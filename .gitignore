@@ -1,0 +1,11 @@
+.hvigor/
+.idea/
+.ohpm/
+build/
+entry/build/
+oh_modules/
+*.hap
+*.hsp
+*.har
+local.properties
+

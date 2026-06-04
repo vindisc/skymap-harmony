@@ -1,0 +1,10 @@
+{
+  "name": "entry",
+  "version": "0.1.0",
+  "description": "skymap-harmony entry module",
+  "main": "",
+  "author": "skymap",
+  "license": "UNLICENSED",
+  "dependencies": {}
+}
+

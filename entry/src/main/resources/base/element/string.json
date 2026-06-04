@@ -1,0 +1,17 @@
+{
+  "string": [
+    {
+      "name": "app_name",
+      "value": "摄影复盘卡"
+    },
+    {
+      "name": "module_desc",
+      "value": "skymap-harmony entry module"
+    },
+    {
+      "name": "entryability_desc",
+      "value": "摄影复盘卡入口"
+    }
+  ]
+}
+

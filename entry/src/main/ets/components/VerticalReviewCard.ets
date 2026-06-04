@@ -1,0 +1,72 @@
+import { createDefaultReviewCardDocument, ReviewCardDocument } from '../model/ReviewCardModel';
+import { resolveReviewCardTheme, ReviewCardTheme } from '../model/ReviewCardTheme';
+import { getImageRatioLabel } from '../utils/ImageLayoutUtils';
+
+@Component
+export struct VerticalReviewCard {
+  @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
+
+  @Builder
+  PhotoBlock() {
+    Column() {
+      Text(getImageRatioLabel(this.document.imageWidth, this.document.imageHeight))
+        .fontSize(17)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#1F2329')
+      Text(`${this.document.imageWidth} x ${this.document.imageHeight}`)
+        .fontSize(12)
+        .fontColor('#68707D')
+        .margin({ top: 6 })
+    }
+    .justifyContent(FlexAlign.Center)
+    .width('46%')
+    .aspectRatio(0.68)
+    .borderRadius(6)
+    .backgroundColor('#DCE7E1')
+  }
+
+  @Builder
+  FieldBlock(label: string, value: string, theme: ReviewCardTheme) {
+    Column() {
+      Text(label)
+        .fontSize(theme.captionSize)
+        .fontColor(theme.mutedTextColor)
+        .fontWeight(FontWeight.Medium)
+      Text(value.length > 0 ? value : '待填写')
+        .fontSize(theme.bodySize)
+        .fontColor(theme.textColor)
+        .lineHeight(theme.bodySize + 5)
+        .margin({ top: 7 })
+    }
+    .alignItems(HorizontalAlign.Start)
+    .padding(11)
+    .width('100%')
+    .borderRadius(6)
+    .backgroundColor(theme.panelColor)
+  }
+
+  build() {
+    Row({ space: 12 }) {
+      this.PhotoBlock()
+      Column({ space: 9 }) {
+        Text(this.document.content.title)
+          .fontSize(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).titleSize)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#1F2329')
+          .width('100%')
+        this.FieldBlock('第一眼落点', this.document.content.firstLook, resolveReviewCardTheme(this.document.config.background, this.document.config.textSize))
+        this.FieldBlock('是否成立', this.document.content.judgement, resolveReviewCardTheme(this.document.config.background, this.document.config.textSize))
+        this.FieldBlock('卡点', this.document.content.blocker, resolveReviewCardTheme(this.document.config.background, this.document.config.textSize))
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+    }
+    .alignItems(VerticalAlign.Top)
+    .padding(14)
+    .width('100%')
+    .borderRadius(8)
+    .backgroundColor(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).canvasColor)
+    .shadow({ radius: 14, color: '#1A000000', offsetX: 0, offsetY: 6 })
+  }
+}
+

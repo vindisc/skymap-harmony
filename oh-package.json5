@@ -1,0 +1,11 @@
+{
+  "name": "skymap-harmony",
+  "version": "0.1.0",
+  "description": "HarmonyOS 原生摄影复盘卡 MVP",
+  "main": "",
+  "author": "skymap",
+  "license": "UNLICENSED",
+  "dependencies": {},
+  "devDependencies": {}
+}
+
