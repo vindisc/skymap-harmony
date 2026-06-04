@@ -1,5 +1,6 @@
 import { createDefaultReviewCardDocument, ReviewCardDocument } from '../model/ReviewCardModel';
-import { resolveReviewCardTheme, ReviewCardTheme } from '../model/ReviewCardTheme';
+import { resolveReviewCardTheme } from '../model/ReviewCardTheme';
+import { AppColors, InfoBlockCard } from './AppDesign';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 @Component
@@ -12,53 +13,53 @@ export struct SquareReviewCard {
       imageUri: this.document.imageUri,
       imageWidth: this.document.imageWidth,
       imageHeight: this.document.imageHeight,
-      aspectRatioValue: 1
+      aspectRatioValue: 1,
+      cornerRadius: 8
     })
-  }
-
-  @Builder
-  CompactBlock(label: string, value: string, theme: ReviewCardTheme) {
-    Column() {
-      Text(label)
-        .fontSize(theme.captionSize)
-        .fontColor(theme.mutedTextColor)
-        .fontWeight(FontWeight.Medium)
-        .width('100%')
-      Text(value.length > 0 ? value : '待填写')
-        .fontSize(theme.bodySize)
-        .fontColor(theme.textColor)
-        .lineHeight(theme.bodySize + 5)
-        .margin({ top: 6 })
-        .width('100%')
-    }
-    .alignItems(HorizontalAlign.Start)
-    .padding(12)
-    .width('100%')
-    .borderRadius(6)
-    .backgroundColor(theme.panelColor)
   }
 
   build() {
     Column() {
       this.PhotoBlock()
-      Column({ space: 8 }) {
+      Column({ space: 10 }) {
         Text(this.document.content.title)
-          .fontSize(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).titleSize)
+          .fontSize(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).titleSize + 1)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#1F2329')
-          .lineHeight(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).titleSize + 6)
+          .fontColor(AppColors.text)
+          .lineHeight(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).titleSize + 8)
+          .maxLines(2)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
-        this.CompactBlock('第一眼落点', this.document.content.firstLook, resolveReviewCardTheme(this.document.config.background, this.document.config.textSize))
-        this.CompactBlock('是否成立', this.document.content.judgement, resolveReviewCardTheme(this.document.config.background, this.document.config.textSize))
-        this.CompactBlock('卡点', this.document.content.blocker, resolveReviewCardTheme(this.document.config.background, this.document.config.textSize))
+        InfoBlockCard({
+          label: '第一眼落点',
+          value: this.document.content.firstLook,
+          bodySize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).bodySize,
+          captionSize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).captionSize,
+          maxLines: 3
+        })
+        InfoBlockCard({
+          label: '是否成立',
+          value: this.document.content.judgement,
+          bodySize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).bodySize,
+          captionSize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).captionSize,
+          maxLines: 3
+        })
+        InfoBlockCard({
+          label: '卡点',
+          value: this.document.content.blocker,
+          bodySize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).bodySize,
+          captionSize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).captionSize,
+          maxLines: 4
+        })
       }
-      .padding({ top: 16 })
+      .padding({ top: 17 })
       .width('100%')
     }
     .padding(14)
     .width('100%')
     .borderRadius(10)
     .backgroundColor(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).canvasColor)
-    .shadow({ radius: 18, color: '#1F000000', offsetX: 0, offsetY: 8 })
+    .border({ width: 1, color: '#ECEFF2' })
+    .shadow({ radius: 22, color: '#1A000000', offsetX: 0, offsetY: 10 })
   }
 }

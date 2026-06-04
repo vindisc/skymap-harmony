@@ -10,6 +10,7 @@ import { ReviewCardPreview } from '../components/ReviewCardPreview';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
+import { AppColors, PrimaryButton, SecondaryButton, TagLabel } from '../components/AppDesign';
 
 @Entry
 @Component
@@ -17,6 +18,7 @@ struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State exportMessage: string = '';
   @State isExporting: boolean = false;
+  @State saveStateLabel: string = '已自动保存';
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -29,6 +31,7 @@ struct PreviewPage {
   private async saveDraft(): Promise<void> {
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
     await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+    this.saveStateLabel = '刚刚保存';
     this.exportMessage = '复盘记录已保存，首页最近记录会同步更新。';
     promptAction.showToast({ message: '已保存复盘记录' });
   }
@@ -51,86 +54,92 @@ struct PreviewPage {
     Column() {
       Row() {
         Column() {
+          Row({ space: 8 }) {
+            TagLabel({ label: this.saveStateLabel, color: AppColors.tagGreenText, tagBackground: AppColors.tagGreen })
+          }
+          .width('100%')
+
           Text('复盘卡预览')
-            .fontSize(22)
+            .fontSize(24)
             .fontWeight(FontWeight.Bold)
-            .fontColor('#1F2329')
-          Text('确认版式后保存记录或导出图片')
-            .fontSize(13)
-            .fontColor('#68707D')
-            .margin({ top: 4 })
+            .fontColor(AppColors.text)
+            .lineHeight(30)
+            .margin({ top: 8 })
+          Text('确认成品效果后，可以继续编辑、保存记录或导出图片。')
+            .fontSize(14)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(21)
+            .margin({ top: 5 })
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
 
-        Button('编辑')
-          .height(36)
-          .borderRadius(6)
-          .fontSize(14)
-          .fontColor('#1F2329')
-          .backgroundColor('#FFFFFF')
-          .onClick(() => {
+        SecondaryButton({
+          label: '编辑',
+          onTap: () => {
             router.pushUrl({ url: EDITOR_PAGE });
-          })
+          }
+        })
+          .width(78)
       }
       .alignItems(VerticalAlign.Center)
-      .padding({ left: 20, right: 20, top: 18, bottom: 8 })
+      .padding({ left: 20, right: 20, top: 18, bottom: 10 })
       .width('100%')
 
       Scroll() {
         Column() {
           ReviewCardPreview({ document: this.document })
             .id(REVIEW_CARD_EXPORT_ID)
+
+          if (this.exportMessage.length > 0) {
+            Text(this.exportMessage)
+              .fontSize(12)
+              .fontColor(AppColors.secondaryText)
+              .lineHeight(18)
+              .padding(12)
+              .width('100%')
+              .borderRadius(8)
+              .backgroundColor(AppColors.surface)
+              .border({ width: 1, color: AppColors.border })
+              .margin({ top: 18 })
+          }
         }
         .alignItems(HorizontalAlign.Center)
-        .padding({ left: 18, right: 18, top: 14, bottom: 24 })
+        .padding({ left: 18, right: 18, top: 14, bottom: 28 })
         .width('100%')
       }
       .layoutWeight(1)
 
       Row({ space: 10 }) {
-        Button('编辑')
-          .height(46)
-          .layoutWeight(1)
-          .borderRadius(6)
-          .fontSize(14)
-          .fontColor('#1F2329')
-          .backgroundColor('#EEF2F5')
-          .onClick(() => {
+        SecondaryButton({
+          label: '编辑',
+          onTap: () => {
             router.pushUrl({ url: EDITOR_PAGE });
-          })
-        Button('保存')
-          .height(46)
+          }
+        })
           .layoutWeight(1)
-          .borderRadius(6)
-          .fontSize(14)
-          .onClick(() => {
+        SecondaryButton({
+          label: '保存',
+          onTap: () => {
             this.saveDraft();
-          })
-        Button(this.isExporting ? '正在导出' : '导出图片')
-          .height(46)
+          }
+        })
           .layoutWeight(1)
-          .borderRadius(6)
-          .fontSize(14)
-          .onClick(() => {
+        PrimaryButton({
+          label: this.isExporting ? '正在导出' : '导出图片',
+          onTap: () => {
             this.exportImage();
-          })
+          }
+        })
+          .layoutWeight(1)
       }
       .padding({ left: 16, right: 16, top: 12, bottom: 14 })
       .width('100%')
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(AppColors.surface)
       .shadow({ radius: 12, color: '#14000000', offsetX: 0, offsetY: -4 })
-      if (this.exportMessage.length > 0) {
-        Text(this.exportMessage)
-          .fontSize(12)
-          .fontColor('#68707D')
-          .padding({ left: 16, right: 16, bottom: 12 })
-          .width('100%')
-          .backgroundColor('#FFFFFF')
-      }
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F6F7F9')
+    .backgroundColor(AppColors.pageBackground)
   }
 }

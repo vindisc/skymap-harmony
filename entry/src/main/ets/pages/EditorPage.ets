@@ -7,14 +7,14 @@ import {
   ReviewCardDocument
 } from '../model/ReviewCardModel';
 import { ReviewInputForm } from '../components/ReviewInputForm';
-import { ReviewPhotoBlock } from '../components/ReviewPhotoBlock';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
-import { getImageRatioLabel } from '../utils/ImageLayoutUtils';
+import { AppColors, AppPageHeader, PhotoSummaryCard, PrimaryButton, SecondaryButton } from '../components/AppDesign';
 
 @Entry
 @Component
 struct EditorPage {
+  private scroller: Scroller = new Scroller();
   private document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State title: string = DEFAULT_REVIEW_TITLE;
   @State firstLook: string = '';
@@ -58,100 +58,84 @@ struct EditorPage {
     router.pushUrl({ url: PREVIEW_PAGE });
   }
 
+  private scrollToFocusedField(field: string): void {
+    let offset: number = 0;
+    if (field === 'firstLook') {
+      offset = 260;
+    } else if (field === 'judgement') {
+      offset = 470;
+    } else if (field === 'blocker') {
+      offset = 690;
+    }
+
+    this.scroller.scrollTo({
+      xOffset: 0,
+      yOffset: offset,
+      animation: { duration: 220, curve: Curve.EaseOut }
+    });
+  }
+
   build() {
-    Column() {
-      Scroll() {
-        Column() {
-          Row() {
-            Button('返回')
-              .height(36)
-              .borderRadius(6)
-              .fontSize(14)
-              .onClick(() => {
-                router.back();
-              })
-            Blank()
-          }
-          .width('100%')
-
-          Text('填写复盘')
-            .fontSize(26)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#1F2329')
-            .margin({ top: 18 })
-            .width('100%')
-
-          Text('先写下第一眼，再判断照片是否成立。')
-            .fontSize(15)
-            .fontColor('#68707D')
-            .lineHeight(22)
-            .margin({ top: 8 })
-            .width('100%')
-
-          Row({ space: 12 }) {
-            ReviewPhotoBlock({
-              imageUri: this.imageUri,
-              imageWidth: this.imageWidth,
-              imageHeight: this.imageHeight,
-              aspectRatioValue: 1.35,
-              compact: true
-            })
-            .width(112)
-            Column() {
-              Text(getImageRatioLabel(this.imageWidth, this.imageHeight))
-                .fontSize(16)
-                .fontWeight(FontWeight.Medium)
-                .fontColor('#1F2329')
-              Text(`${this.imageWidth} x ${this.imageHeight}`)
-                .fontSize(13)
-                .fontColor('#68707D')
-                .margin({ top: 6 })
-              Text('照片将自动匹配复盘卡版式')
-                .fontSize(12)
-                .fontColor('#8A919F')
-                .margin({ top: 8 })
-            }
-            .alignItems(HorizontalAlign.Start)
-            .layoutWeight(1)
-          }
-          .alignItems(VerticalAlign.Center)
-          .padding(12)
-          .width('100%')
-          .borderRadius(8)
-          .backgroundColor('#FFFFFF')
-          .shadow({ radius: 10, color: '#10000000', offsetX: 0, offsetY: 4 })
-          .margin({ top: 14, bottom: 22 })
-
-          ReviewInputForm({
-            title: $title,
-            firstLook: $firstLook,
-            judgement: $judgement,
-            blocker: $blocker
-          })
-        }
-        .padding({ left: 20, right: 20, top: 18, bottom: 96 })
-        .width('100%')
-      }
-      .layoutWeight(1)
-
+    Scroll(this.scroller) {
       Column() {
-        Button('生成复盘卡')
-          .height(48)
-          .width('100%')
-          .borderRadius(6)
-          .fontSize(16)
-          .fontWeight(FontWeight.Medium)
-          .onClick(() => {
-            this.saveAndPreview();
+        Row() {
+          SecondaryButton({
+            label: '返回',
+            onTap: () => {
+              router.back();
+            }
           })
+            .width(82)
+          Blank()
+        }
+        .width('100%')
+
+        AppPageHeader({
+          title: '写一张照片复盘',
+          subtitle: '像写短评一样记录第一眼、判断和卡点，生成卡片前随时可以补充。'
+        })
+          .margin({ top: 18 })
+
+        PhotoSummaryCard({
+          imageUri: this.imageUri,
+          imageWidth: this.imageWidth,
+          imageHeight: this.imageHeight
+        })
+          .margin({ top: 18, bottom: 24 })
+
+        ReviewInputForm({
+          title: $title,
+          firstLook: $firstLook,
+          judgement: $judgement,
+          blocker: $blocker,
+          onFieldFocus: (field: string) => {
+            this.scrollToFocusedField(field);
+          }
+        })
+
+        Column() {
+          PrimaryButton({
+            label: '生成复盘卡',
+            onTap: () => {
+              this.saveAndPreview();
+            }
+          })
+
+          Text('生成时会自动保存到最近记录，之后仍可返回继续编辑。')
+            .fontSize(12)
+            .fontColor(AppColors.mutedText)
+            .lineHeight(18)
+            .margin({ top: 10 })
+            .width('100%')
+        }
+        .width('100%')
+        .margin({ top: 26 })
       }
-      .padding({ left: 16, right: 16, top: 12, bottom: 16 })
+      .padding({ left: 20, right: 20, top: 18, bottom: 42 })
       .width('100%')
-      .backgroundColor('#FFFFFF')
-      .shadow({ radius: 12, color: '#14000000', offsetX: 0, offsetY: -4 })
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F6F7F9')
+    .backgroundColor(AppColors.pageBackground)
   }
 }

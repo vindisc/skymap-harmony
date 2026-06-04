@@ -7,6 +7,7 @@ export struct ReviewPhotoBlock {
   @Prop imageHeight: number = 1000;
   @Prop aspectRatioValue: number = 1.6;
   @Prop compact: boolean = false;
+  @Prop cornerRadius: number = 7;
   @State loadFailed: boolean = false;
 
   @Builder
@@ -43,9 +44,8 @@ export struct ReviewPhotoBlock {
     }
     .width('100%')
     .aspectRatio(this.aspectRatioValue)
-    .borderRadius(6)
+    .borderRadius(this.cornerRadius)
     .clip(true)
     .backgroundColor('#DCE7E1')
   }
 }
-
