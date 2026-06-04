@@ -22,7 +22,8 @@ export struct ReviewCardPreview {
         HorizontalReviewCard({ document: this.document })
       }
     }
+    .alignItems(HorizontalAlign.Center)
     .width('100%')
+    .constraintSize({ maxWidth: 720 })
   }
 }
-
