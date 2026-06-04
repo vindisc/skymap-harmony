@@ -13,15 +13,14 @@ export struct VerticalReviewCard {
       imageUri: this.document.imageUri,
       imageWidth: this.document.imageWidth,
       imageHeight: this.document.imageHeight,
-      aspectRatioValue: 0.68,
+      aspectRatioValue: 0.76,
       compact: true,
       cornerRadius: ReviewCardMetrics.photoRadius
     })
-    .width('43%')
   }
 
   build() {
-    Row({ space: ReviewCardMetrics.contentInset }) {
+    Column() {
       this.PhotoBlock()
       Column() {
         ReviewTitle({
@@ -38,9 +37,12 @@ export struct VerticalReviewCard {
           .margin({ top: ReviewCardMetrics.titleInfoGap })
       }
       .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
+      .padding({
+        top: ReviewCardMetrics.photoTitleGap,
+        bottom: 2
+      })
+      .width('100%')
     }
-    .alignItems(VerticalAlign.Top)
     .padding(ReviewCardMetrics.shellPadding)
     .width('100%')
     .borderRadius(ReviewCardMetrics.shellRadius)

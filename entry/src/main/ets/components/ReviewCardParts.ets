@@ -3,13 +3,13 @@ import { AppColors } from './AppDesign';
 
 export class ReviewCardMetrics {
   static readonly shellPadding: number = 14;
-  static readonly contentInset: number = 16;
   static readonly shellRadius: number = 10;
   static readonly photoRadius: number = 8;
-  static readonly infoRadius: number = 6;
-  static readonly photoTitleGap: number = 14;
+  static readonly infoRadius: number = 8;
+  static readonly photoTitleGap: number = 16;
   static readonly titleInfoGap: number = 12;
-  static readonly infoGap: number = 8;
+  static readonly infoGap: number = 10;
+  static readonly infoPanelPadding: number = 12;
 }
 
 @Component
@@ -42,31 +42,24 @@ export struct ReviewInfoItem {
     Column() {
       Text(this.label)
         .fontSize(this.captionSize)
-        .fontWeight(FontWeight.Regular)
+        .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.mutedText)
         .lineHeight(this.captionSize + 5)
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
         .width('100%')
       Text(this.value.length > 0 ? this.value : '待填写')
         .fontSize(this.bodySize)
         .fontWeight(FontWeight.Medium)
         .fontColor(this.value.length > 0 ? AppColors.text : AppColors.mutedText)
-        .lineHeight(this.bodySize + 5)
+        .lineHeight(this.bodySize + 6)
         .maxLines(this.maxLines)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
-        .margin({ top: this.compact ? 4 : 5 })
+        .margin({ top: this.compact ? 4 : 6 })
         .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({
-      left: this.compact ? 9 : 11,
-      right: this.compact ? 9 : 11,
-      top: this.compact ? 8 : 10,
-      bottom: this.compact ? 8 : 10
-    })
     .width('100%')
-    .borderRadius(ReviewCardMetrics.infoRadius)
-    .backgroundColor('#F8FAFB')
-    .border({ width: 1, color: '#E8ECEF' })
   }
 }
 
@@ -80,37 +73,43 @@ export struct ReviewInfoGroup {
 
   build() {
     if (this.layout === 'row') {
-      Row({ space: ReviewCardMetrics.infoGap }) {
-        ReviewInfoItem({
-          label: '第一眼落点',
-          value: this.content.firstLook,
-          bodySize: this.bodySize,
-          captionSize: this.captionSize,
-          maxLines: 3,
-          compact: this.compact
-        })
-          .layoutWeight(1)
-        ReviewInfoItem({
-          label: '是否成立',
-          value: this.content.judgement,
-          bodySize: this.bodySize,
-          captionSize: this.captionSize,
-          maxLines: 3,
-          compact: this.compact
-        })
-          .layoutWeight(1)
+      Column({ space: ReviewCardMetrics.infoGap }) {
+        Row({ space: ReviewCardMetrics.infoGap }) {
+          ReviewInfoItem({
+            label: '第一眼落点',
+            value: this.content.firstLook,
+            bodySize: this.bodySize,
+            captionSize: this.captionSize,
+            maxLines: 2,
+            compact: this.compact
+          })
+            .layoutWeight(1)
+          ReviewInfoItem({
+            label: '是否成立',
+            value: this.content.judgement,
+            bodySize: this.bodySize,
+            captionSize: this.captionSize,
+            maxLines: 2,
+            compact: this.compact
+          })
+            .layoutWeight(1)
+        }
+        .alignItems(VerticalAlign.Top)
+        .width('100%')
         ReviewInfoItem({
           label: '卡点',
           value: this.content.blocker,
           bodySize: this.bodySize,
           captionSize: this.captionSize,
-          maxLines: 4,
+          maxLines: 3,
           compact: this.compact
         })
-          .layoutWeight(1)
       }
-      .alignItems(VerticalAlign.Top)
+      .padding(ReviewCardMetrics.infoPanelPadding)
       .width('100%')
+      .borderRadius(ReviewCardMetrics.infoRadius)
+      .backgroundColor('#F8F9FB')
+      .border({ width: 1, color: '#E8ECEF' })
     } else {
       Column({ space: ReviewCardMetrics.infoGap }) {
         ReviewInfoItem({
@@ -138,7 +137,11 @@ export struct ReviewInfoGroup {
           compact: this.compact
         })
       }
+      .padding(this.compact ? 10 : ReviewCardMetrics.infoPanelPadding)
       .width('100%')
+      .borderRadius(ReviewCardMetrics.infoRadius)
+      .backgroundColor('#F8F9FB')
+      .border({ width: 1, color: '#E8ECEF' })
     }
   }
 }

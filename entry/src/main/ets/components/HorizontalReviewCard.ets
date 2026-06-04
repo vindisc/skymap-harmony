@@ -13,7 +13,7 @@ export struct HorizontalReviewCard {
       imageUri: this.document.imageUri,
       imageWidth: this.document.imageWidth,
       imageHeight: this.document.imageHeight,
-      aspectRatioValue: 1.52,
+      aspectRatioValue: 1.5,
       cornerRadius: ReviewCardMetrics.photoRadius
     })
   }
@@ -35,10 +35,8 @@ export struct HorizontalReviewCard {
           .margin({ top: ReviewCardMetrics.titleInfoGap })
       }
       .padding({
-        left: ReviewCardMetrics.contentInset,
-        right: ReviewCardMetrics.contentInset,
         top: ReviewCardMetrics.photoTitleGap,
-        bottom: ReviewCardMetrics.contentInset
+        bottom: 2
       })
       .width('100%')
     }

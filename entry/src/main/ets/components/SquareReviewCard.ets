@@ -13,7 +13,7 @@ export struct SquareReviewCard {
       imageUri: this.document.imageUri,
       imageWidth: this.document.imageWidth,
       imageHeight: this.document.imageHeight,
-      aspectRatioValue: 1.22,
+      aspectRatioValue: 1.12,
       cornerRadius: ReviewCardMetrics.photoRadius
     })
   }
@@ -30,15 +30,13 @@ export struct SquareReviewCard {
           content: this.document.content,
           bodySize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).bodySize,
           captionSize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).captionSize,
-          layout: 'column'
+          layout: 'row'
         })
           .margin({ top: ReviewCardMetrics.titleInfoGap })
       }
       .padding({
-        left: ReviewCardMetrics.contentInset,
-        right: ReviewCardMetrics.contentInset,
         top: ReviewCardMetrics.photoTitleGap,
-        bottom: ReviewCardMetrics.contentInset
+        bottom: 2
       })
       .width('100%')
     }
