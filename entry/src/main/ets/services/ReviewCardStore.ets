@@ -27,6 +27,10 @@ export class ReviewCardStore {
     return cloneReviewCardDocument(ReviewCardStore.currentDocument);
   }
 
+  static setCurrentDocument(document: ReviewCardDocument): void {
+    ReviewCardStore.currentDocument = cloneReviewCardDocument(document);
+  }
+
   static saveCurrentDocument(document: ReviewCardDocument): void {
     const next = cloneReviewCardDocument(document);
     next.updatedAt = Date.now();

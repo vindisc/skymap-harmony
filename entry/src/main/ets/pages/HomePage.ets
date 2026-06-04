@@ -1,17 +1,40 @@
 import router from '@ohos.router';
+import common from '@ohos.app.ability.common';
 import { EDITOR_PAGE } from '../app/AppRouter';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
+import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
+import { getImageRatioLabel } from '../utils/ImageLayoutUtils';
 import { SampleImageKind } from '../utils/ImageLayoutUtils';
+import { ReviewPhotoBlock } from '../components/ReviewPhotoBlock';
 
 @Entry
 @Component
 struct HomePage {
   @State statusMessage: string = '';
   @State isPickingPhoto: boolean = false;
+  @State historyItems: Array<ReviewCardHistoryItem> = [];
+
+  aboutToAppear(): void {
+    this.reloadHistory();
+  }
+
+  private getAbilityContext(): common.UIAbilityContext {
+    return getContext(this) as common.UIAbilityContext;
+  }
+
+  private async reloadHistory(): Promise<void> {
+    this.historyItems = await ReviewCardHistoryService.load(this.getAbilityContext());
+  }
 
   private startDraft(kind: SampleImageKind): void {
     ReviewCardStore.createDraft(kind);
+    router.pushUrl({ url: EDITOR_PAGE });
+  }
+
+  private openHistory(document: ReviewCardDocument): void {
+    ReviewCardStore.setCurrentDocument(document);
     router.pushUrl({ url: EDITOR_PAGE });
   }
 
@@ -47,6 +70,46 @@ struct HomePage {
       .onClick(() => {
         this.startDraft(kind);
       })
+  }
+
+  @Builder
+  HistoryRow(item: ReviewCardHistoryItem) {
+    Row({ space: 12 }) {
+      ReviewPhotoBlock({
+        imageUri: item.document.imageUri,
+        imageWidth: item.document.imageWidth,
+        imageHeight: item.document.imageHeight,
+        aspectRatioValue: 1.35,
+        compact: true
+      })
+      .width(78)
+
+      Column() {
+        Text(item.document.content.title.length > 0 ? item.document.content.title : '未命名复盘')
+          .fontSize(15)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#1F2329')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+        Text(new Date(item.document.updatedAt).toLocaleString())
+          .fontSize(12)
+          .fontColor('#68707D')
+          .margin({ top: 5 })
+        if (item.exportedPath.length > 0) {
+          Text('已导出')
+            .fontSize(11)
+            .fontColor('#2563EB')
+            .margin({ top: 5 })
+        }
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+    }
+    .padding({ top: 10, bottom: 10 })
+    .width('100%')
+    .onClick(() => {
+      this.openHistory(item.document);
+    })
   }
 
   build() {
@@ -109,12 +172,18 @@ struct HomePage {
             .fontWeight(FontWeight.Medium)
             .fontColor('#1F2329')
             .width('100%')
-          Text('第一版暂不保存历史，后续会在这里展示草稿和导出记录。')
-            .fontSize(14)
-            .fontColor('#68707D')
-            .lineHeight(21)
-            .margin({ top: 10 })
-            .width('100%')
+          if (this.historyItems.length === 0) {
+            Text('还没有复盘记录。选择一张照片，生成第一张复盘卡。')
+              .fontSize(14)
+              .fontColor('#68707D')
+              .lineHeight(21)
+              .margin({ top: 10 })
+              .width('100%')
+          } else {
+            ForEach(this.historyItems, (item: ReviewCardHistoryItem) => {
+              this.HistoryRow(item)
+            }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
+          }
         }
         .padding(16)
         .width('100%')

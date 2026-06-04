@@ -1,4 +1,5 @@
 import router from '@ohos.router';
+import common from '@ohos.app.ability.common';
 import { PREVIEW_PAGE } from '../app/AppRouter';
 import {
   createDefaultReviewCardDocument,
@@ -8,6 +9,7 @@ import {
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewPhotoBlock } from '../components/ReviewPhotoBlock';
 import { ReviewCardStore } from '../services/ReviewCardStore';
+import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { getImageRatioLabel } from '../utils/ImageLayoutUtils';
 
 @Entry
@@ -22,6 +24,10 @@ struct EditorPage {
   @State imageWidth: number = 1600;
   @State imageHeight: number = 1000;
 
+  private getAbilityContext(): common.UIAbilityContext {
+    return getContext(this) as common.UIAbilityContext;
+  }
+
   aboutToAppear(): void {
     this.document = ReviewCardStore.getCurrentDocument();
     this.imageUri = this.document.imageUri;
@@ -33,12 +39,13 @@ struct EditorPage {
     this.blocker = this.document.content.blocker;
   }
 
-  private saveAndPreview(): void {
+  private async saveAndPreview(): Promise<void> {
     this.document.content.title = this.title.length > 0 ? this.title : DEFAULT_REVIEW_TITLE;
     this.document.content.firstLook = this.firstLook;
     this.document.content.judgement = this.judgement;
     this.document.content.blocker = this.blocker;
     ReviewCardStore.saveCurrentDocument(this.document);
+    await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
     router.pushUrl({ url: PREVIEW_PAGE });
   }
 

@@ -41,6 +41,11 @@ export interface ReviewCardDocument {
   updatedAt: number;
 }
 
+export interface ReviewCardHistoryItem {
+  document: ReviewCardDocument;
+  exportedPath: string;
+}
+
 export const DEFAULT_REVIEW_TITLE: string = '这张照片是否成立';
 
 export function createDefaultReviewContent(): ReviewContent {
@@ -92,4 +97,8 @@ export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCar
     createdAt: document.createdAt,
     updatedAt: document.updatedAt
   };
+}
+
+export function getReviewDocumentKey(document: ReviewCardDocument): string {
+  return `${document.createdAt}`;
 }
