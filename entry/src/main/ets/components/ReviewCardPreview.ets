@@ -23,6 +23,6 @@ export struct ReviewCardPreview {
       }
     }
     .width('100%')
+    .constraintSize({ maxWidth: 520 })
   }
 }
-

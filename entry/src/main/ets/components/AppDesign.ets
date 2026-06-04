@@ -3,24 +3,24 @@ import { formatReviewTime, getImageRatioLabel } from '../utils/ImageLayoutUtils'
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
-  static readonly pageBackground: string = '#F5F6F8';
-  static readonly surface: string = '#FFFFFF';
-  static readonly surfaceMuted: string = '#F8F9FB';
-  static readonly border: string = '#E6E9ED';
+  static readonly pageBackground: string = '#F4F1EC';
+  static readonly surface: string = '#FFFEFC';
+  static readonly surfaceMuted: string = '#F7F5F1';
+  static readonly border: string = '#E5E0D7';
   static readonly text: string = '#171A1F';
-  static readonly secondaryText: string = '#5F6673';
-  static readonly mutedText: string = '#8A919F';
-  static readonly primary: string = '#111827';
-  static readonly primaryPressed: string = '#2B313C';
-  static readonly tagBlue: string = '#EAF2FF';
-  static readonly tagBlueText: string = '#2563EB';
-  static readonly tagGreen: string = '#E9F6F0';
+  static readonly secondaryText: string = '#5E6470';
+  static readonly mutedText: string = '#8A8F98';
+  static readonly primary: string = '#1B1E23';
+  static readonly primaryPressed: string = '#333840';
+  static readonly tagBlue: string = '#EEF4F0';
+  static readonly tagBlueText: string = '#496A52';
+  static readonly tagGreen: string = '#EAF5ED';
   static readonly tagGreenText: string = '#2E7D5B';
 }
 
 export class AppMetrics {
   static readonly pagePadding: number = 20;
-  static readonly cardRadius: number = 8;
+  static readonly cardRadius: number = 10;
   static readonly buttonRadius: number = 7;
   static readonly panelRadius: number = 8;
 }
@@ -33,10 +33,10 @@ export struct AppPageHeader {
   build() {
     Column() {
       Text(this.title)
-        .fontSize(28)
+        .fontSize(26)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
-        .lineHeight(34)
+        .lineHeight(32)
         .width('100%')
       if (this.subtitle.length > 0) {
         Text(this.subtitle)
@@ -66,6 +66,7 @@ export struct PrimaryButton {
       .fontWeight(FontWeight.Medium)
       .fontColor('#FFFFFF')
       .backgroundColor(AppColors.primary)
+      .stateEffect(true)
       .onClick(() => {
         this.onTap();
       })
@@ -85,7 +86,8 @@ export struct SecondaryButton {
       .fontSize(15)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
-      .backgroundColor('#EEF1F4')
+      .backgroundColor('#ECE8DF')
+      .stateEffect(true)
       .onClick(() => {
         this.onTap();
       })
@@ -150,7 +152,8 @@ export struct PhotoSummaryCard {
         imageWidth: this.imageWidth,
         imageHeight: this.imageHeight,
         aspectRatioValue: 1.25,
-        compact: true
+        compact: true,
+        fitMode: ImageFit.Contain
       })
         .width(112)
 
@@ -163,7 +166,7 @@ export struct PhotoSummaryCard {
         }
         .width('100%')
 
-        Text('照片方向会自动匹配复盘卡版式')
+        Text('按照片方向生成作品卡')
           .fontSize(15)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
@@ -171,7 +174,7 @@ export struct PhotoSummaryCard {
           .margin({ top: 10 })
           .width('100%')
 
-        Text('保留真实照片作为视觉主体，文字只记录关键判断。')
+        Text('照片是主视觉，文字只保留第一眼、判断和卡点。')
           .fontSize(12)
           .fontColor(AppColors.secondaryText)
           .lineHeight(18)
@@ -205,7 +208,8 @@ export struct RecentReviewCard {
         imageWidth: this.item.document.imageWidth,
         imageHeight: this.item.document.imageHeight,
         aspectRatioValue: 1.25,
-        compact: true
+        compact: true,
+        fitMode: ImageFit.Contain
       })
         .width(92)
 
@@ -232,9 +236,11 @@ export struct RecentReviewCard {
         .margin({ top: 8 })
         .width('100%')
 
-        Text('查看成品卡')
+        Text(this.item.document.content.firstLook.length > 0 ? this.item.document.content.firstLook : '查看这张复盘卡')
           .fontSize(12)
           .fontColor(AppColors.mutedText)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
           .margin({ top: 9 })
           .width('100%')
       }
@@ -247,7 +253,7 @@ export struct RecentReviewCard {
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
-    .shadow({ radius: 10, color: '#0D000000', offsetX: 0, offsetY: 4 })
+    .shadow({ radius: 14, color: '#10000000', offsetX: 0, offsetY: 6 })
     .onClick(() => {
       this.onTap();
     })

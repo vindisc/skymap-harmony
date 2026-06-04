@@ -54,18 +54,12 @@ struct PreviewPage {
     Column() {
       Row() {
         Column() {
-          Row({ space: 8 }) {
-            TagLabel({ label: this.saveStateLabel, color: AppColors.tagGreenText, tagBackground: AppColors.tagGreen })
-          }
-          .width('100%')
-
           Text('复盘卡预览')
             .fontSize(24)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.text)
             .lineHeight(30)
-            .margin({ top: 8 })
-          Text('确认成品效果后，可以继续编辑、保存记录或导出图片。')
+          Text('确认照片、判断和复盘说明是否形成一张完整作品卡。')
             .fontSize(14)
             .fontColor(AppColors.secondaryText)
             .lineHeight(21)
@@ -74,16 +68,10 @@ struct PreviewPage {
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
 
-        SecondaryButton({
-          label: '编辑',
-          onTap: () => {
-            router.pushUrl({ url: EDITOR_PAGE });
-          }
-        })
-          .width(78)
+        TagLabel({ label: this.saveStateLabel, color: AppColors.tagGreenText, tagBackground: AppColors.tagGreen })
       }
       .alignItems(VerticalAlign.Center)
-      .padding({ left: 20, right: 20, top: 18, bottom: 10 })
+      .padding({ left: 20, right: 20, top: 18, bottom: 8 })
       .width('100%')
 
       Scroll() {
@@ -96,6 +84,8 @@ struct PreviewPage {
               .fontSize(12)
               .fontColor(AppColors.secondaryText)
               .lineHeight(18)
+              .maxLines(3)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
               .padding(12)
               .width('100%')
               .borderRadius(8)
@@ -105,8 +95,10 @@ struct PreviewPage {
           }
         }
         .alignItems(HorizontalAlign.Center)
-        .padding({ left: 18, right: 18, top: 14, bottom: 28 })
+        .justifyContent(FlexAlign.Center)
+        .padding({ left: 18, right: 18, top: 16, bottom: 32 })
         .width('100%')
+        .constraintSize({ minHeight: 560 })
       }
       .layoutWeight(1)
 

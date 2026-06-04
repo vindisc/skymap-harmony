@@ -60,12 +60,14 @@ struct EditorPage {
 
   private scrollToFocusedField(field: string): void {
     let offset: number = 0;
-    if (field === 'firstLook') {
-      offset = 260;
+    if (field === 'title') {
+      offset = 120;
+    } else if (field === 'firstLook') {
+      offset = 310;
     } else if (field === 'judgement') {
-      offset = 470;
+      offset = 520;
     } else if (field === 'blocker') {
-      offset = 690;
+      offset = 760;
     }
 
     this.scroller.scrollTo({
@@ -76,63 +78,69 @@ struct EditorPage {
   }
 
   build() {
-    Scroll(this.scroller) {
-      Column() {
-        Row() {
-          SecondaryButton({
-            label: '返回',
-            onTap: () => {
-              router.back();
+    Column() {
+      Scroll(this.scroller) {
+        Column() {
+          Row() {
+            SecondaryButton({
+              label: '返回',
+              onTap: () => {
+                router.back();
+              }
+            })
+              .width(82)
+            Blank()
+          }
+          .width('100%')
+
+          AppPageHeader({
+            title: '写照片复盘',
+            subtitle: '像写短评一样，留下第一眼、成立判断和真正卡住你的地方。'
+          })
+            .margin({ top: 18 })
+
+          PhotoSummaryCard({
+            imageUri: this.imageUri,
+            imageWidth: this.imageWidth,
+            imageHeight: this.imageHeight
+          })
+            .margin({ top: 18, bottom: 24 })
+
+          ReviewInputForm({
+            title: $title,
+            firstLook: $firstLook,
+            judgement: $judgement,
+            blocker: $blocker,
+            onFieldFocus: (field: string) => {
+              this.scrollToFocusedField(field);
             }
           })
-            .width(82)
-          Blank()
         }
+        .padding({ left: 20, right: 20, top: 18, bottom: 140 })
         .width('100%')
+      }
+      .layoutWeight(1)
+      .width('100%')
 
-        AppPageHeader({
-          title: '写一张照片复盘',
-          subtitle: '像写短评一样记录第一眼、判断和卡点，生成卡片前随时可以补充。'
-        })
-          .margin({ top: 18 })
-
-        PhotoSummaryCard({
-          imageUri: this.imageUri,
-          imageWidth: this.imageWidth,
-          imageHeight: this.imageHeight
-        })
-          .margin({ top: 18, bottom: 24 })
-
-        ReviewInputForm({
-          title: $title,
-          firstLook: $firstLook,
-          judgement: $judgement,
-          blocker: $blocker,
-          onFieldFocus: (field: string) => {
-            this.scrollToFocusedField(field);
+      Column() {
+        PrimaryButton({
+          label: '生成复盘卡',
+          onTap: () => {
+            this.saveAndPreview();
           }
         })
 
-        Column() {
-          PrimaryButton({
-            label: '生成复盘卡',
-            onTap: () => {
-              this.saveAndPreview();
-            }
-          })
-
-          Text('生成时会自动保存到最近记录，之后仍可返回继续编辑。')
-            .fontSize(12)
-            .fontColor(AppColors.mutedText)
-            .lineHeight(18)
-            .margin({ top: 10 })
-            .width('100%')
-        }
-        .width('100%')
-        .margin({ top: 26 })
+        Text('生成时会自动保存到最近记录，之后仍可返回继续编辑。')
+          .fontSize(12)
+          .fontColor(AppColors.mutedText)
+          .lineHeight(18)
+          .margin({ top: 9 })
+          .width('100%')
       }
-      .padding({ left: 20, right: 20, top: 18, bottom: 42 })
+      .padding({ left: 16, right: 16, top: 12, bottom: 16 })
       .width('100%')
+      .backgroundColor(AppColors.surface)
+      .shadow({ radius: 12, color: '#14000000', offsetX: 0, offsetY: -4 })
     }
     .width('100%')
     .height('100%')

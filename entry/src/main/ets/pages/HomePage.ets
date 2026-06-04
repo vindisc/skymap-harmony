@@ -6,7 +6,7 @@ import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerServi
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { SampleImageKind } from '../utils/ImageLayoutUtils';
-import { AppColors, EmptyState, PrimaryButton, RecentReviewCard, SecondaryButton, TagLabel } from '../components/AppDesign';
+import { AppColors, EmptyState, PrimaryButton, RecentReviewCard, TagLabel } from '../components/AppDesign';
 
 @Entry
 @Component
@@ -60,13 +60,13 @@ struct HomePage {
   @Builder
   SampleChip(label: string, kind: SampleImageKind) {
     Button(label)
-      .height(36)
+      .height(34)
       .borderRadius(7)
       .fontSize(13)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
-      .backgroundColor('#EEF1F4')
-      .padding({ left: 14, right: 14 })
+      .backgroundColor('#EDE9E0')
+      .padding({ left: 13, right: 13 })
       .onClick(() => {
         this.startDraft(kind);
       })
@@ -76,14 +76,14 @@ struct HomePage {
   HeroPanel() {
     Column() {
       TagLabel({ label: '摄影复盘卡' })
-      Text('把一张照片整理成一次清晰复盘')
-        .fontSize(31)
+      Text('把一张照片整理成一张复盘作品卡')
+        .fontSize(30)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
-        .lineHeight(38)
+        .lineHeight(37)
         .margin({ top: 14 })
         .width('100%')
-      Text('选择真实照片，写下第一眼、判断和卡点，生成一张干净的作品卡。')
+      Text('选择真实照片，写下第一眼落点、成立判断和卡点，生成一张干净、有秩序的摄影学习卡。')
         .fontSize(15)
         .fontColor(AppColors.secondaryText)
         .lineHeight(23)
@@ -100,19 +100,14 @@ struct HomePage {
 
       Row({ space: 8 }) {
         TagLabel({ label: '真实照片' })
-        TagLabel({ label: '自动版式', color: AppColors.secondaryText, tagBackground: '#F1F3F5' })
-        TagLabel({ label: '可导出', color: AppColors.secondaryText, tagBackground: '#F1F3F5' })
+        TagLabel({ label: '自动版式', color: AppColors.secondaryText, tagBackground: '#EEEAE2' })
+        TagLabel({ label: '可导出', color: AppColors.secondaryText, tagBackground: '#EEEAE2' })
       }
       .margin({ top: 14 })
       .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
-    .padding(20)
     .width('100%')
-    .borderRadius(8)
-    .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: AppColors.border })
-    .shadow({ radius: 16, color: '#12000000', offsetX: 0, offsetY: 6 })
   }
 
   build() {
@@ -131,12 +126,12 @@ struct HomePage {
 
         Column() {
           Row() {
-            Text('示例体验')
-              .fontSize(15)
+            Text('快速试试看')
+              .fontSize(14)
               .fontWeight(FontWeight.Medium)
               .fontColor(AppColors.text)
             Blank()
-            Text('不选照片也能试')
+            Text('示例照片')
               .fontSize(12)
               .fontColor(AppColors.mutedText)
           }
@@ -150,17 +145,17 @@ struct HomePage {
           .width('100%')
           .margin({ top: 10 })
         }
-        .padding(16)
+        .padding(14)
         .width('100%')
-        .borderRadius(8)
-        .backgroundColor(AppColors.surface)
+        .borderRadius(10)
+        .backgroundColor('#FFFEFC')
         .border({ width: 1, color: AppColors.border })
-        .margin({ top: 16 })
+        .margin({ top: 22 })
 
         Column() {
           Row() {
-            Text('最近记录')
-              .fontSize(20)
+            Text('最近复盘')
+              .fontSize(19)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.text)
             Blank()
@@ -175,7 +170,7 @@ struct HomePage {
           if (this.historyItems.length === 0) {
             EmptyState({
               title: '还没有复盘记录',
-              message: '选择一张照片完成第一张复盘后，这里会展示缩略图、方向、保存时间和导出状态。'
+              message: '选择一张照片完成第一张复盘后，这里会展示你的作品卡、方向、保存时间和导出状态。'
             })
               .margin({ top: 12 })
           } else {
@@ -194,9 +189,9 @@ struct HomePage {
           }
         }
         .width('100%')
-        .margin({ top: 28 })
+        .margin({ top: 30 })
       }
-      .padding(24)
+      .padding({ left: 22, right: 22, top: 28, bottom: 36 })
       .width('100%')
     }
     .width('100%')

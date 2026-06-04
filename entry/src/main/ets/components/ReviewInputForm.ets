@@ -1,3 +1,5 @@
+import { AppColors } from './AppDesign';
+
 @Component
 export struct ReviewInputForm {
   @Link title: string;
@@ -9,9 +11,9 @@ export struct ReviewInputForm {
   @Builder
   FieldLabel(label: string) {
     Text(label)
-      .fontSize(15)
+      .fontSize(14)
       .fontWeight(FontWeight.Medium)
-      .fontColor('#1F2329')
+      .fontColor(AppColors.text)
       .width('100%')
   }
 
@@ -19,24 +21,24 @@ export struct ReviewInputForm {
   FieldHint(text: string) {
     Text(text)
       .fontSize(12)
-      .fontColor('#8A919F')
+      .fontColor(AppColors.mutedText)
       .lineHeight(18)
       .width('100%')
   }
 
   build() {
-    Column({ space: 22 }) {
+    Column({ space: 20 }) {
       Column({ space: 9 }) {
         this.FieldLabel('标题')
         TextInput({ text: this.title, placeholder: '这张照片是否成立' })
-          .height(48)
+          .height(50)
           .borderRadius(8)
           .fontSize(16)
-          .fontColor('#1F2329')
+          .fontColor(AppColors.text)
           .placeholderColor('#9AA1AB')
-          .backgroundColor('#FFFFFF')
+          .backgroundColor(AppColors.surface)
           .padding({ left: 14, right: 14 })
-          .border({ width: 1, color: '#E6E9ED' })
+          .border({ width: 1, color: AppColors.border })
           .onFocus(() => {
             this.onFieldFocus('title');
           })
@@ -49,15 +51,15 @@ export struct ReviewInputForm {
       Column({ space: 9 }) {
         this.FieldLabel('第一眼落点')
         TextArea({ text: this.firstLook, placeholder: '我第一眼看到了什么？为什么？' })
-          .height(158)
+          .height(150)
           .borderRadius(8)
           .fontSize(16)
           .lineHeight(24)
-          .fontColor('#1F2329')
+          .fontColor(AppColors.text)
           .placeholderColor('#9AA1AB')
-          .backgroundColor('#FFFFFF')
+          .backgroundColor(AppColors.surface)
           .padding({ left: 14, right: 14, top: 12, bottom: 12 })
-          .border({ width: 1, color: '#E6E9ED' })
+          .border({ width: 1, color: AppColors.border })
           .onFocus(() => {
             this.onFieldFocus('firstLook');
           })
@@ -75,11 +77,11 @@ export struct ReviewInputForm {
           .borderRadius(8)
           .fontSize(16)
           .lineHeight(24)
-          .fontColor('#1F2329')
+          .fontColor(AppColors.text)
           .placeholderColor('#9AA1AB')
-          .backgroundColor('#FFFFFF')
+          .backgroundColor(AppColors.surface)
           .padding({ left: 14, right: 14, top: 12, bottom: 12 })
-          .border({ width: 1, color: '#E6E9ED' })
+          .border({ width: 1, color: AppColors.border })
           .onFocus(() => {
             this.onFieldFocus('judgement');
           })
@@ -93,15 +95,15 @@ export struct ReviewInputForm {
       Column({ space: 9 }) {
         this.FieldLabel('卡点')
         TextArea({ text: this.blocker, placeholder: '这张照片当前最大的问题是什么？' })
-          .height(190)
+          .height(210)
           .borderRadius(8)
           .fontSize(16)
           .lineHeight(24)
-          .fontColor('#1F2329')
+          .fontColor(AppColors.text)
           .placeholderColor('#9AA1AB')
-          .backgroundColor('#FFFFFF')
+          .backgroundColor(AppColors.surface)
           .padding({ left: 14, right: 14, top: 12, bottom: 12 })
-          .border({ width: 1, color: '#E6E9ED' })
+          .border({ width: 1, color: AppColors.border })
           .onFocus(() => {
             this.onFieldFocus('blocker');
           })

@@ -1,7 +1,8 @@
 import { createDefaultReviewCardDocument, ReviewCardDocument } from '../model/ReviewCardModel';
-import { resolveReviewCardTheme } from '../model/ReviewCardTheme';
-import { AppColors, InfoBlockCard } from './AppDesign';
-import { ReviewPhotoBlock } from './ReviewPhotoBlock';
+import { ReviewCardStyleTokens } from './ReviewCardStyleTokens';
+import { ReviewPhotoArea } from './ReviewPhotoArea';
+import { ReviewCardTitle } from './ReviewCardTitle';
+import { ReviewInfoGroup } from './ReviewInfoGroup';
 
 @Component
 export struct SquareReviewCard {
@@ -9,57 +10,40 @@ export struct SquareReviewCard {
 
   @Builder
   PhotoBlock() {
-    ReviewPhotoBlock({
+    ReviewPhotoArea({
       imageUri: this.document.imageUri,
       imageWidth: this.document.imageWidth,
       imageHeight: this.document.imageHeight,
-      aspectRatioValue: 1,
-      cornerRadius: 8
+      aspectRatioValue: 1
     })
   }
 
   build() {
     Column() {
       this.PhotoBlock()
-      Column({ space: 10 }) {
-        Text(this.document.content.title)
-          .fontSize(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).titleSize + 1)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.text)
-          .lineHeight(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).titleSize + 8)
-          .maxLines(2)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .width('100%')
-        InfoBlockCard({
-          label: '第一眼落点',
-          value: this.document.content.firstLook,
-          bodySize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).bodySize,
-          captionSize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).captionSize,
-          maxLines: 3
+      Column() {
+        ReviewCardTitle({ title: this.document.content.title })
+        ReviewInfoGroup({
+          firstLook: this.document.content.firstLook,
+          judgement: this.document.content.judgement,
+          blocker: this.document.content.blocker,
+          compact: true
         })
-        InfoBlockCard({
-          label: '是否成立',
-          value: this.document.content.judgement,
-          bodySize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).bodySize,
-          captionSize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).captionSize,
-          maxLines: 3
-        })
-        InfoBlockCard({
-          label: '卡点',
-          value: this.document.content.blocker,
-          bodySize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).bodySize,
-          captionSize: resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).captionSize,
-          maxLines: 4
-        })
+          .margin({ top: 14 })
       }
-      .padding({ top: 17 })
+      .padding({
+        left: ReviewCardStyleTokens.textInset,
+        right: ReviewCardStyleTokens.textInset,
+        top: 17,
+        bottom: 2
+      })
       .width('100%')
     }
-    .padding(14)
+    .padding(ReviewCardStyleTokens.cardPadding)
     .width('100%')
-    .borderRadius(10)
-    .backgroundColor(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).canvasColor)
-    .border({ width: 1, color: '#ECEFF2' })
-    .shadow({ radius: 22, color: '#1A000000', offsetX: 0, offsetY: 10 })
+    .borderRadius(ReviewCardStyleTokens.cardRadius)
+    .backgroundColor(ReviewCardStyleTokens.canvasColor)
+    .border({ width: 1, color: ReviewCardStyleTokens.hairlineColor })
+    .shadow({ radius: 22, color: ReviewCardStyleTokens.shadowColor, offsetX: 0, offsetY: 10 })
   }
 }

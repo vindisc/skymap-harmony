@@ -8,6 +8,7 @@ export struct ReviewPhotoBlock {
   @Prop aspectRatioValue: number = 1.6;
   @Prop compact: boolean = false;
   @Prop cornerRadius: number = 7;
+  @Prop fitMode: ImageFit = ImageFit.Cover;
   @State loadFailed: boolean = false;
 
   @Builder
@@ -25,7 +26,7 @@ export struct ReviewPhotoBlock {
     .justifyContent(FlexAlign.Center)
     .width('100%')
     .height('100%')
-    .backgroundColor('#DCE7E1')
+    .backgroundColor('#E9E5DC')
   }
 
   build() {
@@ -34,7 +35,7 @@ export struct ReviewPhotoBlock {
         Image(this.imageUri)
           .width('100%')
           .height('100%')
-          .objectFit(ImageFit.Cover)
+          .objectFit(this.fitMode)
           .onError(() => {
             this.loadFailed = true;
           })
@@ -46,6 +47,6 @@ export struct ReviewPhotoBlock {
     .aspectRatio(this.aspectRatioValue)
     .borderRadius(this.cornerRadius)
     .clip(true)
-    .backgroundColor('#DCE7E1')
+    .backgroundColor('#E9E5DC')
   }
 }
