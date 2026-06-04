@@ -116,32 +116,33 @@ func drawIcon(size: Int) throws -> CGImage {
     context.setFillColor(color(0x2D3D4D).cgColor)
     context.fillPath()
 
+    let indicatorCenterY: CGFloat = 718
     context.saveGState()
-    context.setShadow(offset: CGSize(width: 0, height: -s(5)), blur: s(6), color: color(0x1A2530, 0.18).cgColor)
-    context.addPath(roundedRect(rect(286, 707, 178, 21), radius: s(10.5)))
+    context.setShadow(offset: CGSize(width: 0, height: -s(5)), blur: s(6), color: color(0x1A2530, 0.16).cgColor)
+    context.addPath(roundedRect(rect(480, indicatorCenterY - 10.5, 142, 21), radius: s(10.5)))
     context.setFillColor(color(0x2D3D4D).cgColor)
     context.fillPath()
     context.restoreGState()
 
-    let blueCenter = point(760, 620)
+    let blueCenter = point(424, indicatorCenterY)
     context.saveGState()
-    context.setShadow(offset: CGSize(width: 0, height: -s(9)), blur: s(10), color: color(0x1E5DA8, 0.26).cgColor)
-    context.addEllipse(in: CGRect(x: blueCenter.x - s(52), y: blueCenter.y - s(52), width: s(104), height: s(104)))
+    context.setShadow(offset: CGSize(width: 0, height: -s(7)), blur: s(9), color: color(0x1E5DA8, 0.18).cgColor)
+    context.addEllipse(in: CGRect(x: blueCenter.x - s(42), y: blueCenter.y - s(42), width: s(84), height: s(84)))
     context.clip()
-    gradient(context, from: point(730, 598), to: point(842, 720), stops: [
-        ColorStop(position: 0, color: color(0x78B8FF)),
-        ColorStop(position: 0.58, color: color(0x4D9AF4)),
-        ColorStop(position: 1, color: color(0x327EDB))
+    gradient(context, from: point(398, 696), to: point(462, 758), stops: [
+        ColorStop(position: 0, color: color(0x6BA9F0)),
+        ColorStop(position: 0.58, color: color(0x438DE1)),
+        ColorStop(position: 1, color: color(0x2F73C7))
     ])
     context.restoreGState()
 
-    context.addEllipse(in: CGRect(x: blueCenter.x - s(46), y: blueCenter.y - s(46), width: s(92), height: s(92)))
-    context.setLineWidth(s(8))
-    context.setStrokeColor(color(0x2F82E1, 0.45).cgColor)
+    context.addEllipse(in: CGRect(x: blueCenter.x - s(37), y: blueCenter.y - s(37), width: s(74), height: s(74)))
+    context.setLineWidth(s(7))
+    context.setStrokeColor(color(0x2D72CC, 0.38).cgColor)
     context.strokePath()
 
-    context.addEllipse(in: rect(723, 584, 38, 30))
-    context.setFillColor(color(0xFFFFFF, 0.35).cgColor)
+    context.addEllipse(in: rect(410, 695, 28, 22))
+    context.setFillColor(color(0xFFFFFF, 0.28).cgColor)
     context.fillPath()
 
     guard let image = context.makeImage() else {

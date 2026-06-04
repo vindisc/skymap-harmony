@@ -14,10 +14,10 @@
       <stop stop-color="#405061"/>
       <stop offset="1" stop-color="#263341"/>
     </linearGradient>
-    <linearGradient id="blue" x1="730" y1="598" x2="842" y2="720" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#78B8FF"/>
-      <stop offset="0.58" stop-color="#4D9AF4"/>
-      <stop offset="1" stop-color="#327EDB"/>
+    <linearGradient id="blue" x1="398" y1="696" x2="462" y2="758" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6BA9F0"/>
+      <stop offset="0.58" stop-color="#438DE1"/>
+      <stop offset="1" stop-color="#2F73C7"/>
     </linearGradient>
     <filter id="baseShadow" x="-80" y="-40" width="1184" height="1120" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#182231" flood-opacity="0.18"/>
@@ -27,11 +27,11 @@
       <feDropShadow dx="0" dy="13" stdDeviation="16" flood-color="#1A2530" flood-opacity="0.18"/>
       <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#FFFFFF" flood-opacity="0.65"/>
     </filter>
-    <filter id="softLineShadow" x="259" y="701" width="234" height="56" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#1A2530" flood-opacity="0.18"/>
+    <filter id="softLineShadow" x="456" y="700" width="190" height="56" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#1A2530" flood-opacity="0.16"/>
     </filter>
-    <filter id="blueShadow" x="684" y="540" width="202" height="207" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#1E5DA8" flood-opacity="0.26"/>
+    <filter id="blueShadow" x="360" y="665" width="130" height="128" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1E5DA8" flood-opacity="0.18"/>
       <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#FFFFFF" flood-opacity="0.55"/>
     </filter>
   </defs>
@@ -49,12 +49,12 @@
   </g>
 
   <g filter="url(#softLineShadow)">
-    <rect x="286" y="707" width="178" height="21" rx="10.5" fill="#2D3D4D"/>
+    <rect x="480" y="707.5" width="142" height="21" rx="10.5" fill="#2D3D4D"/>
   </g>
 
   <g filter="url(#blueShadow)">
-    <circle cx="760" cy="620" r="52" fill="url(#blue)"/>
-    <circle cx="760" cy="620" r="46" stroke="#2F82E1" stroke-width="8" stroke-opacity="0.45"/>
-    <ellipse cx="742" cy="599" rx="19" ry="15" fill="#FFFFFF" fill-opacity="0.35"/>
+    <circle cx="424" cy="718" r="42" fill="url(#blue)"/>
+    <circle cx="424" cy="718" r="37" stroke="#2D72CC" stroke-width="7" stroke-opacity="0.38"/>
+    <ellipse cx="424" cy="706" rx="14" ry="11" fill="#FFFFFF" fill-opacity="0.28"/>
   </g>
 </svg>
