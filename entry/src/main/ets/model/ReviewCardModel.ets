@@ -61,7 +61,7 @@ export function createDefaultReviewCardDocument(): ReviewCardDocument {
     imageHeight: 1000,
     content: createDefaultReviewContent(),
     config: {
-      templateId: 'review-card-basic',
+      templateId: 'review_card',
       layoutMode: ReviewCardLayoutMode.AUTO,
       background: ReviewCardBackground.WHITE,
       textSize: ReviewCardTextSize.STANDARD
@@ -93,4 +93,3 @@ export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCar
     updatedAt: document.updatedAt
   };
 }
-

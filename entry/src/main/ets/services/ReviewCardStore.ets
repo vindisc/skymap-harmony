@@ -10,10 +10,14 @@ export class ReviewCardStore {
 
   static createDraft(kind: SampleImageKind): ReviewCardDocument {
     const sample = getSampleImage(kind);
+    return ReviewCardStore.createPhotoDraft(sample.imageUri, sample.imageWidth, sample.imageHeight);
+  }
+
+  static createPhotoDraft(imageUri: string, imageWidth: number, imageHeight: number): ReviewCardDocument {
     const draft = createDefaultReviewCardDocument();
-    draft.imageUri = sample.imageUri;
-    draft.imageWidth = sample.imageWidth;
-    draft.imageHeight = sample.imageHeight;
+    draft.imageUri = imageUri;
+    draft.imageWidth = imageWidth;
+    draft.imageHeight = imageHeight;
     draft.updatedAt = Date.now();
     ReviewCardStore.currentDocument = draft;
     return cloneReviewCardDocument(draft);
@@ -29,4 +33,3 @@ export class ReviewCardStore {
     ReviewCardStore.currentDocument = next;
   }
 }
-

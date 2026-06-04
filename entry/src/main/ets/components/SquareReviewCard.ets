@@ -1,6 +1,6 @@
 import { createDefaultReviewCardDocument, ReviewCardDocument } from '../model/ReviewCardModel';
 import { resolveReviewCardTheme, ReviewCardTheme } from '../model/ReviewCardTheme';
-import { getImageRatioLabel } from '../utils/ImageLayoutUtils';
+import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 @Component
 export struct SquareReviewCard {
@@ -8,21 +8,12 @@ export struct SquareReviewCard {
 
   @Builder
   PhotoBlock() {
-    Column() {
-      Text(getImageRatioLabel(this.document.imageWidth, this.document.imageHeight))
-        .fontSize(18)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#1F2329')
-      Text(`${this.document.imageWidth} x ${this.document.imageHeight}`)
-        .fontSize(12)
-        .fontColor('#68707D')
-        .margin({ top: 6 })
-    }
-    .justifyContent(FlexAlign.Center)
-    .width('100%')
-    .aspectRatio(1)
-    .borderRadius(6)
-    .backgroundColor('#DCE7E1')
+    ReviewPhotoBlock({
+      imageUri: this.document.imageUri,
+      imageWidth: this.document.imageWidth,
+      imageHeight: this.document.imageHeight,
+      aspectRatioValue: 1
+    })
   }
 
   @Builder
@@ -68,4 +59,3 @@ export struct SquareReviewCard {
     .shadow({ radius: 14, color: '#1A000000', offsetX: 0, offsetY: 6 })
   }
 }
-

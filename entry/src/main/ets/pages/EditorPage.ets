@@ -6,6 +6,7 @@ import {
   ReviewCardDocument
 } from '../model/ReviewCardModel';
 import { ReviewInputForm } from '../components/ReviewInputForm';
+import { ReviewPhotoBlock } from '../components/ReviewPhotoBlock';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { getImageRatioLabel } from '../utils/ImageLayoutUtils';
 
@@ -17,9 +18,15 @@ struct EditorPage {
   @State firstLook: string = '';
   @State judgement: string = '';
   @State blocker: string = '';
+  @State imageUri: string = '';
+  @State imageWidth: number = 1600;
+  @State imageHeight: number = 1000;
 
   aboutToAppear(): void {
     this.document = ReviewCardStore.getCurrentDocument();
+    this.imageUri = this.document.imageUri;
+    this.imageWidth = this.document.imageWidth;
+    this.imageHeight = this.document.imageHeight;
     this.title = this.document.content.title;
     this.firstLook = this.document.content.firstLook;
     this.judgement = this.document.content.judgement;
@@ -61,8 +68,37 @@ struct EditorPage {
           Text(getImageRatioLabel(this.document.imageWidth, this.document.imageHeight))
             .fontSize(14)
             .fontColor('#68707D')
-            .margin({ top: 8, bottom: 20 })
+            .margin({ top: 8 })
             .width('100%')
+
+          Row({ space: 12 }) {
+            ReviewPhotoBlock({
+              imageUri: this.imageUri,
+              imageWidth: this.imageWidth,
+              imageHeight: this.imageHeight,
+              aspectRatioValue: 1.35,
+              compact: true
+            })
+            .width(112)
+            Column() {
+              Text(getImageRatioLabel(this.imageWidth, this.imageHeight))
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#1F2329')
+              Text(`${this.imageWidth} x ${this.imageHeight}`)
+                .fontSize(13)
+                .fontColor('#68707D')
+                .margin({ top: 6 })
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+          }
+          .alignItems(VerticalAlign.Center)
+          .padding(12)
+          .width('100%')
+          .borderRadius(8)
+          .backgroundColor('#FFFFFF')
+          .margin({ top: 14, bottom: 22 })
 
           ReviewInputForm({
             title: $title,
@@ -96,4 +132,3 @@ struct EditorPage {
     .backgroundColor('#F6F7F9')
   }
 }
-

@@ -32,18 +32,25 @@ export function getSampleImage(kind: SampleImageKind): SampleImageInfo {
 
 export function getImageRatioLabel(width: number, height: number): string {
   if (height <= 0) {
-    return '示例照片';
+    return '照片';
   }
 
   const ratio: number = width / height;
   if (ratio >= 1.15) {
-    return '示例横图';
+    return '横图';
   }
 
   if (ratio <= 0.85) {
-    return '示例竖图';
+    return '竖图';
   }
 
-  return '示例方图';
+  return '方图';
 }
 
+export function isSampleImageUri(imageUri: string): boolean {
+  return imageUri.startsWith('sample://');
+}
+
+export function hasDisplayableImageUri(imageUri: string): boolean {
+  return imageUri.length > 0 && !isSampleImageUri(imageUri);
+}
