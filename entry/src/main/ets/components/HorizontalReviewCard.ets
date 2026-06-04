@@ -23,16 +23,18 @@ export struct HorizontalReviewCard {
         .fontSize(theme.captionSize)
         .fontColor(theme.mutedTextColor)
         .fontWeight(FontWeight.Medium)
+        .width('100%')
       Text(value.length > 0 ? value : '待填写')
         .fontSize(theme.bodySize)
         .fontColor(theme.textColor)
         .lineHeight(theme.bodySize + 5)
         .margin({ top: 8 })
+        .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
-    .padding(12)
+    .padding(13)
     .layoutWeight(1)
-    .constraintSize({ minHeight: 96 })
+    .constraintSize({ minHeight: 108 })
     .borderRadius(6)
     .backgroundColor(theme.panelColor)
   }
@@ -45,6 +47,7 @@ export struct HorizontalReviewCard {
           .fontSize(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).titleSize)
           .fontWeight(FontWeight.Bold)
           .fontColor('#1F2329')
+          .lineHeight(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).titleSize + 6)
           .width('100%')
         Row({ space: 8 }) {
           this.InfoColumn('第一眼落点', this.document.content.firstLook, resolveReviewCardTheme(this.document.config.background, this.document.config.textSize))
@@ -52,15 +55,15 @@ export struct HorizontalReviewCard {
           this.InfoColumn('卡点', this.document.content.blocker, resolveReviewCardTheme(this.document.config.background, this.document.config.textSize))
         }
         .width('100%')
-        .margin({ top: 12 })
+        .margin({ top: 14 })
       }
-      .padding(16)
+      .padding({ left: 18, right: 18, top: 18, bottom: 18 })
       .width('100%')
     }
     .padding(14)
     .width('100%')
-    .borderRadius(8)
+    .borderRadius(10)
     .backgroundColor(resolveReviewCardTheme(this.document.config.background, this.document.config.textSize).canvasColor)
-    .shadow({ radius: 14, color: '#1A000000', offsetX: 0, offsetY: 6 })
+    .shadow({ radius: 18, color: '#1F000000', offsetX: 0, offsetY: 8 })
   }
 }

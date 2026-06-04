@@ -8,7 +8,7 @@ export struct ReviewInputForm {
   @Builder
   FieldLabel(label: string) {
     Text(label)
-      .fontSize(14)
+      .fontSize(15)
       .fontWeight(FontWeight.Medium)
       .fontColor('#1F2329')
       .width('100%')
@@ -21,6 +21,9 @@ export struct ReviewInputForm {
         TextInput({ text: this.title, placeholder: '这张照片是否成立' })
           .height(44)
           .borderRadius(6)
+          .fontSize(16)
+          .fontColor('#1F2329')
+          .placeholderColor('#9AA1AB')
           .backgroundColor('#FFFFFF')
           .onChange((value: string) => {
             this.title = value;
@@ -31,8 +34,11 @@ export struct ReviewInputForm {
       Column({ space: 8 }) {
         this.FieldLabel('第一眼落点')
         TextArea({ text: this.firstLook, placeholder: '我第一眼看到了什么？为什么？' })
-          .height(112)
+          .height(128)
           .borderRadius(6)
+          .fontSize(15)
+          .fontColor('#1F2329')
+          .placeholderColor('#9AA1AB')
           .backgroundColor('#FFFFFF')
           .onChange((value: string) => {
             this.firstLook = value;
@@ -43,8 +49,11 @@ export struct ReviewInputForm {
       Column({ space: 8 }) {
         this.FieldLabel('是否成立')
         TextArea({ text: this.judgement, placeholder: '成立 / 不确定 / 不成立，并说明原因' })
-          .height(112)
+          .height(128)
           .borderRadius(6)
+          .fontSize(15)
+          .fontColor('#1F2329')
+          .placeholderColor('#9AA1AB')
           .backgroundColor('#FFFFFF')
           .onChange((value: string) => {
             this.judgement = value;
@@ -55,8 +64,11 @@ export struct ReviewInputForm {
       Column({ space: 8 }) {
         this.FieldLabel('卡点')
         TextArea({ text: this.blocker, placeholder: '这张照片当前最大的问题是什么？' })
-          .height(112)
+          .height(128)
           .borderRadius(6)
+          .fontSize(15)
+          .fontColor('#1F2329')
+          .placeholderColor('#9AA1AB')
           .backgroundColor('#FFFFFF')
           .onChange((value: string) => {
             this.blocker = value;
@@ -67,4 +79,3 @@ export struct ReviewInputForm {
     .width('100%')
   }
 }
-

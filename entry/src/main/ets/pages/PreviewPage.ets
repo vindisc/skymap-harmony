@@ -1,6 +1,7 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
+import { EDITOR_PAGE } from '../app/AppRouter';
 import {
   createDefaultReviewCardDocument,
   ReviewCardDocument
@@ -26,8 +27,9 @@ struct PreviewPage {
   }
 
   private async saveDraft(): Promise<void> {
-    ReviewCardStore.saveCurrentDocument(this.document);
+    this.document = ReviewCardStore.saveCurrentDocument(this.document);
     await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+    this.exportMessage = '复盘记录已保存，首页最近记录会同步更新。';
     promptAction.showToast({ message: '已保存复盘记录' });
   }
 
@@ -48,16 +50,31 @@ struct PreviewPage {
   build() {
     Column() {
       Row() {
-        Button('返回编辑')
+        Column() {
+          Text('复盘卡预览')
+            .fontSize(22)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#1F2329')
+          Text('确认版式后保存记录或导出图片')
+            .fontSize(13)
+            .fontColor('#68707D')
+            .margin({ top: 4 })
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+
+        Button('编辑')
           .height(36)
           .borderRadius(6)
           .fontSize(14)
+          .fontColor('#1F2329')
+          .backgroundColor('#FFFFFF')
           .onClick(() => {
-            router.back();
+            router.pushUrl({ url: EDITOR_PAGE });
           })
-        Blank()
       }
-      .padding({ left: 16, right: 16, top: 16 })
+      .alignItems(VerticalAlign.Center)
+      .padding({ left: 20, right: 20, top: 18, bottom: 8 })
       .width('100%')
 
       Scroll() {
@@ -65,17 +82,28 @@ struct PreviewPage {
           ReviewCardPreview({ document: this.document })
             .id(REVIEW_CARD_EXPORT_ID)
         }
-        .padding(20)
+        .alignItems(HorizontalAlign.Center)
+        .padding({ left: 18, right: 18, top: 14, bottom: 24 })
         .width('100%')
       }
       .layoutWeight(1)
 
       Row({ space: 10 }) {
-        Button('保存草稿')
+        Button('编辑')
           .height(46)
           .layoutWeight(1)
           .borderRadius(6)
-          .fontSize(15)
+          .fontSize(14)
+          .fontColor('#1F2329')
+          .backgroundColor('#EEF2F5')
+          .onClick(() => {
+            router.pushUrl({ url: EDITOR_PAGE });
+          })
+        Button('保存')
+          .height(46)
+          .layoutWeight(1)
+          .borderRadius(6)
+          .fontSize(14)
           .onClick(() => {
             this.saveDraft();
           })
@@ -83,14 +111,15 @@ struct PreviewPage {
           .height(46)
           .layoutWeight(1)
           .borderRadius(6)
-          .fontSize(15)
+          .fontSize(14)
           .onClick(() => {
             this.exportImage();
           })
       }
-      .padding(16)
+      .padding({ left: 16, right: 16, top: 12, bottom: 14 })
       .width('100%')
       .backgroundColor('#FFFFFF')
+      .shadow({ radius: 12, color: '#14000000', offsetX: 0, offsetY: -4 })
       if (this.exportMessage.length > 0) {
         Text(this.exportMessage)
           .fontSize(12)

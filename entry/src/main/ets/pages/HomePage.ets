@@ -1,12 +1,11 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
-import { EDITOR_PAGE } from '../app/AppRouter';
+import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { getImageRatioLabel } from '../utils/ImageLayoutUtils';
-import { SampleImageKind } from '../utils/ImageLayoutUtils';
+import { formatReviewTime, getImageRatioLabel, SampleImageKind } from '../utils/ImageLayoutUtils';
 import { ReviewPhotoBlock } from '../components/ReviewPhotoBlock';
 
 @Entry
@@ -35,7 +34,7 @@ struct HomePage {
 
   private openHistory(document: ReviewCardDocument): void {
     ReviewCardStore.setCurrentDocument(document);
-    router.pushUrl({ url: EDITOR_PAGE });
+    router.pushUrl({ url: PREVIEW_PAGE });
   }
 
   private async startPhotoDraft(): Promise<void> {
@@ -59,14 +58,13 @@ struct HomePage {
   }
 
   @Builder
-  SampleButton(label: string, kind: SampleImageKind) {
+  SampleChip(label: string, kind: SampleImageKind) {
     Button(label)
-      .height(40)
-      .width('100%')
+      .height(34)
       .borderRadius(6)
-      .fontSize(14)
-      .fontColor('#1F2329')
-      .backgroundColor('#FFFFFF')
+      .fontSize(13)
+      .fontColor('#46505C')
+      .backgroundColor('#F1F3F5')
       .onClick(() => {
         this.startDraft(kind);
       })
@@ -82,7 +80,7 @@ struct HomePage {
         aspectRatioValue: 1.35,
         compact: true
       })
-      .width(78)
+        .width(86)
 
       Column() {
         Text(item.document.content.title.length > 0 ? item.document.content.title : '未命名复盘')
@@ -91,29 +89,48 @@ struct HomePage {
           .fontColor('#1F2329')
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
-        Text(new Date(item.document.updatedAt).toLocaleString())
-          .fontSize(12)
-          .fontColor('#68707D')
-          .margin({ top: 5 })
-        if (item.exportedPath.length > 0) {
-          Text('已导出')
+
+        Row({ space: 6 }) {
+          Text(getImageRatioLabel(item.document.imageWidth, item.document.imageHeight))
             .fontSize(11)
             .fontColor('#2563EB')
-            .margin({ top: 5 })
+            .padding({ left: 7, right: 7, top: 3, bottom: 3 })
+            .borderRadius(4)
+            .backgroundColor('#EAF2FF')
+          Text(formatReviewTime(item.document.updatedAt))
+            .fontSize(12)
+            .fontColor('#68707D')
+          if (item.exportedPath.length > 0) {
+            Text('已导出')
+              .fontSize(11)
+              .fontColor('#2E7D5B')
+              .padding({ left: 7, right: 7, top: 3, bottom: 3 })
+              .borderRadius(4)
+              .backgroundColor('#E9F6F0')
+          }
         }
+        .margin({ top: 8 })
+        .width('100%')
+
+        Text('点击查看复盘卡')
+          .fontSize(12)
+          .fontColor('#8A919F')
+          .margin({ top: 7 })
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
     }
-    .padding({ top: 10, bottom: 10 })
+    .padding({ top: 12, bottom: 12, left: 12, right: 12 })
     .width('100%')
+    .borderRadius(8)
+    .backgroundColor('#FFFFFF')
     .onClick(() => {
       this.openHistory(item.document);
     })
   }
 
   build() {
-    Column() {
+    Scroll() {
       Column() {
         Text('摄影复盘卡')
           .fontSize(30)
@@ -147,15 +164,22 @@ struct HomePage {
         }
 
         Column() {
-          Text('开发调试')
-            .fontSize(15)
-            .fontWeight(FontWeight.Medium)
-            .fontColor('#1F2329')
-            .width('100%')
-          Column({ space: 8 }) {
-            this.SampleButton('使用示例横图', 'horizontal')
-            this.SampleButton('使用示例竖图', 'vertical')
-            this.SampleButton('使用示例方图', 'square')
+          Row() {
+            Text('示例体验')
+              .fontSize(15)
+              .fontWeight(FontWeight.Medium)
+              .fontColor('#1F2329')
+            Blank()
+            Text('快速看看不同版式')
+              .fontSize(12)
+              .fontColor('#8A919F')
+          }
+          .width('100%')
+
+          Row({ space: 8 }) {
+            this.SampleChip('横图', 'horizontal')
+            this.SampleChip('竖图', 'vertical')
+            this.SampleChip('方图', 'square')
           }
           .width('100%')
           .margin({ top: 10 })
@@ -163,32 +187,54 @@ struct HomePage {
         .padding(14)
         .width('100%')
         .borderRadius(8)
-        .backgroundColor('#EEF2F5')
+        .backgroundColor('#FFFFFF')
         .margin({ top: 18 })
 
         Column() {
-          Text('最近记录')
-            .fontSize(18)
-            .fontWeight(FontWeight.Medium)
-            .fontColor('#1F2329')
-            .width('100%')
+          Row() {
+            Text('最近记录')
+              .fontSize(20)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#1F2329')
+            Blank()
+            if (this.historyItems.length > 0) {
+              Text(`${this.historyItems.length} 条`)
+                .fontSize(12)
+                .fontColor('#8A919F')
+            }
+          }
+          .width('100%')
+
           if (this.historyItems.length === 0) {
-            Text('还没有复盘记录。选择一张照片，生成第一张复盘卡。')
-              .fontSize(14)
-              .fontColor('#68707D')
-              .lineHeight(21)
-              .margin({ top: 10 })
-              .width('100%')
+            Column() {
+              Text('还没有复盘记录')
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#1F2329')
+              Text('选择一张照片，写下第一眼、判断和卡点，保存后会出现在这里。')
+                .fontSize(14)
+                .fontColor('#68707D')
+                .lineHeight(21)
+                .margin({ top: 8 })
+                .width('100%')
+            }
+            .alignItems(HorizontalAlign.Start)
+            .padding(18)
+            .width('100%')
+            .borderRadius(8)
+            .backgroundColor('#FFFFFF')
+            .margin({ top: 12 })
           } else {
-            ForEach(this.historyItems, (item: ReviewCardHistoryItem) => {
-              this.HistoryRow(item)
-            }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
+            Column({ space: 10 }) {
+              ForEach(this.historyItems, (item: ReviewCardHistoryItem) => {
+                this.HistoryRow(item)
+              }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
+            }
+            .width('100%')
+            .margin({ top: 12 })
           }
         }
-        .padding(16)
         .width('100%')
-        .borderRadius(8)
-        .backgroundColor('#FFFFFF')
         .margin({ top: 28 })
       }
       .padding(24)

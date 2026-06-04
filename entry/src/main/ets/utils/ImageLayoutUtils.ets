@@ -47,6 +47,15 @@ export function getImageRatioLabel(width: number, height: number): string {
   return '方图';
 }
 
+export function formatReviewTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  const hour = `${date.getHours()}`.padStart(2, '0');
+  const minute = `${date.getMinutes()}`.padStart(2, '0');
+  return `${month}-${day} ${hour}:${minute}`;
+}
+
 export function isSampleImageUri(imageUri: string): boolean {
   return imageUri.startsWith('sample://');
 }

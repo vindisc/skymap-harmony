@@ -39,12 +39,21 @@ struct EditorPage {
     this.blocker = this.document.content.blocker;
   }
 
-  private async saveAndPreview(): Promise<void> {
+  aboutToDisappear(): void {
+    this.syncDocumentFromInput();
+    ReviewCardStore.saveCurrentDocument(this.document);
+  }
+
+  private syncDocumentFromInput(): void {
     this.document.content.title = this.title.length > 0 ? this.title : DEFAULT_REVIEW_TITLE;
     this.document.content.firstLook = this.firstLook;
     this.document.content.judgement = this.judgement;
     this.document.content.blocker = this.blocker;
-    ReviewCardStore.saveCurrentDocument(this.document);
+  }
+
+  private async saveAndPreview(): Promise<void> {
+    this.syncDocumentFromInput();
+    this.document = ReviewCardStore.saveCurrentDocument(this.document);
     await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
     router.pushUrl({ url: PREVIEW_PAGE });
   }
@@ -65,16 +74,17 @@ struct EditorPage {
           }
           .width('100%')
 
-          Text('填写复盘内容')
-            .fontSize(24)
+          Text('填写复盘')
+            .fontSize(26)
             .fontWeight(FontWeight.Bold)
             .fontColor('#1F2329')
             .margin({ top: 18 })
             .width('100%')
 
-          Text(getImageRatioLabel(this.document.imageWidth, this.document.imageHeight))
-            .fontSize(14)
+          Text('先写下第一眼，再判断照片是否成立。')
+            .fontSize(15)
             .fontColor('#68707D')
+            .lineHeight(22)
             .margin({ top: 8 })
             .width('100%')
 
@@ -96,6 +106,10 @@ struct EditorPage {
                 .fontSize(13)
                 .fontColor('#68707D')
                 .margin({ top: 6 })
+              Text('照片将自动匹配复盘卡版式')
+                .fontSize(12)
+                .fontColor('#8A919F')
+                .margin({ top: 8 })
             }
             .alignItems(HorizontalAlign.Start)
             .layoutWeight(1)
@@ -105,6 +119,7 @@ struct EditorPage {
           .width('100%')
           .borderRadius(8)
           .backgroundColor('#FFFFFF')
+          .shadow({ radius: 10, color: '#10000000', offsetX: 0, offsetY: 4 })
           .margin({ top: 14, bottom: 22 })
 
           ReviewInputForm({
@@ -130,9 +145,10 @@ struct EditorPage {
             this.saveAndPreview();
           })
       }
-      .padding(16)
+      .padding({ left: 16, right: 16, top: 12, bottom: 16 })
       .width('100%')
       .backgroundColor('#FFFFFF')
+      .shadow({ radius: 12, color: '#14000000', offsetX: 0, offsetY: -4 })
     }
     .width('100%')
     .height('100%')
