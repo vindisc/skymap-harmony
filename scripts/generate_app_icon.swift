@@ -85,63 +85,63 @@ func drawIcon(size: Int) throws -> CGImage {
 
     context.saveGState()
     context.setShadow(offset: CGSize(width: 0, height: -s(13)), blur: s(16), color: color(0x1A2530, 0.18).cgColor)
-    context.addPath(roundedRect(rect(282, 266, 460, 360), radius: s(52)))
+    context.addPath(roundedRect(rect(259, 248, 506, 396), radius: s(57)))
     context.clip()
-    gradient(context, from: point(323, 268), to: point(698, 682), stops: [
+    gradient(context, from: point(304, 250), to: point(717, 706), stops: [
         ColorStop(position: 0, color: color(0x405061)),
         ColorStop(position: 1, color: color(0x263341))
     ])
     context.restoreGState()
 
     context.saveGState()
-    context.addPath(roundedRect(rect(318, 306, 388, 282), radius: s(34)))
+    context.addPath(roundedRect(rect(299, 292, 427, 310), radius: s(37)))
     context.clip()
-    gradient(context, from: point(308, 263), to: point(718, 671), stops: [
+    gradient(context, from: point(286, 246), to: point(737, 695), stops: [
         ColorStop(position: 0, color: color(0xFFFFFF)),
         ColorStop(position: 0.72, color: color(0xFFFDF8)),
         ColorStop(position: 1, color: color(0xF3F0E8))
     ])
     context.restoreGState()
 
-    context.addPath(roundedRect(rect(367, 356, 290, 190), radius: s(24)))
-    context.setLineWidth(s(27))
+    context.addPath(roundedRect(rect(352.5, 346.5, 319, 209), radius: s(26)))
+    context.setLineWidth(s(30))
     context.setStrokeColor(color(0x2F4051).cgColor)
     context.strokePath()
 
-    context.addPath(roundedRect(rect(397, 385, 230, 131), radius: s(11)))
+    context.addPath(roundedRect(rect(385.5, 378.5, 253, 144), radius: s(12)))
     context.setFillColor(color(0xFFFDF8).cgColor)
     context.fillPath()
 
-    context.addPath(roundedRect(rect(426, 482, 170, 18), radius: s(9)))
+    context.addPath(roundedRect(rect(418.5, 485, 187, 20), radius: s(10)))
     context.setFillColor(color(0x2D3D4D).cgColor)
     context.fillPath()
 
-    let indicatorCenterY: CGFloat = 718
+    let indicatorCenterY: CGFloat = 734
     context.saveGState()
     context.setShadow(offset: CGSize(width: 0, height: -s(5)), blur: s(6), color: color(0x1A2530, 0.16).cgColor)
-    context.addPath(roundedRect(rect(480, indicatorCenterY - 10.5, 142, 21), radius: s(10.5)))
+    context.addPath(roundedRect(rect(504, indicatorCenterY - 10, 168, 20), radius: s(10)))
     context.setFillColor(color(0x2D3D4D).cgColor)
     context.fillPath()
     context.restoreGState()
 
-    let blueCenter = point(424, indicatorCenterY)
+    let blueCenter = point(392, indicatorCenterY)
     context.saveGState()
     context.setShadow(offset: CGSize(width: 0, height: -s(7)), blur: s(9), color: color(0x1E5DA8, 0.18).cgColor)
-    context.addEllipse(in: CGRect(x: blueCenter.x - s(42), y: blueCenter.y - s(42), width: s(84), height: s(84)))
+    context.addEllipse(in: CGRect(x: blueCenter.x - s(48), y: blueCenter.y - s(48), width: s(96), height: s(96)))
     context.clip()
-    gradient(context, from: point(398, 696), to: point(462, 758), stops: [
-        ColorStop(position: 0, color: color(0x6BA9F0)),
-        ColorStop(position: 0.58, color: color(0x438DE1)),
-        ColorStop(position: 1, color: color(0x2F73C7))
+    gradient(context, from: point(362, 708), to: point(430, 778), stops: [
+        ColorStop(position: 0, color: color(0x5FA0E8)),
+        ColorStop(position: 0.58, color: color(0x3F86D6)),
+        ColorStop(position: 1, color: color(0x2B6FBE))
     ])
     context.restoreGState()
 
-    context.addEllipse(in: CGRect(x: blueCenter.x - s(37), y: blueCenter.y - s(37), width: s(74), height: s(74)))
+    context.addEllipse(in: CGRect(x: blueCenter.x - s(42), y: blueCenter.y - s(42), width: s(84), height: s(84)))
     context.setLineWidth(s(7))
     context.setStrokeColor(color(0x2D72CC, 0.38).cgColor)
     context.strokePath()
 
-    context.addEllipse(in: rect(410, 695, 28, 22))
+    context.addEllipse(in: rect(376, 708, 32, 25))
     context.setFillColor(color(0xFFFFFF, 0.28).cgColor)
     context.fillPath()
 

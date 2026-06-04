@@ -5,32 +5,32 @@
       <stop offset="0.58" stop-color="#F8F6F0"/>
       <stop offset="1" stop-color="#ECEFF3"/>
     </linearGradient>
-    <linearGradient id="paper" x1="308" y1="263" x2="718" y2="671" gradientUnits="userSpaceOnUse">
+    <linearGradient id="paper" x1="286" y1="246" x2="737" y2="695" gradientUnits="userSpaceOnUse">
       <stop stop-color="#FFFFFF"/>
       <stop offset="0.72" stop-color="#FFFDF8"/>
       <stop offset="1" stop-color="#F3F0E8"/>
     </linearGradient>
-    <linearGradient id="ink" x1="323" y1="268" x2="698" y2="682" gradientUnits="userSpaceOnUse">
+    <linearGradient id="ink" x1="304" y1="250" x2="717" y2="706" gradientUnits="userSpaceOnUse">
       <stop stop-color="#405061"/>
       <stop offset="1" stop-color="#263341"/>
     </linearGradient>
-    <linearGradient id="blue" x1="398" y1="696" x2="462" y2="758" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#6BA9F0"/>
-      <stop offset="0.58" stop-color="#438DE1"/>
-      <stop offset="1" stop-color="#2F73C7"/>
+    <linearGradient id="blue" x1="362" y1="708" x2="430" y2="778" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5FA0E8"/>
+      <stop offset="0.58" stop-color="#3F86D6"/>
+      <stop offset="1" stop-color="#2B6FBE"/>
     </linearGradient>
     <filter id="baseShadow" x="-80" y="-40" width="1184" height="1120" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#182231" flood-opacity="0.18"/>
       <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#FFFFFF" flood-opacity="0.9"/>
     </filter>
-    <filter id="frameShadow" x="246" y="226" width="546" height="490" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="frameShadow" x="220" y="206" width="584" height="530" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="13" stdDeviation="16" flood-color="#1A2530" flood-opacity="0.18"/>
       <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#FFFFFF" flood-opacity="0.65"/>
     </filter>
-    <filter id="softLineShadow" x="456" y="700" width="190" height="56" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="softLineShadow" x="480" y="706" width="216" height="56" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#1A2530" flood-opacity="0.16"/>
     </filter>
-    <filter id="blueShadow" x="360" y="665" width="130" height="128" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="blueShadow" x="326" y="668" width="132" height="132" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1E5DA8" flood-opacity="0.18"/>
       <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#FFFFFF" flood-opacity="0.55"/>
     </filter>
@@ -41,20 +41,20 @@
   <rect x="92" y="82" width="840" height="820" rx="174" stroke="#D8D5CC" stroke-opacity="0.34" stroke-width="10"/>
 
   <g filter="url(#frameShadow)">
-    <rect x="282" y="266" width="460" height="360" rx="52" fill="url(#ink)"/>
-    <rect x="318" y="306" width="388" height="282" rx="34" fill="url(#paper)"/>
-    <rect x="367" y="356" width="290" height="190" rx="24" stroke="#2F4051" stroke-width="27"/>
-    <rect x="397" y="385" width="230" height="131" rx="11" fill="#FFFDF8"/>
-    <rect x="426" y="482" width="170" height="18" rx="9" fill="#2D3D4D"/>
+    <rect x="259" y="248" width="506" height="396" rx="57" fill="url(#ink)"/>
+    <rect x="299" y="292" width="427" height="310" rx="37" fill="url(#paper)"/>
+    <rect x="352.5" y="346.5" width="319" height="209" rx="26" stroke="#2F4051" stroke-width="30"/>
+    <rect x="385.5" y="378.5" width="253" height="144" rx="12" fill="#FFFDF8"/>
+    <rect x="418.5" y="485" width="187" height="20" rx="10" fill="#2D3D4D"/>
   </g>
 
   <g filter="url(#softLineShadow)">
-    <rect x="480" y="707.5" width="142" height="21" rx="10.5" fill="#2D3D4D"/>
+    <rect x="504" y="724" width="168" height="20" rx="10" fill="#2D3D4D"/>
   </g>
 
   <g filter="url(#blueShadow)">
-    <circle cx="424" cy="718" r="42" fill="url(#blue)"/>
-    <circle cx="424" cy="718" r="37" stroke="#2D72CC" stroke-width="7" stroke-opacity="0.38"/>
-    <ellipse cx="424" cy="706" rx="14" ry="11" fill="#FFFFFF" fill-opacity="0.28"/>
+    <circle cx="392" cy="734" r="48" fill="url(#blue)"/>
+    <circle cx="392" cy="734" r="42" stroke="#2D72CC" stroke-width="7" stroke-opacity="0.38"/>
+    <ellipse cx="392" cy="720.5" rx="16" ry="12.5" fill="#FFFFFF" fill-opacity="0.28"/>
   </g>
 </svg>
