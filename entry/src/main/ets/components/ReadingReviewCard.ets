@@ -43,11 +43,11 @@ export struct ReadingReviewCard {
   }
 
   private getTitleSize(): number {
-    return this.isExportMode() ? 17 : ReviewCardStyleTokens.titleSize;
+    return this.isExportMode() ? 15 : 18;
   }
 
   private getTitleLineHeight(): number {
-    return this.isExportMode() ? 23 : ReviewCardStyleTokens.titleLineHeight;
+    return this.isExportMode() ? 21 : 25;
   }
 
   private getLabelSize(): number {
