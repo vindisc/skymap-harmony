@@ -7,6 +7,7 @@ export interface PickedPhotoResult {
   imageUri: string;
   imageWidth: number;
   imageHeight: number;
+  imageSizeFallbackUsed: boolean;
   message: string;
 }
 
@@ -20,6 +21,7 @@ function emptyResult(cancelled: boolean, message: string): PickedPhotoResult {
     imageUri: '',
     imageWidth: FALLBACK_IMAGE_WIDTH,
     imageHeight: FALLBACK_IMAGE_HEIGHT,
+    imageSizeFallbackUsed: false,
     message: message
   };
 }
@@ -56,6 +58,7 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
           imageUri: imageUri,
           imageWidth: size.width,
           imageHeight: size.height,
+          imageSizeFallbackUsed: false,
           message: ''
         };
       }
@@ -67,7 +70,8 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
         imageUri: imageUri,
         imageWidth: FALLBACK_IMAGE_WIDTH,
         imageHeight: FALLBACK_IMAGE_HEIGHT,
-        message: '已选择照片，但暂时无法读取宽高'
+        imageSizeFallbackUsed: true,
+        message: '已选择照片，但暂时无法读取原始宽高，当前先按兜底尺寸继续'
       };
     }
 
@@ -77,7 +81,8 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
       imageUri: imageUri,
       imageWidth: FALLBACK_IMAGE_WIDTH,
       imageHeight: FALLBACK_IMAGE_HEIGHT,
-      message: '已选择照片，但宽高为空'
+      imageSizeFallbackUsed: true,
+      message: '已选择照片，但宽高为空，当前先按兜底尺寸继续'
     };
   } catch (error) {
     return emptyResult(false, '无法打开系统相册，请稍后重试');

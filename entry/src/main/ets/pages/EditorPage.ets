@@ -23,6 +23,7 @@ struct EditorPage {
   @State imageUri: string = '';
   @State imageWidth: number = 1600;
   @State imageHeight: number = 1000;
+  @State imageSizeFallbackUsed: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -33,6 +34,7 @@ struct EditorPage {
     this.imageUri = this.document.imageUri;
     this.imageWidth = this.document.imageWidth;
     this.imageHeight = this.document.imageHeight;
+    this.imageSizeFallbackUsed = this.document.imageSizeFallbackUsed;
     this.title = this.document.content.title;
     this.firstLook = this.document.content.firstLook;
     this.judgement = this.document.content.judgement;
@@ -94,7 +96,7 @@ struct EditorPage {
           .width('100%')
 
           AppPageHeader({
-            title: '写照片复盘',
+            title: '写一张照片复盘',
             subtitle: '像写短评一样，留下第一眼、成立判断和真正卡住你的地方。'
           })
             .margin({ top: 18 })
@@ -102,7 +104,8 @@ struct EditorPage {
           PhotoSummaryCard({
             imageUri: this.imageUri,
             imageWidth: this.imageWidth,
-            imageHeight: this.imageHeight
+            imageHeight: this.imageHeight,
+            imageSizeFallbackUsed: this.imageSizeFallbackUsed
           })
             .margin({ top: 18, bottom: 24 })
 

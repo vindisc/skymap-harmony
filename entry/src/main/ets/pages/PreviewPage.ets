@@ -10,7 +10,7 @@ import { ReviewCardPreview } from '../components/ReviewCardPreview';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
-import { AppColors, PrimaryButton, SecondaryButton, TagLabel } from '../components/AppDesign';
+import { AppColors, PrimaryButton, SecondaryButton } from '../components/AppDesign';
 
 @Entry
 @Component
@@ -18,7 +18,7 @@ struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State exportMessage: string = '';
   @State isExporting: boolean = false;
-  @State saveStateLabel: string = '已自动保存';
+  @State saveStateLabel: string = '已自动保存到最近记录';
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -54,11 +54,19 @@ struct PreviewPage {
     Column() {
       Row() {
         Column() {
+          Text(this.saveStateLabel)
+            .fontSize(12)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.tagGreenText)
+            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+            .borderRadius(4)
+            .backgroundColor(AppColors.tagGreen)
           Text('复盘卡预览')
             .fontSize(24)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.text)
             .lineHeight(30)
+            .margin({ top: 10 })
           Text('确认照片、判断和复盘说明是否形成一张完整作品卡。')
             .fontSize(14)
             .fontColor(AppColors.secondaryText)
@@ -68,7 +76,13 @@ struct PreviewPage {
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
 
-        TagLabel({ label: this.saveStateLabel, color: AppColors.tagGreenText, tagBackground: AppColors.tagGreen })
+        SecondaryButton({
+          label: '编辑',
+          onTap: () => {
+            router.pushUrl({ url: EDITOR_PAGE });
+          }
+        })
+          .width(88)
       }
       .alignItems(VerticalAlign.Center)
       .padding({ left: 20, right: 20, top: 18, bottom: 8 })

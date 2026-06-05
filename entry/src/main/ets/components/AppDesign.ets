@@ -144,47 +144,69 @@ export struct PhotoSummaryCard {
   @Prop imageUri: string = '';
   @Prop imageWidth: number = 1600;
   @Prop imageHeight: number = 1000;
+  @Prop imageSizeFallbackUsed: boolean = false;
 
   build() {
-    Row({ space: 12 }) {
-      ReviewPhotoBlock({
-        imageUri: this.imageUri,
-        imageWidth: this.imageWidth,
-        imageHeight: this.imageHeight,
-        aspectRatioValue: 1.25,
-        compact: true,
-        fitMode: ImageFit.Contain
-      })
-        .width(112)
+    Column({ space: 12 }) {
+      Row({ space: 12 }) {
+        ReviewPhotoBlock({
+          imageUri: this.imageUri,
+          imageWidth: this.imageWidth,
+          imageHeight: this.imageHeight,
+          aspectRatioValue: 1.25,
+          compact: true,
+          fitMode: ImageFit.Contain
+        })
+          .width(112)
 
-      Column() {
-        Row({ space: 8 }) {
-          TagLabel({ label: getImageRatioLabel(this.imageWidth, this.imageHeight) })
-          Text(`${this.imageWidth} x ${this.imageHeight}`)
+        Column() {
+          Text('已选照片')
             .fontSize(12)
+            .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.mutedText)
-        }
-        .width('100%')
+            .width('100%')
 
-        Text('按照片方向生成作品卡')
-          .fontSize(15)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .lineHeight(21)
-          .margin({ top: 10 })
+          Row({ space: 8 }) {
+            TagLabel({ label: getImageRatioLabel(this.imageWidth, this.imageHeight) })
+            Text(`${this.imageWidth} x ${this.imageHeight}`)
+              .fontSize(12)
+              .fontColor(AppColors.mutedText)
+          }
           .width('100%')
+          .margin({ top: 8 })
 
-        Text('照片是主视觉，文字只保留第一眼、判断和卡点。')
+          Text('照片方向会自动匹配复盘卡版式')
+            .fontSize(15)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .lineHeight(21)
+            .margin({ top: 10 })
+            .width('100%')
+
+          Text('照片是主视觉，文字只保留第一眼、判断和卡点。')
+            .fontSize(12)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(18)
+            .margin({ top: 6 })
+            .width('100%')
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+      }
+      .alignItems(VerticalAlign.Center)
+      .width('100%')
+
+      if (this.imageSizeFallbackUsed) {
+        Text('当前暂时无法读取原始宽高，已先按兜底尺寸继续，方向判断可能不准确。')
           .fontSize(12)
           .fontColor(AppColors.secondaryText)
           .lineHeight(18)
-          .margin({ top: 6 })
+          .padding(12)
           .width('100%')
+          .borderRadius(AppMetrics.panelRadius)
+          .backgroundColor(AppColors.surfaceMuted)
       }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
     }
-    .alignItems(VerticalAlign.Center)
     .padding(12)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)

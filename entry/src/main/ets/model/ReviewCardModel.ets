@@ -35,6 +35,7 @@ export interface ReviewCardDocument {
   imageUri: string;
   imageWidth: number;
   imageHeight: number;
+  imageSizeFallbackUsed: boolean;
   content: ReviewContent;
   config: ReviewCardConfig;
   createdAt: number;
@@ -64,6 +65,7 @@ export function createDefaultReviewCardDocument(): ReviewCardDocument {
     imageUri: '',
     imageWidth: 1600,
     imageHeight: 1000,
+    imageSizeFallbackUsed: false,
     content: createDefaultReviewContent(),
     config: {
       templateId: 'review_card',
@@ -82,6 +84,7 @@ export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCar
     imageUri: document.imageUri,
     imageWidth: document.imageWidth,
     imageHeight: document.imageHeight,
+    imageSizeFallbackUsed: document.imageSizeFallbackUsed === true,
     content: {
       title: document.content.title,
       firstLook: document.content.firstLook,

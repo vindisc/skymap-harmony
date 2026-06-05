@@ -6,7 +6,7 @@ import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerServi
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { SampleImageKind } from '../utils/ImageLayoutUtils';
-import { AppColors, EmptyState, PrimaryButton, RecentReviewCard, TagLabel } from '../components/AppDesign';
+import { AppColors, EmptyState, PrimaryButton, RecentReviewCard } from '../components/AppDesign';
 
 @Entry
 @Component
@@ -52,7 +52,12 @@ struct HomePage {
       return;
     }
 
-    ReviewCardStore.createPhotoDraft(result.imageUri, result.imageWidth, result.imageHeight);
+    ReviewCardStore.createPhotoDraft(
+      result.imageUri,
+      result.imageWidth,
+      result.imageHeight,
+      result.imageSizeFallbackUsed
+    );
     this.statusMessage = result.message;
     router.pushUrl({ url: EDITOR_PAGE });
   }
@@ -75,15 +80,19 @@ struct HomePage {
   @Builder
   HeroPanel() {
     Column() {
-      TagLabel({ label: '摄影复盘卡' })
-      Text('把一张照片整理成一张复盘作品卡')
+      Text('摄影复盘卡')
+        .fontSize(14)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.secondaryText)
+        .width('100%')
+      Text('把一张照片整理成一次清晰复盘')
         .fontSize(30)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
         .lineHeight(37)
         .margin({ top: 14 })
         .width('100%')
-      Text('选择真实照片，写下第一眼落点、成立判断和卡点，生成一张干净、有秩序的摄影学习卡。')
+      Text('选择照片，写下第一眼、判断和卡点，生成一张复盘卡。')
         .fontSize(15)
         .fontColor(AppColors.secondaryText)
         .lineHeight(23)
@@ -97,14 +106,6 @@ struct HomePage {
         }
       })
         .margin({ top: 24 })
-
-      Row({ space: 8 }) {
-        TagLabel({ label: '真实照片' })
-        TagLabel({ label: '自动版式', color: AppColors.secondaryText, tagBackground: '#EEEAE2' })
-        TagLabel({ label: '可导出', color: AppColors.secondaryText, tagBackground: '#EEEAE2' })
-      }
-      .margin({ top: 14 })
-      .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
@@ -126,12 +127,12 @@ struct HomePage {
 
         Column() {
           Row() {
-            Text('快速试试看')
+            Text('不选照片也能试')
               .fontSize(14)
               .fontWeight(FontWeight.Medium)
               .fontColor(AppColors.text)
             Blank()
-            Text('示例照片')
+            Text('示例体验')
               .fontSize(12)
               .fontColor(AppColors.mutedText)
           }
@@ -170,7 +171,7 @@ struct HomePage {
           if (this.historyItems.length === 0) {
             EmptyState({
               title: '还没有复盘记录',
-              message: '选择一张照片完成第一张复盘后，这里会展示你的作品卡、方向、保存时间和导出状态。'
+              message: '选择一张照片完成第一张复盘后，这里会展示缩略图、方向、保存时间和导出状态。'
             })
               .margin({ top: 12 })
           } else {
