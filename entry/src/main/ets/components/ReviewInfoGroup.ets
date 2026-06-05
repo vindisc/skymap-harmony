@@ -12,7 +12,7 @@ export struct ReviewInfoGroup {
       ReviewInfoItem({
         label: '第一眼落点',
         value: this.firstLook,
-        showDivider: true
+        showDivider: false
       })
       ReviewInfoItem({
         label: '是否成立',
@@ -29,7 +29,7 @@ export struct ReviewInfoGroup {
     .width('100%')
     .padding({
       top: 2,
-      bottom: ReviewCardStyleTokens.sectionGap
+      bottom: 0
     })
   }
 }

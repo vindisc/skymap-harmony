@@ -12,5 +12,8 @@ export struct ReviewCardTitle {
       .fontColor(ReviewCardStyleTokens.inkColor)
       .lineHeight(ReviewCardStyleTokens.titleLineHeight)
       .width('100%')
+      .wordBreak(WordBreak.BREAK_WORD)
+      .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
+      .textOverflow({ overflow: TextOverflow.Clip })
   }
 }

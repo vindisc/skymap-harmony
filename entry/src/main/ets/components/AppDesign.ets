@@ -55,6 +55,7 @@ export struct AppPageHeader {
 @Component
 export struct PrimaryButton {
   @Prop label: string = '';
+  @Prop isDisabled: boolean = false;
   onTap: () => void = () => {};
 
   build() {
@@ -65,9 +66,14 @@ export struct PrimaryButton {
       .fontSize(16)
       .fontWeight(FontWeight.Medium)
       .fontColor('#FFFFFF')
-      .backgroundColor(AppColors.primary)
-      .stateEffect(true)
+      .backgroundColor(this.isDisabled ? '#B8C6B9' : AppColors.primary)
+      .opacity(this.isDisabled ? 0.72 : 1)
+      .enabled(!this.isDisabled)
+      .stateEffect(!this.isDisabled)
       .onClick(() => {
+        if (this.isDisabled) {
+          return;
+        }
         this.onTap();
       })
   }
@@ -250,7 +256,7 @@ export struct RecentReviewCard {
             .fontSize(12)
             .fontColor(AppColors.secondaryText)
           if (this.item.exportedPath.length > 0) {
-            TagLabel({ label: '已导出', color: AppColors.tagGreenText, tagBackground: AppColors.tagGreen })
+            TagLabel({ label: '已生成图片', color: AppColors.tagGreenText, tagBackground: AppColors.tagGreen })
           } else {
             TagLabel({ label: '已保存', color: AppColors.secondaryText, tagBackground: '#F1F3F5' })
           }

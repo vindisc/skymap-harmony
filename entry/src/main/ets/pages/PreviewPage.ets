@@ -17,7 +17,7 @@ enum PreviewSaveState {
   UNSAVED = '未保存',
   AUTO_SAVED = '已自动保存',
   JUST_SAVED = '刚刚保存',
-  EXPORTED = '已导出'
+  EXPORTED = '已生成图片'
 }
 
 @Entry
@@ -71,18 +71,28 @@ struct PreviewPage {
       return;
     }
     this.isExporting = true;
-    const result: ReviewCardExportResult = await ReviewCardExportService.exportSnapshot(this.getAbilityContext());
-    this.isExporting = false;
-    this.exportMessage = result.message;
-    if (result.savedToPhotoLibrary) {
-      await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path);
-      this.saveStateLabel = PreviewSaveState.EXPORTED;
+    try {
+      const result: ReviewCardExportResult = await ReviewCardExportService.exportSnapshot(
+        this.getAbilityContext(),
+        this.getExportComponentId()
+      );
+      this.exportMessage = result.message;
+      if (result.savedToPhotoLibrary) {
+        await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path);
+        this.saveStateLabel = PreviewSaveState.EXPORTED;
+      }
+      promptAction.showToast({ message: result.message });
+    } finally {
+      this.isExporting = false;
     }
-    promptAction.showToast({ message: result.message });
   }
 
   private completeReview(): void {
     router.pushUrl({ url: HOME_PAGE });
+  }
+
+  private getExportComponentId(): string {
+    return `${REVIEW_CARD_EXPORT_ID}-${this.document.createdAt}-${this.document.updatedAt}`;
   }
 
   build() {
@@ -126,15 +136,14 @@ struct PreviewPage {
       Scroll() {
         Column() {
           ReviewCardPreview({ document: this.document })
-            .id(REVIEW_CARD_EXPORT_ID)
+            .id(this.getExportComponentId())
 
           if (this.exportMessage.length > 0) {
             Text(this.exportMessage)
               .fontSize(12)
               .fontColor(AppColors.secondaryText)
               .lineHeight(18)
-              .maxLines(3)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .maxLines(4)
               .padding(12)
               .width('100%')
               .borderRadius(8)
@@ -155,7 +164,7 @@ struct PreviewPage {
         SecondaryButton({
           label: '编辑',
           onTap: () => {
-            router.pushUrl({ url: EDITOR_PAGE });
+            router.replaceUrl({ url: EDITOR_PAGE });
           }
         })
           .layoutWeight(1)
@@ -167,7 +176,8 @@ struct PreviewPage {
         })
           .layoutWeight(1)
         PrimaryButton({
-          label: this.isExporting ? '正在导出' : '保存到相册',
+          label: this.isExporting ? '正在导出' : '导出图片',
+          isDisabled: this.isExporting,
           onTap: () => {
             this.exportImage();
           }

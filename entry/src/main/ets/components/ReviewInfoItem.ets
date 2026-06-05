@@ -14,7 +14,8 @@ export struct ReviewInfoItem {
           .strokeWidth(1)
           .color(ReviewCardStyleTokens.hairlineColor)
           .width('100%')
-          .margin({ bottom: 16 })
+          .opacity(0.72)
+          .margin({ bottom: 14 })
       }
       Text(this.label)
         .fontSize(ReviewCardStyleTokens.labelSize)
@@ -22,6 +23,9 @@ export struct ReviewInfoItem {
         .fontColor(ReviewCardStyleTokens.labelColor)
         .lineHeight(ReviewCardStyleTokens.labelLineHeight)
         .width('100%')
+        .wordBreak(WordBreak.BREAK_WORD)
+        .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
+        .textOverflow({ overflow: TextOverflow.Clip })
       Text(this.value.length > 0 ? this.value : '待填写')
         .fontSize(this.emphasized ? ReviewCardStyleTokens.bodySize + 1 : ReviewCardStyleTokens.bodySize)
         .fontWeight(this.emphasized ? FontWeight.Medium : FontWeight.Regular)
@@ -29,9 +33,12 @@ export struct ReviewInfoItem {
         .lineHeight(ReviewCardStyleTokens.bodyLineHeight)
         .margin({ top: 5 })
         .width('100%')
+        .wordBreak(WordBreak.BREAK_WORD)
+        .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
+        .textOverflow({ overflow: TextOverflow.Clip })
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ top: this.emphasized ? 2 : 0, bottom: this.emphasized ? 2 : 0 })
+    .padding({ top: this.emphasized ? 2 : 0, bottom: this.emphasized ? 4 : 2 })
     .width('100%')
   }
 }
