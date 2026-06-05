@@ -63,7 +63,6 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
         };
       }
     } catch (error) {
-      // TODO: 部分相册 URI 在当前 SDK/设备上可能无法直接解码宽高；这里先用横图兜底，后续可通过 photoAccessHelper.getAssets 读取媒体元数据。
       return {
         success: true,
         cancelled: false,
@@ -71,7 +70,7 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
         imageWidth: FALLBACK_IMAGE_WIDTH,
         imageHeight: FALLBACK_IMAGE_HEIGHT,
         imageSizeFallbackUsed: true,
-        message: '已选择照片，但暂时无法读取原始宽高，当前先按兜底尺寸继续'
+        message: '尺寸暂不可读，已继续编辑'
       };
     }
 
@@ -82,7 +81,7 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
       imageWidth: FALLBACK_IMAGE_WIDTH,
       imageHeight: FALLBACK_IMAGE_HEIGHT,
       imageSizeFallbackUsed: true,
-      message: '已选择照片，但宽高为空，当前先按兜底尺寸继续'
+      message: '尺寸暂不可读，已继续编辑'
     };
   } catch (error) {
     return emptyResult(false, '无法打开系统相册，请稍后重试');

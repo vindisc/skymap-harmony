@@ -17,7 +17,7 @@ export struct ReviewPhotoArea {
       aspectRatioValue: this.aspectRatioValue,
       compact: this.compact,
       cornerRadius: ReviewCardStyleTokens.photoRadius,
-      fitMode: ImageFit.Contain
+      fitMode: ImageFit.Cover
     })
   }
 }

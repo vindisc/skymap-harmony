@@ -7,6 +7,7 @@ export struct ReviewInputForm {
   @Link judgement: string;
   @Link blocker: string;
   onFieldFocus: (field: string) => void = () => {};
+  onFieldBlur: () => void = () => {};
 
   @Builder
   FieldLabel(label: string) {
@@ -17,17 +18,8 @@ export struct ReviewInputForm {
       .width('100%')
   }
 
-  @Builder
-  FieldHint(text: string) {
-    Text(text)
-      .fontSize(12)
-      .fontColor(AppColors.mutedText)
-      .lineHeight(18)
-      .width('100%')
-  }
-
   build() {
-    Column({ space: 20 }) {
+    Column({ space: 18 }) {
       Column({ space: 9 }) {
         this.FieldLabel('标题')
         TextInput({ text: this.title, placeholder: '这张照片是否成立' })
@@ -41,6 +33,9 @@ export struct ReviewInputForm {
           .border({ width: 1, color: AppColors.border })
           .onFocus(() => {
             this.onFieldFocus('title');
+          })
+          .onBlur(() => {
+            this.onFieldBlur();
           })
           .onChange((value: string) => {
             this.title = value;
@@ -63,10 +58,12 @@ export struct ReviewInputForm {
           .onFocus(() => {
             this.onFieldFocus('firstLook');
           })
+          .onBlur(() => {
+            this.onFieldBlur();
+          })
           .onChange((value: string) => {
             this.firstLook = value;
           })
-        this.FieldHint('记录最先进入视线的主体、光线或关系。')
       }
       .width('100%')
 
@@ -85,10 +82,12 @@ export struct ReviewInputForm {
           .onFocus(() => {
             this.onFieldFocus('judgement');
           })
+          .onBlur(() => {
+            this.onFieldBlur();
+          })
           .onChange((value: string) => {
             this.judgement = value;
           })
-        this.FieldHint('用一句判断开头，再补充画面为什么有效或失效。')
       }
       .width('100%')
 
@@ -107,10 +106,12 @@ export struct ReviewInputForm {
           .onFocus(() => {
             this.onFieldFocus('blocker');
           })
+          .onBlur(() => {
+            this.onFieldBlur();
+          })
           .onChange((value: string) => {
             this.blocker = value;
           })
-        this.FieldHint('这里可以写得更完整，预览卡会自动处理长内容。')
       }
       .width('100%')
     }

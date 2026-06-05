@@ -15,9 +15,8 @@ import { AppColors, PrimaryButton, SecondaryButton } from '../components/AppDesi
 
 enum PreviewSaveState {
   UNSAVED = '未保存',
-  AUTO_SAVED = '已自动保存',
-  JUST_SAVED = '刚刚保存',
-  EXPORTED = '已生成图片'
+  SAVED = '已保存',
+  EXPORTED = '已导出'
 }
 
 @Entry
@@ -47,7 +46,7 @@ struct PreviewPage {
         return;
       }
 
-      this.saveStateLabel = matchedItem.exportedPath.length > 0 ? PreviewSaveState.EXPORTED : PreviewSaveState.AUTO_SAVED;
+      this.saveStateLabel = matchedItem.exportedPath.length > 0 ? PreviewSaveState.EXPORTED : PreviewSaveState.SAVED;
     } catch (error) {
       this.saveStateLabel = PreviewSaveState.UNSAVED;
     }
@@ -57,8 +56,8 @@ struct PreviewPage {
     try {
       this.document = ReviewCardStore.saveCurrentDocument(this.document);
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
-      this.saveStateLabel = PreviewSaveState.JUST_SAVED;
-      this.exportMessage = '复盘记录已保存，首页最近记录会同步更新。';
+      this.saveStateLabel = PreviewSaveState.SAVED;
+      this.exportMessage = '已保存';
       promptAction.showToast({ message: '已保存复盘记录' });
     } catch (error) {
       this.exportMessage = '保存失败，请稍后重试';
@@ -87,7 +86,7 @@ struct PreviewPage {
     }
   }
 
-  private completeReview(): void {
+  private goHome(): void {
     router.pushUrl({ url: HOME_PAGE });
   }
 
@@ -99,32 +98,28 @@ struct PreviewPage {
     Column() {
       Row() {
         Column() {
-          Text(this.saveStateLabel)
-            .fontSize(12)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.tagGreenText)
-            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-            .borderRadius(4)
-            .backgroundColor(AppColors.tagGreen)
           Text('复盘卡预览')
             .fontSize(24)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.text)
             .lineHeight(30)
-            .margin({ top: 10 })
-          Text('确认照片、判断和复盘说明是否形成一张完整作品卡。')
+          Text('确认后可以保存或导出')
             .fontSize(14)
             .fontColor(AppColors.secondaryText)
             .lineHeight(21)
             .margin({ top: 5 })
+          Text(this.saveStateLabel)
+            .fontSize(12)
+            .fontColor(AppColors.mutedText)
+            .margin({ top: 8 })
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
 
         SecondaryButton({
-          label: '完成',
+          label: '回首页',
           onTap: () => {
-            this.completeReview();
+            this.goHome();
           }
         })
           .width(88)
@@ -143,20 +138,16 @@ struct PreviewPage {
               .fontSize(12)
               .fontColor(AppColors.secondaryText)
               .lineHeight(18)
-              .maxLines(4)
-              .padding(12)
+              .maxLines(2)
               .width('100%')
-              .borderRadius(8)
-              .backgroundColor(AppColors.surface)
-              .border({ width: 1, color: AppColors.border })
-              .margin({ top: 18 })
+              .margin({ top: 12 })
           }
         }
         .alignItems(HorizontalAlign.Center)
         .justifyContent(FlexAlign.Center)
         .padding({ left: 18, right: 18, top: 16, bottom: 32 })
         .width('100%')
-        .constraintSize({ minHeight: 560 })
+        .constraintSize({ minHeight: 520 })
       }
       .layoutWeight(1)
 
@@ -176,7 +167,7 @@ struct PreviewPage {
         })
           .layoutWeight(1)
         PrimaryButton({
-          label: this.isExporting ? '正在导出' : '导出图片',
+          label: this.isExporting ? '导出中' : '导出',
           isDisabled: this.isExporting,
           onTap: () => {
             this.exportImage();

@@ -88,7 +88,7 @@ export class ReviewCardExportService {
         savedToPhotoLibrary: false,
         path: '',
         backupPath: '',
-        message: '导出正在进行中，请稍候'
+        message: '正在导出，请稍候'
       };
     }
 
@@ -113,8 +113,8 @@ export class ReviewCardExportService {
         path: mediaUri,
         backupPath: backupPath,
         message: mediaUri.length > 0
-          ? '系统已完成保存，可到图库“最近项目”查看；如果没立即出现，请稍等后刷新图库。'
-          : '未完成系统保存，但 JPG 备份已生成，可稍后重新导出。'
+          ? '已导出到图库'
+          : '未完成保存，已保留备份'
       };
     } catch (error) {
       if (backupPath.length > 0) {
@@ -123,7 +123,7 @@ export class ReviewCardExportService {
           savedToPhotoLibrary: false,
           path: backupPath,
           backupPath: backupPath,
-          message: '系统保存未完成，但 JPG 备份已生成，可稍后重新导出。'
+          message: '未完成保存，已保留备份'
         };
       }
       return {

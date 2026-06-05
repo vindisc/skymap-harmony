@@ -9,7 +9,7 @@ import {
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
-import { AppColors, AppPageHeader, PhotoSummaryCard, PrimaryButton, SecondaryButton } from '../components/AppDesign';
+import { AppColors, PhotoSummaryCard, PrimaryButton, SecondaryButton } from '../components/AppDesign';
 
 @Entry
 @Component
@@ -24,6 +24,7 @@ struct EditorPage {
   @State imageWidth: number = 1600;
   @State imageHeight: number = 1000;
   @State imageSizeFallbackUsed: boolean = false;
+  @State isInputFocused: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -57,10 +58,11 @@ struct EditorPage {
     this.syncDocumentFromInput();
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
     await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
-    router.pushUrl({ url: PREVIEW_PAGE });
+    router.replaceUrl({ url: PREVIEW_PAGE });
   }
 
   private scrollToFocusedField(field: string): void {
+    this.isInputFocused = true;
     let offset: number = 0;
     if (field === 'title') {
       offset = 120;
@@ -92,14 +94,17 @@ struct EditorPage {
             })
               .width(82)
             Blank()
+            Text('写复盘')
+              .fontSize(20)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(AppColors.text)
+              .lineHeight(28)
+            Blank()
+            Blank()
+              .width(82)
           }
+          .alignItems(VerticalAlign.Center)
           .width('100%')
-
-          AppPageHeader({
-            title: '写一张照片复盘',
-            subtitle: '像写短评一样，留下第一眼、成立判断和真正卡住你的地方。'
-          })
-            .margin({ top: 18 })
 
           PhotoSummaryCard({
             imageUri: this.imageUri,
@@ -107,7 +112,7 @@ struct EditorPage {
             imageHeight: this.imageHeight,
             imageSizeFallbackUsed: this.imageSizeFallbackUsed
           })
-            .margin({ top: 18, bottom: 24 })
+            .margin({ top: 18, bottom: 22 })
 
           ReviewInputForm({
             title: $title,
@@ -116,34 +121,32 @@ struct EditorPage {
             blocker: $blocker,
             onFieldFocus: (field: string) => {
               this.scrollToFocusedField(field);
+            },
+            onFieldBlur: () => {
+              this.isInputFocused = false;
             }
           })
         }
-        .padding({ left: 20, right: 20, top: 18, bottom: 140 })
+        .padding({ left: 20, right: 20, top: 18, bottom: this.isInputFocused ? 48 : 126 })
         .width('100%')
       }
       .layoutWeight(1)
       .width('100%')
 
-      Column() {
-        PrimaryButton({
-          label: '生成复盘卡',
-          onTap: () => {
-            this.saveAndPreview();
-          }
-        })
-
-        Text('生成时会自动保存到最近记录，之后仍可返回继续编辑。')
-          .fontSize(12)
-          .fontColor(AppColors.mutedText)
-          .lineHeight(18)
-          .margin({ top: 9 })
-          .width('100%')
+      if (!this.isInputFocused) {
+        Column() {
+          PrimaryButton({
+            label: '生成复盘卡',
+            onTap: () => {
+              this.saveAndPreview();
+            }
+          })
+        }
+        .padding({ left: 16, right: 16, top: 12, bottom: 16 })
+        .width('100%')
+        .backgroundColor(AppColors.surface)
+        .shadow({ radius: 10, color: '#10000000', offsetX: 0, offsetY: -3 })
       }
-      .padding({ left: 16, right: 16, top: 12, bottom: 16 })
-      .width('100%')
-      .backgroundColor(AppColors.surface)
-      .shadow({ radius: 12, color: '#14000000', offsetX: 0, offsetY: -4 })
     }
     .width('100%')
     .height('100%')

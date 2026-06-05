@@ -70,7 +70,7 @@ struct HomePage {
       .fontSize(13)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
-      .backgroundColor('#EDE9E0')
+      .backgroundColor('#F0ECE4')
       .padding({ left: 13, right: 13 })
       .onClick(() => {
         this.startDraft(kind);
@@ -81,22 +81,16 @@ struct HomePage {
   HeroPanel() {
     Column() {
       Text('摄影复盘卡')
-        .fontSize(14)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.secondaryText)
-        .width('100%')
-      Text('把一张照片整理成一次清晰复盘')
-        .fontSize(30)
+        .fontSize(28)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
-        .lineHeight(37)
-        .margin({ top: 14 })
+        .lineHeight(34)
         .width('100%')
-      Text('选择照片，写下第一眼、判断和卡点，生成一张复盘卡。')
+      Text('选择照片，写下观察，生成一张复盘卡')
         .fontSize(15)
         .fontColor(AppColors.secondaryText)
         .lineHeight(23)
-        .margin({ top: 10 })
+        .margin({ top: 8 })
         .width('100%')
 
       PrimaryButton({
@@ -127,14 +121,11 @@ struct HomePage {
 
         Column() {
           Row() {
-            Text('不选照片也能试')
+            Text('示例')
               .fontSize(14)
               .fontWeight(FontWeight.Medium)
               .fontColor(AppColors.text)
             Blank()
-            Text('示例体验')
-              .fontSize(12)
-              .fontColor(AppColors.mutedText)
           }
           .width('100%')
 
@@ -146,32 +137,23 @@ struct HomePage {
           .width('100%')
           .margin({ top: 10 })
         }
-        .padding(14)
+        .padding({ left: 2, right: 2, top: 0, bottom: 0 })
         .width('100%')
-        .borderRadius(10)
-        .backgroundColor('#FFFEFC')
-        .border({ width: 1, color: AppColors.border })
         .margin({ top: 22 })
 
         Column() {
           Row() {
-            Text('最近复盘')
+            Text('最近记录')
               .fontSize(19)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.text)
-            Blank()
-            if (this.historyItems.length > 0) {
-              Text(`${this.historyItems.length} 条`)
-                .fontSize(12)
-                .fontColor(AppColors.mutedText)
-            }
           }
           .width('100%')
 
           if (this.historyItems.length === 0) {
             EmptyState({
-              title: '还没有复盘记录',
-              message: '选择一张照片完成第一张复盘后，这里会展示缩略图、方向、保存时间和导出状态。'
+              title: '暂无复盘记录',
+              message: ''
             })
               .margin({ top: 12 })
           } else {

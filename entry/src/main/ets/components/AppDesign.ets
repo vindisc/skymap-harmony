@@ -60,7 +60,7 @@ export struct PrimaryButton {
 
   build() {
     Button(this.label)
-      .height(52)
+      .height(48)
       .width('100%')
       .borderRadius(AppMetrics.buttonRadius)
       .fontSize(16)
@@ -112,12 +112,14 @@ export struct EmptyState {
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.text)
         .width('100%')
-      Text(this.message)
-        .fontSize(14)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(22)
-        .margin({ top: 8 })
-        .width('100%')
+      if (this.message.length > 0) {
+        Text(this.message)
+          .fontSize(14)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(22)
+          .margin({ top: 8 })
+          .width('100%')
+      }
     }
     .alignItems(HorizontalAlign.Start)
     .padding(18)
@@ -153,7 +155,7 @@ export struct PhotoSummaryCard {
   @Prop imageSizeFallbackUsed: boolean = false;
 
   build() {
-    Column({ space: 12 }) {
+    Column({ space: 8 }) {
       Row({ space: 12 }) {
         ReviewPhotoBlock({
           imageUri: this.imageUri,
@@ -166,52 +168,34 @@ export struct PhotoSummaryCard {
           .width(112)
 
         Column() {
-          Text('已选照片')
-            .fontSize(12)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.mutedText)
-            .width('100%')
-
-          Row({ space: 8 }) {
-            TagLabel({ label: getImageRatioLabel(this.imageWidth, this.imageHeight) })
-            Text(`${this.imageWidth} x ${this.imageHeight}`)
-              .fontSize(12)
-              .fontColor(AppColors.mutedText)
-          }
-          .width('100%')
-          .margin({ top: 8 })
-
-          Text('照片方向会自动匹配复盘卡版式')
+          Text(getImageRatioLabel(this.imageWidth, this.imageHeight))
             .fontSize(15)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
-            .lineHeight(21)
-            .margin({ top: 10 })
             .width('100%')
 
-          Text('照片是主视觉，文字只保留第一眼、判断和卡点。')
-            .fontSize(12)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(18)
-            .margin({ top: 6 })
-            .width('100%')
+          if (!this.imageSizeFallbackUsed) {
+            Text(`${this.imageWidth} x ${this.imageHeight}`)
+              .fontSize(12)
+              .fontColor(AppColors.mutedText)
+              .margin({ top: 7 })
+              .width('100%')
+          }
+
+          if (this.imageSizeFallbackUsed) {
+            Text('尺寸暂不可读，已继续编辑。')
+              .fontSize(12)
+              .fontColor(AppColors.mutedText)
+              .lineHeight(18)
+              .margin({ top: 7 })
+              .width('100%')
+          }
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
       }
       .alignItems(VerticalAlign.Center)
       .width('100%')
-
-      if (this.imageSizeFallbackUsed) {
-        Text('当前暂时无法读取原始宽高，已先按兜底尺寸继续，方向判断可能不准确。')
-          .fontSize(12)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(18)
-          .padding(12)
-          .width('100%')
-          .borderRadius(AppMetrics.panelRadius)
-          .backgroundColor(AppColors.surfaceMuted)
-      }
     }
     .padding(12)
     .width('100%')
@@ -239,7 +223,7 @@ export struct RecentReviewCard {
         compact: true,
         fitMode: ImageFit.Contain
       })
-        .width(92)
+        .width(78)
 
       Column() {
         Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
@@ -250,27 +234,16 @@ export struct RecentReviewCard {
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
 
-        Row({ space: 7 }) {
-          TagLabel({ label: getImageRatioLabel(this.item.document.imageWidth, this.item.document.imageHeight) })
+        Row({ space: 8 }) {
           Text(formatReviewTime(this.item.document.updatedAt))
             .fontSize(12)
             .fontColor(AppColors.secondaryText)
-          if (this.item.exportedPath.length > 0) {
-            TagLabel({ label: '已生成图片', color: AppColors.tagGreenText, tagBackground: AppColors.tagGreen })
-          } else {
-            TagLabel({ label: '已保存', color: AppColors.secondaryText, tagBackground: '#F1F3F5' })
-          }
+          Text(getImageRatioLabel(this.item.document.imageWidth, this.item.document.imageHeight))
+            .fontSize(12)
+            .fontColor(AppColors.mutedText)
         }
-        .margin({ top: 8 })
+        .margin({ top: 9 })
         .width('100%')
-
-        Text(this.item.document.content.firstLook.length > 0 ? this.item.document.content.firstLook : '查看这张复盘卡')
-          .fontSize(12)
-          .fontColor(AppColors.mutedText)
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .margin({ top: 9 })
-          .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
@@ -281,7 +254,6 @@ export struct RecentReviewCard {
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
-    .shadow({ radius: 14, color: '#10000000', offsetX: 0, offsetY: 6 })
     .onClick(() => {
       this.onTap();
     })

@@ -22,7 +22,6 @@ export struct ReviewInfoGroup {
       ReviewInfoItem({
         label: '卡点',
         value: this.blocker,
-        emphasized: true,
         showDivider: true
       })
     }
