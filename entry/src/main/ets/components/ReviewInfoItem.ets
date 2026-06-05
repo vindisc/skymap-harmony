@@ -4,11 +4,18 @@ import { ReviewCardStyleTokens } from './ReviewCardStyleTokens';
 export struct ReviewInfoItem {
   @Prop label: string = '';
   @Prop value: string = '';
-  @Prop maxLines: number = 3;
   @Prop emphasized: boolean = false;
+  @Prop showDivider: boolean = false;
 
   build() {
     Column() {
+      if (this.showDivider) {
+        Divider()
+          .strokeWidth(1)
+          .color(ReviewCardStyleTokens.hairlineColor)
+          .width('100%')
+          .margin({ bottom: 16 })
+      }
       Text(this.label)
         .fontSize(ReviewCardStyleTokens.labelSize)
         .fontWeight(FontWeight.Medium)
@@ -20,13 +27,11 @@ export struct ReviewInfoItem {
         .fontWeight(this.emphasized ? FontWeight.Medium : FontWeight.Regular)
         .fontColor(ReviewCardStyleTokens.bodyColor)
         .lineHeight(ReviewCardStyleTokens.bodyLineHeight)
-        .maxLines(this.maxLines)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
         .margin({ top: 5 })
         .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ top: this.emphasized ? 12 : 0, bottom: this.emphasized ? 2 : 0 })
+    .padding({ top: this.emphasized ? 2 : 0, bottom: this.emphasized ? 2 : 0 })
     .width('100%')
   }
 }

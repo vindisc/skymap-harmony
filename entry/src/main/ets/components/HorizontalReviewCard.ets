@@ -28,13 +28,13 @@ export struct HorizontalReviewCard {
           judgement: this.document.content.judgement,
           blocker: this.document.content.blocker
         })
-          .margin({ top: 15 })
+          .margin({ top: 18 })
       }
       .padding({
         left: ReviewCardStyleTokens.textInset,
         right: ReviewCardStyleTokens.textInset,
         top: ReviewCardStyleTokens.sectionGap,
-        bottom: 2
+        bottom: 0
       })
       .width('100%')
     }

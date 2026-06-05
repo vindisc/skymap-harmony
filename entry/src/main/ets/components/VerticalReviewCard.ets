@@ -23,20 +23,19 @@ export struct VerticalReviewCard {
     Column() {
       this.PhotoBlock()
       Column() {
-        ReviewCardTitle({ title: this.document.content.title, compact: true })
+        ReviewCardTitle({ title: this.document.content.title })
         ReviewInfoGroup({
           firstLook: this.document.content.firstLook,
           judgement: this.document.content.judgement,
-          blocker: this.document.content.blocker,
-          compact: true
+          blocker: this.document.content.blocker
         })
-          .margin({ top: 14 })
+          .margin({ top: 18 })
       }
       .padding({
         left: ReviewCardStyleTokens.textInset,
         right: ReviewCardStyleTokens.textInset,
-        top: 17,
-        bottom: 2
+        top: ReviewCardStyleTokens.sectionGap,
+        bottom: 0
       })
       .alignItems(HorizontalAlign.Start)
       .width('100%')
