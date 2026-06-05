@@ -1,9 +1,10 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { EDITOR_PAGE } from '../app/AppRouter';
+import { EDITOR_PAGE, HOME_PAGE } from '../app/AppRouter';
 import {
   createDefaultReviewCardDocument,
+  getReviewDocumentKey,
   ReviewCardDocument
 } from '../model/ReviewCardModel';
 import { ReviewCardPreview } from '../components/ReviewCardPreview';
@@ -12,13 +13,20 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
 import { AppColors, PrimaryButton, SecondaryButton } from '../components/AppDesign';
 
+enum PreviewSaveState {
+  UNSAVED = '未保存',
+  AUTO_SAVED = '已自动保存',
+  JUST_SAVED = '刚刚保存',
+  EXPORTED = '已导出'
+}
+
 @Entry
 @Component
 struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State exportMessage: string = '';
   @State isExporting: boolean = false;
-  @State saveStateLabel: string = '已自动保存到最近记录';
+  @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -26,14 +34,36 @@ struct PreviewPage {
 
   aboutToAppear(): void {
     this.document = ReviewCardStore.getCurrentDocument();
+    this.syncSaveState();
+  }
+
+  private async syncSaveState(): Promise<void> {
+    try {
+      const items = await ReviewCardHistoryService.load(this.getAbilityContext());
+      const currentKey = getReviewDocumentKey(this.document);
+      const matchedItem = items.find((item) => getReviewDocumentKey(item.document) === currentKey);
+      if (!matchedItem) {
+        this.saveStateLabel = PreviewSaveState.UNSAVED;
+        return;
+      }
+
+      this.saveStateLabel = matchedItem.exportedPath.length > 0 ? PreviewSaveState.EXPORTED : PreviewSaveState.AUTO_SAVED;
+    } catch (error) {
+      this.saveStateLabel = PreviewSaveState.UNSAVED;
+    }
   }
 
   private async saveDraft(): Promise<void> {
-    this.document = ReviewCardStore.saveCurrentDocument(this.document);
-    await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
-    this.saveStateLabel = '刚刚保存';
-    this.exportMessage = '复盘记录已保存，首页最近记录会同步更新。';
-    promptAction.showToast({ message: '已保存复盘记录' });
+    try {
+      this.document = ReviewCardStore.saveCurrentDocument(this.document);
+      await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+      this.saveStateLabel = PreviewSaveState.JUST_SAVED;
+      this.exportMessage = '复盘记录已保存，首页最近记录会同步更新。';
+      promptAction.showToast({ message: '已保存复盘记录' });
+    } catch (error) {
+      this.exportMessage = '保存失败，请稍后重试';
+      promptAction.showToast({ message: '保存失败，请稍后重试' });
+    }
   }
 
   private async exportImage(): Promise<void> {
@@ -46,8 +76,13 @@ struct PreviewPage {
     this.exportMessage = result.message;
     if (result.savedToPhotoLibrary) {
       await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path);
+      this.saveStateLabel = PreviewSaveState.EXPORTED;
     }
     promptAction.showToast({ message: result.message });
+  }
+
+  private completeReview(): void {
+    router.pushUrl({ url: HOME_PAGE });
   }
 
   build() {
@@ -77,9 +112,9 @@ struct PreviewPage {
         .layoutWeight(1)
 
         SecondaryButton({
-          label: '编辑',
+          label: '完成',
           onTap: () => {
-            router.pushUrl({ url: EDITOR_PAGE });
+            this.completeReview();
           }
         })
           .width(88)
