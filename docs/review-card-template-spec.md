@@ -64,13 +64,13 @@
 
 ## 5. 导出图片
 
-当前版本使用 `@ohos.arkui.componentSnapshot` 对预览卡组件截图，使用 `@ohos.multimedia.image.createImagePacker()` 编码为 PNG，再通过 `@ohos.file.fs` 写入应用沙箱目录：
+当前版本使用 `@ohos.arkui.componentSnapshot` 对预览卡组件截图，使用 `@ohos.multimedia.image.createImagePacker()` 编码为 PNG，再通过 `@ohos.file.fs` 写入应用沙箱备份目录：
 
 ```text
-files/review_exports/review-card-{timestamp}.png
+files/review_exports/skymap-review-card-{timestamp}.png
 ```
 
-这是 MVP 阶段最接近可用的导出路径。后续需要继续接入系统相册写入或分享能力，让用户能在图库、文件管理器或分享面板中直接使用导出图。
+随后使用 `@ohos.file.fileuri.getUriFromPath()` 转成沙箱文件 URI，并调用 `@ohos.file.photoAccessHelper.PhotoAccessHelper.showAssetsCreationDialog()` 交给系统保存到相册。用户完成系统确认后，可在图库最近项目找到导出图；如果系统保存被取消或失败，应用保留沙箱备份并显示兜底提示，避免导出结果丢失。
 
 ## 6. 横图布局规则
 

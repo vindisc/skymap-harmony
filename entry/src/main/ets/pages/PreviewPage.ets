@@ -43,11 +43,11 @@ struct PreviewPage {
     this.isExporting = true;
     const result: ReviewCardExportResult = await ReviewCardExportService.exportSnapshot(this.getAbilityContext());
     this.isExporting = false;
-    this.exportMessage = result.success ? `${result.message}：${result.path}` : result.message;
-    if (result.success) {
+    this.exportMessage = result.message;
+    if (result.savedToPhotoLibrary) {
       await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path);
     }
-    promptAction.showToast({ message: result.success ? '导出完成' : '导出失败' });
+    promptAction.showToast({ message: result.message });
   }
 
   build() {
@@ -118,7 +118,7 @@ struct PreviewPage {
         })
           .layoutWeight(1)
         PrimaryButton({
-          label: this.isExporting ? '正在导出' : '导出图片',
+          label: this.isExporting ? '正在导出' : '保存到相册',
           onTap: () => {
             this.exportImage();
           }
