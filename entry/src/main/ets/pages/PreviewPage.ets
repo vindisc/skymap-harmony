@@ -25,6 +25,7 @@ struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State exportMessage: string = '';
   @State isExporting: boolean = false;
+  @State isExportSnapshotMode: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
 
   private getAbilityContext(): common.UIAbilityContext {
@@ -70,7 +71,9 @@ struct PreviewPage {
       return;
     }
     this.isExporting = true;
+    this.isExportSnapshotMode = true;
     try {
+      await this.waitForExportLayout();
       const result: ReviewCardExportResult = await ReviewCardExportService.exportSnapshot(
         this.getAbilityContext(),
         this.getExportComponentId()
@@ -82,8 +85,17 @@ struct PreviewPage {
       }
       promptAction.showToast({ message: result.message });
     } finally {
+      this.isExportSnapshotMode = false;
       this.isExporting = false;
     }
+  }
+
+  private async waitForExportLayout(): Promise<void> {
+    return new Promise<void>((resolve: () => void) => {
+      setTimeout(() => {
+        resolve();
+      }, 80);
+    });
   }
 
   private goHome(): void {
@@ -130,7 +142,10 @@ struct PreviewPage {
 
       Scroll() {
         Column() {
-          ReviewCardPreview({ document: this.document })
+          ReviewCardPreview({
+            document: this.document,
+            displayMode: this.isExportSnapshotMode ? 'export' : 'preview'
+          })
             .id(this.getExportComponentId())
 
           if (this.exportMessage.length > 0) {
@@ -150,6 +165,7 @@ struct PreviewPage {
         .constraintSize({ minHeight: 520 })
       }
       .layoutWeight(1)
+      .scrollBar(BarState.Off)
 
       Row({ space: 10 }) {
         SecondaryButton({

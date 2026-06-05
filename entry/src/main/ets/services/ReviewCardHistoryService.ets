@@ -77,10 +77,20 @@ export class ReviewCardHistoryService {
     return nextItems;
   }
 
+  static async deleteDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
+    const items = await ReviewCardHistoryService.load(context);
+    const key = getReviewDocumentKey(document);
+    const nextItems = items.filter((item: ReviewCardHistoryItem): boolean => {
+      return getReviewDocumentKey(item.document) !== key;
+    });
+
+    await ReviewCardHistoryService.persist(context, nextItems);
+    return nextItems;
+  }
+
   private static async persist(context: common.UIAbilityContext, items: Array<ReviewCardHistoryItem>): Promise<void> {
     const store = await ReviewCardHistoryService.getStore(context);
     await store.put(HISTORY_KEY, JSON.stringify(items));
     await store.flush();
   }
 }
-

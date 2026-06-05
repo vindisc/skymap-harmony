@@ -37,6 +37,30 @@ struct HomePage {
     router.pushUrl({ url: PREVIEW_PAGE });
   }
 
+  private confirmDeleteHistory(document: ReviewCardDocument): void {
+    AlertDialog.show({
+      title: '删除这条复盘记录？',
+      message: '删除后无法恢复',
+      autoCancel: true,
+      primaryButton: {
+        value: '取消',
+        action: () => {
+        }
+      },
+      secondaryButton: {
+        value: '删除',
+        fontColor: '#9A3328',
+        action: () => {
+          this.deleteHistory(document);
+        }
+      }
+    });
+  }
+
+  private async deleteHistory(document: ReviewCardDocument): Promise<void> {
+    this.historyItems = await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
+  }
+
   private async startPhotoDraft(): Promise<void> {
     if (this.isPickingPhoto) {
       return;
@@ -163,6 +187,9 @@ struct HomePage {
                   item: item,
                   onTap: () => {
                     this.openHistory(item.document);
+                  },
+                  onDelete: () => {
+                    this.confirmDeleteHistory(item.document);
                   }
                 })
               }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
@@ -179,6 +206,7 @@ struct HomePage {
     }
     .width('100%')
     .height('100%')
+    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

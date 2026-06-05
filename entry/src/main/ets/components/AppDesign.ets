@@ -212,6 +212,7 @@ export struct RecentReviewCard {
     exportedPath: ''
   };
   onTap: () => void = () => {};
+  onDelete: () => void = () => {};
 
   build() {
     Row({ space: 12 }) {
@@ -247,6 +248,19 @@ export struct RecentReviewCard {
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
+
+      Button('删除')
+        .height(34)
+        .width(54)
+        .borderRadius(7)
+        .fontSize(13)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#9A3328')
+        .backgroundColor('#F3E6E2')
+        .stateEffect(true)
+        .onClick(() => {
+          this.onDelete();
+        })
     }
     .alignItems(VerticalAlign.Center)
     .padding(12)

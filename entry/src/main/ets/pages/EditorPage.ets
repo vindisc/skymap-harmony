@@ -132,6 +132,7 @@ struct EditorPage {
       }
       .layoutWeight(1)
       .width('100%')
+      .scrollBar(BarState.Off)
 
       if (!this.isInputFocused) {
         Column() {
