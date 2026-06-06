@@ -61,8 +61,7 @@ struct EditorPage {
     router.replaceUrl({ url: PREVIEW_PAGE });
   }
 
-  private scrollToFocusedField(field: string): void {
-    this.isInputFocused = true;
+  private getFocusScrollOffset(field: string): number {
     let offset: number = 0;
     if (field === 'title') {
       offset = 120;
@@ -71,14 +70,28 @@ struct EditorPage {
     } else if (field === 'judgement') {
       offset = 520;
     } else if (field === 'blocker') {
-      offset = 760;
+      offset = 850;
     }
+
+    return offset;
+  }
+
+  private scrollToFocusedField(field: string): void {
+    this.isInputFocused = true;
+    const offset: number = this.getFocusScrollOffset(field);
 
     this.scroller.scrollTo({
       xOffset: 0,
       yOffset: offset,
       animation: { duration: 220, curve: Curve.EaseOut }
     });
+    setTimeout(() => {
+      this.scroller.scrollTo({
+        xOffset: 0,
+        yOffset: offset,
+        animation: { duration: 180, curve: Curve.EaseOut }
+      });
+    }, 260);
   }
 
   build() {
@@ -126,28 +139,23 @@ struct EditorPage {
               this.isInputFocused = false;
             }
           })
+
+          if (!this.isInputFocused) {
+            PrimaryButton({
+              label: '生成复盘卡',
+              onTap: () => {
+                this.saveAndPreview();
+              }
+            })
+              .margin({ top: 22 })
+          }
         }
-        .padding({ left: 20, right: 20, top: 18, bottom: this.isInputFocused ? 48 : 126 })
+        .padding({ left: 20, right: 20, top: 18, bottom: this.isInputFocused ? 360 : 28 })
         .width('100%')
       }
       .layoutWeight(1)
       .width('100%')
       .scrollBar(BarState.Off)
-
-      if (!this.isInputFocused) {
-        Column() {
-          PrimaryButton({
-            label: '生成复盘卡',
-            onTap: () => {
-              this.saveAndPreview();
-            }
-          })
-        }
-        .padding({ left: 16, right: 16, top: 12, bottom: 16 })
-        .width('100%')
-        .backgroundColor(AppColors.surface)
-        .shadow({ radius: 10, color: '#10000000', offsetX: 0, offsetY: -3 })
-      }
     }
     .width('100%')
     .height('100%')

@@ -35,19 +35,19 @@ export struct ReadingReviewCard {
   }
 
   private getTextTopGap(): number {
-    return this.isExportMode() ? 16 : 20;
+    return this.isExportMode() ? 12 : 14;
   }
 
   private getInfoTopGap(): number {
-    return this.isExportMode() ? 15 : 20;
+    return this.isExportMode() ? 10 : 12;
   }
 
   private getTitleSize(): number {
-    return this.isExportMode() ? 15 : 18;
+    return this.isExportMode() ? 14 : 18;
   }
 
   private getTitleLineHeight(): number {
-    return this.isExportMode() ? 21 : 25;
+    return this.isExportMode() ? 20 : 25;
   }
 
   private getLabelSize(): number {
@@ -59,11 +59,11 @@ export struct ReadingReviewCard {
   }
 
   private getBodySize(): number {
-    return this.isExportMode() ? 12 : ReviewCardStyleTokens.bodySize;
+    return this.isExportMode() ? 11 : ReviewCardStyleTokens.bodySize;
   }
 
   private getBodyLineHeight(): number {
-    return this.isExportMode() ? 18 : ReviewCardStyleTokens.bodyLineHeight;
+    return this.isExportMode() ? 17 : ReviewCardStyleTokens.bodyLineHeight;
   }
 
   build() {
@@ -91,8 +91,8 @@ export struct ReadingReviewCard {
           labelLineHeight: this.getLabelLineHeight(),
           bodySize: this.getBodySize(),
           bodyLineHeight: this.getBodyLineHeight(),
-          valueTopGap: this.isExportMode() ? 5 : 7,
-          dividerBottomGap: this.isExportMode() ? 12 : 16
+          valueTopGap: this.isExportMode() ? 4 : 5,
+          dividerBottomGap: this.isExportMode() ? 9 : 10
         })
           .margin({ top: this.getInfoTopGap() })
       }

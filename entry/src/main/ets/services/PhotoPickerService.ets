@@ -70,7 +70,7 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
         imageWidth: FALLBACK_IMAGE_WIDTH,
         imageHeight: FALLBACK_IMAGE_HEIGHT,
         imageSizeFallbackUsed: true,
-        message: '尺寸暂不可读，已继续编辑'
+        message: ''
       };
     }
 
@@ -81,7 +81,7 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
       imageWidth: FALLBACK_IMAGE_WIDTH,
       imageHeight: FALLBACK_IMAGE_HEIGHT,
       imageSizeFallbackUsed: true,
-      message: '尺寸暂不可读，已继续编辑'
+      message: ''
     };
   } catch (error) {
     return emptyResult(false, '无法打开系统相册，请稍后重试');

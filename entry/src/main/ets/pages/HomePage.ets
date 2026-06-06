@@ -1,5 +1,6 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
+import promptAction from '@ohos.promptAction';
 import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
@@ -11,7 +12,6 @@ import { AppColors, EmptyState, PrimaryButton, RecentReviewCard } from '../compo
 @Entry
 @Component
 struct HomePage {
-  @State statusMessage: string = '';
   @State isPickingPhoto: boolean = false;
   @State historyItems: Array<ReviewCardHistoryItem> = [];
 
@@ -67,12 +67,13 @@ struct HomePage {
     }
 
     this.isPickingPhoto = true;
-    this.statusMessage = '';
     const result: PickedPhotoResult = await pickSinglePhoto();
     this.isPickingPhoto = false;
 
     if (!result.success) {
-      this.statusMessage = result.cancelled ? '' : result.message;
+      if (!result.cancelled && result.message.length > 0) {
+        promptAction.showToast({ message: result.message });
+      }
       return;
     }
 
@@ -82,7 +83,6 @@ struct HomePage {
       result.imageHeight,
       result.imageSizeFallbackUsed
     );
-    this.statusMessage = result.message;
     router.pushUrl({ url: EDITOR_PAGE });
   }
 
@@ -133,15 +133,6 @@ struct HomePage {
     Scroll() {
       Column() {
         this.HeroPanel()
-
-        if (this.statusMessage.length > 0) {
-          Text(this.statusMessage)
-            .fontSize(13)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(19)
-            .margin({ top: 12 })
-            .width('100%')
-        }
 
         Column() {
           Row() {

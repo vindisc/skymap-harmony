@@ -183,7 +183,7 @@ export struct PhotoSummaryCard {
           }
 
           if (this.imageSizeFallbackUsed) {
-            Text('尺寸暂不可读，已继续编辑。')
+            Text('照片信息暂不可显示，可继续填写。')
               .fontSize(12)
               .fontColor(AppColors.mutedText)
               .lineHeight(18)
@@ -215,48 +215,52 @@ export struct RecentReviewCard {
   onDelete: () => void = () => {};
 
   build() {
-    Row({ space: 12 }) {
-      ReviewPhotoBlock({
-        imageUri: this.item.document.imageUri,
-        imageWidth: this.item.document.imageWidth,
-        imageHeight: this.item.document.imageHeight,
-        aspectRatioValue: 1.25,
-        compact: true,
-        fitMode: ImageFit.Contain
-      })
-        .width(78)
+    Row({ space: 10 }) {
+      Row({ space: 12 }) {
+        ReviewPhotoBlock({
+          imageUri: this.item.document.imageUri,
+          imageWidth: this.item.document.imageWidth,
+          imageHeight: this.item.document.imageHeight,
+          aspectRatioValue: 1.25,
+          compact: true,
+          fitMode: ImageFit.Contain
+        })
+          .width(78)
 
-      Column() {
-        Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-          .fontSize(16)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
+        Column() {
+          Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+
+          Row({ space: 8 }) {
+            Text(formatReviewTime(this.item.document.updatedAt))
+              .fontSize(12)
+              .fontColor(AppColors.secondaryText)
+            Text(getImageRatioLabel(this.item.document.imageWidth, this.item.document.imageHeight))
+              .fontSize(12)
+              .fontColor(AppColors.mutedText)
+          }
+          .margin({ top: 9 })
           .width('100%')
-
-        Row({ space: 8 }) {
-          Text(formatReviewTime(this.item.document.updatedAt))
-            .fontSize(12)
-            .fontColor(AppColors.secondaryText)
-          Text(getImageRatioLabel(this.item.document.imageWidth, this.item.document.imageHeight))
-            .fontSize(12)
-            .fontColor(AppColors.mutedText)
         }
-        .margin({ top: 9 })
-        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
       }
-      .alignItems(HorizontalAlign.Start)
+      .alignItems(VerticalAlign.Center)
       .layoutWeight(1)
 
-      Button('删除')
-        .height(34)
-        .width(54)
-        .borderRadius(7)
-        .fontSize(13)
+      Button('···')
+        .height(32)
+        .width(32)
+        .borderRadius(16)
+        .fontSize(18)
         .fontWeight(FontWeight.Medium)
-        .fontColor('#9A3328')
-        .backgroundColor('#F3E6E2')
+        .fontColor(AppColors.mutedText)
+        .backgroundColor('#00000000')
         .stateEffect(true)
         .onClick(() => {
           this.onDelete();

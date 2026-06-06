@@ -20,7 +20,7 @@ export struct ReviewInfoItem {
           .strokeWidth(1)
           .color(ReviewCardStyleTokens.hairlineColor)
           .width('100%')
-          .opacity(0.72)
+          .opacity(0.46)
           .margin({ bottom: this.dividerBottomGap })
       }
       Text(this.label)
@@ -44,7 +44,7 @@ export struct ReviewInfoItem {
         .textOverflow({ overflow: TextOverflow.Clip })
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ top: 0, bottom: 4 })
+    .padding({ top: 0, bottom: 8 })
     .width('100%')
   }
 }

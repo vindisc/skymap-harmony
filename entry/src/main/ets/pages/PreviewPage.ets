@@ -174,14 +174,14 @@ struct PreviewPage {
             router.replaceUrl({ url: EDITOR_PAGE });
           }
         })
-          .layoutWeight(1)
+          .layoutWeight(0.86)
         SecondaryButton({
           label: '保存',
           onTap: () => {
             this.saveDraft();
           }
         })
-          .layoutWeight(1)
+          .layoutWeight(0.86)
         PrimaryButton({
           label: this.isExporting ? '导出中' : '导出',
           isDisabled: this.isExporting,
@@ -189,9 +189,9 @@ struct PreviewPage {
             this.exportImage();
           }
         })
-          .layoutWeight(1)
+          .layoutWeight(1.18)
       }
-      .padding({ left: 16, right: 16, top: 12, bottom: 14 })
+      .padding({ left: 16, right: 16, top: 10, bottom: 12 })
       .width('100%')
       .backgroundColor(AppColors.surface)
       .shadow({ radius: 12, color: '#14000000', offsetX: 0, offsetY: -4 })

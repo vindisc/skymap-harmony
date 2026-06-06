@@ -51,7 +51,7 @@ export struct ReviewInfoGroup {
     }
     .width('100%')
     .padding({
-      top: 2,
+      top: 0,
       bottom: 0
     })
   }
