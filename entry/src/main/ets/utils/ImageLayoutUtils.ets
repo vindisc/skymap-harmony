@@ -11,6 +11,11 @@ export const VERTICAL_ASPECT_RATIO: number = 0.87;
 
 export type ImageRatioKind = 'horizontal' | 'vertical' | 'square' | 'unknown';
 
+export interface ReviewImageLayout {
+  layoutType: ImageRatioKind;
+  aspectRatio: number;
+}
+
 export function getSampleImage(kind: SampleImageKind): SampleImageInfo {
   if (kind === 'vertical') {
     return {
@@ -85,40 +90,12 @@ export function getImageSizeText(width: number, height: number, fallbackUsed: bo
   return `${width} x ${height}`;
 }
 
-export function getPreviewPhotoAspectRatio(width: number, height: number, fallbackUsed: boolean = false): number {
+export function resolveReviewImageLayout(width: number, height: number, fallbackUsed: boolean = false): ReviewImageLayout {
   const kind = getImageRatioKind(width, height, fallbackUsed);
-  if (kind === 'unknown') {
-    return 1.05;
-  }
-
-  const ratio = getImageAspectRatio(width, height, fallbackUsed);
-  if (kind === 'horizontal') {
-    return Math.min(1.9, Math.max(1.2, ratio));
-  }
-
-  if (kind === 'vertical') {
-    return Math.min(0.92, Math.max(0.72, ratio));
-  }
-
-  return 1;
-}
-
-export function getExportPhotoAspectRatio(width: number, height: number, fallbackUsed: boolean = false): number {
-  const kind = getImageRatioKind(width, height, fallbackUsed);
-  if (kind === 'unknown') {
-    return 1.05;
-  }
-
-  const ratio = getImageAspectRatio(width, height, fallbackUsed);
-  if (kind === 'horizontal') {
-    return Math.min(2.05, Math.max(1.2, ratio));
-  }
-
-  if (kind === 'vertical') {
-    return Math.min(0.9, Math.max(0.68, ratio));
-  }
-
-  return 1;
+  return {
+    layoutType: kind,
+    aspectRatio: kind === 'unknown' ? 1 : getImageAspectRatio(width, height, fallbackUsed)
+  };
 }
 
 export function formatReviewTime(timestamp: number): string {

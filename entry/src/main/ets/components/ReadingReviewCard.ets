@@ -3,7 +3,7 @@ import { ReviewCardStyleTokens } from './ReviewCardStyleTokens';
 import { ReviewCardTitle } from './ReviewCardTitle';
 import { ReviewInfoGroup } from './ReviewInfoGroup';
 import { ReviewPhotoArea } from './ReviewPhotoArea';
-import { getExportPhotoAspectRatio, getPreviewPhotoAspectRatio } from '../utils/ImageLayoutUtils';
+import { resolveReviewImageLayout } from '../utils/ImageLayoutUtils';
 
 @Component
 export struct ReadingReviewCard {
@@ -15,19 +15,11 @@ export struct ReadingReviewCard {
   }
 
   private getPhotoAspectRatio(): number {
-    if (this.isExportMode()) {
-      return getExportPhotoAspectRatio(
-        this.document.imageWidth,
-        this.document.imageHeight,
-        this.document.imageSizeFallbackUsed
-      );
-    }
-
-    return getPreviewPhotoAspectRatio(
+    return resolveReviewImageLayout(
       this.document.imageWidth,
       this.document.imageHeight,
       this.document.imageSizeFallbackUsed
-    );
+    ).aspectRatio;
   }
 
   private getCardPadding(): number {

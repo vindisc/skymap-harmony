@@ -9,7 +9,7 @@ export struct ReviewPhotoBlock {
   @Prop aspectRatioValue: number = 1.6;
   @Prop compact: boolean = false;
   @Prop cornerRadius: number = 7;
-  @Prop fitMode: ImageFit = ImageFit.Cover;
+  @Prop fitMode: ImageFit = ImageFit.Contain;
   @State loadFailed: boolean = false;
 
   @Builder

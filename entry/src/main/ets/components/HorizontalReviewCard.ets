@@ -3,6 +3,7 @@ import { ReviewCardStyleTokens } from './ReviewCardStyleTokens';
 import { ReviewPhotoArea } from './ReviewPhotoArea';
 import { ReviewCardTitle } from './ReviewCardTitle';
 import { ReviewInfoGroup } from './ReviewInfoGroup';
+import { resolveReviewImageLayout } from '../utils/ImageLayoutUtils';
 
 @Component
 export struct HorizontalReviewCard {
@@ -14,7 +15,12 @@ export struct HorizontalReviewCard {
       imageUri: this.document.imageUri,
       imageWidth: this.document.imageWidth,
       imageHeight: this.document.imageHeight,
-      aspectRatioValue: 1.55
+      imageSizeFallbackUsed: this.document.imageSizeFallbackUsed,
+      aspectRatioValue: resolveReviewImageLayout(
+        this.document.imageWidth,
+        this.document.imageHeight,
+        this.document.imageSizeFallbackUsed
+      ).aspectRatio
     })
   }
 
