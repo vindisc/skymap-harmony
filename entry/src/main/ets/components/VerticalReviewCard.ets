@@ -28,11 +28,12 @@ export struct VerticalReviewCard {
   }
 
   build() {
-    Row({ space: ReviewCardRenderPreset.verticalGap(this.displayMode) }) {
+    Column() {
       Column() {
         this.PhotoBlock()
       }
-        .width(ReviewCardRenderPreset.verticalPhotoWidth(this.displayMode))
+      .width(ReviewCardRenderPreset.verticalInlinePhotoWidth(this.displayMode))
+      .alignSelf(ItemAlign.Center)
 
       Column() {
         ReviewCardTitle({
@@ -54,10 +55,16 @@ export struct VerticalReviewCard {
         })
           .margin({ top: ReviewCardRenderPreset.infoTopGap(this.displayMode) })
       }
+      .padding({
+        left: 2,
+        right: 2,
+        top: ReviewCardRenderPreset.textTopGap(this.displayMode),
+        bottom: 0
+      })
       .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
+      .width('100%')
     }
-    .alignItems(VerticalAlign.Top)
+    .alignItems(HorizontalAlign.Start)
     .padding(ReviewCardRenderPreset.cardPadding(this.displayMode))
     .width('100%')
     .borderRadius(ReviewCardRenderPreset.cardRadius(this.displayMode))

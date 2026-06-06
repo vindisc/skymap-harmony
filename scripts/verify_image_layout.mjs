@@ -32,7 +32,7 @@ function resolveReviewImageLayout(width, height, fallbackUsed = false) {
 
 const cases = [
   { name: 'horizontal', width: 1600, height: 1000, expectedType: 'horizontal', expectedRatio: 1.6, expectedStructure: 'top-image-bottom-text' },
-  { name: 'vertical', width: 1152, height: 1536, expectedType: 'vertical', expectedRatio: 0.75, expectedStructure: 'left-image-right-text' },
+  { name: 'vertical', width: 1152, height: 1536, expectedType: 'vertical', expectedRatio: 0.75, expectedStructure: 'top-image-bottom-text' },
   { name: 'square', width: 1200, height: 1200, expectedType: 'square', expectedRatio: 1, expectedStructure: 'top-image-bottom-text' },
   { name: 'fallback', width: 1600, height: 1000, fallbackUsed: true, expectedType: 'unknown', expectedRatio: 1, expectedStructure: 'top-image-bottom-text' }
 ];
@@ -44,13 +44,10 @@ const recoveredFallbackCase = {
   fallbackUsed: false,
   expectedType: 'vertical',
   expectedRatio: 1272 / 2860,
-  expectedStructure: 'left-image-right-text'
+  expectedStructure: 'top-image-bottom-text'
 };
 
 function resolveReviewCardStructure(layoutType) {
-  if (layoutType === 'vertical') {
-    return 'left-image-right-text';
-  }
   return 'top-image-bottom-text';
 }
 
