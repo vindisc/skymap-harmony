@@ -14,6 +14,6 @@ export struct ReviewCardPreview {
       })
     }
     .width('100%')
-    .constraintSize({ maxWidth: this.displayMode === 'export' ? 420 : 480 })
+    .constraintSize({ maxWidth: this.displayMode === 'export' ? 560 : 480 })
   }
 }
