@@ -44,6 +44,10 @@ function resolveReviewCardStructure(layoutType) {
   return 'top-image-bottom-text';
 }
 
+function resolveExportCanvasWidth() {
+  return 560;
+}
+
 let failed = false;
 for (const testCase of cases) {
   const result = resolveReviewImageLayout(testCase.width, testCase.height, testCase.fallbackUsed === true);
@@ -62,3 +66,10 @@ for (const testCase of cases) {
 if (failed) {
   process.exit(1);
 }
+
+const exportCanvasWidth = resolveExportCanvasWidth();
+if (exportCanvasWidth !== 560) {
+  console.error(`export canvas: expected 560, got ${exportCanvasWidth}`);
+  process.exit(1);
+}
+console.log(`export canvas: width=${exportCanvasWidth}`);

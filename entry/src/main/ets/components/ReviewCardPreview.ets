@@ -1,5 +1,6 @@
 import { createDefaultReviewCardDocument, ReviewCardDocument } from '../model/ReviewCardModel';
 import { ReadingReviewCard } from './ReadingReviewCard';
+import { ReviewCardRenderPreset } from './ReviewCardRenderPreset';
 
 @Component
 export struct ReviewCardPreview {
@@ -7,13 +8,23 @@ export struct ReviewCardPreview {
   @Prop displayMode: string = 'preview';
 
   build() {
-    Column() {
-      ReadingReviewCard({
-        document: this.document,
-        displayMode: this.displayMode
-      })
+    if (this.displayMode === 'export') {
+      Column() {
+        ReadingReviewCard({
+          document: this.document,
+          displayMode: this.displayMode
+        })
+      }
+      .width(ReviewCardRenderPreset.exportCanvasWidth())
+    } else {
+      Column() {
+        ReadingReviewCard({
+          document: this.document,
+          displayMode: this.displayMode
+        })
+      }
+      .width('100%')
+      .constraintSize({ maxWidth: 480 })
     }
-    .width('100%')
-    .constraintSize({ maxWidth: this.displayMode === 'export' ? 560 : 480 })
   }
 }

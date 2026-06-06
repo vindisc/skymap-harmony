@@ -69,7 +69,11 @@ export class ReviewCardRenderPreset {
     return ReviewCardRenderPreset.isExportMode(displayMode) ? 18 : 12;
   }
 
-  static verticalPhotoWidth(displayMode: string): string {
-    return ReviewCardRenderPreset.isExportMode(displayMode) ? '42%' : '40%';
+  static verticalPhotoWidth(displayMode: string): number {
+    return ReviewCardRenderPreset.isExportMode(displayMode) ? 214 : 122;
+  }
+
+  static exportCanvasWidth(): number {
+    return 560;
   }
 }
