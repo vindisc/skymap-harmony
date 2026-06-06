@@ -5,6 +5,7 @@ export struct ReviewPhotoBlock {
   @Prop imageUri: string = '';
   @Prop imageWidth: number = 1600;
   @Prop imageHeight: number = 1000;
+  @Prop imageSizeFallbackUsed: boolean = false;
   @Prop aspectRatioValue: number = 1.6;
   @Prop compact: boolean = false;
   @Prop cornerRadius: number = 7;
@@ -14,14 +15,18 @@ export struct ReviewPhotoBlock {
   @Builder
   Placeholder() {
     Column() {
-      Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '图片加载失败' : getImageRatioLabel(this.imageWidth, this.imageHeight))
+      Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed
+        ? '图片加载失败'
+        : getImageRatioLabel(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
         .fontSize(this.compact ? 14 : 18)
         .fontWeight(FontWeight.Medium)
         .fontColor('#1F2329')
-      Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '请返回重新选择照片' : `${this.imageWidth} x ${this.imageHeight}`)
-        .fontSize(12)
-        .fontColor('#68707D')
-        .margin({ top: 6 })
+      if (!this.imageSizeFallbackUsed) {
+        Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '请返回重新选择照片' : `${this.imageWidth} x ${this.imageHeight}`)
+          .fontSize(12)
+          .fontColor('#68707D')
+          .margin({ top: 6 })
+      }
     }
     .justifyContent(FlexAlign.Center)
     .width('100%')

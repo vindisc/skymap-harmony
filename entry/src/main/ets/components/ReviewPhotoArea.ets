@@ -6,6 +6,7 @@ export struct ReviewPhotoArea {
   @Prop imageUri: string = '';
   @Prop imageWidth: number = 1600;
   @Prop imageHeight: number = 1000;
+  @Prop imageSizeFallbackUsed: boolean = false;
   @Prop aspectRatioValue: number = 1.6;
   @Prop compact: boolean = false;
 
@@ -14,6 +15,7 @@ export struct ReviewPhotoArea {
       imageUri: this.imageUri,
       imageWidth: this.imageWidth,
       imageHeight: this.imageHeight,
+      imageSizeFallbackUsed: this.imageSizeFallbackUsed,
       aspectRatioValue: this.aspectRatioValue,
       compact: this.compact,
       cornerRadius: ReviewCardStyleTokens.photoRadius,

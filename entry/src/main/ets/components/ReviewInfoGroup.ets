@@ -12,6 +12,7 @@ export struct ReviewInfoGroup {
   @Prop bodyLineHeight: number = ReviewCardStyleTokens.bodyLineHeight;
   @Prop valueTopGap: number = 7;
   @Prop dividerBottomGap: number = 16;
+  @Prop itemBottomGap: number = 8;
 
   build() {
     Column() {
@@ -24,7 +25,8 @@ export struct ReviewInfoGroup {
         bodySize: this.bodySize,
         bodyLineHeight: this.bodyLineHeight,
         valueTopGap: this.valueTopGap,
-        dividerBottomGap: this.dividerBottomGap
+        dividerBottomGap: this.dividerBottomGap,
+        itemBottomGap: this.itemBottomGap
       })
       ReviewInfoItem({
         label: '是否成立',
@@ -35,7 +37,8 @@ export struct ReviewInfoGroup {
         bodySize: this.bodySize,
         bodyLineHeight: this.bodyLineHeight,
         valueTopGap: this.valueTopGap,
-        dividerBottomGap: this.dividerBottomGap
+        dividerBottomGap: this.dividerBottomGap,
+        itemBottomGap: this.itemBottomGap
       })
       ReviewInfoItem({
         label: '卡点',
@@ -46,7 +49,8 @@ export struct ReviewInfoGroup {
         bodySize: this.bodySize,
         bodyLineHeight: this.bodyLineHeight,
         valueTopGap: this.valueTopGap,
-        dividerBottomGap: this.dividerBottomGap
+        dividerBottomGap: this.dividerBottomGap,
+        itemBottomGap: this.itemBottomGap
       })
     }
     .width('100%')

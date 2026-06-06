@@ -1,5 +1,5 @@
 import { createDefaultReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { formatReviewTime, getImageRatioLabel } from '../utils/ImageLayoutUtils';
+import { formatReviewTime, getImageRatioLabel, getImageSizeText } from '../utils/ImageLayoutUtils';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
@@ -161,6 +161,7 @@ export struct PhotoSummaryCard {
           imageUri: this.imageUri,
           imageWidth: this.imageWidth,
           imageHeight: this.imageHeight,
+          imageSizeFallbackUsed: this.imageSizeFallbackUsed,
           aspectRatioValue: 1.25,
           compact: true,
           fitMode: ImageFit.Contain
@@ -168,14 +169,14 @@ export struct PhotoSummaryCard {
           .width(112)
 
         Column() {
-          Text(getImageRatioLabel(this.imageWidth, this.imageHeight))
+          Text(getImageRatioLabel(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
             .fontSize(15)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .width('100%')
 
           if (!this.imageSizeFallbackUsed) {
-            Text(`${this.imageWidth} x ${this.imageHeight}`)
+            Text(getImageSizeText(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
               .fontSize(12)
               .fontColor(AppColors.mutedText)
               .margin({ top: 7 })
@@ -219,6 +220,7 @@ export struct RecentReviewCard {
         imageUri: this.item.document.imageUri,
         imageWidth: this.item.document.imageWidth,
         imageHeight: this.item.document.imageHeight,
+        imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
         aspectRatioValue: 1.25,
         compact: true,
         fitMode: ImageFit.Contain
@@ -238,7 +240,11 @@ export struct RecentReviewCard {
           Text(formatReviewTime(this.item.document.updatedAt))
             .fontSize(12)
             .fontColor(AppColors.secondaryText)
-          Text(getImageRatioLabel(this.item.document.imageWidth, this.item.document.imageHeight))
+          Text(getImageRatioLabel(
+            this.item.document.imageWidth,
+            this.item.document.imageHeight,
+            this.item.document.imageSizeFallbackUsed
+          ))
             .fontSize(12)
             .fontColor(AppColors.mutedText)
         }

@@ -3,6 +3,7 @@ import { ReviewCardStyleTokens } from './ReviewCardStyleTokens';
 import { ReviewCardTitle } from './ReviewCardTitle';
 import { ReviewInfoGroup } from './ReviewInfoGroup';
 import { ReviewPhotoArea } from './ReviewPhotoArea';
+import { getExportPhotoAspectRatio, getPreviewPhotoAspectRatio } from '../utils/ImageLayoutUtils';
 
 @Component
 export struct ReadingReviewCard {
@@ -13,57 +14,72 @@ export struct ReadingReviewCard {
     return this.displayMode === 'export';
   }
 
-  private getPhotoRatio(): number {
-    if (this.document.imageWidth <= 0 || this.document.imageHeight <= 0) {
-      return 1.35;
+  private getPhotoAspectRatio(): number {
+    if (this.isExportMode()) {
+      return getExportPhotoAspectRatio(
+        this.document.imageWidth,
+        this.document.imageHeight,
+        this.document.imageSizeFallbackUsed
+      );
     }
 
-    const ratio: number = this.document.imageWidth / this.document.imageHeight;
-    if (ratio >= 1.15) {
-      return 1.45;
-    }
-
-    if (ratio <= 0.85) {
-      return 0.82;
-    }
-
-    return 1;
+    return getPreviewPhotoAspectRatio(
+      this.document.imageWidth,
+      this.document.imageHeight,
+      this.document.imageSizeFallbackUsed
+    );
   }
 
   private getCardPadding(): number {
-    return this.isExportMode() ? 18 : ReviewCardStyleTokens.cardPadding;
+    return this.isExportMode() ? 22 : 16;
+  }
+
+  private getCardRadius(): number {
+    return this.isExportMode() ? 12 : ReviewCardStyleTokens.cardRadius;
   }
 
   private getTextTopGap(): number {
-    return this.isExportMode() ? 12 : 14;
+    return this.isExportMode() ? 11 : 13;
   }
 
   private getInfoTopGap(): number {
-    return this.isExportMode() ? 10 : 12;
+    return this.isExportMode() ? 8 : 10;
   }
 
   private getTitleSize(): number {
-    return this.isExportMode() ? 14 : 18;
+    return this.isExportMode() ? 13 : 17;
   }
 
   private getTitleLineHeight(): number {
-    return this.isExportMode() ? 20 : 25;
+    return this.isExportMode() ? 18 : 24;
   }
 
   private getLabelSize(): number {
-    return this.isExportMode() ? 9 : ReviewCardStyleTokens.labelSize;
+    return this.isExportMode() ? 7 : 10;
   }
 
   private getLabelLineHeight(): number {
-    return this.isExportMode() ? 13 : ReviewCardStyleTokens.labelLineHeight;
+    return this.isExportMode() ? 10 : 14;
   }
 
   private getBodySize(): number {
-    return this.isExportMode() ? 11 : ReviewCardStyleTokens.bodySize;
+    return this.isExportMode() ? 10 : 14;
   }
 
   private getBodyLineHeight(): number {
-    return this.isExportMode() ? 17 : ReviewCardStyleTokens.bodyLineHeight;
+    return this.isExportMode() ? 15 : 22;
+  }
+
+  private getValueTopGap(): number {
+    return this.isExportMode() ? 3 : 4;
+  }
+
+  private getDividerBottomGap(): number {
+    return this.isExportMode() ? 6 : 8;
+  }
+
+  private getItemBottomGap(): number {
+    return this.isExportMode() ? 4 : 6;
   }
 
   build() {
@@ -72,7 +88,8 @@ export struct ReadingReviewCard {
         imageUri: this.document.imageUri,
         imageWidth: this.document.imageWidth,
         imageHeight: this.document.imageHeight,
-        aspectRatioValue: this.getPhotoRatio(),
+        imageSizeFallbackUsed: this.document.imageSizeFallbackUsed,
+        aspectRatioValue: this.getPhotoAspectRatio(),
         compact: true
       })
 
@@ -91,8 +108,9 @@ export struct ReadingReviewCard {
           labelLineHeight: this.getLabelLineHeight(),
           bodySize: this.getBodySize(),
           bodyLineHeight: this.getBodyLineHeight(),
-          valueTopGap: this.isExportMode() ? 4 : 5,
-          dividerBottomGap: this.isExportMode() ? 9 : 10
+          valueTopGap: this.getValueTopGap(),
+          dividerBottomGap: this.getDividerBottomGap(),
+          itemBottomGap: this.getItemBottomGap()
         })
           .margin({ top: this.getInfoTopGap() })
       }
@@ -103,9 +121,9 @@ export struct ReadingReviewCard {
     .alignItems(HorizontalAlign.Start)
     .padding(this.getCardPadding())
     .width('100%')
-    .borderRadius(ReviewCardStyleTokens.cardRadius)
+    .borderRadius(this.getCardRadius())
     .backgroundColor(ReviewCardStyleTokens.canvasColor)
     .border({ width: 1, color: ReviewCardStyleTokens.hairlineColor })
-    .shadow({ radius: 16, color: ReviewCardStyleTokens.shadowColor, offsetX: 0, offsetY: 8 })
+    .shadow({ radius: this.isExportMode() ? 8 : 14, color: ReviewCardStyleTokens.shadowColor, offsetX: 0, offsetY: 6 })
   }
 }

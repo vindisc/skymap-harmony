@@ -14,6 +14,11 @@ export interface PickedPhotoResult {
 const FALLBACK_IMAGE_WIDTH: number = 1600;
 const FALLBACK_IMAGE_HEIGHT: number = 1000;
 
+interface DisplayImageSize {
+  width: number;
+  height: number;
+}
+
 function emptyResult(cancelled: boolean, message: string): PickedPhotoResult {
   return {
     success: false,
@@ -26,11 +31,37 @@ function emptyResult(cancelled: boolean, message: string): PickedPhotoResult {
   };
 }
 
-async function resolveImageSize(imageUri: string): Promise<image.Size> {
+function shouldSwapOrientation(orientation: string): boolean {
+  const normalized = orientation.trim().toLowerCase();
+  return normalized === '5'
+    || normalized === '6'
+    || normalized === '7'
+    || normalized === '8'
+    || normalized === 'left-top'
+    || normalized === 'right-top'
+    || normalized === 'right-bottom'
+    || normalized === 'left-bottom';
+}
+
+async function resolveDisplayImageSize(imageUri: string): Promise<DisplayImageSize> {
   const source: image.ImageSource = image.createImageSource(imageUri);
   try {
     const imageInfo: image.ImageInfo = await source.getImageInfo();
-    return imageInfo.size;
+    let width = imageInfo.size.width;
+    let height = imageInfo.size.height;
+    try {
+      const orientation = await source.getImageProperty(image.PropertyKey.ORIENTATION);
+      if (shouldSwapOrientation(orientation)) {
+        const originalWidth = width;
+        width = height;
+        height = originalWidth;
+      }
+    } catch (error) {
+    }
+    return {
+      width: width,
+      height: height
+    };
   } finally {
     await source.release();
   }
@@ -50,7 +81,7 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
 
     const imageUri: string = result.photoUris[0];
     try {
-      const size: image.Size = await resolveImageSize(imageUri);
+      const size: DisplayImageSize = await resolveDisplayImageSize(imageUri);
       if (size.width > 0 && size.height > 0) {
         return {
           success: true,

@@ -167,7 +167,6 @@ struct PreviewPage {
         .justifyContent(FlexAlign.Center)
         .padding({ left: 18, right: 18, top: 16, bottom: 32 })
         .width('100%')
-        .constraintSize({ minHeight: 520 })
       }
       .layoutWeight(1)
       .scrollBar(BarState.Off)

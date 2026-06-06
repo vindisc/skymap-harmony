@@ -12,6 +12,7 @@ export struct ReviewInfoItem {
   @Prop bodyLineHeight: number = ReviewCardStyleTokens.bodyLineHeight;
   @Prop valueTopGap: number = 7;
   @Prop dividerBottomGap: number = 16;
+  @Prop itemBottomGap: number = 8;
 
   build() {
     Column() {
@@ -44,7 +45,7 @@ export struct ReviewInfoItem {
         .textOverflow({ overflow: TextOverflow.Clip })
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ top: 0, bottom: 8 })
+    .padding({ top: 0, bottom: this.itemBottomGap })
     .width('100%')
   }
 }

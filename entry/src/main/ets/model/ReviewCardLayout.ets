@@ -1,23 +1,28 @@
 import { ReviewCardDocument, ReviewCardLayoutMode } from './ReviewCardModel';
+import { getImageRatioKind, ImageRatioKind } from '../utils/ImageLayoutUtils';
 
 export function resolveLayoutMode(document: ReviewCardDocument): ReviewCardLayoutMode {
   if (document.config.layoutMode !== ReviewCardLayoutMode.AUTO) {
     return document.config.layoutMode;
   }
 
-  if (document.imageHeight <= 0) {
-    return ReviewCardLayoutMode.SQUARE_PHOTO_BOTTOM_TEXT;
-  }
+  const kind: ImageRatioKind = getImageRatioKind(
+    document.imageWidth,
+    document.imageHeight,
+    document.imageSizeFallbackUsed
+  );
 
-  const ratio: number = document.imageWidth / document.imageHeight;
-  if (ratio >= 1.15) {
+  if (kind === 'horizontal') {
     return ReviewCardLayoutMode.HORIZONTAL_PHOTO_BOTTOM_TEXT;
   }
 
-  if (ratio <= 0.85) {
+  if (kind === 'vertical') {
     return ReviewCardLayoutMode.VERTICAL_PHOTO_RIGHT_TEXT;
+  }
+
+  if (kind === 'unknown') {
+    return ReviewCardLayoutMode.SQUARE_PHOTO_BOTTOM_TEXT;
   }
 
   return ReviewCardLayoutMode.SQUARE_PHOTO_BOTTOM_TEXT;
 }
-
