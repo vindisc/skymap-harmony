@@ -37,6 +37,16 @@ const cases = [
   { name: 'fallback', width: 1600, height: 1000, fallbackUsed: true, expectedType: 'unknown', expectedRatio: 1, expectedStructure: 'top-image-bottom-text' }
 ];
 
+const recoveredFallbackCase = {
+  name: 'recovered fallback vertical',
+  width: 1272,
+  height: 2860,
+  fallbackUsed: false,
+  expectedType: 'vertical',
+  expectedRatio: 1272 / 2860,
+  expectedStructure: 'left-image-right-text'
+};
+
 function resolveReviewCardStructure(layoutType) {
   if (layoutType === 'vertical') {
     return 'left-image-right-text';
@@ -61,6 +71,22 @@ for (const testCase of cases) {
   } else {
     console.log(`${testCase.name}: ${result.layoutType}, aspectRatio=${result.aspectRatio}, structure=${structure}`);
   }
+}
+
+const recoveredResult = resolveReviewImageLayout(
+  recoveredFallbackCase.width,
+  recoveredFallbackCase.height,
+  recoveredFallbackCase.fallbackUsed
+);
+const recoveredRatioMatches = Math.abs(recoveredResult.aspectRatio - recoveredFallbackCase.expectedRatio) < 0.0001;
+const recoveredTypeMatches = recoveredResult.layoutType === recoveredFallbackCase.expectedType;
+const recoveredStructure = resolveReviewCardStructure(recoveredResult.layoutType);
+const recoveredStructureMatches = recoveredStructure === recoveredFallbackCase.expectedStructure;
+if (!recoveredRatioMatches || !recoveredTypeMatches || !recoveredStructureMatches) {
+  failed = true;
+  console.error(`${recoveredFallbackCase.name}: expected ${recoveredFallbackCase.expectedType}/${recoveredFallbackCase.expectedRatio}/${recoveredFallbackCase.expectedStructure}, got ${recoveredResult.layoutType}/${recoveredResult.aspectRatio}/${recoveredStructure}`);
+} else {
+  console.log(`${recoveredFallbackCase.name}: ${recoveredResult.layoutType}, aspectRatio=${recoveredResult.aspectRatio}, structure=${recoveredStructure}`);
 }
 
 if (failed) {

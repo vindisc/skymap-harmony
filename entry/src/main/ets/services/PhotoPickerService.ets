@@ -1,5 +1,6 @@
 import photoAccessHelper from '@ohos.file.photoAccessHelper';
 import image from '@ohos.multimedia.image';
+import fs from '@ohos.file.fs';
 
 export interface PickedPhotoResult {
   success: boolean;
@@ -14,7 +15,7 @@ export interface PickedPhotoResult {
 const FALLBACK_IMAGE_WIDTH: number = 1600;
 const FALLBACK_IMAGE_HEIGHT: number = 1000;
 
-interface DisplayImageSize {
+export interface DisplayImageSize {
   width: number;
   height: number;
 }
@@ -43,8 +44,7 @@ function shouldSwapOrientation(orientation: string): boolean {
     || normalized === 'left-bottom';
 }
 
-async function resolveDisplayImageSize(imageUri: string): Promise<DisplayImageSize> {
-  const source: image.ImageSource = image.createImageSource(imageUri);
+async function readDisplayImageSize(source: image.ImageSource): Promise<DisplayImageSize> {
   try {
     const imageInfo: image.ImageInfo = await source.getImageInfo();
     let width = imageInfo.size.width;
@@ -64,6 +64,29 @@ async function resolveDisplayImageSize(imageUri: string): Promise<DisplayImageSi
     };
   } finally {
     await source.release();
+  }
+}
+
+async function resolveDisplayImageSizeByUri(imageUri: string): Promise<DisplayImageSize> {
+  const source: image.ImageSource = image.createImageSource(imageUri);
+  return readDisplayImageSize(source);
+}
+
+async function resolveDisplayImageSizeByFd(imageUri: string): Promise<DisplayImageSize> {
+  const file: fs.File = fs.openSync(imageUri, fs.OpenMode.READ_ONLY);
+  try {
+    const source: image.ImageSource = image.createImageSource(file.fd);
+    return await readDisplayImageSize(source);
+  } finally {
+    fs.closeSync(file);
+  }
+}
+
+export async function resolveDisplayImageSize(imageUri: string): Promise<DisplayImageSize> {
+  try {
+    return await resolveDisplayImageSizeByUri(imageUri);
+  } catch (error) {
+    return await resolveDisplayImageSizeByFd(imageUri);
   }
 }
 

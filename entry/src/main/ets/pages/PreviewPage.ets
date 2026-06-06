@@ -12,6 +12,8 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
 import { AppColors, PrimaryButton, SecondaryButton } from '../components/AppDesign';
+import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
+import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 
 enum PreviewSaveState {
   UNSAVED = '未保存',
@@ -34,7 +36,47 @@ struct PreviewPage {
 
   aboutToAppear(): void {
     this.document = ReviewCardStore.getCurrentDocument();
+    this.recoverImageSizeIfNeeded();
     this.syncSaveState();
+  }
+
+  private async recoverImageSizeIfNeeded(): Promise<void> {
+    if (!this.document.imageSizeFallbackUsed || !hasDisplayableImageUri(this.document.imageUri)) {
+      return;
+    }
+
+    try {
+      const size: DisplayImageSize = await resolveDisplayImageSize(this.document.imageUri);
+      if (size.width <= 0 || size.height <= 0) {
+        return;
+      }
+
+      const next: ReviewCardDocument = {
+        version: this.document.version,
+        imageUri: this.document.imageUri,
+        imageWidth: size.width,
+        imageHeight: size.height,
+        imageSizeFallbackUsed: false,
+        content: {
+          title: this.document.content.title,
+          firstLook: this.document.content.firstLook,
+          judgement: this.document.content.judgement,
+          blocker: this.document.content.blocker
+        },
+        config: {
+          templateId: this.document.config.templateId,
+          layoutMode: this.document.config.layoutMode,
+          background: this.document.config.background,
+          textSize: this.document.config.textSize
+        },
+        createdAt: this.document.createdAt,
+        updatedAt: this.document.updatedAt
+      };
+      this.document = next;
+      ReviewCardStore.setCurrentDocument(next);
+      await ReviewCardHistoryService.updateDocument(this.getAbilityContext(), next);
+    } catch (error) {
+    }
   }
 
   private async syncSaveState(): Promise<void> {
@@ -94,7 +136,7 @@ struct PreviewPage {
     return new Promise<void>((resolve: () => void) => {
       setTimeout(() => {
         resolve();
-      }, 80);
+      }, 360);
     });
   }
 

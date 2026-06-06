@@ -59,6 +59,22 @@ export class ReviewCardHistoryService {
     return nextItems;
   }
 
+  static async updateDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
+    const items = await ReviewCardHistoryService.load(context);
+    const key = getReviewDocumentKey(document);
+    const nextItems = items.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
+      if (getReviewDocumentKey(item.document) === key) {
+        return createHistoryItem(document, item.exportedPath);
+      }
+      return createHistoryItem(item.document, item.exportedPath);
+    });
+
+    if (nextItems.some((item: ReviewCardHistoryItem): boolean => getReviewDocumentKey(item.document) === key)) {
+      await ReviewCardHistoryService.persist(context, nextItems);
+    }
+    return nextItems;
+  }
+
   static async markExported(context: common.UIAbilityContext, document: ReviewCardDocument, exportedPath: string): Promise<Array<ReviewCardHistoryItem>> {
     const items = await ReviewCardHistoryService.load(context);
     const key = getReviewDocumentKey(document);
