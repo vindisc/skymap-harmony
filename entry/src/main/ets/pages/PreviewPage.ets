@@ -128,13 +128,18 @@ struct PreviewPage {
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
 
-        SecondaryButton({
-          label: '回首页',
-          onTap: () => {
+        Button('回首页')
+          .height(34)
+          .width(72)
+          .borderRadius(7)
+          .fontSize(13)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.secondaryText)
+          .backgroundColor('#00000000')
+          .stateEffect(true)
+          .onClick(() => {
             this.goHome();
-          }
-        })
-          .width(88)
+          })
       }
       .alignItems(VerticalAlign.Center)
       .padding({ left: 20, right: 20, top: 18, bottom: 8 })

@@ -9,7 +9,7 @@ import {
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
-import { AppColors, PhotoSummaryCard, PrimaryButton, SecondaryButton } from '../components/AppDesign';
+import { AppColors, PhotoSummaryCard, PrimaryButton } from '../components/AppDesign';
 
 @Entry
 @Component
@@ -99,13 +99,6 @@ struct EditorPage {
       Scroll(this.scroller) {
         Column() {
           Row() {
-            SecondaryButton({
-              label: '返回',
-              onTap: () => {
-                router.back();
-              }
-            })
-              .width(82)
             Blank()
             Text('写复盘')
               .fontSize(20)
@@ -113,8 +106,6 @@ struct EditorPage {
               .fontColor(AppColors.text)
               .lineHeight(28)
             Blank()
-            Blank()
-              .width(82)
           }
           .alignItems(VerticalAlign.Center)
           .width('100%')

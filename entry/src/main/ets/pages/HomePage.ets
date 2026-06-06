@@ -6,7 +6,6 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { SampleImageKind } from '../utils/ImageLayoutUtils';
 import { AppColors, EmptyState, PrimaryButton, RecentReviewCard } from '../components/AppDesign';
 
 @Entry
@@ -25,11 +24,6 @@ struct HomePage {
 
   private async reloadHistory(): Promise<void> {
     this.historyItems = await ReviewCardHistoryService.load(this.getAbilityContext());
-  }
-
-  private startDraft(kind: SampleImageKind): void {
-    ReviewCardStore.createDraft(kind);
-    router.pushUrl({ url: EDITOR_PAGE });
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -59,6 +53,7 @@ struct HomePage {
 
   private async deleteHistory(document: ReviewCardDocument): Promise<void> {
     this.historyItems = await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
+    promptAction.showToast({ message: '已删除复盘记录' });
   }
 
   private async startPhotoDraft(): Promise<void> {
@@ -87,17 +82,17 @@ struct HomePage {
   }
 
   @Builder
-  SampleChip(label: string, kind: SampleImageKind) {
-    Button(label)
-      .height(34)
-      .borderRadius(7)
-      .fontSize(13)
+  DeleteSwipeAction(document: ReviewCardDocument) {
+    Button('删除')
+      .height(66)
+      .width(76)
+      .borderRadius(8)
+      .fontSize(14)
       .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.text)
-      .backgroundColor('#F0ECE4')
-      .padding({ left: 13, right: 13 })
+      .fontColor('#FFFFFF')
+      .backgroundColor('#B73A31')
       .onClick(() => {
-        this.startDraft(kind);
+        this.confirmDeleteHistory(document);
       })
   }
 
@@ -136,28 +131,6 @@ struct HomePage {
 
         Column() {
           Row() {
-            Text('示例')
-              .fontSize(14)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(AppColors.text)
-            Blank()
-          }
-          .width('100%')
-
-          Row({ space: 8 }) {
-            this.SampleChip('横图', 'horizontal')
-            this.SampleChip('竖图', 'vertical')
-            this.SampleChip('方图', 'square')
-          }
-          .width('100%')
-          .margin({ top: 10 })
-        }
-        .padding({ left: 2, right: 2, top: 0, bottom: 0 })
-        .width('100%')
-        .margin({ top: 22 })
-
-        Column() {
-          Row() {
             Text('最近记录')
               .fontSize(19)
               .fontWeight(FontWeight.Bold)
@@ -172,20 +145,27 @@ struct HomePage {
             })
               .margin({ top: 12 })
           } else {
-            Column({ space: 10 }) {
+            List({ space: 10 }) {
               ForEach(this.historyItems, (item: ReviewCardHistoryItem) => {
-                RecentReviewCard({
-                  item: item,
-                  onTap: () => {
-                    this.openHistory(item.document);
+                ListItem() {
+                  RecentReviewCard({
+                    item: item,
+                    onTap: () => {
+                      this.openHistory(item.document);
+                    }
+                  })
+                }
+                .swipeAction({
+                  end: () => {
+                    this.DeleteSwipeAction(item.document);
                   },
-                  onDelete: () => {
-                    this.confirmDeleteHistory(item.document);
-                  }
+                  edgeEffect: SwipeEdgeEffect.Spring
                 })
               }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
             }
             .width('100%')
+            .height(this.historyItems.length * 98)
+            .scrollBar(BarState.Off)
             .margin({ top: 12 })
           }
         }
