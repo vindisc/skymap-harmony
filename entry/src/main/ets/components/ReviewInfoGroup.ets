@@ -3,12 +3,13 @@ import { ReviewInfoItem } from './ReviewInfoItem';
 
 @Component
 export struct ReviewInfoGroup {
-  @Prop firstLook: string = '';
-  @Prop reason: string = '';
+  @Prop visualFocus: string = '';
+  @Prop focusReason: string = '';
   @Prop visualPath: string = '';
-  @Prop strongestRelation: string = '';
-  @Prop judgement: string = '';
-  @Prop blocker: string = '';
+  @Prop visibleFacts: string = '';
+  @Prop coreRelation: string = '';
+  @Prop extendedUnderstanding: string = '';
+  @Prop currentBlocker: string = '';
   @Prop labelSize: number = ReviewCardStyleTokens.labelSize;
   @Prop labelLineHeight: number = ReviewCardStyleTokens.labelLineHeight;
   @Prop bodySize: number = ReviewCardStyleTokens.bodySize;
@@ -26,10 +27,10 @@ export struct ReviewInfoGroup {
 
   build() {
     Column() {
-      if (this.hasValue(this.firstLook)) {
+      if (this.hasValue(this.visualFocus)) {
         ReviewInfoItem({
-          label: '第一眼落点',
-          value: this.firstLook,
+          label: '视觉落点',
+          value: this.visualFocus,
           showDivider: false,
           labelSize: this.labelSize,
           labelLineHeight: this.labelLineHeight,
@@ -43,11 +44,11 @@ export struct ReviewInfoGroup {
           itemBottomGap: this.itemBottomGap
         })
       }
-      if (this.hasValue(this.reason)) {
+      if (this.hasValue(this.focusReason)) {
         ReviewInfoItem({
-          label: '原因',
-          value: this.reason,
-          showDivider: this.hasValue(this.firstLook),
+          label: '落点原因',
+          value: this.focusReason,
+          showDivider: this.hasValue(this.visualFocus),
           labelSize: this.labelSize,
           labelLineHeight: this.labelLineHeight,
           bodySize: this.bodySize,
@@ -64,7 +65,7 @@ export struct ReviewInfoGroup {
         ReviewInfoItem({
           label: '视线路径',
           value: this.visualPath,
-          showDivider: this.hasValue(this.firstLook) || this.hasValue(this.reason),
+          showDivider: this.hasValue(this.visualFocus) || this.hasValue(this.focusReason),
           labelSize: this.labelSize,
           labelLineHeight: this.labelLineHeight,
           bodySize: this.bodySize,
@@ -77,11 +78,11 @@ export struct ReviewInfoGroup {
           itemBottomGap: this.itemBottomGap
         })
       }
-      if (this.hasValue(this.strongestRelation)) {
+      if (this.hasValue(this.visibleFacts)) {
         ReviewInfoItem({
-          label: '最强关系',
-          value: this.strongestRelation,
-          showDivider: this.hasValue(this.firstLook) || this.hasValue(this.reason) || this.hasValue(this.visualPath),
+          label: '画面事实',
+          value: this.visibleFacts,
+          showDivider: this.hasValue(this.visualFocus) || this.hasValue(this.focusReason) || this.hasValue(this.visualPath),
           labelSize: this.labelSize,
           labelLineHeight: this.labelLineHeight,
           bodySize: this.bodySize,
@@ -94,14 +95,14 @@ export struct ReviewInfoGroup {
           itemBottomGap: this.itemBottomGap
         })
       }
-      if (this.hasValue(this.judgement)) {
+      if (this.hasValue(this.coreRelation)) {
         ReviewInfoItem({
-          label: '是否成立',
-          value: this.judgement,
-          showDivider: this.hasValue(this.firstLook)
-            || this.hasValue(this.reason)
+          label: '核心关系',
+          value: this.coreRelation,
+          showDivider: this.hasValue(this.visualFocus)
+            || this.hasValue(this.focusReason)
             || this.hasValue(this.visualPath)
-            || this.hasValue(this.strongestRelation),
+            || this.hasValue(this.visibleFacts),
           labelSize: this.labelSize,
           labelLineHeight: this.labelLineHeight,
           bodySize: this.bodySize,
@@ -114,15 +115,37 @@ export struct ReviewInfoGroup {
           itemBottomGap: this.itemBottomGap
         })
       }
-      if (this.hasValue(this.blocker)) {
+      if (this.hasValue(this.extendedUnderstanding)) {
         ReviewInfoItem({
-          label: '卡点',
-          value: this.blocker,
-          showDivider: this.hasValue(this.firstLook)
-            || this.hasValue(this.reason)
+          label: '延伸理解',
+          value: this.extendedUnderstanding,
+          showDivider: this.hasValue(this.visualFocus)
+            || this.hasValue(this.focusReason)
             || this.hasValue(this.visualPath)
-            || this.hasValue(this.strongestRelation)
-            || this.hasValue(this.judgement),
+            || this.hasValue(this.visibleFacts)
+            || this.hasValue(this.coreRelation),
+          labelSize: this.labelSize,
+          labelLineHeight: this.labelLineHeight,
+          bodySize: this.bodySize,
+          bodyLineHeight: this.bodyLineHeight,
+          labelColor: this.labelColor,
+          bodyColor: this.bodyColor,
+          dividerColor: this.dividerColor,
+          valueTopGap: this.valueTopGap,
+          dividerBottomGap: this.dividerBottomGap,
+          itemBottomGap: this.itemBottomGap
+        })
+      }
+      if (this.hasValue(this.currentBlocker)) {
+        ReviewInfoItem({
+          label: '当前卡点',
+          value: this.currentBlocker,
+          showDivider: this.hasValue(this.visualFocus)
+            || this.hasValue(this.focusReason)
+            || this.hasValue(this.visualPath)
+            || this.hasValue(this.visibleFacts)
+            || this.hasValue(this.coreRelation)
+            || this.hasValue(this.extendedUnderstanding),
           labelSize: this.labelSize,
           labelLineHeight: this.labelLineHeight,
           bodySize: this.bodySize,

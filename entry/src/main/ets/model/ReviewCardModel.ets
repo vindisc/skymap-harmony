@@ -36,12 +36,18 @@ export enum ReviewCardTextSize {
 
 export interface ReviewContent {
   title: string;
-  firstLook: string;
-  reason: string;
+  visualFocus: string;
+  focusReason: string;
   visualPath: string;
-  strongestRelation: string;
-  judgement: string;
-  blocker: string;
+  visibleFacts: string;
+  coreRelation: string;
+  extendedUnderstanding: string;
+  currentBlocker: string;
+  firstLook?: string;
+  reason?: string;
+  strongestRelation?: string;
+  judgement?: string;
+  blocker?: string;
 }
 
 export interface ReviewCardConfig {
@@ -79,15 +85,23 @@ function normalizeReviewText(value: string | undefined, fallback: string = ''): 
   return fallback;
 }
 
+function normalizeReviewNumber(value: number | undefined, fallback: number): number {
+  if (typeof value === 'number' && value > 0) {
+    return value;
+  }
+  return fallback;
+}
+
 export function createDefaultReviewContent(): ReviewContent {
   return {
     title: DEFAULT_REVIEW_TITLE,
-    firstLook: '',
-    reason: '',
+    visualFocus: '',
+    focusReason: '',
     visualPath: '',
-    strongestRelation: '',
-    judgement: '',
-    blocker: ''
+    visibleFacts: '',
+    coreRelation: '',
+    extendedUnderstanding: '',
+    currentBlocker: ''
   };
 }
 
@@ -113,31 +127,38 @@ export function createDefaultReviewCardDocument(): ReviewCardDocument {
 }
 
 export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCardDocument {
+  const fallbackDocument = createDefaultReviewCardDocument();
   const sourceContent = document.content ? document.content : createDefaultReviewContent();
+  const sourceConfig = document.config ? document.config : fallbackDocument.config;
+  const extendedUnderstanding = normalizeReviewText(
+    sourceContent.extendedUnderstanding,
+    normalizeReviewText(sourceContent.judgement)
+  );
   return {
-    version: document.version,
+    version: normalizeReviewText(document.version, fallbackDocument.version),
     projectId: document.projectId && document.projectId.length > 0 ? document.projectId : DEFAULT_PROJECT_ID,
-    imageUri: document.imageUri,
-    imageWidth: document.imageWidth,
-    imageHeight: document.imageHeight,
+    imageUri: normalizeReviewText(document.imageUri),
+    imageWidth: normalizeReviewNumber(document.imageWidth, fallbackDocument.imageWidth),
+    imageHeight: normalizeReviewNumber(document.imageHeight, fallbackDocument.imageHeight),
     imageSizeFallbackUsed: document.imageSizeFallbackUsed === true,
     content: {
       title: normalizeReviewText(sourceContent.title, DEFAULT_REVIEW_TITLE),
-      firstLook: normalizeReviewText(sourceContent.firstLook),
-      reason: normalizeReviewText(sourceContent.reason),
+      visualFocus: normalizeReviewText(sourceContent.visualFocus, normalizeReviewText(sourceContent.firstLook)),
+      focusReason: normalizeReviewText(sourceContent.focusReason, normalizeReviewText(sourceContent.reason)),
       visualPath: normalizeReviewText(sourceContent.visualPath),
-      strongestRelation: normalizeReviewText(sourceContent.strongestRelation),
-      judgement: normalizeReviewText(sourceContent.judgement),
-      blocker: normalizeReviewText(sourceContent.blocker)
+      visibleFacts: normalizeReviewText(sourceContent.visibleFacts),
+      coreRelation: normalizeReviewText(sourceContent.coreRelation, normalizeReviewText(sourceContent.strongestRelation)),
+      extendedUnderstanding: extendedUnderstanding,
+      currentBlocker: normalizeReviewText(sourceContent.currentBlocker, normalizeReviewText(sourceContent.blocker))
     },
     config: {
-      templateId: document.config.templateId,
-      layoutMode: document.config.layoutMode,
-      background: document.config.background,
-      textSize: document.config.textSize
+      templateId: normalizeReviewText(sourceConfig.templateId, fallbackDocument.config.templateId),
+      layoutMode: sourceConfig.layoutMode ? sourceConfig.layoutMode : fallbackDocument.config.layoutMode,
+      background: sourceConfig.background ? sourceConfig.background : fallbackDocument.config.background,
+      textSize: sourceConfig.textSize ? sourceConfig.textSize : fallbackDocument.config.textSize
     },
-    createdAt: document.createdAt,
-    updatedAt: document.updatedAt
+    createdAt: normalizeReviewNumber(document.createdAt, fallbackDocument.createdAt),
+    updatedAt: normalizeReviewNumber(document.updatedAt, fallbackDocument.updatedAt)
   };
 }
 

@@ -40,12 +40,13 @@ function resolveReviewTextAreaHeight(value: string): number {
 @Component
 export struct ReviewInputForm {
   @Link title: string;
-  @Link firstLook: string;
-  @Link reason: string;
+  @Link visualFocus: string;
+  @Link focusReason: string;
   @Link visualPath: string;
-  @Link strongestRelation: string;
-  @Link judgement: string;
-  @Link blocker: string;
+  @Link visibleFacts: string;
+  @Link coreRelation: string;
+  @Link extendedUnderstanding: string;
+  @Link currentBlocker: string;
   onFieldFocus: (field: string) => void = () => {};
   onFieldBlur: () => void = () => {};
 
@@ -94,7 +95,7 @@ export struct ReviewInputForm {
   }
 
   build() {
-    Column({ space: 22 }) {
+    Column({ space: 18 }) {
       Column({ space: 10 }) {
         this.FieldLabel('标题')
         TextInput({ text: this.title, placeholder: '这张照片是否成立' })
@@ -118,23 +119,26 @@ export struct ReviewInputForm {
       }
       .width('100%')
 
-      this.ReviewField('第一眼落点', '我第一眼看到了什么？', this.firstLook, 'firstLook', (value: string) => {
-        this.firstLook = value;
+      this.ReviewField('视觉落点', '第一眼先看到哪里？', this.visualFocus, 'visualFocus', (value: string) => {
+        this.visualFocus = value;
       })
-      this.ReviewField('原因', '为什么它会先进入视线？', this.reason, 'reason', (value: string) => {
-        this.reason = value;
+      this.ReviewField('落点原因', '为什么它会先被看到？', this.focusReason, 'focusReason', (value: string) => {
+        this.focusReason = value;
       })
       this.ReviewField('视线路径', '视线接着从哪里走到哪里？', this.visualPath, 'visualPath', (value: string) => {
         this.visualPath = value;
       })
-      this.ReviewField('最强关系', '画面里最强的 A ↔ B 关系是什么？', this.strongestRelation, 'strongestRelation', (value: string) => {
-        this.strongestRelation = value;
+      this.ReviewField('画面事实', '画面里有哪些可见事实？', this.visibleFacts, 'visibleFacts', (value: string) => {
+        this.visibleFacts = value;
       })
-      this.ReviewField('是否成立', '成立 / 不确定 / 不成立，并说明原因', this.judgement, 'judgement', (value: string) => {
-        this.judgement = value;
+      this.ReviewField('核心关系', '最重要的 A ↔ B 关系是什么？', this.coreRelation, 'coreRelation', (value: string) => {
+        this.coreRelation = value;
       })
-      this.ReviewField('卡点', '这张照片当前最大的问题是什么？', this.blocker, 'blocker', (value: string) => {
-        this.blocker = value;
+      this.ReviewField('延伸理解', '这张照片为什么成立或不成立？', this.extendedUnderstanding, 'extendedUnderstanding', (value: string) => {
+        this.extendedUnderstanding = value;
+      })
+      this.ReviewField('当前卡点', '当前最大问题是什么？', this.currentBlocker, 'currentBlocker', (value: string) => {
+        this.currentBlocker = value;
       })
     }
     .width('100%')

@@ -11,7 +11,7 @@
   </text>
 
   <line x1="176" y1="772" x2="904" y2="772" stroke="#E8E4DC" stroke-width="2"/>
-  <text x="176" y="822" fill="#8B929C" font-size="22" font-weight="500" font-family="PingFang SC, Helvetica Neue, Arial, sans-serif">第一眼落点</text>
+  <text x="176" y="822" fill="#8B929C" font-size="22" font-weight="500" font-family="PingFang SC, Helvetica Neue, Arial, sans-serif">视觉落点</text>
   <text x="176" y="870" fill="#30343B" font-size="28" font-weight="400" font-family="PingFang SC, Helvetica Neue, Arial, sans-serif">
     <tspan x="176" dy="0">第一眼先看到风机主体，因为主体亮度最高，</tspan>
     <tspan x="176" dy="44">同时位于画面中心，和天空留白形成了明确的</tspan>
@@ -19,7 +19,7 @@
   </text>
 
   <line x1="176" y1="1014" x2="904" y2="1014" stroke="#E8E4DC" stroke-width="2"/>
-  <text x="176" y="1064" fill="#8B929C" font-size="22" font-weight="500" font-family="PingFang SC, Helvetica Neue, Arial, sans-serif">是否成立</text>
+  <text x="176" y="1064" fill="#8B929C" font-size="22" font-weight="500" font-family="PingFang SC, Helvetica Neue, Arial, sans-serif">延伸理解</text>
   <text x="176" y="1112" fill="#30343B" font-size="28" font-weight="400" font-family="PingFang SC, Helvetica Neue, Arial, sans-serif">
     <tspan x="176" dy="0">成立。主体突出，背景足够干净，风机和云层</tspan>
     <tspan x="176" dy="44">之间的明暗对比也把视线稳定地留在主体上，</tspan>
@@ -27,7 +27,7 @@
   </text>
 
   <line x1="176" y1="1256" x2="904" y2="1256" stroke="#E8E4DC" stroke-width="2"/>
-  <text x="176" y="1306" fill="#8B929C" font-size="22" font-weight="500" font-family="PingFang SC, Helvetica Neue, Arial, sans-serif">卡点</text>
+  <text x="176" y="1306" fill="#8B929C" font-size="22" font-weight="500" font-family="PingFang SC, Helvetica Neue, Arial, sans-serif">当前卡点</text>
   <text x="176" y="1354" fill="#30343B" font-size="29" font-weight="500" font-family="PingFang SC, Helvetica Neue, Arial, sans-serif">
     <tspan x="176" dy="0">下方黄色设备有轻微干扰，会把视线从主体底部</tspan>
     <tspan x="176" dy="44">向外带走。后期可进一步裁切，或在拍摄时再往</tspan>

@@ -13,18 +13,20 @@ import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDes
 
 const EDITOR_BOTTOM_ACTION_PADDING: number = 126;
 const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 34;
+const EDITOR_STICKY_PHOTO_HEIGHT: string = '26%';
 
 @Entry
 @Component
 struct EditorPage {
   private document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State title: string = DEFAULT_REVIEW_TITLE;
-  @State firstLook: string = '';
-  @State reason: string = '';
+  @State visualFocus: string = '';
+  @State focusReason: string = '';
   @State visualPath: string = '';
-  @State strongestRelation: string = '';
-  @State judgement: string = '';
-  @State blocker: string = '';
+  @State visibleFacts: string = '';
+  @State coreRelation: string = '';
+  @State extendedUnderstanding: string = '';
+  @State currentBlocker: string = '';
   @State focusedField: string = '';
   @State imageUri: string = '';
   @State imageWidth: number = 1600;
@@ -42,12 +44,13 @@ struct EditorPage {
     this.imageHeight = this.document.imageHeight;
     this.imageSizeFallbackUsed = this.document.imageSizeFallbackUsed;
     this.title = this.document.content.title;
-    this.firstLook = this.document.content.firstLook;
-    this.reason = this.document.content.reason;
+    this.visualFocus = this.document.content.visualFocus;
+    this.focusReason = this.document.content.focusReason;
     this.visualPath = this.document.content.visualPath;
-    this.strongestRelation = this.document.content.strongestRelation;
-    this.judgement = this.document.content.judgement;
-    this.blocker = this.document.content.blocker;
+    this.visibleFacts = this.document.content.visibleFacts;
+    this.coreRelation = this.document.content.coreRelation;
+    this.extendedUnderstanding = this.document.content.extendedUnderstanding;
+    this.currentBlocker = this.document.content.currentBlocker;
   }
 
   aboutToDisappear(): void {
@@ -57,12 +60,13 @@ struct EditorPage {
 
   private syncDocumentFromInput(): void {
     this.document.content.title = this.title.length > 0 ? this.title : DEFAULT_REVIEW_TITLE;
-    this.document.content.firstLook = this.firstLook;
-    this.document.content.reason = this.reason;
+    this.document.content.visualFocus = this.visualFocus;
+    this.document.content.focusReason = this.focusReason;
     this.document.content.visualPath = this.visualPath;
-    this.document.content.strongestRelation = this.strongestRelation;
-    this.document.content.judgement = this.judgement;
-    this.document.content.blocker = this.blocker;
+    this.document.content.visibleFacts = this.visibleFacts;
+    this.document.content.coreRelation = this.coreRelation;
+    this.document.content.extendedUnderstanding = this.extendedUnderstanding;
+    this.document.content.currentBlocker = this.currentBlocker;
   }
 
   private async saveAndPreview(): Promise<void> {
@@ -86,39 +90,54 @@ struct EditorPage {
         }
       })
     }
-    .padding({ left: 20, right: 20, top: 14, bottom: 28 })
+    .padding({ left: 20, right: 20, top: 10, bottom: 20 })
     .width('100%')
     .backgroundColor(AppColors.pageBackground)
+  }
+
+  @Builder
+  StickyPhotoHeader() {
+    Column({ space: 10 }) {
+      Text('写复盘')
+        .fontSize(17)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+        .lineHeight(24)
+        .width('100%')
+
+      PhotoWritingHero({
+        imageUri: this.imageUri,
+        imageWidth: this.imageWidth,
+        imageHeight: this.imageHeight,
+        imageSizeFallbackUsed: this.imageSizeFallbackUsed
+      })
+        .layoutWeight(1)
+    }
+    .alignItems(HorizontalAlign.Start)
+    .padding({ left: 20, right: 20, top: 12, bottom: 10 })
+    .width('100%')
+    .height(EDITOR_STICKY_PHOTO_HEIGHT)
+    .backgroundColor(AppColors.pageBackground)
+    .zIndex(2)
   }
 
   build() {
     Column() {
       Stack({ alignContent: Alignment.Bottom }) {
-        Scroll() {
+        Column() {
+          this.StickyPhotoHeader()
+
+          Scroll() {
           Column() {
-            Text('写复盘')
-              .fontSize(20)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .lineHeight(28)
-              .width('100%')
-
-            PhotoWritingHero({
-              imageUri: this.imageUri,
-              imageWidth: this.imageWidth,
-              imageHeight: this.imageHeight,
-              imageSizeFallbackUsed: this.imageSizeFallbackUsed
-            })
-              .margin({ top: 18, bottom: 26 })
-
             ReviewInputForm({
               title: $title,
-              firstLook: $firstLook,
-              reason: $reason,
+              visualFocus: $visualFocus,
+              focusReason: $focusReason,
               visualPath: $visualPath,
-              strongestRelation: $strongestRelation,
-              judgement: $judgement,
-              blocker: $blocker,
+              visibleFacts: $visibleFacts,
+              coreRelation: $coreRelation,
+              extendedUnderstanding: $extendedUnderstanding,
+              currentBlocker: $currentBlocker,
               onFieldFocus: (field: string) => {
                 this.focusedField = field;
               },
@@ -130,14 +149,17 @@ struct EditorPage {
           .padding({
             left: 20,
             right: 20,
-            top: 18,
+            top: 8,
             bottom: this.isKeyboardActive() ? EDITOR_KEYBOARD_BOTTOM_PADDING : EDITOR_BOTTOM_ACTION_PADDING
           })
           .width('100%')
         }
+          .layoutWeight(1)
+          .width('100%')
+          .scrollBar(BarState.Off)
+        }
         .width('100%')
         .height('100%')
-        .scrollBar(BarState.Off)
 
         if (!this.isKeyboardActive()) {
           this.BottomActionBar()

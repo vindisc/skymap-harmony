@@ -45,17 +45,17 @@ export struct ReadingReviewRecord {
         .width('100%')
 
       Text(value.length > 0 ? value : '待补充')
-        .fontSize(18)
+        .fontSize(16)
         .fontColor(value.length > 0 ? AppColors.text : AppColors.secondaryText)
-        .lineHeight(30)
+        .lineHeight(25)
         .width('100%')
         .wordBreak(WordBreak.BREAK_WORD)
         .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
-        .margin({ top: 10 })
+        .margin({ top: 7 })
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-    .padding({ top: showDivider ? 0 : 4, bottom: 26 })
+    .padding({ top: showDivider ? 0 : 2, bottom: 18 })
   }
 
   build() {
@@ -96,47 +96,59 @@ export struct ReadingReviewRecord {
         .margin({ top: 12 })
 
         Column() {
-          if (this.hasValue(this.document.content.firstLook)) {
-            this.Section('第一眼落点', this.document.content.firstLook, false)
+          if (this.hasValue(this.document.content.visualFocus)) {
+            this.Section('视觉落点', this.document.content.visualFocus, false)
           }
-          if (this.hasValue(this.document.content.reason)) {
-            this.Section('原因', this.document.content.reason, this.hasValue(this.document.content.firstLook))
+          if (this.hasValue(this.document.content.focusReason)) {
+            this.Section('落点原因', this.document.content.focusReason, this.hasValue(this.document.content.visualFocus))
           }
           if (this.hasValue(this.document.content.visualPath)) {
             this.Section(
               '视线路径',
               this.document.content.visualPath,
-              this.hasValue(this.document.content.firstLook) || this.hasValue(this.document.content.reason)
+              this.hasValue(this.document.content.visualFocus) || this.hasValue(this.document.content.focusReason)
             )
           }
-          if (this.hasValue(this.document.content.strongestRelation)) {
+          if (this.hasValue(this.document.content.visibleFacts)) {
             this.Section(
-              '最强关系',
-              this.document.content.strongestRelation,
-              this.hasValue(this.document.content.firstLook)
-                || this.hasValue(this.document.content.reason)
+              '画面事实',
+              this.document.content.visibleFacts,
+              this.hasValue(this.document.content.visualFocus)
+                || this.hasValue(this.document.content.focusReason)
                 || this.hasValue(this.document.content.visualPath)
             )
           }
-          if (this.hasValue(this.document.content.judgement)) {
+          if (this.hasValue(this.document.content.coreRelation)) {
             this.Section(
-              '是否成立',
-              this.document.content.judgement,
-              this.hasValue(this.document.content.firstLook)
-                || this.hasValue(this.document.content.reason)
+              '核心关系',
+              this.document.content.coreRelation,
+              this.hasValue(this.document.content.visualFocus)
+                || this.hasValue(this.document.content.focusReason)
                 || this.hasValue(this.document.content.visualPath)
-                || this.hasValue(this.document.content.strongestRelation)
+                || this.hasValue(this.document.content.visibleFacts)
             )
           }
-          if (this.hasValue(this.document.content.blocker)) {
+          if (this.hasValue(this.document.content.extendedUnderstanding)) {
             this.Section(
-              '卡点',
-              this.document.content.blocker,
-              this.hasValue(this.document.content.firstLook)
-                || this.hasValue(this.document.content.reason)
+              '延伸理解',
+              this.document.content.extendedUnderstanding,
+              this.hasValue(this.document.content.visualFocus)
+                || this.hasValue(this.document.content.focusReason)
                 || this.hasValue(this.document.content.visualPath)
-                || this.hasValue(this.document.content.strongestRelation)
-                || this.hasValue(this.document.content.judgement)
+                || this.hasValue(this.document.content.visibleFacts)
+                || this.hasValue(this.document.content.coreRelation)
+            )
+          }
+          if (this.hasValue(this.document.content.currentBlocker)) {
+            this.Section(
+              '当前卡点',
+              this.document.content.currentBlocker,
+              this.hasValue(this.document.content.visualFocus)
+                || this.hasValue(this.document.content.focusReason)
+                || this.hasValue(this.document.content.visualPath)
+                || this.hasValue(this.document.content.visibleFacts)
+                || this.hasValue(this.document.content.coreRelation)
+                || this.hasValue(this.document.content.extendedUnderstanding)
             )
           }
         }

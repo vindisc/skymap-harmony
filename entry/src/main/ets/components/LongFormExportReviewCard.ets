@@ -1,23 +1,28 @@
 import {
   createDefaultReviewCardDocument,
-  ReviewCardDocument,
-  ReviewCardLayoutType,
-  ReviewCardRenderMode
+  ReviewCardDocument
 } from '../model/ReviewCardModel';
 import { resolveReviewCardLayoutResolution } from '../model/ReviewCardLayout';
 import { ReviewCardStyleTokens } from './ReviewCardStyleTokens';
-import { ReviewCardStyleDefinition, ReviewCardStylePreset } from './ReviewCardStylePreset';
 import { ReviewPhotoArea } from './ReviewPhotoArea';
 import { ReviewCardTitle } from './ReviewCardTitle';
 import { ReviewInfoGroup } from './ReviewInfoGroup';
 
-@Component
-export struct ExportHorizontalReviewCard {
-  @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
+export class CompactReviewTextStyle {
+  static readonly titleSize: number = 38;
+  static readonly titleLineHeight: number = 52;
+  static readonly labelSize: number = 16;
+  static readonly labelLineHeight: number = 22;
+  static readonly bodySize: number = 24;
+  static readonly bodyLineHeight: number = 34;
+  static readonly valueTopGap: number = 6;
+  static readonly dividerBottomGap: number = 10;
+  static readonly itemBottomGap: number = 12;
+}
 
-  private getPreset(): ReviewCardStyleDefinition {
-    return ReviewCardStylePreset.resolve(ReviewCardRenderMode.EXPORT_CARD, ReviewCardLayoutType.HORIZONTAL);
-  }
+@Component
+export struct LongFormExportReviewCard {
+  @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
 
   build() {
     Column() {
@@ -27,14 +32,14 @@ export struct ExportHorizontalReviewCard {
         imageHeight: this.document.imageHeight,
         imageSizeFallbackUsed: this.document.imageSizeFallbackUsed,
         aspectRatioValue: resolveReviewCardLayoutResolution(this.document).aspectRatio,
-        cornerRadius: this.getPreset().imageRadius
+        cornerRadius: 22
       })
 
       Column() {
         ReviewCardTitle({
           title: this.document.content.title,
-          titleSize: this.getPreset().titleSize,
-          titleLineHeight: this.getPreset().titleLineHeight
+          titleSize: CompactReviewTextStyle.titleSize,
+          titleLineHeight: CompactReviewTextStyle.titleLineHeight
         })
 
         ReviewInfoGroup({
@@ -45,37 +50,27 @@ export struct ExportHorizontalReviewCard {
           coreRelation: this.document.content.coreRelation,
           extendedUnderstanding: this.document.content.extendedUnderstanding,
           currentBlocker: this.document.content.currentBlocker,
-          labelSize: this.getPreset().labelSize,
-          labelLineHeight: this.getPreset().labelLineHeight,
-          bodySize: this.getPreset().bodySize,
-          bodyLineHeight: this.getPreset().bodyLineHeight,
-          dividerColor: this.getPreset().dividerColor,
-          valueTopGap: this.getPreset().valueTopGap,
-          dividerBottomGap: this.getPreset().dividerBottomGap,
-          itemBottomGap: this.getPreset().itemBottomGap
+          labelSize: CompactReviewTextStyle.labelSize,
+          labelLineHeight: CompactReviewTextStyle.labelLineHeight,
+          bodySize: CompactReviewTextStyle.bodySize,
+          bodyLineHeight: CompactReviewTextStyle.bodyLineHeight,
+          labelColor: '#8D929A',
+          bodyColor: ReviewCardStyleTokens.bodyColor,
+          dividerColor: '#ECE5DA',
+          valueTopGap: CompactReviewTextStyle.valueTopGap,
+          dividerBottomGap: CompactReviewTextStyle.dividerBottomGap,
+          itemBottomGap: CompactReviewTextStyle.itemBottomGap
         })
-          .margin({ top: this.getPreset().infoTopGap })
+          .margin({ top: 18 })
       }
-      .padding({
-        left: 0,
-        right: 0,
-        top: this.getPreset().textTopGap,
-        bottom: 0
-      })
+      .padding({ top: 24 })
       .alignItems(HorizontalAlign.Start)
       .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
-    .padding(this.getPreset().cardPadding)
+    .padding(58)
     .width('100%')
-    .borderRadius(this.getPreset().cardRadius)
+    .borderRadius(0)
     .backgroundColor(ReviewCardStyleTokens.canvasColor)
-    .border({ width: 1, color: ReviewCardStyleTokens.hairlineColor })
-    .shadow({
-      radius: this.getPreset().shadowRadius,
-      color: ReviewCardStyleTokens.shadowColor,
-      offsetX: 0,
-      offsetY: this.getPreset().shadowOffsetY
-    })
   }
 }

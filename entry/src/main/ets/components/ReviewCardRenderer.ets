@@ -5,9 +5,7 @@ import {
   ReviewCardRenderMode
 } from '../model/ReviewCardModel';
 import { MobileReadingReviewCard } from './MobileReadingReviewCard';
-import { ExportHorizontalReviewCard } from './ExportHorizontalReviewCard';
-import { ExportVerticalReviewCard } from './ExportVerticalReviewCard';
-import { ExportSquareReviewCard } from './ExportSquareReviewCard';
+import { LongFormExportReviewCard } from './LongFormExportReviewCard';
 
 @Component
 export struct ReviewCardRenderer {
@@ -21,16 +19,8 @@ export struct ReviewCardRenderer {
         document: this.document,
         layoutType: this.layoutType
       })
-    } else if (this.layoutType === ReviewCardLayoutType.VERTICAL) {
-      ExportVerticalReviewCard({
-        document: this.document
-      })
-    } else if (this.layoutType === ReviewCardLayoutType.SQUARE) {
-      ExportSquareReviewCard({
-        document: this.document
-      })
     } else {
-      ExportHorizontalReviewCard({
+      LongFormExportReviewCard({
         document: this.document
       })
     }

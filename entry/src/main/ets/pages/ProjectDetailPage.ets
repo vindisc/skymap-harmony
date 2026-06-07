@@ -129,6 +129,7 @@ struct ProjectDetailPage {
         }
         .layoutWeight(1)
         .width('100%')
+        .edgeEffect(EdgeEffect.None)
         .scrollBar(BarState.Off)
         .padding({ left: 20, right: 20, top: 18 })
       }

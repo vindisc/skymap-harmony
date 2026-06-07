@@ -1,7 +1,7 @@
 import { createDefaultReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { getReviewProjectExcerpt } from '../services/ReviewProjectService';
-import { formatReviewTime, getImageRatioLabel, getImageSizeText } from '../utils/ImageLayoutUtils';
+import { formatReviewTime, getImageRatioLabel, getImageSizeText, hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
@@ -214,20 +214,43 @@ export struct PhotoWritingHero {
   @Prop imageWidth: number = 1600;
   @Prop imageHeight: number = 1000;
   @Prop imageSizeFallbackUsed: boolean = false;
+  @State loadFailed: boolean = false;
+
+  @Builder
+  Placeholder() {
+    Column() {
+      Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '图片加载失败' : '照片预览')
+        .fontSize(14)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.text)
+    }
+    .justifyContent(FlexAlign.Center)
+    .width('100%')
+    .height('100%')
+    .backgroundColor('#E9E5DC')
+  }
 
   build() {
-    Column() {
-      ReviewPhotoBlock({
-        imageUri: this.imageUri,
-        imageWidth: this.imageWidth,
-        imageHeight: this.imageHeight,
-        imageSizeFallbackUsed: this.imageSizeFallbackUsed,
-        aspectRatioValue: this.imageWidth > 0 && this.imageHeight > 0 ? this.imageWidth / this.imageHeight : 1,
-        fitMode: ImageFit.Contain,
-        cornerRadius: 12
-      })
+    Stack() {
+      if (hasDisplayableImageUri(this.imageUri) && !this.loadFailed) {
+        Image(this.imageUri)
+          .width('100%')
+          .height('100%')
+          .objectFit(ImageFit.Contain)
+          .syncLoad(true)
+          .onError(() => {
+            this.loadFailed = true;
+          })
+      } else {
+        this.Placeholder()
+      }
     }
     .width('100%')
+    .height('100%')
+    .borderRadius(12)
+    .clip(true)
+    .backgroundColor('#E9E5DC')
+    .border({ width: 1, color: AppColors.border })
   }
 }
 

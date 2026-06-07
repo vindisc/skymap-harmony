@@ -15,19 +15,19 @@ function normalizeExcerpt(value: string): string {
 }
 
 export function getReviewProjectExcerpt(document: ReviewCardDocument): string {
-  const judgement = normalizeExcerpt(document.content.judgement);
-  if (judgement.length > 0) {
-    return judgement.slice(0, 32);
+  const extendedUnderstanding = normalizeExcerpt(document.content.extendedUnderstanding);
+  if (extendedUnderstanding.length > 0) {
+    return extendedUnderstanding.slice(0, 32);
   }
 
-  const strongestRelation = normalizeExcerpt(document.content.strongestRelation);
-  if (strongestRelation.length > 0) {
-    return strongestRelation.slice(0, 32);
+  const coreRelation = normalizeExcerpt(document.content.coreRelation);
+  if (coreRelation.length > 0) {
+    return coreRelation.slice(0, 32);
   }
 
-  const firstLook = normalizeExcerpt(document.content.firstLook);
-  if (firstLook.length > 0) {
-    return firstLook.slice(0, 32);
+  const visualFocus = normalizeExcerpt(document.content.visualFocus);
+  if (visualFocus.length > 0) {
+    return visualFocus.slice(0, 32);
   }
 
   return '还没有写下复盘摘要。';

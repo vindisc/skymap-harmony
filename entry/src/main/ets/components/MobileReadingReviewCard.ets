@@ -47,16 +47,6 @@ export struct MobileReadingReviewCard {
       this.PhotoBlock()
 
       Column() {
-        if (this.getLayoutResolution().usedFallbackSize) {
-          Text('未读取到真实尺寸，当前先按兜底比例阅读预览')
-            .fontSize(12)
-            .fontColor(ReviewCardStyleTokens.labelColor)
-            .lineHeight(18)
-            .width('100%')
-            .wordBreak(WordBreak.BREAK_WORD)
-            .margin({ bottom: 10 })
-        }
-
         ReviewCardTitle({
           title: this.document.content.title,
           titleSize: this.getPreset().titleSize,
@@ -64,12 +54,13 @@ export struct MobileReadingReviewCard {
         })
 
         ReviewInfoGroup({
-          firstLook: this.document.content.firstLook,
-          reason: this.document.content.reason,
+          visualFocus: this.document.content.visualFocus,
+          focusReason: this.document.content.focusReason,
           visualPath: this.document.content.visualPath,
-          strongestRelation: this.document.content.strongestRelation,
-          judgement: this.document.content.judgement,
-          blocker: this.document.content.blocker,
+          visibleFacts: this.document.content.visibleFacts,
+          coreRelation: this.document.content.coreRelation,
+          extendedUnderstanding: this.document.content.extendedUnderstanding,
+          currentBlocker: this.document.content.currentBlocker,
           labelSize: this.getPreset().labelSize,
           labelLineHeight: this.getPreset().labelLineHeight,
           bodySize: this.getPreset().bodySize,

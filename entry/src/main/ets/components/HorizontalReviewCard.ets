@@ -36,12 +36,13 @@ export struct HorizontalReviewCard {
           titleLineHeight: ReviewCardRenderPreset.titleLineHeight(this.displayMode)
         })
         ReviewInfoGroup({
-          firstLook: this.document.content.firstLook,
-          reason: this.document.content.reason,
+          visualFocus: this.document.content.visualFocus,
+          focusReason: this.document.content.focusReason,
           visualPath: this.document.content.visualPath,
-          strongestRelation: this.document.content.strongestRelation,
-          judgement: this.document.content.judgement,
-          blocker: this.document.content.blocker,
+          visibleFacts: this.document.content.visibleFacts,
+          coreRelation: this.document.content.coreRelation,
+          extendedUnderstanding: this.document.content.extendedUnderstanding,
+          currentBlocker: this.document.content.currentBlocker,
           labelSize: ReviewCardRenderPreset.labelSize(this.displayMode),
           labelLineHeight: ReviewCardRenderPreset.labelLineHeight(this.displayMode),
           bodySize: ReviewCardRenderPreset.bodySize(this.displayMode),
