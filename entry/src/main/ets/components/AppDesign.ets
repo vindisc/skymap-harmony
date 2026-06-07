@@ -240,7 +240,7 @@ export struct PhotoWritingHero {
 
   build() {
     if (this.fixedFrame) {
-      Stack() {
+      Stack({ alignContent: Alignment.Center }) {
         if (hasDisplayableImageUri(this.imageUri) && !this.loadFailed) {
           Image(this.imageUri)
             .width('100%')
@@ -254,13 +254,10 @@ export struct PhotoWritingHero {
           this.Placeholder()
         }
       }
-        .width('94%')
+        .width('100%')
         .height('100%')
         .alignSelf(ItemAlign.Center)
-        .borderRadius(12)
-        .clip(true)
-        .backgroundColor('#E9E5DC')
-        .border({ width: 1, color: AppColors.border })
+        .backgroundColor(AppColors.pageBackground)
     } else {
       Stack() {
         if (hasDisplayableImageUri(this.imageUri) && !this.loadFailed) {

@@ -20,7 +20,7 @@ const EDITOR_FIELD_GAP: number = 18;
 const EDITOR_TEXTAREA_LINE_HEIGHT: number = 28;
 const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
 const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 14;
-const EDITOR_FIXED_PHOTO_HEIGHT: string = '34%';
+const EDITOR_FIXED_PHOTO_HEIGHT: number = 312;
 
 @Entry
 @Component
