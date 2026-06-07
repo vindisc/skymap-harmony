@@ -6,7 +6,7 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
+import { ReviewProjectStats, ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import {
   AppColors,
@@ -21,6 +21,12 @@ struct HomePage {
   @State isPickingPhoto: boolean = false;
   @State historyItems: Array<ReviewCardHistoryItem> = [];
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
+  @State globalStats: ReviewProjectStats = {
+    totalCount: 0,
+    validCount: 0,
+    unsureCount: 0,
+    invalidCount: 0
+  };
 
   aboutToAppear(): void {
     this.reloadHistory();
@@ -32,6 +38,7 @@ struct HomePage {
 
   private async reloadHistory(): Promise<void> {
     this.historyItems = await ReviewCardHistoryService.load(this.getAbilityContext());
+    this.globalStats = ReviewProjectService.buildGlobalStats(this.historyItems);
     this.projectSummary = ReviewProjectService.buildDefaultProjectSummary(this.historyItems);
   }
 
@@ -136,10 +143,10 @@ struct HomePage {
         .width('100%')
 
       Row({ space: 8 }) {
-        this.OverviewStat('总复盘', this.projectSummary.stats.totalCount)
-        this.OverviewStat('成立', this.projectSummary.stats.validCount)
-        this.OverviewStat('待判断', this.projectSummary.stats.unsureCount)
-        this.OverviewStat('不成立', this.projectSummary.stats.invalidCount)
+        this.OverviewStat('总复盘', this.globalStats.totalCount)
+        this.OverviewStat('成立', this.globalStats.validCount)
+        this.OverviewStat('待判断', this.globalStats.unsureCount)
+        this.OverviewStat('不成立', this.globalStats.invalidCount)
       }
       .width('100%')
       .margin({ top: 12 })

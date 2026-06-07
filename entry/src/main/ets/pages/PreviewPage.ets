@@ -13,6 +13,7 @@ import { resolveReviewCardLayoutType } from '../model/ReviewCardLayout';
 import { ReviewCardPreview } from '../components/ReviewCardPreview';
 import { ReadingReviewRecord } from '../components/ReadingReviewRecord';
 import { ReviewCardStylePreset } from '../components/ReviewCardStylePreset';
+import { resolveLongFormExportCardHeight } from '../components/LongFormExportReviewCard';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
@@ -139,6 +140,10 @@ struct PreviewPage {
     ).canvasWidth;
   }
 
+  private getExportCanvasHeight(): number {
+    return resolveLongFormExportCardHeight(this.document, this.getExportCanvasWidth());
+  }
+
   @Builder
   ActionButton(label: string, emphasized: boolean, onTap: () => void) {
     Button(label)
@@ -161,12 +166,13 @@ struct PreviewPage {
     Column() {
       ReviewCardPreview({
         document: this.document,
-        renderMode: ReviewCardRenderMode.EXPORT_CARD
+        renderMode: ReviewCardRenderMode.EXPORT_CARD,
+        exportComponentId: this.getExportComponentId(),
+        exportCanvasHeight: this.getExportCanvasHeight()
       })
     }
-    .id(this.getExportComponentId())
     .width(this.getExportCanvasWidth())
-    .padding(12)
+    .height(this.getExportCanvasHeight())
     .backgroundColor('#FFFFFF')
   }
 
@@ -232,7 +238,7 @@ struct PreviewPage {
       .alignItems(HorizontalAlign.Center)
       .padding({ top: 24, bottom: 24 })
       .width('100%')
-      .height('100%')
+      .height(this.getExportCanvasHeight() + 48)
       .backgroundColor(AppColors.pageBackground)
     } else {
       Column() {

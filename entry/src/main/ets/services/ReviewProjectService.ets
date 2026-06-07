@@ -1,4 +1,4 @@
-import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
+import { ReviewProjectStats, ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import {
   DEFAULT_PROJECT_ID,
   getReviewDocumentKey,
@@ -36,6 +36,30 @@ export function getReviewProjectExcerpt(document: ReviewCardDocument): string {
 }
 
 export class ReviewProjectService {
+  static buildGlobalStats(items: Array<ReviewCardHistoryItem>): ReviewProjectStats {
+    const stats: ReviewProjectStats = {
+      totalCount: items.length,
+      validCount: 0,
+      unsureCount: 0,
+      invalidCount: 0
+    };
+
+    items.forEach((item: ReviewCardHistoryItem): void => {
+      const judgement = normalizeReviewJudgement(item.document.content.judgement);
+      if (judgement === ReviewJudgementStatus.VALID) {
+        stats.validCount += 1;
+        return;
+      }
+      if (judgement === ReviewJudgementStatus.INVALID) {
+        stats.invalidCount += 1;
+        return;
+      }
+      stats.unsureCount += 1;
+    });
+
+    return stats;
+  }
+
   static buildDefaultProjectSummary(items: Array<ReviewCardHistoryItem>): ReviewProjectSummary {
     const summary = createDefaultProjectSummary();
     const projectItems = items.filter((item: ReviewCardHistoryItem): boolean => {
@@ -44,22 +68,9 @@ export class ReviewProjectService {
 
     summary.items = projectItems;
     summary.recordCount = projectItems.length;
-    summary.stats.totalCount = projectItems.length;
+    summary.stats = ReviewProjectService.buildGlobalStats(projectItems);
     summary.project.reviewIds = projectItems.map((item: ReviewCardHistoryItem): string => {
       return getReviewDocumentKey(item.document);
-    });
-
-    projectItems.forEach((item: ReviewCardHistoryItem): void => {
-      const judgement = normalizeReviewJudgement(item.document.content.judgement);
-      if (judgement === ReviewJudgementStatus.VALID) {
-        summary.stats.validCount += 1;
-        return;
-      }
-      if (judgement === ReviewJudgementStatus.INVALID) {
-        summary.stats.invalidCount += 1;
-        return;
-      }
-      summary.stats.unsureCount += 1;
     });
 
     if (projectItems.length > 0) {

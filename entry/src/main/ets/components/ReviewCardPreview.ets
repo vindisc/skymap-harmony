@@ -11,6 +11,8 @@ import { ReviewCardStylePreset } from './ReviewCardStylePreset';
 export struct ReviewCardPreview {
   @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
   @Prop renderMode: ReviewCardRenderMode = ReviewCardRenderMode.MOBILE_READING;
+  @Prop exportComponentId: string = '';
+  @Prop exportCanvasHeight: number = 0;
 
   private getLayout() {
     return resolveReviewCardLayoutResolution(this.document);
@@ -22,10 +24,13 @@ export struct ReviewCardPreview {
         ReviewCardRenderer({
           document: this.document,
           renderMode: this.renderMode,
-          layoutType: this.getLayout().layoutType
+          layoutType: this.getLayout().layoutType,
+          exportComponentId: this.exportComponentId,
+          exportCanvasHeight: this.exportCanvasHeight
         })
       }
       .width(ReviewCardStylePreset.resolve(this.renderMode, this.getLayout().layoutType).canvasWidth)
+      .height(this.exportCanvasHeight)
     } else {
       Column() {
         ReviewCardRenderer({
