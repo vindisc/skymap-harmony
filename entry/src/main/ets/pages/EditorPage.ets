@@ -13,12 +13,10 @@ import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDes
 
 const EDITOR_BOTTOM_ACTION_PADDING: number = 126;
 const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 420;
-const EDITOR_TITLE_FIELD_HEIGHT: number = 84;
+const EDITOR_TITLE_FIELD_HEIGHT: number = 78;
 const EDITOR_FIELD_LABEL_HEIGHT: number = 18;
 const EDITOR_FIELD_LABEL_GAP: number = 10;
 const EDITOR_FIELD_GAP: number = 18;
-const EDITOR_TEXTAREA_MIN_LINES: number = 2;
-const EDITOR_TEXTAREA_MAX_LINES: number = 10;
 const EDITOR_TEXTAREA_LINE_HEIGHT: number = 28;
 const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
 const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 14;
@@ -105,14 +103,21 @@ struct EditorPage {
     return EDITOR_PHOTO_HEADER_EXTRA_HEIGHT + EDITOR_PHOTO_REFERENCE_WIDTH / this.getPhotoAspectRatio();
   }
 
-  private estimateTextAreaHeight(value: string): number {
-    const minHeight: number = EDITOR_TEXTAREA_MIN_LINES * EDITOR_TEXTAREA_LINE_HEIGHT
-      + EDITOR_TEXTAREA_VERTICAL_PADDING;
-    const maxHeight: number = EDITOR_TEXTAREA_MAX_LINES * EDITOR_TEXTAREA_LINE_HEIGHT
-      + EDITOR_TEXTAREA_VERTICAL_PADDING;
+  private getDefaultLines(field: string): number {
+    switch (field) {
+      case 'visualPath':
+      case 'visibleFacts':
+        return 3;
+      case 'judgement':
+        return 1;
+      default:
+        return 2;
+    }
+  }
 
+  private estimateTextAreaHeight(field: string, value: string): number {
     if (value.length === 0) {
-      return minHeight;
+      return this.getDefaultLines(field) * EDITOR_TEXTAREA_LINE_HEIGHT + EDITOR_TEXTAREA_VERTICAL_PADDING;
     }
 
     const rows: Array<string> = value.split('\n');
@@ -121,12 +126,12 @@ struct EditorPage {
       lineCount += Math.max(1, Math.ceil(rows[index].length / EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE));
     }
 
-    const visibleLines: number = Math.min(EDITOR_TEXTAREA_MAX_LINES, Math.max(EDITOR_TEXTAREA_MIN_LINES, lineCount));
-    return Math.min(maxHeight, Math.max(minHeight, visibleLines * EDITOR_TEXTAREA_LINE_HEIGHT + EDITOR_TEXTAREA_VERTICAL_PADDING));
+    const visibleLines: number = Math.max(this.getDefaultLines(field), lineCount);
+    return visibleLines * EDITOR_TEXTAREA_LINE_HEIGHT + EDITOR_TEXTAREA_VERTICAL_PADDING;
   }
 
-  private getReviewFieldHeight(value: string): number {
-    return EDITOR_FIELD_LABEL_HEIGHT + EDITOR_FIELD_LABEL_GAP + this.estimateTextAreaHeight(value);
+  private getReviewFieldHeight(field: string, value: string): number {
+    return EDITOR_FIELD_LABEL_HEIGHT + EDITOR_FIELD_LABEL_GAP + this.estimateTextAreaHeight(field, value);
   }
 
   private getFieldValue(field: string): string {
@@ -174,7 +179,7 @@ struct EditorPage {
       if (fieldKey === field) {
         return Math.max(0, offset - 16);
       }
-      offset += this.getReviewFieldHeight(this.getFieldValue(fieldKey)) + EDITOR_FIELD_GAP;
+      offset += this.getReviewFieldHeight(fieldKey, this.getFieldValue(fieldKey)) + EDITOR_FIELD_GAP;
     }
 
     return 0;
