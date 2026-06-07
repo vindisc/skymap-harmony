@@ -5,8 +5,11 @@ import { EDITOR_PAGE, HOME_PAGE } from '../app/AppRouter';
 import {
   createDefaultReviewCardDocument,
   getReviewDocumentKey,
-  ReviewCardDocument
+  ReviewCardDocument,
+  ReviewCardLayoutType,
+  ReviewCardRenderMode
 } from '../model/ReviewCardModel';
+import { resolveReviewCardLayoutResolution } from '../model/ReviewCardLayout';
 import { ReviewCardPreview } from '../components/ReviewCardPreview';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
@@ -148,6 +151,23 @@ struct PreviewPage {
     return `${REVIEW_CARD_EXPORT_ID}-${this.document.createdAt}-${this.document.updatedAt}`;
   }
 
+  private getExportHint(): string {
+    const layout = resolveReviewCardLayoutResolution(this.document);
+    if (layout.usedFallbackSize) {
+      return '未读取到真实尺寸，当前先按兜底比例阅读预览；导出前会继续尝试恢复。';
+    }
+
+    if (layout.layoutType === ReviewCardLayoutType.VERTICAL) {
+      return '导出时会按竖图成品卡排版：左图右文。';
+    }
+
+    if (layout.layoutType === ReviewCardLayoutType.HORIZONTAL) {
+      return '导出时会按横图成品卡排版：上图下文。';
+    }
+
+    return '导出时会按方图成品卡排版：上图下文。';
+  }
+
   build() {
     Column() {
       Row() {
@@ -166,6 +186,13 @@ struct PreviewPage {
             .fontSize(12)
             .fontColor(AppColors.mutedText)
             .margin({ top: 8 })
+          Text(this.getExportHint())
+            .fontSize(12)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(18)
+            .margin({ top: 8 })
+            .width('100%')
+            .wordBreak(WordBreak.BREAK_WORD)
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
@@ -191,7 +218,9 @@ struct PreviewPage {
         Column() {
           ReviewCardPreview({
             document: this.document,
-            displayMode: this.isExportSnapshotMode ? 'export' : 'preview'
+            renderMode: this.isExportSnapshotMode
+              ? ReviewCardRenderMode.EXPORT_CARD
+              : ReviewCardRenderMode.MOBILE_READING
           })
             .id(this.getExportComponentId())
 

@@ -10,6 +10,9 @@ export struct ReviewInfoGroup {
   @Prop labelLineHeight: number = ReviewCardStyleTokens.labelLineHeight;
   @Prop bodySize: number = ReviewCardStyleTokens.bodySize;
   @Prop bodyLineHeight: number = ReviewCardStyleTokens.bodyLineHeight;
+  @Prop labelColor: string = ReviewCardStyleTokens.labelColor;
+  @Prop bodyColor: string = ReviewCardStyleTokens.bodyColor;
+  @Prop dividerColor: string = ReviewCardStyleTokens.hairlineColor;
   @Prop valueTopGap: number = 7;
   @Prop dividerBottomGap: number = 16;
   @Prop itemBottomGap: number = 8;
@@ -24,6 +27,9 @@ export struct ReviewInfoGroup {
         labelLineHeight: this.labelLineHeight,
         bodySize: this.bodySize,
         bodyLineHeight: this.bodyLineHeight,
+        labelColor: this.labelColor,
+        bodyColor: this.bodyColor,
+        dividerColor: this.dividerColor,
         valueTopGap: this.valueTopGap,
         dividerBottomGap: this.dividerBottomGap,
         itemBottomGap: this.itemBottomGap
@@ -36,6 +42,9 @@ export struct ReviewInfoGroup {
         labelLineHeight: this.labelLineHeight,
         bodySize: this.bodySize,
         bodyLineHeight: this.bodyLineHeight,
+        labelColor: this.labelColor,
+        bodyColor: this.bodyColor,
+        dividerColor: this.dividerColor,
         valueTopGap: this.valueTopGap,
         dividerBottomGap: this.dividerBottomGap,
         itemBottomGap: this.itemBottomGap
@@ -48,6 +57,9 @@ export struct ReviewInfoGroup {
         labelLineHeight: this.labelLineHeight,
         bodySize: this.bodySize,
         bodyLineHeight: this.bodyLineHeight,
+        labelColor: this.labelColor,
+        bodyColor: this.bodyColor,
+        dividerColor: this.dividerColor,
         valueTopGap: this.valueTopGap,
         dividerBottomGap: this.dividerBottomGap,
         itemBottomGap: this.itemBottomGap

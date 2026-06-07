@@ -1,30 +1,41 @@
-import { createDefaultReviewCardDocument, ReviewCardDocument } from '../model/ReviewCardModel';
-import { ReadingReviewCard } from './ReadingReviewCard';
-import { ReviewCardRenderPreset } from './ReviewCardRenderPreset';
+import {
+  createDefaultReviewCardDocument,
+  ReviewCardDocument,
+  ReviewCardRenderMode
+} from '../model/ReviewCardModel';
+import { resolveReviewCardLayoutResolution } from '../model/ReviewCardLayout';
+import { ReviewCardRenderer } from './ReviewCardRenderer';
+import { ReviewCardStylePreset } from './ReviewCardStylePreset';
 
 @Component
 export struct ReviewCardPreview {
   @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
-  @Prop displayMode: string = 'preview';
+  @Prop renderMode: ReviewCardRenderMode = ReviewCardRenderMode.MOBILE_READING;
+
+  private getLayout() {
+    return resolveReviewCardLayoutResolution(this.document);
+  }
 
   build() {
-    if (this.displayMode === 'export') {
+    if (this.renderMode === ReviewCardRenderMode.EXPORT_CARD) {
       Column() {
-        ReadingReviewCard({
+        ReviewCardRenderer({
           document: this.document,
-          displayMode: this.displayMode
+          renderMode: this.renderMode,
+          layoutType: this.getLayout().layoutType
         })
       }
-      .width(ReviewCardRenderPreset.exportCanvasWidth())
+      .width(ReviewCardStylePreset.resolve(this.renderMode, this.getLayout().layoutType).canvasWidth)
     } else {
       Column() {
-        ReadingReviewCard({
+        ReviewCardRenderer({
           document: this.document,
-          displayMode: this.displayMode
+          renderMode: this.renderMode,
+          layoutType: this.getLayout().layoutType
         })
       }
       .width('100%')
-      .constraintSize({ maxWidth: 480 })
+      .constraintSize({ maxWidth: ReviewCardStylePreset.previewMaxWidth() })
     }
   }
 }
