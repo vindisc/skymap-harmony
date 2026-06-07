@@ -155,29 +155,36 @@ export struct TagLabel {
 }
 
 function getJudgementBadgeText(value: string): string {
-  return normalizeReviewJudgement(value);
+  const judgement: ReviewJudgementStatus = normalizeReviewJudgement(value);
+  if (judgement === ReviewJudgementStatus.VALID) {
+    return '✓ 成立';
+  }
+  if (judgement === ReviewJudgementStatus.INVALID) {
+    return '✕ 不成立';
+  }
+  return '？ 不确定';
 }
 
 function getJudgementBadgeColor(value: string): string {
   const judgement: ReviewJudgementStatus = normalizeReviewJudgement(value);
   if (judgement === ReviewJudgementStatus.VALID) {
-    return '#2E7D5B';
+    return '#587363';
   }
   if (judgement === ReviewJudgementStatus.INVALID) {
-    return '#9A3D35';
+    return '#805A55';
   }
-  return '#6E5A2F';
+  return '#776C52';
 }
 
 function getJudgementBadgeBackground(value: string): string {
   const judgement: ReviewJudgementStatus = normalizeReviewJudgement(value);
   if (judgement === ReviewJudgementStatus.VALID) {
-    return '#EAF5ED';
+    return '#F1F6F2';
   }
   if (judgement === ReviewJudgementStatus.INVALID) {
-    return '#F8EAE7';
+    return '#F8F1EF';
   }
-  return '#F5EFD8';
+  return '#F7F4EA';
 }
 
 @Component
@@ -186,13 +193,12 @@ export struct ReviewJudgementBadge {
 
   build() {
     Text(getJudgementBadgeText(this.value))
-      .fontSize(11)
-      .fontWeight(FontWeight.Medium)
+      .fontSize(10)
+      .fontWeight(FontWeight.Regular)
       .fontColor(getJudgementBadgeColor(this.value))
-      .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+      .padding({ left: 6, right: 6, top: 2, bottom: 2 })
       .borderRadius(4)
       .backgroundColor(getJudgementBadgeBackground(this.value))
-      .constraintSize({ minWidth: 48 })
       .textAlign(TextAlign.Center)
       .maxLines(1)
   }
@@ -349,7 +355,7 @@ export struct ProjectHomeCard {
             imageSizeFallbackUsed: this.summary.latestItem.document.imageSizeFallbackUsed,
             aspectRatioValue: 1,
             compact: true,
-            fitMode: ImageFit.Contain,
+            fitMode: ImageFit.Cover,
             cornerRadius: 10
           })
         }
@@ -386,18 +392,6 @@ export struct ProjectHomeCard {
           .fontColor(AppColors.mutedText)
           .width('100%')
           .lineHeight(18)
-
-        if (this.summary.latestItem) {
-          Text(this.summary.latestItem.document.content.title.length > 0
-            ? this.summary.latestItem.document.content.title
-            : '这张照片是否成立')
-            .fontSize(13)
-            .fontColor(AppColors.text)
-            .lineHeight(20)
-            .width('100%')
-            .maxLines(2)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-        }
       }
       .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)
@@ -430,31 +424,20 @@ export struct RecentReviewCard {
         imageWidth: this.item.document.imageWidth,
         imageHeight: this.item.document.imageHeight,
         imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
-        aspectRatioValue: 1.08,
+        aspectRatioValue: 1,
         compact: true,
-        fitMode: ImageFit.Contain,
+        fitMode: ImageFit.Cover,
         cornerRadius: 9
       })
         .width(72)
 
-      Column({ space: 4 }) {
-        Row({ space: 8 }) {
-          Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-            .fontSize(15)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .layoutWeight(1)
-
-          ReviewJudgementBadge({ value: this.item.document.content.judgement })
-        }
-        .alignItems(VerticalAlign.Center)
-        .width('100%')
-
-        Text(formatReviewTime(this.item.document.updatedAt))
-          .fontSize(12)
-          .fontColor(AppColors.mutedText)
+      Column({ space: 5 }) {
+        Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
+          .fontSize(15)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
 
         Text(getReviewProjectExcerpt(this.item.document))
@@ -464,6 +447,17 @@ export struct RecentReviewCard {
           .width('100%')
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+        Row({ space: 8 }) {
+          Text(formatReviewTime(this.item.document.updatedAt))
+            .fontSize(12)
+            .fontColor(AppColors.mutedText)
+            .layoutWeight(1)
+
+          ReviewJudgementBadge({ value: this.item.document.content.judgement })
+        }
+        .alignItems(VerticalAlign.Center)
+        .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
@@ -471,7 +465,7 @@ export struct RecentReviewCard {
     .alignItems(VerticalAlign.Center)
     .padding({ left: 10, right: 10, top: 10, bottom: 10 })
     .width('100%')
-    .constraintSize({ minHeight: 88 })
+    .constraintSize({ minHeight: 92 })
     .borderRadius(11)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
@@ -498,29 +492,18 @@ export struct ProjectReviewCard {
         imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
         aspectRatioValue: 1,
         compact: true,
-        fitMode: ImageFit.Contain,
+        fitMode: ImageFit.Cover,
         cornerRadius: 9
       })
-        .width(68)
+        .width(76)
 
-      Column({ space: 4 }) {
-        Row({ space: 8 }) {
-          Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-            .fontSize(15)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .layoutWeight(1)
-
-          ReviewJudgementBadge({ value: this.item.document.content.judgement })
-        }
-        .alignItems(VerticalAlign.Center)
-        .width('100%')
-
-        Text(formatReviewTime(this.item.document.updatedAt))
-          .fontSize(12)
-          .fontColor(AppColors.mutedText)
+      Column({ space: 5 }) {
+        Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
+          .fontSize(15)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
 
         Text(getReviewProjectExcerpt(this.item.document))
@@ -530,6 +513,17 @@ export struct ProjectReviewCard {
           .width('100%')
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+        Row({ space: 8 }) {
+          Text(formatReviewTime(this.item.document.updatedAt))
+            .fontSize(12)
+            .fontColor(AppColors.mutedText)
+            .layoutWeight(1)
+
+          ReviewJudgementBadge({ value: this.item.document.content.judgement })
+        }
+        .alignItems(VerticalAlign.Center)
+        .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
@@ -537,7 +531,7 @@ export struct ProjectReviewCard {
     .alignItems(VerticalAlign.Center)
     .padding({ left: 10, right: 10, top: 10, bottom: 10 })
     .width('100%')
-    .constraintSize({ minHeight: 84 })
+    .constraintSize({ minHeight: 96 })
     .borderRadius(11)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
