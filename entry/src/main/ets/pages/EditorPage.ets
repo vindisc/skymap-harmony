@@ -9,7 +9,7 @@ import {
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
-import { AppColors, PhotoSummaryCard, PrimaryButton } from '../components/AppDesign';
+import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 
 @Entry
 @Component
@@ -24,7 +24,6 @@ struct EditorPage {
   @State imageWidth: number = 1600;
   @State imageHeight: number = 1000;
   @State imageSizeFallbackUsed: boolean = false;
-  @State isInputFocused: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -61,30 +60,29 @@ struct EditorPage {
     router.replaceUrl({ url: PREVIEW_PAGE });
   }
 
+  private goBack(): void {
+    this.syncDocumentFromInput();
+    ReviewCardStore.saveCurrentDocument(this.document);
+    router.back();
+  }
+
   private getFocusScrollOffset(field: string): number {
     let offset: number = 0;
     if (field === 'title') {
-      offset = 120;
+      offset = 180;
     } else if (field === 'firstLook') {
-      offset = 310;
+      offset = 560;
     } else if (field === 'judgement') {
-      offset = 520;
+      offset = 900;
     } else if (field === 'blocker') {
-      offset = 850;
+      offset = 1260;
     }
 
     return offset;
   }
 
   private scrollToFocusedField(field: string): void {
-    this.isInputFocused = true;
     const offset: number = this.getFocusScrollOffset(field);
-
-    this.scroller.scrollTo({
-      xOffset: 0,
-      yOffset: offset,
-      animation: { duration: 220, curve: Curve.EaseOut }
-    });
     setTimeout(() => {
       this.scroller.scrollTo({
         xOffset: 0,
@@ -99,7 +97,17 @@ struct EditorPage {
       Scroll(this.scroller) {
         Column() {
           Row() {
-            Blank()
+            Button('返回')
+              .height(34)
+              .width(64)
+              .borderRadius(7)
+              .fontSize(13)
+              .fontColor(AppColors.secondaryText)
+              .backgroundColor('#00000000')
+              .onClick(() => {
+                this.goBack();
+              })
+
             Text('写复盘')
               .fontSize(20)
               .fontWeight(FontWeight.Bold)
@@ -110,13 +118,13 @@ struct EditorPage {
           .alignItems(VerticalAlign.Center)
           .width('100%')
 
-          PhotoSummaryCard({
+          PhotoWritingHero({
             imageUri: this.imageUri,
             imageWidth: this.imageWidth,
             imageHeight: this.imageHeight,
             imageSizeFallbackUsed: this.imageSizeFallbackUsed
           })
-            .margin({ top: 18, bottom: 22 })
+            .margin({ top: 18, bottom: 26 })
 
           ReviewInputForm({
             title: $title,
@@ -127,21 +135,18 @@ struct EditorPage {
               this.scrollToFocusedField(field);
             },
             onFieldBlur: () => {
-              this.isInputFocused = false;
             }
           })
 
-          if (!this.isInputFocused) {
-            PrimaryButton({
-              label: '生成复盘卡',
-              onTap: () => {
-                this.saveAndPreview();
-              }
-            })
-              .margin({ top: 22 })
-          }
+          PrimaryButton({
+            label: '保存并进入阅读',
+            onTap: () => {
+              this.saveAndPreview();
+            }
+          })
+            .margin({ top: 26 })
         }
-        .padding({ left: 20, right: 20, top: 18, bottom: this.isInputFocused ? 360 : 28 })
+        .padding({ left: 20, right: 20, top: 18, bottom: 120 })
         .width('100%')
       }
       .layoutWeight(1)

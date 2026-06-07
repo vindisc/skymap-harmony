@@ -50,6 +50,7 @@ export interface ReviewCardConfig {
 
 export interface ReviewCardDocument {
   version: string;
+  projectId: string;
   imageUri: string;
   imageWidth: number;
   imageHeight: number;
@@ -66,6 +67,7 @@ export interface ReviewCardHistoryItem {
 }
 
 export const DEFAULT_REVIEW_TITLE: string = '这张照片是否成立';
+export const DEFAULT_PROJECT_ID: string = 'default';
 
 export function createDefaultReviewContent(): ReviewContent {
   return {
@@ -80,6 +82,7 @@ export function createDefaultReviewCardDocument(): ReviewCardDocument {
   const now: number = Date.now();
   return {
     version: '0.1.0',
+    projectId: DEFAULT_PROJECT_ID,
     imageUri: '',
     imageWidth: 1600,
     imageHeight: 1000,
@@ -99,6 +102,7 @@ export function createDefaultReviewCardDocument(): ReviewCardDocument {
 export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCardDocument {
   return {
     version: document.version,
+    projectId: document.projectId && document.projectId.length > 0 ? document.projectId : DEFAULT_PROJECT_ID,
     imageUri: document.imageUri,
     imageWidth: document.imageWidth,
     imageHeight: document.imageHeight,

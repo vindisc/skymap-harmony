@@ -1,4 +1,6 @@
 import { createDefaultReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
+import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
+import { getReviewProjectExcerpt } from '../services/ReviewProjectService';
 import { formatReviewTime, getImageRatioLabel, getImageSizeText } from '../utils/ImageLayoutUtils';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
@@ -207,6 +209,123 @@ export struct PhotoSummaryCard {
 }
 
 @Component
+export struct PhotoWritingHero {
+  @Prop imageUri: string = '';
+  @Prop imageWidth: number = 1600;
+  @Prop imageHeight: number = 1000;
+  @Prop imageSizeFallbackUsed: boolean = false;
+
+  build() {
+    Column() {
+      ReviewPhotoBlock({
+        imageUri: this.imageUri,
+        imageWidth: this.imageWidth,
+        imageHeight: this.imageHeight,
+        imageSizeFallbackUsed: this.imageSizeFallbackUsed,
+        aspectRatioValue: this.imageWidth > 0 && this.imageHeight > 0 ? this.imageWidth / this.imageHeight : 1,
+        fitMode: ImageFit.Contain,
+        cornerRadius: 12
+      })
+
+      Row({ space: 10 }) {
+        Text(getImageRatioLabel(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
+          .fontSize(12)
+          .fontColor(AppColors.secondaryText)
+        Text(getImageSizeText(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
+          .fontSize(12)
+          .fontColor(AppColors.mutedText)
+          .layoutWeight(1)
+          .textAlign(TextAlign.End)
+      }
+      .width('100%')
+      .margin({ top: 10 })
+    }
+    .width('100%')
+  }
+}
+
+@Component
+export struct ProjectHomeCard {
+  @Prop summary: ReviewProjectSummary = createDefaultProjectSummary();
+  onTap: () => void = () => {};
+
+  build() {
+    Row({ space: 14 }) {
+      if (this.summary.latestItem) {
+        Column() {
+          ReviewPhotoBlock({
+            imageUri: this.summary.latestItem.document.imageUri,
+            imageWidth: this.summary.latestItem.document.imageWidth,
+            imageHeight: this.summary.latestItem.document.imageHeight,
+            imageSizeFallbackUsed: this.summary.latestItem.document.imageSizeFallbackUsed,
+            aspectRatioValue: 1,
+            compact: true,
+            fitMode: ImageFit.Contain,
+            cornerRadius: 10
+          })
+        }
+        .width(96)
+      } else {
+        Column() {
+          Text('暂无记录')
+            .fontSize(13)
+            .fontColor(AppColors.mutedText)
+        }
+        .justifyContent(FlexAlign.Center)
+        .width(96)
+        .height(96)
+        .borderRadius(10)
+        .backgroundColor(AppColors.surfaceMuted)
+      }
+
+      Column({ space: 9 }) {
+        Text(this.summary.project.name)
+          .fontSize(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+        Text(`${this.summary.recordCount} 条复盘记录`)
+          .fontSize(13)
+          .fontColor(AppColors.secondaryText)
+          .width('100%')
+
+        Text(this.summary.recordCount > 0 ? `最近更新 ${formatReviewTime(this.summary.latestUpdatedAt)}` : '还没有保存过复盘记录')
+          .fontSize(12)
+          .fontColor(AppColors.mutedText)
+          .width('100%')
+          .lineHeight(18)
+
+        if (this.summary.latestItem) {
+          Text(this.summary.latestItem.document.content.title.length > 0
+            ? this.summary.latestItem.document.content.title
+            : '这张照片是否成立')
+            .fontSize(13)
+            .fontColor(AppColors.text)
+            .lineHeight(20)
+            .width('100%')
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding(14)
+    .width('100%')
+    .borderRadius(12)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+    .onClick(() => {
+      this.onTap();
+    })
+  }
+}
+
+@Component
 export struct RecentReviewCard {
   @Prop item: ReviewCardHistoryItem = {
     document: createDefaultReviewCardDocument(),
@@ -258,6 +377,75 @@ export struct RecentReviewCard {
     .padding(12)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+    .onClick(() => {
+      this.onTap();
+    })
+  }
+}
+
+@Component
+export struct ProjectReviewCard {
+  @Prop item: ReviewCardHistoryItem = {
+    document: createDefaultReviewCardDocument(),
+    exportedPath: ''
+  };
+  onTap: () => void = () => {};
+
+  build() {
+    Row({ space: 12 }) {
+      ReviewPhotoBlock({
+        imageUri: this.item.document.imageUri,
+        imageWidth: this.item.document.imageWidth,
+        imageHeight: this.item.document.imageHeight,
+        imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
+        aspectRatioValue: 1.05,
+        compact: true,
+        fitMode: ImageFit.Contain,
+        cornerRadius: 10
+      })
+        .width(82)
+
+      Column({ space: 6 }) {
+        Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+        Row({ space: 8 }) {
+          Text(getImageRatioLabel(
+            this.item.document.imageWidth,
+            this.item.document.imageHeight,
+            this.item.document.imageSizeFallbackUsed
+          ))
+            .fontSize(12)
+            .fontColor(AppColors.secondaryText)
+
+          Text(formatReviewTime(this.item.document.updatedAt))
+            .fontSize(12)
+            .fontColor(AppColors.mutedText)
+        }
+        .width('100%')
+
+        Text(getReviewProjectExcerpt(this.item.document))
+          .fontSize(13)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(20)
+          .width('100%')
+          .maxLines(2)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding(12)
+    .width('100%')
+    .borderRadius(12)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
     .onClick(() => {
