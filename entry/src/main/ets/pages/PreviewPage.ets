@@ -1,5 +1,6 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
+import pasteboard from '@ohos.pasteboard';
 import promptAction from '@ohos.promptAction';
 import { EDITOR_PAGE } from '../app/AppRouter';
 import {
@@ -17,6 +18,7 @@ import { resolveLongFormExportCardHeight } from '../components/LongFormExportRev
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
+import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { AppColors } from '../components/AppDesign';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
@@ -121,6 +123,19 @@ struct PreviewPage {
     }
   }
 
+  private async copyReviewData(): Promise<void> {
+    try {
+      const exchangeJson: string = stringifyReviewCardExchangeSchemaV1(this.document);
+      const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, exchangeJson);
+      await pasteboard.getSystemPasteboard().setData(data);
+      this.exportMessage = '已复制复盘数据';
+      promptAction.showToast({ message: '已复制复盘数据' });
+    } catch (error) {
+      this.exportMessage = '复制失败，请稍后重试';
+      promptAction.showToast({ message: '复制失败，请稍后重试' });
+    }
+  }
+
   private async waitForExportLayout(): Promise<void> {
     return new Promise<void>((resolve: () => void) => {
       setTimeout(() => {
@@ -190,6 +205,9 @@ struct PreviewPage {
         Row({ space: 8 }) {
           this.ActionButton('编辑', false, () => {
             router.replaceUrl({ url: EDITOR_PAGE });
+          })
+          this.ActionButton('复制复盘数据', false, () => {
+            this.copyReviewData();
           })
           this.ActionButton(this.isExporting ? '导出中' : '导出', true, () => {
             this.exportImage();
