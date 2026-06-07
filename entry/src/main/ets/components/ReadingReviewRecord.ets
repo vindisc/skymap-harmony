@@ -2,44 +2,56 @@ import {
   createDefaultReviewCardDocument,
   ReviewCardDocument
 } from '../model/ReviewCardModel';
-import { getImageSizeText } from '../utils/ImageLayoutUtils';
+import { formatReviewTime, getImageRatioLabel, getImageSizeText } from '../utils/ImageLayoutUtils';
 import { AppColors } from './AppDesign';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 @Component
 export struct ReadingReviewRecord {
   @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
+  @Prop saveStateLabel: string = '';
 
   @Builder
-  Section(label: string, value: string) {
+  MetaTag(label: string) {
+    Text(label)
+      .fontSize(11)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(AppColors.secondaryText)
+      .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+      .borderRadius(6)
+      .backgroundColor('#F1ECE3')
+  }
+
+  @Builder
+  Section(label: string, value: string, showDivider: boolean) {
     Column() {
-      Column() {
-        Text(label)
-          .fontSize(13)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.mutedText)
+      if (showDivider) {
+        Divider()
+          .strokeWidth(1)
+          .color(AppColors.border)
+          .opacity(0.32)
           .width('100%')
-
-        Text(value.length > 0 ? value : '待补充')
-          .fontSize(17)
-          .fontColor(AppColors.text)
-          .lineHeight(28)
-          .width('100%')
-          .wordBreak(WordBreak.BREAK_WORD)
-          .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
-          .margin({ top: 10 })
+          .margin({ bottom: 18 })
       }
-      .alignItems(HorizontalAlign.Start)
-      .padding({ top: 16, bottom: 20 })
-      .width('100%')
 
-      Divider()
-        .strokeWidth(1)
-        .color(AppColors.border)
+      Text(label)
+        .fontSize(12)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.mutedText)
         .width('100%')
+
+      Text(value.length > 0 ? value : '待补充')
+        .fontSize(18)
+        .fontColor(value.length > 0 ? AppColors.text : AppColors.secondaryText)
+        .lineHeight(30)
+        .width('100%')
+        .wordBreak(WordBreak.BREAK_WORD)
+        .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
+        .margin({ top: 10 })
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
+    .padding({ top: showDivider ? 0 : 4, bottom: 26 })
   }
 
   build() {
@@ -53,18 +65,39 @@ export struct ReadingReviewRecord {
           ? this.document.imageWidth / this.document.imageHeight
           : 1,
         fitMode: ImageFit.Contain,
-        cornerRadius: 14
+        cornerRadius: 18
       })
 
       Column() {
         Text(this.document.content.title.length > 0 ? this.document.content.title : '这张照片是否成立')
-          .fontSize(28)
+          .fontSize(30)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
-          .lineHeight(36)
+          .lineHeight(40)
           .width('100%')
           .wordBreak(WordBreak.BREAK_WORD)
-          .margin({ top: 22 })
+          .margin({ top: 28 })
+
+        Row({ space: 10 }) {
+          Text(formatReviewTime(this.document.updatedAt))
+            .fontSize(12)
+            .fontColor(AppColors.secondaryText)
+
+          Text(getImageRatioLabel(
+            this.document.imageWidth,
+            this.document.imageHeight,
+            this.document.imageSizeFallbackUsed
+          ))
+            .fontSize(12)
+            .fontColor(AppColors.mutedText)
+
+          if (this.saveStateLabel.length > 0) {
+            this.MetaTag(this.saveStateLabel)
+          }
+        }
+        .alignItems(VerticalAlign.Center)
+        .width('100%')
+        .margin({ top: 12 })
 
         if (this.document.imageSizeFallbackUsed) {
           Text(getImageSizeText(this.document.imageWidth, this.document.imageHeight, true))
@@ -75,9 +108,12 @@ export struct ReadingReviewRecord {
             .width('100%')
         }
 
-        this.Section('第一眼落点', this.document.content.firstLook)
-        this.Section('是否成立', this.document.content.judgement)
-        this.Section('卡点', this.document.content.blocker)
+        Column() {
+          this.Section('第一眼落点', this.document.content.firstLook, false)
+          this.Section('是否成立', this.document.content.judgement, true)
+          this.Section('卡点', this.document.content.blocker, true)
+        }
+        .margin({ top: 18 })
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')

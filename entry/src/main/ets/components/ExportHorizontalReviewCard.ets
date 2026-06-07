@@ -53,8 +53,8 @@ export struct ExportHorizontalReviewCard {
           .margin({ top: this.getPreset().infoTopGap })
       }
       .padding({
-        left: 6,
-        right: 6,
+        left: 0,
+        right: 0,
         top: this.getPreset().textTopGap,
         bottom: 0
       })

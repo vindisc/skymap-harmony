@@ -1,12 +1,12 @@
 export class ReviewCardStyleTokens {
-  static readonly canvasColor: string = '#FFFEFC';
-  static readonly canvasMutedColor: string = '#F6F4EF';
+  static readonly canvasColor: string = '#FFFDFC';
+  static readonly canvasMutedColor: string = '#F7F4EE';
   static readonly inkColor: string = '#16181D';
-  static readonly bodyColor: string = '#30343B';
-  static readonly labelColor: string = '#8B929C';
-  static readonly hairlineColor: string = '#E8E4DC';
+  static readonly bodyColor: string = '#2E333A';
+  static readonly labelColor: string = '#9097A0';
+  static readonly hairlineColor: string = '#E9E4DB';
   static readonly accentColor: string = '#7C947E';
-  static readonly shadowColor: string = '#12000000';
+  static readonly shadowColor: string = '#10000000';
 
   static readonly cardRadius: number = 8;
   static readonly photoRadius: number = 7;

@@ -24,7 +24,7 @@ export struct ReviewInfoItem {
           .strokeWidth(1)
           .color(this.dividerColor)
           .width('100%')
-          .opacity(0.46)
+          .opacity(0.24)
           .margin({ bottom: this.dividerBottomGap })
       }
       Text(this.label)
@@ -39,7 +39,7 @@ export struct ReviewInfoItem {
       Text(this.value.length > 0 ? this.value : '待填写')
         .fontSize(this.bodySize)
         .fontWeight(FontWeight.Regular)
-        .fontColor(this.bodyColor)
+        .fontColor(this.value.length > 0 ? this.bodyColor : this.labelColor)
         .lineHeight(this.bodyLineHeight)
         .margin({ top: this.valueTopGap })
         .width('100%')

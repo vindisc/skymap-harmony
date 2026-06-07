@@ -33,6 +33,7 @@ export struct ExportVerticalReviewCard {
         })
       }
       .width(this.getPreset().verticalPhotoWidth)
+      .margin({ top: 6, bottom: 6 })
       .alignItems(HorizontalAlign.Start)
 
       Column() {
@@ -59,6 +60,7 @@ export struct ExportVerticalReviewCard {
       }
       .layoutWeight(1)
       .constraintSize({ minWidth: this.getPreset().textColumnMinWidth })
+      .padding({ top: this.getPreset().textTopGap })
       .alignItems(HorizontalAlign.Start)
     }
     .alignItems(VerticalAlign.Top)

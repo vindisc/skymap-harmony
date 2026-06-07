@@ -15,7 +15,7 @@ import { ReviewCardStylePreset } from '../components/ReviewCardStylePreset';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
-import { AppColors, SecondaryButton } from '../components/AppDesign';
+import { AppColors } from '../components/AppDesign';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 
@@ -161,6 +161,23 @@ struct PreviewPage {
   }
 
   @Builder
+  ActionButton(label: string, emphasized: boolean, onTap: () => void) {
+    Button(label)
+      .height(30)
+      .padding({ left: emphasized ? 12 : 8, right: emphasized ? 12 : 8 })
+      .borderRadius(15)
+      .fontSize(13)
+      .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
+      .fontColor(emphasized ? AppColors.text : AppColors.secondaryText)
+      .backgroundColor(emphasized ? '#ECE7DE' : '#00000000')
+      .border(emphasized ? { width: 1, color: '#E2DCCD' } : { width: 0 })
+      .stateEffect(true)
+      .onClick(() => {
+        onTap();
+      })
+  }
+
+  @Builder
   ExportSnapshotCard() {
     Column() {
       ReviewCardPreview({
@@ -178,63 +195,31 @@ struct PreviewPage {
   ReadingPage() {
     Column() {
       Row() {
-        Button('返回')
-          .height(34)
-          .width(64)
-          .borderRadius(7)
-          .fontSize(13)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.secondaryText)
-          .backgroundColor('#00000000')
-          .stateEffect(true)
-          .onClick(() => {
-            this.goBack();
-          })
+        this.ActionButton('返回', false, () => {
+          this.goBack();
+        })
 
-        Column() {
-          Text('复盘记录')
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
-            .lineHeight(30)
-            .width('100%')
-          Text(this.saveStateLabel)
-            .fontSize(12)
-            .fontColor(AppColors.mutedText)
-            .margin({ top: 6 })
-            .width('100%')
-        }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start)
-        .margin({ left: 10 })
+        Blank()
 
         Row({ space: 8 }) {
-          SecondaryButton({
-            label: '编辑',
-            onTap: () => {
-              router.replaceUrl({ url: EDITOR_PAGE });
-            }
+          this.ActionButton('编辑', false, () => {
+            router.replaceUrl({ url: EDITOR_PAGE });
           })
-            .width(76)
-
-          SecondaryButton({
-            label: this.isExporting ? '导出中' : '导出',
-            onTap: () => {
-              this.exportImage();
-            }
+          this.ActionButton(this.isExporting ? '导出中' : '导出', true, () => {
+            this.exportImage();
           })
-            .width(76)
-            .opacity(this.isExporting ? 0.72 : 1)
         }
+        .opacity(this.isExporting ? 0.8 : 1)
       }
       .alignItems(VerticalAlign.Center)
-      .padding({ left: 20, right: 20, top: 18, bottom: 12 })
+      .padding({ left: 20, right: 20, top: 14, bottom: 6 })
       .width('100%')
 
       Scroll() {
         Column() {
           ReadingReviewRecord({
-            document: this.document
+            document: this.document,
+            saveStateLabel: this.saveStateLabel === PreviewSaveState.UNSAVED ? '' : this.saveStateLabel
           })
 
           if (this.exportMessage.length > 0) {
@@ -244,11 +229,11 @@ struct PreviewPage {
               .lineHeight(18)
               .maxLines(2)
               .width('100%')
-              .margin({ top: 16 })
+              .margin({ top: 14 })
           }
         }
         .alignItems(HorizontalAlign.Start)
-        .padding({ left: 20, right: 20, top: 10, bottom: 32 })
+        .padding({ left: 20, right: 20, top: 6, bottom: 28 })
         .width('100%')
       }
       .layoutWeight(1)

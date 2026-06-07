@@ -58,8 +58,8 @@ export struct ExportSquareReviewCard {
           .margin({ top: this.getPreset().infoTopGap })
       }
       .padding({
-        left: 4,
-        right: 4,
+        left: 0,
+        right: 0,
         top: this.getPreset().textTopGap,
         bottom: 0
       })
