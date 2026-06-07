@@ -8,8 +8,10 @@ import {
   ReviewCardDocument,
   ReviewCardRenderMode
 } from '../model/ReviewCardModel';
+import { resolveReviewCardLayoutType } from '../model/ReviewCardLayout';
 import { ReviewCardPreview } from '../components/ReviewCardPreview';
 import { ReadingReviewRecord } from '../components/ReadingReviewRecord';
+import { ReviewCardStylePreset } from '../components/ReviewCardStylePreset';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
@@ -151,7 +153,29 @@ struct PreviewPage {
     return `${REVIEW_CARD_EXPORT_ID}-${this.document.createdAt}-${this.document.updatedAt}`;
   }
 
-  build() {
+  private getExportCanvasWidth(): number {
+    return ReviewCardStylePreset.resolve(
+      ReviewCardRenderMode.EXPORT_CARD,
+      resolveReviewCardLayoutType(this.document)
+    ).canvasWidth;
+  }
+
+  @Builder
+  ExportSnapshotCard() {
+    Column() {
+      ReviewCardPreview({
+        document: this.document,
+        renderMode: ReviewCardRenderMode.EXPORT_CARD
+      })
+    }
+    .id(this.getExportComponentId())
+    .width(this.getExportCanvasWidth())
+    .padding(12)
+    .backgroundColor('#FFFFFF')
+  }
+
+  @Builder
+  ReadingPage() {
     Column() {
       Row() {
         Button('返回')
@@ -222,17 +246,6 @@ struct PreviewPage {
               .width('100%')
               .margin({ top: 16 })
           }
-
-          if (this.isExportSnapshotMode) {
-            Column() {
-              ReviewCardPreview({
-                document: this.document,
-                renderMode: ReviewCardRenderMode.EXPORT_CARD
-              })
-            }
-            .id(this.getExportComponentId())
-            .margin({ top: 24 })
-          }
         }
         .alignItems(HorizontalAlign.Start)
         .padding({ left: 20, right: 20, top: 10, bottom: 32 })
@@ -243,6 +256,26 @@ struct PreviewPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(AppColors.pageBackground)
+  }
+
+  build() {
+    if (this.isExportSnapshotMode) {
+      Column() {
+        this.ExportSnapshotCard()
+      }
+      .justifyContent(FlexAlign.Start)
+      .alignItems(HorizontalAlign.Center)
+      .padding({ top: 24, bottom: 24 })
+      .width('100%')
+      .height('100%')
+      .backgroundColor(AppColors.pageBackground)
+    } else {
+      Column() {
+        this.ReadingPage()
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor(AppColors.pageBackground)
+    }
   }
 }

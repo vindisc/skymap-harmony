@@ -2,7 +2,7 @@
   "src": [
     "pages/HomePage",
     "pages/EditorPage",
-    "pages/PreviewPage"
+    "pages/PreviewPage",
+    "pages/ProjectDetailPage"
   ]
 }
-

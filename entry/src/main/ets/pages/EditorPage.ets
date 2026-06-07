@@ -19,6 +19,7 @@ struct EditorPage {
   @State firstLook: string = '';
   @State judgement: string = '';
   @State blocker: string = '';
+  @State focusedField: string = '';
   @State imageUri: string = '';
   @State imageWidth: number = 1600;
   @State imageHeight: number = 1000;
@@ -59,6 +60,10 @@ struct EditorPage {
     router.replaceUrl({ url: PREVIEW_PAGE });
   }
 
+  private isKeyboardActive(): boolean {
+    return this.focusedField.length > 0;
+  }
+
   build() {
     Column() {
       Scroll() {
@@ -83,9 +88,11 @@ struct EditorPage {
             firstLook: $firstLook,
             judgement: $judgement,
             blocker: $blocker,
-            onFieldFocus: (_field: string) => {
+            onFieldFocus: (field: string) => {
+              this.focusedField = field;
             },
             onFieldBlur: () => {
+              this.focusedField = '';
             }
           })
 
@@ -97,7 +104,12 @@ struct EditorPage {
           })
             .margin({ top: 26 })
         }
-        .padding({ left: 20, right: 20, top: 18, bottom: 120 })
+        .padding({
+          left: 20,
+          right: 20,
+          top: 18,
+          bottom: this.isKeyboardActive() ? 260 : 140
+        })
         .width('100%')
       }
       .layoutWeight(1)
