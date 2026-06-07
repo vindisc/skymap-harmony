@@ -21,12 +21,10 @@ struct HomePage {
   @State isPickingPhoto: boolean = false;
   @State historyItems: Array<ReviewCardHistoryItem> = [];
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
-  @State globalStats: ReviewProjectStats = {
-    totalCount: 0,
-    validCount: 0,
-    unsureCount: 0,
-    invalidCount: 0
-  };
+  @State totalReviewCount: number = 0;
+  @State validReviewCount: number = 0;
+  @State unsureReviewCount: number = 0;
+  @State invalidReviewCount: number = 0;
 
   aboutToAppear(): void {
     this.reloadHistory();
@@ -38,7 +36,11 @@ struct HomePage {
 
   private async reloadHistory(): Promise<void> {
     this.historyItems = await ReviewCardHistoryService.load(this.getAbilityContext());
-    this.globalStats = ReviewProjectService.buildGlobalStats(this.historyItems);
+    const globalStats: ReviewProjectStats = ReviewProjectService.buildGlobalStats(this.historyItems);
+    this.totalReviewCount = globalStats.totalCount;
+    this.validReviewCount = globalStats.validCount;
+    this.unsureReviewCount = globalStats.unsureCount;
+    this.invalidReviewCount = globalStats.invalidCount;
     this.projectSummary = ReviewProjectService.buildDefaultProjectSummary(this.historyItems);
   }
 
@@ -143,10 +145,10 @@ struct HomePage {
         .width('100%')
 
       Row({ space: 8 }) {
-        this.OverviewStat('总复盘', this.globalStats.totalCount)
-        this.OverviewStat('成立', this.globalStats.validCount)
-        this.OverviewStat('待判断', this.globalStats.unsureCount)
-        this.OverviewStat('不成立', this.globalStats.invalidCount)
+        this.OverviewStat('总复盘', this.totalReviewCount)
+        this.OverviewStat('成立', this.validReviewCount)
+        this.OverviewStat('待判断', this.unsureReviewCount)
+        this.OverviewStat('不成立', this.invalidReviewCount)
       }
       .width('100%')
       .margin({ top: 12 })
