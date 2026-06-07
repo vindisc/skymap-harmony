@@ -45,6 +45,7 @@ export struct ReviewInputForm {
   @Link visualPath: string;
   @Link visibleFacts: string;
   @Link coreRelation: string;
+  @Link judgement: string;
   @Link extendedUnderstanding: string;
   @Link currentBlocker: string;
   onFieldFocus: (field: string) => void = () => {};
@@ -133,6 +134,9 @@ export struct ReviewInputForm {
       })
       this.ReviewField('核心关系', '最重要的 A ↔ B 关系是什么？', this.coreRelation, 'coreRelation', (value: string) => {
         this.coreRelation = value;
+      })
+      this.ReviewField('是否成立', '成立、不确定或不成立？', this.judgement, 'judgement', (value: string) => {
+        this.judgement = value;
       })
       this.ReviewField('延伸理解', '这张照片为什么成立或不成立？', this.extendedUnderstanding, 'extendedUnderstanding', (value: string) => {
         this.extendedUnderstanding = value;

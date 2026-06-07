@@ -41,12 +41,12 @@ export interface ReviewContent {
   visualPath: string;
   visibleFacts: string;
   coreRelation: string;
+  judgement: string;
   extendedUnderstanding: string;
   currentBlocker: string;
   firstLook?: string;
   reason?: string;
   strongestRelation?: string;
-  judgement?: string;
   blocker?: string;
 }
 
@@ -100,6 +100,7 @@ export function createDefaultReviewContent(): ReviewContent {
     visualPath: '',
     visibleFacts: '',
     coreRelation: '',
+    judgement: '',
     extendedUnderstanding: '',
     currentBlocker: ''
   };
@@ -130,10 +131,8 @@ export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCar
   const fallbackDocument = createDefaultReviewCardDocument();
   const sourceContent = document.content ? document.content : createDefaultReviewContent();
   const sourceConfig = document.config ? document.config : fallbackDocument.config;
-  const extendedUnderstanding = normalizeReviewText(
-    sourceContent.extendedUnderstanding,
-    normalizeReviewText(sourceContent.judgement)
-  );
+  const extendedUnderstanding = normalizeReviewText(sourceContent.extendedUnderstanding);
+  const judgement = normalizeReviewText(sourceContent.judgement, extendedUnderstanding);
   return {
     version: normalizeReviewText(document.version, fallbackDocument.version),
     projectId: document.projectId && document.projectId.length > 0 ? document.projectId : DEFAULT_PROJECT_ID,
@@ -148,6 +147,7 @@ export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCar
       visualPath: normalizeReviewText(sourceContent.visualPath),
       visibleFacts: normalizeReviewText(sourceContent.visibleFacts),
       coreRelation: normalizeReviewText(sourceContent.coreRelation, normalizeReviewText(sourceContent.strongestRelation)),
+      judgement: judgement,
       extendedUnderstanding: extendedUnderstanding,
       currentBlocker: normalizeReviewText(sourceContent.currentBlocker, normalizeReviewText(sourceContent.blocker))
     },

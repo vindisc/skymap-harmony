@@ -41,6 +41,7 @@ export struct SquareReviewCard {
           visualPath: this.document.content.visualPath,
           visibleFacts: this.document.content.visibleFacts,
           coreRelation: this.document.content.coreRelation,
+          judgement: this.document.content.judgement,
           extendedUnderstanding: this.document.content.extendedUnderstanding,
           currentBlocker: this.document.content.currentBlocker,
           labelSize: ReviewCardRenderPreset.labelSize(this.displayMode),

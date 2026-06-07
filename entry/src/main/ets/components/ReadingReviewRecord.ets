@@ -128,6 +128,17 @@ export struct ReadingReviewRecord {
                 || this.hasValue(this.document.content.visibleFacts)
             )
           }
+          if (this.hasValue(this.document.content.judgement)) {
+            this.Section(
+              '是否成立',
+              this.document.content.judgement,
+              this.hasValue(this.document.content.visualFocus)
+                || this.hasValue(this.document.content.focusReason)
+                || this.hasValue(this.document.content.visualPath)
+                || this.hasValue(this.document.content.visibleFacts)
+                || this.hasValue(this.document.content.coreRelation)
+            )
+          }
           if (this.hasValue(this.document.content.extendedUnderstanding)) {
             this.Section(
               '延伸理解',
@@ -137,6 +148,7 @@ export struct ReadingReviewRecord {
                 || this.hasValue(this.document.content.visualPath)
                 || this.hasValue(this.document.content.visibleFacts)
                 || this.hasValue(this.document.content.coreRelation)
+                || this.hasValue(this.document.content.judgement)
             )
           }
           if (this.hasValue(this.document.content.currentBlocker)) {
@@ -148,6 +160,7 @@ export struct ReadingReviewRecord {
                 || this.hasValue(this.document.content.visualPath)
                 || this.hasValue(this.document.content.visibleFacts)
                 || this.hasValue(this.document.content.coreRelation)
+                || this.hasValue(this.document.content.judgement)
                 || this.hasValue(this.document.content.extendedUnderstanding)
             )
           }

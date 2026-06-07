@@ -35,6 +35,7 @@ struct EditorPage {
   @State visualPath: string = '';
   @State visibleFacts: string = '';
   @State coreRelation: string = '';
+  @State judgement: string = '';
   @State extendedUnderstanding: string = '';
   @State currentBlocker: string = '';
   @State focusedField: string = '';
@@ -59,6 +60,7 @@ struct EditorPage {
     this.visualPath = this.document.content.visualPath;
     this.visibleFacts = this.document.content.visibleFacts;
     this.coreRelation = this.document.content.coreRelation;
+    this.judgement = this.document.content.judgement;
     this.extendedUnderstanding = this.document.content.extendedUnderstanding;
     this.currentBlocker = this.document.content.currentBlocker;
   }
@@ -75,6 +77,7 @@ struct EditorPage {
     this.document.content.visualPath = this.visualPath;
     this.document.content.visibleFacts = this.visibleFacts;
     this.document.content.coreRelation = this.coreRelation;
+    this.document.content.judgement = this.judgement;
     this.document.content.extendedUnderstanding = this.extendedUnderstanding;
     this.document.content.currentBlocker = this.currentBlocker;
   }
@@ -126,6 +129,8 @@ struct EditorPage {
         return this.visibleFacts;
       case 'coreRelation':
         return this.coreRelation;
+      case 'judgement':
+        return this.judgement;
       case 'extendedUnderstanding':
         return this.extendedUnderstanding;
       case 'currentBlocker':
@@ -146,6 +151,7 @@ struct EditorPage {
       'visualPath',
       'visibleFacts',
       'coreRelation',
+      'judgement',
       'extendedUnderstanding',
       'currentBlocker'
     ];
@@ -240,6 +246,7 @@ struct EditorPage {
                 visualPath: $visualPath,
                 visibleFacts: $visibleFacts,
                 coreRelation: $coreRelation,
+                judgement: $judgement,
                 extendedUnderstanding: $extendedUnderstanding,
                 currentBlocker: $currentBlocker,
                 onFieldFocus: (field: string) => {

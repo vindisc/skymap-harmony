@@ -8,6 +8,7 @@ export struct ReviewInfoGroup {
   @Prop visualPath: string = '';
   @Prop visibleFacts: string = '';
   @Prop coreRelation: string = '';
+  @Prop judgement: string = '';
   @Prop extendedUnderstanding: string = '';
   @Prop currentBlocker: string = '';
   @Prop labelSize: number = ReviewCardStyleTokens.labelSize;
@@ -115,6 +116,27 @@ export struct ReviewInfoGroup {
           itemBottomGap: this.itemBottomGap
         })
       }
+      if (this.hasValue(this.judgement)) {
+        ReviewInfoItem({
+          label: '是否成立',
+          value: this.judgement,
+          showDivider: this.hasValue(this.visualFocus)
+            || this.hasValue(this.focusReason)
+            || this.hasValue(this.visualPath)
+            || this.hasValue(this.visibleFacts)
+            || this.hasValue(this.coreRelation),
+          labelSize: this.labelSize,
+          labelLineHeight: this.labelLineHeight,
+          bodySize: this.bodySize,
+          bodyLineHeight: this.bodyLineHeight,
+          labelColor: this.labelColor,
+          bodyColor: this.bodyColor,
+          dividerColor: this.dividerColor,
+          valueTopGap: this.valueTopGap,
+          dividerBottomGap: this.dividerBottomGap,
+          itemBottomGap: this.itemBottomGap
+        })
+      }
       if (this.hasValue(this.extendedUnderstanding)) {
         ReviewInfoItem({
           label: '延伸理解',
@@ -123,7 +145,8 @@ export struct ReviewInfoGroup {
             || this.hasValue(this.focusReason)
             || this.hasValue(this.visualPath)
             || this.hasValue(this.visibleFacts)
-            || this.hasValue(this.coreRelation),
+            || this.hasValue(this.coreRelation)
+            || this.hasValue(this.judgement),
           labelSize: this.labelSize,
           labelLineHeight: this.labelLineHeight,
           bodySize: this.bodySize,
@@ -145,6 +168,7 @@ export struct ReviewInfoGroup {
             || this.hasValue(this.visualPath)
             || this.hasValue(this.visibleFacts)
             || this.hasValue(this.coreRelation)
+            || this.hasValue(this.judgement)
             || this.hasValue(this.extendedUnderstanding),
           labelSize: this.labelSize,
           labelLineHeight: this.labelLineHeight,
