@@ -1,18 +1,27 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
+import { EDITOR_PAGE, PREVIEW_PAGE, PROJECT_DETAIL_PAGE } from '../app/AppRouter';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { AppColors, EmptyState, PrimaryButton, RecentReviewCard } from '../components/AppDesign';
+import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
+import { ReviewProjectService } from '../services/ReviewProjectService';
+import {
+  AppColors,
+  EmptyState,
+  PrimaryButton,
+  ProjectHomeCard,
+  RecentReviewCard
+} from '../components/AppDesign';
 
 @Entry
 @Component
 struct HomePage {
   @State isPickingPhoto: boolean = false;
   @State historyItems: Array<ReviewCardHistoryItem> = [];
+  @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
 
   aboutToAppear(): void {
     this.reloadHistory();
@@ -24,6 +33,7 @@ struct HomePage {
 
   private async reloadHistory(): Promise<void> {
     this.historyItems = await ReviewCardHistoryService.load(this.getAbilityContext());
+    this.projectSummary = ReviewProjectService.buildDefaultProjectSummary(this.historyItems);
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -53,7 +63,21 @@ struct HomePage {
 
   private async deleteHistory(document: ReviewCardDocument): Promise<void> {
     this.historyItems = await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
+    this.projectSummary = ReviewProjectService.buildDefaultProjectSummary(this.historyItems);
     promptAction.showToast({ message: '已删除复盘记录' });
+  }
+
+  private openProject(): void {
+    router.pushUrl({
+      url: PROJECT_DETAIL_PAGE,
+      params: {
+        projectId: 'default'
+      }
+    });
+  }
+
+  private getRecentItems(): Array<ReviewCardHistoryItem> {
+    return this.historyItems.slice(0, 3);
   }
 
   private async startPhotoDraft(): Promise<void> {
@@ -105,7 +129,7 @@ struct HomePage {
         .fontColor(AppColors.text)
         .lineHeight(34)
         .width('100%')
-      Text('选择照片，写下观察，生成一张复盘卡')
+      Text('选择照片，写下观察，把每次拍摄沉淀成可回看的复盘记录')
         .fontSize(15)
         .fontColor(AppColors.secondaryText)
         .lineHeight(23)
@@ -131,8 +155,28 @@ struct HomePage {
 
         Column() {
           Row() {
-            Text('最近记录')
+            Text('我的复盘')
               .fontSize(19)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(AppColors.text)
+          }
+          .width('100%')
+
+          ProjectHomeCard({
+            summary: this.projectSummary,
+            onTap: () => {
+              this.openProject();
+            }
+          })
+            .margin({ top: 12 })
+        }
+        .width('100%')
+        .margin({ top: 28 })
+
+        Column() {
+          Row() {
+            Text('最近记录')
+              .fontSize(17)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.text)
           }
@@ -146,7 +190,7 @@ struct HomePage {
               .margin({ top: 12 })
           } else {
             List({ space: 10 }) {
-              ForEach(this.historyItems, (item: ReviewCardHistoryItem) => {
+              ForEach(this.getRecentItems(), (item: ReviewCardHistoryItem) => {
                 ListItem() {
                   RecentReviewCard({
                     item: item,
@@ -164,7 +208,7 @@ struct HomePage {
               }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
             }
             .width('100%')
-            .height(this.historyItems.length * 98)
+            .height(this.getRecentItems().length * 98)
             .scrollBar(BarState.Off)
             .margin({ top: 12 })
           }

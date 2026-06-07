@@ -1,17 +1,22 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { EDITOR_PAGE, HOME_PAGE } from '../app/AppRouter';
+import { EDITOR_PAGE } from '../app/AppRouter';
 import {
+  cloneReviewCardDocument,
   createDefaultReviewCardDocument,
   getReviewDocumentKey,
-  ReviewCardDocument
+  ReviewCardDocument,
+  ReviewCardRenderMode
 } from '../model/ReviewCardModel';
+import { resolveReviewCardLayoutType } from '../model/ReviewCardLayout';
 import { ReviewCardPreview } from '../components/ReviewCardPreview';
+import { ReadingReviewRecord } from '../components/ReadingReviewRecord';
+import { ReviewCardStylePreset } from '../components/ReviewCardStylePreset';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
-import { AppColors, PrimaryButton, SecondaryButton } from '../components/AppDesign';
+import { AppColors } from '../components/AppDesign';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 
@@ -51,27 +56,10 @@ struct PreviewPage {
         return;
       }
 
-      const next: ReviewCardDocument = {
-        version: this.document.version,
-        imageUri: this.document.imageUri,
-        imageWidth: size.width,
-        imageHeight: size.height,
-        imageSizeFallbackUsed: false,
-        content: {
-          title: this.document.content.title,
-          firstLook: this.document.content.firstLook,
-          judgement: this.document.content.judgement,
-          blocker: this.document.content.blocker
-        },
-        config: {
-          templateId: this.document.config.templateId,
-          layoutMode: this.document.config.layoutMode,
-          background: this.document.config.background,
-          textSize: this.document.config.textSize
-        },
-        createdAt: this.document.createdAt,
-        updatedAt: this.document.updatedAt
-      };
+      const next: ReviewCardDocument = cloneReviewCardDocument(this.document);
+      next.imageWidth = size.width;
+      next.imageHeight = size.height;
+      next.imageSizeFallbackUsed = false;
       this.document = next;
       ReviewCardStore.setCurrentDocument(next);
       await ReviewCardHistoryService.updateDocument(this.getAbilityContext(), next);
@@ -140,60 +128,79 @@ struct PreviewPage {
     });
   }
 
-  private goHome(): void {
-    router.pushUrl({ url: HOME_PAGE });
-  }
-
   private getExportComponentId(): string {
     return `${REVIEW_CARD_EXPORT_ID}-${this.document.createdAt}-${this.document.updatedAt}`;
   }
 
-  build() {
+  private getExportCanvasWidth(): number {
+    return ReviewCardStylePreset.resolve(
+      ReviewCardRenderMode.EXPORT_CARD,
+      resolveReviewCardLayoutType(this.document)
+    ).canvasWidth;
+  }
+
+  @Builder
+  ActionButton(label: string, emphasized: boolean, onTap: () => void) {
+    Button(label)
+      .height(30)
+      .padding({ left: emphasized ? 12 : 8, right: emphasized ? 12 : 8 })
+      .borderRadius(15)
+      .fontSize(13)
+      .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
+      .fontColor(emphasized ? AppColors.text : AppColors.secondaryText)
+      .backgroundColor(emphasized ? '#ECE7DE' : '#00000000')
+      .border(emphasized ? { width: 1, color: '#E2DCCD' } : { width: 0 })
+      .stateEffect(true)
+      .onClick(() => {
+        onTap();
+      })
+  }
+
+  @Builder
+  ExportSnapshotCard() {
+    Column() {
+      ReviewCardPreview({
+        document: this.document,
+        renderMode: ReviewCardRenderMode.EXPORT_CARD
+      })
+    }
+    .id(this.getExportComponentId())
+    .width(this.getExportCanvasWidth())
+    .padding(12)
+    .backgroundColor('#FFFFFF')
+  }
+
+  @Builder
+  ReadingPage() {
     Column() {
       Row() {
-        Column() {
-          Text('复盘卡预览')
-            .fontSize(24)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
-            .lineHeight(30)
-          Text('确认后可以保存或导出')
-            .fontSize(14)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(21)
-            .margin({ top: 5 })
-          Text(this.saveStateLabel)
-            .fontSize(12)
-            .fontColor(AppColors.mutedText)
-            .margin({ top: 8 })
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
+        Text('复盘记录')
+          .fontSize(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
 
-        Button('回首页')
-          .height(34)
-          .width(72)
-          .borderRadius(7)
-          .fontSize(13)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.secondaryText)
-          .backgroundColor('#00000000')
-          .stateEffect(true)
-          .onClick(() => {
-            this.goHome();
+        Blank()
+
+        Row({ space: 8 }) {
+          this.ActionButton('编辑', false, () => {
+            router.replaceUrl({ url: EDITOR_PAGE });
           })
+          this.ActionButton(this.isExporting ? '导出中' : '导出', true, () => {
+            this.exportImage();
+          })
+        }
+        .opacity(this.isExporting ? 0.8 : 1)
       }
       .alignItems(VerticalAlign.Center)
-      .padding({ left: 20, right: 20, top: 18, bottom: 8 })
+      .padding({ left: 20, right: 20, top: 14, bottom: 6 })
       .width('100%')
 
       Scroll() {
         Column() {
-          ReviewCardPreview({
+          ReadingReviewRecord({
             document: this.document,
-            displayMode: this.isExportSnapshotMode ? 'export' : 'preview'
+            saveStateLabel: this.saveStateLabel === PreviewSaveState.UNSAVED ? '' : this.saveStateLabel
           })
-            .id(this.getExportComponentId())
 
           if (this.exportMessage.length > 0) {
             Text(this.exportMessage)
@@ -202,48 +209,38 @@ struct PreviewPage {
               .lineHeight(18)
               .maxLines(2)
               .width('100%')
-              .margin({ top: 12 })
+              .margin({ top: 14 })
           }
         }
-        .alignItems(HorizontalAlign.Center)
-        .justifyContent(FlexAlign.Center)
-        .padding({ left: 18, right: 18, top: 16, bottom: 32 })
+        .alignItems(HorizontalAlign.Start)
+        .padding({ left: 20, right: 20, top: 6, bottom: 28 })
         .width('100%')
       }
       .layoutWeight(1)
       .scrollBar(BarState.Off)
-
-      Row({ space: 10 }) {
-        SecondaryButton({
-          label: '编辑',
-          onTap: () => {
-            router.replaceUrl({ url: EDITOR_PAGE });
-          }
-        })
-          .layoutWeight(0.86)
-        SecondaryButton({
-          label: '保存',
-          onTap: () => {
-            this.saveDraft();
-          }
-        })
-          .layoutWeight(0.86)
-        PrimaryButton({
-          label: this.isExporting ? '导出中' : '导出',
-          isDisabled: this.isExporting,
-          onTap: () => {
-            this.exportImage();
-          }
-        })
-          .layoutWeight(1.18)
-      }
-      .padding({ left: 16, right: 16, top: 10, bottom: 12 })
-      .width('100%')
-      .backgroundColor(AppColors.surface)
-      .shadow({ radius: 12, color: '#14000000', offsetX: 0, offsetY: -4 })
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(AppColors.pageBackground)
+  }
+
+  build() {
+    if (this.isExportSnapshotMode) {
+      Column() {
+        this.ExportSnapshotCard()
+      }
+      .justifyContent(FlexAlign.Start)
+      .alignItems(HorizontalAlign.Center)
+      .padding({ top: 24, bottom: 24 })
+      .width('100%')
+      .height('100%')
+      .backgroundColor(AppColors.pageBackground)
+    } else {
+      Column() {
+        this.ReadingPage()
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor(AppColors.pageBackground)
+    }
   }
 }

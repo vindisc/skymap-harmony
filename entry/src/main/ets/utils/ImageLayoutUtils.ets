@@ -1,3 +1,5 @@
+import { ReviewCardLayoutResolution, ReviewCardLayoutType } from '../model/ReviewCardModel';
+
 export type SampleImageKind = 'horizontal' | 'vertical' | 'square';
 
 export interface SampleImageInfo {
@@ -10,11 +12,6 @@ export const HORIZONTAL_ASPECT_RATIO: number = 1.15;
 export const VERTICAL_ASPECT_RATIO: number = 0.87;
 
 export type ImageRatioKind = 'horizontal' | 'vertical' | 'square' | 'unknown';
-
-export interface ReviewImageLayout {
-  layoutType: ImageRatioKind;
-  aspectRatio: number;
-}
 
 export function getSampleImage(kind: SampleImageKind): SampleImageInfo {
   if (kind === 'vertical') {
@@ -41,16 +38,16 @@ export function getSampleImage(kind: SampleImageKind): SampleImageInfo {
 }
 
 export function getImageRatioKind(width: number, height: number, fallbackUsed: boolean = false): ImageRatioKind {
-  if (fallbackUsed || width <= 0 || height <= 0) {
+  const resolution = resolveReviewImageLayout(width, height, fallbackUsed);
+  if (!resolution.hasExactSize) {
     return 'unknown';
   }
 
-  const ratio: number = width / height;
-  if (ratio >= HORIZONTAL_ASPECT_RATIO) {
+  if (resolution.layoutType === ReviewCardLayoutType.HORIZONTAL) {
     return 'horizontal';
   }
 
-  if (ratio <= VERTICAL_ASPECT_RATIO) {
+  if (resolution.layoutType === ReviewCardLayoutType.VERTICAL) {
     return 'vertical';
   }
 
@@ -58,17 +55,13 @@ export function getImageRatioKind(width: number, height: number, fallbackUsed: b
 }
 
 export function getImageAspectRatio(width: number, height: number, fallbackUsed: boolean = false): number {
-  if (fallbackUsed || width <= 0 || height <= 0) {
-    return 1;
-  }
-
-  return width / height;
+  return resolveReviewImageLayout(width, height, fallbackUsed).aspectRatio;
 }
 
 export function getImageRatioLabel(width: number, height: number, fallbackUsed: boolean = false): string {
   const kind = getImageRatioKind(width, height, fallbackUsed);
   if (kind === 'unknown') {
-    return '照片';
+    return '尺寸待确认';
   }
 
   if (kind === 'horizontal') {
@@ -84,27 +77,47 @@ export function getImageRatioLabel(width: number, height: number, fallbackUsed: 
 
 export function getImageSizeText(width: number, height: number, fallbackUsed: boolean = false): string {
   if (fallbackUsed || width <= 0 || height <= 0) {
-    return '';
+    return '当前按兜底尺寸预览';
   }
 
   return `${width} x ${height}`;
 }
 
-export function resolveReviewImageLayout(width: number, height: number, fallbackUsed: boolean = false): ReviewImageLayout {
-  const kind = getImageRatioKind(width, height, fallbackUsed);
+export function resolveReviewImageLayout(width: number, height: number, fallbackUsed: boolean = false): ReviewCardLayoutResolution {
+  const hasExactSize: boolean = !fallbackUsed && width > 0 && height > 0;
+  if (!hasExactSize) {
+    return {
+      layoutType: ReviewCardLayoutType.SQUARE,
+      aspectRatio: 1,
+      usedFallbackSize: true,
+      hasExactSize: false
+    };
+  }
+
+  const ratio: number = width / height;
+  let layoutType: ReviewCardLayoutType = ReviewCardLayoutType.SQUARE;
+  if (ratio >= HORIZONTAL_ASPECT_RATIO) {
+    layoutType = ReviewCardLayoutType.HORIZONTAL;
+  } else if (ratio <= VERTICAL_ASPECT_RATIO) {
+    layoutType = ReviewCardLayoutType.VERTICAL;
+  }
+
   return {
-    layoutType: kind,
-    aspectRatio: kind === 'unknown' ? 1 : getImageAspectRatio(width, height, fallbackUsed)
+    layoutType: layoutType,
+    aspectRatio: ratio,
+    usedFallbackSize: false,
+    hasExactSize: true
   };
 }
 
 export function formatReviewTime(timestamp: number): string {
   const date = new Date(timestamp);
+  const year = `${date.getFullYear()}`;
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
   const hour = `${date.getHours()}`.padStart(2, '0');
   const minute = `${date.getMinutes()}`.padStart(2, '0');
-  return `${month}-${day} ${hour}:${minute}`;
+  return `${year}-${month}-${day} ${hour}:${minute}`;
 }
 
 export function isSampleImageUri(imageUri: string): boolean {

@@ -36,9 +36,14 @@ export struct SquareReviewCard {
           titleLineHeight: ReviewCardRenderPreset.titleLineHeight(this.displayMode)
         })
         ReviewInfoGroup({
-          firstLook: this.document.content.firstLook,
+          visualFocus: this.document.content.visualFocus,
+          focusReason: this.document.content.focusReason,
+          visualPath: this.document.content.visualPath,
+          visibleFacts: this.document.content.visibleFacts,
+          coreRelation: this.document.content.coreRelation,
           judgement: this.document.content.judgement,
-          blocker: this.document.content.blocker,
+          extendedUnderstanding: this.document.content.extendedUnderstanding,
+          currentBlocker: this.document.content.currentBlocker,
           labelSize: ReviewCardRenderPreset.labelSize(this.displayMode),
           labelLineHeight: ReviewCardRenderPreset.labelLineHeight(this.displayMode),
           bodySize: ReviewCardRenderPreset.bodySize(this.displayMode),

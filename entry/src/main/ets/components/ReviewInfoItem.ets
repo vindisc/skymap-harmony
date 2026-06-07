@@ -10,6 +10,9 @@ export struct ReviewInfoItem {
   @Prop labelLineHeight: number = ReviewCardStyleTokens.labelLineHeight;
   @Prop bodySize: number = ReviewCardStyleTokens.bodySize;
   @Prop bodyLineHeight: number = ReviewCardStyleTokens.bodyLineHeight;
+  @Prop labelColor: string = ReviewCardStyleTokens.labelColor;
+  @Prop bodyColor: string = ReviewCardStyleTokens.bodyColor;
+  @Prop dividerColor: string = ReviewCardStyleTokens.hairlineColor;
   @Prop valueTopGap: number = 7;
   @Prop dividerBottomGap: number = 16;
   @Prop itemBottomGap: number = 8;
@@ -19,15 +22,15 @@ export struct ReviewInfoItem {
       if (this.showDivider) {
         Divider()
           .strokeWidth(1)
-          .color(ReviewCardStyleTokens.hairlineColor)
+          .color(this.dividerColor)
           .width('100%')
-          .opacity(0.46)
+          .opacity(0.14)
           .margin({ bottom: this.dividerBottomGap })
       }
       Text(this.label)
         .fontSize(this.labelSize)
         .fontWeight(FontWeight.Medium)
-        .fontColor(ReviewCardStyleTokens.labelColor)
+        .fontColor(this.labelColor)
         .lineHeight(this.labelLineHeight)
         .width('100%')
         .wordBreak(WordBreak.BREAK_WORD)
@@ -36,7 +39,7 @@ export struct ReviewInfoItem {
       Text(this.value.length > 0 ? this.value : '待填写')
         .fontSize(this.bodySize)
         .fontWeight(FontWeight.Regular)
-        .fontColor(ReviewCardStyleTokens.bodyColor)
+        .fontColor(this.value.length > 0 ? this.bodyColor : this.labelColor)
         .lineHeight(this.bodyLineHeight)
         .margin({ top: this.valueTopGap })
         .width('100%')
