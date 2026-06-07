@@ -20,8 +20,7 @@ const EDITOR_FIELD_GAP: number = 18;
 const EDITOR_TEXTAREA_LINE_HEIGHT: number = 28;
 const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
 const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 14;
-const EDITOR_PHOTO_REFERENCE_WIDTH: number = 330;
-const EDITOR_PHOTO_HEADER_EXTRA_HEIGHT: number = 82;
+const EDITOR_FIXED_PHOTO_HEIGHT: string = '34%';
 
 @Entry
 @Component
@@ -90,17 +89,6 @@ struct EditorPage {
 
   private isKeyboardActive(): boolean {
     return this.focusedField.length > 0;
-  }
-
-  private getPhotoAspectRatio(): number {
-    if (this.imageWidth > 0 && this.imageHeight > 0) {
-      return this.imageWidth / this.imageHeight;
-    }
-    return 1;
-  }
-
-  private getPhotoHeaderHeight(): number {
-    return EDITOR_PHOTO_HEADER_EXTRA_HEIGHT + EDITOR_PHOTO_REFERENCE_WIDTH / this.getPhotoAspectRatio();
   }
 
   private getDefaultLines(field: string): number {
@@ -172,7 +160,7 @@ struct EditorPage {
       'extendedUnderstanding',
       'currentBlocker'
     ];
-    let offset: number = this.getPhotoHeaderHeight() + EDITOR_TITLE_FIELD_HEIGHT + EDITOR_FIELD_GAP;
+    let offset: number = EDITOR_TITLE_FIELD_HEIGHT + EDITOR_FIELD_GAP;
 
     for (let index = 0; index < fieldOrder.length; index += 1) {
       const fieldKey: string = fieldOrder[index];
@@ -236,22 +224,26 @@ struct EditorPage {
         imageUri: this.imageUri,
         imageWidth: this.imageWidth,
         imageHeight: this.imageHeight,
-        imageSizeFallbackUsed: this.imageSizeFallbackUsed
+        imageSizeFallbackUsed: this.imageSizeFallbackUsed,
+        fixedFrame: true
       })
+        .layoutWeight(1)
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ left: 20, right: 20, top: 12, bottom: 16 })
+    .padding({ left: 20, right: 20, top: 12, bottom: 12 })
     .width('100%')
+    .height(EDITOR_FIXED_PHOTO_HEIGHT)
     .backgroundColor(AppColors.pageBackground)
+    .zIndex(2)
   }
 
   build() {
     Column() {
       Stack({ alignContent: Alignment.Bottom }) {
-        Scroll(this.editorScroller) {
-          Column() {
-            this.PhotoHeader()
+        Column() {
+          this.PhotoHeader()
 
+          Scroll(this.editorScroller) {
             Column() {
               ReviewInputForm({
                 title: $title,
@@ -279,11 +271,12 @@ struct EditorPage {
             })
             .width('100%')
           }
+          .layoutWeight(1)
           .width('100%')
+          .scrollBar(BarState.Off)
         }
         .width('100%')
         .height('100%')
-        .scrollBar(BarState.Off)
 
         if (!this.isKeyboardActive()) {
           this.BottomActionBar()

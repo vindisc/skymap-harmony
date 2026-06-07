@@ -214,6 +214,7 @@ export struct PhotoWritingHero {
   @Prop imageWidth: number = 1600;
   @Prop imageHeight: number = 1000;
   @Prop imageSizeFallbackUsed: boolean = false;
+  @Prop fixedFrame: boolean = false;
   @State loadFailed: boolean = false;
 
   private getAspectRatioValue(): number {
@@ -238,27 +239,51 @@ export struct PhotoWritingHero {
   }
 
   build() {
-    Stack() {
-      if (hasDisplayableImageUri(this.imageUri) && !this.loadFailed) {
-        Image(this.imageUri)
-          .width('100%')
-          .height('100%')
-          .objectFit(ImageFit.Contain)
-          .syncLoad(true)
-          .onError(() => {
-            this.loadFailed = true;
-          })
-      } else {
-        this.Placeholder()
+    if (this.fixedFrame) {
+      Stack() {
+        if (hasDisplayableImageUri(this.imageUri) && !this.loadFailed) {
+          Image(this.imageUri)
+            .width('100%')
+            .height('100%')
+            .objectFit(ImageFit.Contain)
+            .syncLoad(true)
+            .onError(() => {
+              this.loadFailed = true;
+            })
+        } else {
+          this.Placeholder()
+        }
       }
+        .width('94%')
+        .height('100%')
+        .alignSelf(ItemAlign.Center)
+        .borderRadius(12)
+        .clip(true)
+        .backgroundColor('#E9E5DC')
+        .border({ width: 1, color: AppColors.border })
+    } else {
+      Stack() {
+        if (hasDisplayableImageUri(this.imageUri) && !this.loadFailed) {
+          Image(this.imageUri)
+            .width('100%')
+            .height('100%')
+            .objectFit(ImageFit.Contain)
+            .syncLoad(true)
+            .onError(() => {
+              this.loadFailed = true;
+            })
+        } else {
+          this.Placeholder()
+        }
+      }
+        .width('94%')
+        .aspectRatio(this.getAspectRatioValue())
+        .alignSelf(ItemAlign.Center)
+        .borderRadius(12)
+        .clip(true)
+        .backgroundColor('#E9E5DC')
+        .border({ width: 1, color: AppColors.border })
     }
-    .width('94%')
-    .aspectRatio(this.getAspectRatioValue())
-    .alignSelf(ItemAlign.Center)
-    .borderRadius(12)
-    .clip(true)
-    .backgroundColor('#E9E5DC')
-    .border({ width: 1, color: AppColors.border })
   }
 }
 
