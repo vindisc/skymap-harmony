@@ -1,4 +1,9 @@
-import { createDefaultReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
+import {
+  createDefaultReviewCardDocument,
+  normalizeReviewJudgement,
+  ReviewCardHistoryItem,
+  ReviewJudgementStatus
+} from '../model/ReviewCardModel';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { getReviewProjectExcerpt } from '../services/ReviewProjectService';
 import { formatReviewTime, getImageRatioLabel, getImageSizeText, hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
@@ -146,6 +151,50 @@ export struct TagLabel {
       .padding({ left: 8, right: 8, top: 4, bottom: 4 })
       .borderRadius(4)
       .backgroundColor(this.tagBackground)
+  }
+}
+
+function getJudgementBadgeText(value: string): string {
+  return normalizeReviewJudgement(value);
+}
+
+function getJudgementBadgeColor(value: string): string {
+  const judgement: ReviewJudgementStatus = normalizeReviewJudgement(value);
+  if (judgement === ReviewJudgementStatus.VALID) {
+    return '#2E7D5B';
+  }
+  if (judgement === ReviewJudgementStatus.INVALID) {
+    return '#9A3D35';
+  }
+  return '#6E5A2F';
+}
+
+function getJudgementBadgeBackground(value: string): string {
+  const judgement: ReviewJudgementStatus = normalizeReviewJudgement(value);
+  if (judgement === ReviewJudgementStatus.VALID) {
+    return '#EAF5ED';
+  }
+  if (judgement === ReviewJudgementStatus.INVALID) {
+    return '#F8EAE7';
+  }
+  return '#F5EFD8';
+}
+
+@Component
+export struct ReviewJudgementBadge {
+  @Prop value: string = ReviewJudgementStatus.UNSURE;
+
+  build() {
+    Text(getJudgementBadgeText(this.value))
+      .fontSize(11)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(getJudgementBadgeColor(this.value))
+      .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+      .borderRadius(4)
+      .backgroundColor(getJudgementBadgeBackground(this.value))
+      .constraintSize({ minWidth: 48 })
+      .textAlign(TextAlign.Center)
+      .maxLines(1)
   }
 }
 
@@ -389,13 +438,19 @@ export struct RecentReviewCard {
         .width(72)
 
       Column({ space: 4 }) {
-        Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-          .fontSize(15)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .width('100%')
+        Row({ space: 8 }) {
+          Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
+            .fontSize(15)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .layoutWeight(1)
+
+          ReviewJudgementBadge({ value: this.item.document.content.judgement })
+        }
+        .alignItems(VerticalAlign.Center)
+        .width('100%')
 
         Text(formatReviewTime(this.item.document.updatedAt))
           .fontSize(12)
@@ -449,13 +504,19 @@ export struct ProjectReviewCard {
         .width(68)
 
       Column({ space: 4 }) {
-        Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-          .fontSize(15)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .width('100%')
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
+        Row({ space: 8 }) {
+          Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
+            .fontSize(15)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .layoutWeight(1)
+
+          ReviewJudgementBadge({ value: this.item.document.content.judgement })
+        }
+        .alignItems(VerticalAlign.Center)
+        .width('100%')
 
         Text(formatReviewTime(this.item.document.updatedAt))
           .fontSize(12)

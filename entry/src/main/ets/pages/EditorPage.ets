@@ -4,6 +4,7 @@ import { PREVIEW_PAGE } from '../app/AppRouter';
 import {
   createDefaultReviewCardDocument,
   DEFAULT_REVIEW_TITLE,
+  normalizeReviewJudgement,
   ReviewCardDocument
 } from '../model/ReviewCardModel';
 import { ReviewInputForm } from '../components/ReviewInputForm';
@@ -58,7 +59,7 @@ struct EditorPage {
     this.visualPath = this.document.content.visualPath;
     this.visibleFacts = this.document.content.visibleFacts;
     this.coreRelation = this.document.content.coreRelation;
-    this.judgement = this.document.content.judgement;
+    this.judgement = normalizeReviewJudgement(this.document.content.judgement);
     this.extendedUnderstanding = this.document.content.extendedUnderstanding;
     this.currentBlocker = this.document.content.currentBlocker;
   }
@@ -75,7 +76,7 @@ struct EditorPage {
     this.document.content.visualPath = this.visualPath;
     this.document.content.visibleFacts = this.visibleFacts;
     this.document.content.coreRelation = this.coreRelation;
-    this.document.content.judgement = this.judgement;
+    this.document.content.judgement = normalizeReviewJudgement(this.judgement);
     this.document.content.extendedUnderstanding = this.extendedUnderstanding;
     this.document.content.currentBlocker = this.currentBlocker;
   }

@@ -1,4 +1,9 @@
 import { AppColors } from './AppDesign';
+import {
+  getReviewJudgementIndex,
+  normalizeReviewJudgement,
+  ReviewJudgementStatus
+} from '../model/ReviewCardModel';
 
 const REVIEW_TEXTAREA_LINE_HEIGHT: number = 28;
 const REVIEW_TEXTAREA_VERTICAL_PADDING: number = 28;
@@ -57,6 +62,36 @@ export struct ReviewInputForm {
 
   private getTextAreaHeight(value: string, defaultLines: number): number {
     return resolveReviewTextAreaHeight(value, defaultLines);
+  }
+
+  @Builder
+  JudgementSelect() {
+    Column({ space: 10 }) {
+      this.FieldLabel('是否成立', SECONDARY_FIELD_LABEL_SIZE)
+      Select([
+        { value: ReviewJudgementStatus.VALID },
+        { value: ReviewJudgementStatus.UNSURE },
+        { value: ReviewJudgementStatus.INVALID }
+      ])
+        .selected(getReviewJudgementIndex(this.judgement))
+        .value(normalizeReviewJudgement(this.judgement))
+        .height(48)
+        .width('100%')
+        .borderRadius(10)
+        .font({ size: SECONDARY_FIELD_INPUT_SIZE, weight: FontWeight.Medium })
+        .fontColor(AppColors.text)
+        .selectedOptionFont({ size: SECONDARY_FIELD_INPUT_SIZE, weight: FontWeight.Medium })
+        .selectedOptionFontColor(AppColors.text)
+        .optionFont({ size: SECONDARY_FIELD_INPUT_SIZE })
+        .optionFontColor(AppColors.secondaryText)
+        .backgroundColor(AppColors.surfaceMuted)
+        .padding({ left: 16, right: 16 })
+        .border({ width: 1, color: AppColors.border })
+        .onSelect((index: number, value: string) => {
+          this.judgement = normalizeReviewJudgement(value);
+        })
+    }
+    .width('100%')
   }
 
   @Builder
@@ -140,10 +175,7 @@ export struct ReviewInputForm {
         PRIMARY_FIELD_LABEL_SIZE, PRIMARY_FIELD_INPUT_SIZE, (value: string) => {
         this.coreRelation = value;
       })
-      this.ReviewField('是否成立', '成立、不确定或不成立？', this.judgement, 'judgement', 1,
-        SECONDARY_FIELD_LABEL_SIZE, SECONDARY_FIELD_INPUT_SIZE, (value: string) => {
-        this.judgement = value;
-      })
+      this.JudgementSelect()
       this.ReviewField('延伸理解', '这张照片为什么成立或不成立？', this.extendedUnderstanding, 'extendedUnderstanding', 2,
         SECONDARY_FIELD_LABEL_SIZE, SECONDARY_FIELD_INPUT_SIZE, (value: string) => {
         this.extendedUnderstanding = value;

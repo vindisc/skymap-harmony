@@ -34,6 +34,17 @@ export enum ReviewCardTextSize {
   LARGE = 'large'
 }
 
+export enum ReviewJudgementStatus {
+  VALID = '成立',
+  UNSURE = '不确定',
+  INVALID = '不成立'
+}
+
+export interface ReviewJudgementOption {
+  label: string;
+  value: ReviewJudgementStatus;
+}
+
 export interface ReviewContent {
   title: string;
   visualFocus: string;
@@ -77,6 +88,12 @@ export interface ReviewCardHistoryItem {
 
 export const DEFAULT_REVIEW_TITLE: string = '这张照片是否成立';
 export const DEFAULT_PROJECT_ID: string = 'default';
+export const DEFAULT_REVIEW_JUDGEMENT: ReviewJudgementStatus = ReviewJudgementStatus.UNSURE;
+export const REVIEW_JUDGEMENT_OPTIONS: Array<ReviewJudgementOption> = [
+  { label: ReviewJudgementStatus.VALID, value: ReviewJudgementStatus.VALID },
+  { label: ReviewJudgementStatus.UNSURE, value: ReviewJudgementStatus.UNSURE },
+  { label: ReviewJudgementStatus.INVALID, value: ReviewJudgementStatus.INVALID }
+];
 
 function normalizeReviewText(value: string | undefined, fallback: string = ''): string {
   if (typeof value === 'string') {
@@ -92,6 +109,39 @@ function normalizeReviewNumber(value: number | undefined, fallback: number): num
   return fallback;
 }
 
+export function normalizeReviewJudgement(value: string | undefined): ReviewJudgementStatus {
+  const trimmedValue: string = normalizeReviewText(value).trim();
+  if (trimmedValue === ReviewJudgementStatus.VALID) {
+    return ReviewJudgementStatus.VALID;
+  }
+  if (trimmedValue === ReviewJudgementStatus.INVALID) {
+    return ReviewJudgementStatus.INVALID;
+  }
+  if (trimmedValue === ReviewJudgementStatus.UNSURE) {
+    return ReviewJudgementStatus.UNSURE;
+  }
+  if (trimmedValue.includes(ReviewJudgementStatus.INVALID)) {
+    return ReviewJudgementStatus.INVALID;
+  }
+  if (trimmedValue.includes(ReviewJudgementStatus.UNSURE)) {
+    return ReviewJudgementStatus.UNSURE;
+  }
+  if (trimmedValue.includes(ReviewJudgementStatus.VALID)) {
+    return ReviewJudgementStatus.VALID;
+  }
+  return DEFAULT_REVIEW_JUDGEMENT;
+}
+
+export function getReviewJudgementIndex(value: string | undefined): number {
+  const status: ReviewJudgementStatus = normalizeReviewJudgement(value);
+  for (let index = 0; index < REVIEW_JUDGEMENT_OPTIONS.length; index += 1) {
+    if (REVIEW_JUDGEMENT_OPTIONS[index].value === status) {
+      return index;
+    }
+  }
+  return 1;
+}
+
 export function createDefaultReviewContent(): ReviewContent {
   return {
     title: DEFAULT_REVIEW_TITLE,
@@ -100,7 +150,7 @@ export function createDefaultReviewContent(): ReviewContent {
     visualPath: '',
     visibleFacts: '',
     coreRelation: '',
-    judgement: '',
+    judgement: DEFAULT_REVIEW_JUDGEMENT,
     extendedUnderstanding: '',
     currentBlocker: ''
   };
@@ -132,7 +182,7 @@ export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCar
   const sourceContent = document.content ? document.content : createDefaultReviewContent();
   const sourceConfig = document.config ? document.config : fallbackDocument.config;
   const extendedUnderstanding = normalizeReviewText(sourceContent.extendedUnderstanding);
-  const judgement = normalizeReviewText(sourceContent.judgement, extendedUnderstanding);
+  const judgement = normalizeReviewJudgement(normalizeReviewText(sourceContent.judgement, extendedUnderstanding));
   return {
     version: normalizeReviewText(document.version, fallbackDocument.version),
     projectId: document.projectId && document.projectId.length > 0 ? document.projectId : DEFAULT_PROJECT_ID,
