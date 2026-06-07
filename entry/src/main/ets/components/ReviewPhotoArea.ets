@@ -9,6 +9,7 @@ export struct ReviewPhotoArea {
   @Prop imageSizeFallbackUsed: boolean = false;
   @Prop aspectRatioValue: number = 1.6;
   @Prop compact: boolean = false;
+  @Prop cornerRadius: number = ReviewCardStyleTokens.photoRadius;
 
   build() {
     ReviewPhotoBlock({
@@ -18,7 +19,7 @@ export struct ReviewPhotoArea {
       imageSizeFallbackUsed: this.imageSizeFallbackUsed,
       aspectRatioValue: this.aspectRatioValue,
       compact: this.compact,
-      cornerRadius: ReviewCardStyleTokens.photoRadius,
+      cornerRadius: this.cornerRadius,
       fitMode: ImageFit.Contain
     })
   }

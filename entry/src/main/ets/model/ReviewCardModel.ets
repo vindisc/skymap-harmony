@@ -5,6 +5,24 @@ export enum ReviewCardLayoutMode {
   SQUARE_PHOTO_BOTTOM_TEXT = 'squarePhotoBottomText'
 }
 
+export enum ReviewCardRenderMode {
+  MOBILE_READING = 'mobileReading',
+  EXPORT_CARD = 'exportCard'
+}
+
+export enum ReviewCardLayoutType {
+  HORIZONTAL = 'horizontal',
+  VERTICAL = 'vertical',
+  SQUARE = 'square'
+}
+
+export interface ReviewCardLayoutResolution {
+  layoutType: ReviewCardLayoutType;
+  aspectRatio: number;
+  usedFallbackSize: boolean;
+  hasExactSize: boolean;
+}
+
 export enum ReviewCardBackground {
   WHITE = 'white',
   LIGHT_GRAY = 'lightGray'
