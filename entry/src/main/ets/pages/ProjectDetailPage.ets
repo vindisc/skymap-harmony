@@ -1,11 +1,10 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
-import { ProjectReviewCard, AppColors, EmptyState, PrimaryButton } from '../components/AppDesign';
+import { PREVIEW_PAGE } from '../app/AppRouter';
+import { AppColors, AppPageHeader, EmptyState, ProjectReviewCard } from '../components/AppDesign';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
@@ -13,7 +12,6 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 @Entry
 @Component
 struct ProjectDetailPage {
-  @State isPickingPhoto: boolean = false;
   @State summary: ReviewProjectSummary = createDefaultProjectSummary();
 
   private getAbilityContext(): common.UIAbilityContext {
@@ -27,10 +25,6 @@ struct ProjectDetailPage {
   private async reloadData(): Promise<void> {
     const items = await ReviewCardHistoryService.load(this.getAbilityContext());
     this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
-  }
-
-  private goBack(): void {
-    router.back();
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -64,35 +58,10 @@ struct ProjectDetailPage {
     promptAction.showToast({ message: '已删除复盘记录' });
   }
 
-  private async startPhotoDraft(): Promise<void> {
-    if (this.isPickingPhoto) {
-      return;
-    }
-
-    this.isPickingPhoto = true;
-    const result: PickedPhotoResult = await pickSinglePhoto();
-    this.isPickingPhoto = false;
-
-    if (!result.success) {
-      if (!result.cancelled && result.message.length > 0) {
-        promptAction.showToast({ message: result.message });
-      }
-      return;
-    }
-
-    ReviewCardStore.createPhotoDraft(
-      result.imageUri,
-      result.imageWidth,
-      result.imageHeight,
-      result.imageSizeFallbackUsed
-    );
-    router.pushUrl({ url: EDITOR_PAGE });
-  }
-
   @Builder
   DeleteSwipeAction(document: ReviewCardDocument) {
     Button('删除')
-      .height(70)
+      .height(64)
       .width(76)
       .borderRadius(8)
       .fontSize(14)
@@ -107,53 +76,26 @@ struct ProjectDetailPage {
   build() {
     Scroll() {
       Column() {
-        Row() {
-          Button('返回')
-            .height(34)
-            .width(64)
-            .borderRadius(7)
-            .fontSize(13)
-            .fontColor(AppColors.secondaryText)
-            .backgroundColor('#00000000')
-            .onClick(() => {
-              this.goBack();
-            })
-
-          Blank()
-        }
-        .width('100%')
-
-        Text(this.summary.project.name)
-          .fontSize(28)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.text)
-          .lineHeight(34)
-          .width('100%')
-          .margin({ top: 10 })
+        AppPageHeader({
+          title: this.summary.project.name,
+          subtitle: ''
+        })
 
         Text(`${this.summary.recordCount} 条复盘记录`)
           .fontSize(14)
           .fontColor(AppColors.secondaryText)
           .lineHeight(22)
           .width('100%')
-          .margin({ top: 8 })
-
-        PrimaryButton({
-          label: this.isPickingPhoto ? '正在打开相册...' : '添加照片复盘',
-          onTap: () => {
-            this.startPhotoDraft();
-          }
-        })
-          .margin({ top: 20 })
+          .margin({ top: 10 })
 
         if (this.summary.recordCount === 0) {
           EmptyState({
-            title: '还没有复盘记录',
-            message: '添加一张照片开始'
+            title: '暂无复盘记录',
+            message: '请回到首页选择照片开始复盘'
           })
-            .margin({ top: 22 })
+            .margin({ top: 18 })
         } else {
-          List({ space: 12 }) {
+          List({ space: 8 }) {
             ForEach(this.summary.items, (item: ReviewCardHistoryItem) => {
               ListItem() {
                 ProjectReviewCard({
@@ -172,12 +114,12 @@ struct ProjectDetailPage {
             }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
           }
           .width('100%')
-          .height(this.summary.items.length * 112)
+          .height(this.summary.items.length * 92)
           .scrollBar(BarState.Off)
-          .margin({ top: 22 })
+          .margin({ top: 18 })
         }
       }
-      .padding({ left: 20, right: 20, top: 18, bottom: 32 })
+      .padding({ left: 20, right: 20, top: 24, bottom: 32 })
       .width('100%')
     }
     .width('100%')

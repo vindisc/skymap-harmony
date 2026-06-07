@@ -10,13 +10,27 @@ function ensureProjectId(document: ReviewCardDocument): string {
   return document.projectId && document.projectId.length > 0 ? document.projectId : DEFAULT_PROJECT_ID;
 }
 
+function normalizeExcerpt(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
 export function getReviewProjectExcerpt(document: ReviewCardDocument): string {
-  const value = document.content.judgement.trim();
-  if (value.length === 0) {
-    return '还没有写下这条复盘。';
+  const judgement = normalizeExcerpt(document.content.judgement);
+  if (judgement.length > 0) {
+    return judgement.slice(0, 32);
   }
 
-  return value.replace(/\s+/g, ' ').slice(0, 28);
+  const blocker = normalizeExcerpt(document.content.blocker);
+  if (blocker.length > 0) {
+    return blocker.slice(0, 32);
+  }
+
+  const firstLook = normalizeExcerpt(document.content.firstLook);
+  if (firstLook.length > 0) {
+    return firstLook.slice(0, 32);
+  }
+
+  return '还没有写下复盘摘要。';
 }
 
 export class ReviewProjectService {

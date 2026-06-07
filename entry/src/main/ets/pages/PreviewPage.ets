@@ -145,10 +145,6 @@ struct PreviewPage {
     });
   }
 
-  private goBack(): void {
-    router.back();
-  }
-
   private getExportComponentId(): string {
     return `${REVIEW_CARD_EXPORT_ID}-${this.document.createdAt}-${this.document.updatedAt}`;
   }
@@ -195,9 +191,10 @@ struct PreviewPage {
   ReadingPage() {
     Column() {
       Row() {
-        this.ActionButton('返回', false, () => {
-          this.goBack();
-        })
+        Text('复盘记录')
+          .fontSize(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
 
         Blank()
 

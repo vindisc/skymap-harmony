@@ -322,49 +322,49 @@ export struct RecentReviewCard {
   onTap: () => void = () => {};
 
   build() {
-    Row({ space: 12 }) {
+    Row({ space: 10 }) {
       ReviewPhotoBlock({
         imageUri: this.item.document.imageUri,
         imageWidth: this.item.document.imageWidth,
         imageHeight: this.item.document.imageHeight,
         imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
-        aspectRatioValue: 1.25,
+        aspectRatioValue: 1.08,
         compact: true,
-        fitMode: ImageFit.Contain
+        fitMode: ImageFit.Contain,
+        cornerRadius: 9
       })
-        .width(78)
+        .width(72)
 
-      Column() {
+      Column({ space: 4 }) {
         Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-          .fontSize(16)
+          .fontSize(15)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
 
-        Row({ space: 8 }) {
-          Text(formatReviewTime(this.item.document.updatedAt))
-            .fontSize(12)
-            .fontColor(AppColors.secondaryText)
-          Text(getImageRatioLabel(
-            this.item.document.imageWidth,
-            this.item.document.imageHeight,
-            this.item.document.imageSizeFallbackUsed
-          ))
-            .fontSize(12)
-            .fontColor(AppColors.mutedText)
-        }
-        .margin({ top: 9 })
-        .width('100%')
+        Text(formatReviewTime(this.item.document.updatedAt))
+          .fontSize(12)
+          .fontColor(AppColors.mutedText)
+          .width('100%')
+
+        Text(getReviewProjectExcerpt(this.item.document))
+          .fontSize(13)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(18)
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
     }
     .alignItems(VerticalAlign.Center)
-    .padding(12)
+    .padding({ left: 10, right: 10, top: 10, bottom: 10 })
     .width('100%')
-    .borderRadius(AppMetrics.cardRadius)
+    .constraintSize({ minHeight: 88 })
+    .borderRadius(11)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
     .onClick(() => {
@@ -382,58 +382,49 @@ export struct ProjectReviewCard {
   onTap: () => void = () => {};
 
   build() {
-    Row({ space: 12 }) {
+    Row({ space: 10 }) {
       ReviewPhotoBlock({
         imageUri: this.item.document.imageUri,
         imageWidth: this.item.document.imageWidth,
         imageHeight: this.item.document.imageHeight,
         imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
-        aspectRatioValue: 1.05,
+        aspectRatioValue: 1,
         compact: true,
         fitMode: ImageFit.Contain,
-        cornerRadius: 10
+        cornerRadius: 9
       })
-        .width(82)
+        .width(68)
 
-      Column({ space: 6 }) {
+      Column({ space: 4 }) {
         Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-          .fontSize(16)
+          .fontSize(15)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .width('100%')
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-        Row({ space: 8 }) {
-          Text(getImageRatioLabel(
-            this.item.document.imageWidth,
-            this.item.document.imageHeight,
-            this.item.document.imageSizeFallbackUsed
-          ))
-            .fontSize(12)
-            .fontColor(AppColors.secondaryText)
-
-          Text(formatReviewTime(this.item.document.updatedAt))
-            .fontSize(12)
-            .fontColor(AppColors.mutedText)
-        }
-        .width('100%')
+        Text(formatReviewTime(this.item.document.updatedAt))
+          .fontSize(12)
+          .fontColor(AppColors.mutedText)
+          .width('100%')
 
         Text(getReviewProjectExcerpt(this.item.document))
           .fontSize(13)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(20)
+          .lineHeight(18)
           .width('100%')
-          .maxLines(2)
+          .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
     }
     .alignItems(VerticalAlign.Center)
-    .padding(12)
+    .padding({ left: 10, right: 10, top: 10, bottom: 10 })
     .width('100%')
-    .borderRadius(12)
+    .constraintSize({ minHeight: 84 })
+    .borderRadius(11)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
     .onClick(() => {

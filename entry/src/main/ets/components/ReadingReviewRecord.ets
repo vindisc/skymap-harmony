@@ -2,7 +2,7 @@ import {
   createDefaultReviewCardDocument,
   ReviewCardDocument
 } from '../model/ReviewCardModel';
-import { formatReviewTime, getImageRatioLabel, getImageSizeText } from '../utils/ImageLayoutUtils';
+import { formatReviewTime } from '../utils/ImageLayoutUtils';
 import { AppColors } from './AppDesign';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
@@ -83,14 +83,6 @@ export struct ReadingReviewRecord {
             .fontSize(12)
             .fontColor(AppColors.secondaryText)
 
-          Text(getImageRatioLabel(
-            this.document.imageWidth,
-            this.document.imageHeight,
-            this.document.imageSizeFallbackUsed
-          ))
-            .fontSize(12)
-            .fontColor(AppColors.mutedText)
-
           if (this.saveStateLabel.length > 0) {
             this.MetaTag(this.saveStateLabel)
           }
@@ -98,15 +90,6 @@ export struct ReadingReviewRecord {
         .alignItems(VerticalAlign.Center)
         .width('100%')
         .margin({ top: 12 })
-
-        if (this.document.imageSizeFallbackUsed) {
-          Text(getImageSizeText(this.document.imageWidth, this.document.imageHeight, true))
-            .fontSize(12)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(18)
-            .margin({ top: 10 })
-            .width('100%')
-        }
 
         Column() {
           this.Section('第一眼落点', this.document.content.firstLook, false)

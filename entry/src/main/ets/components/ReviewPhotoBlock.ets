@@ -1,4 +1,4 @@
-import { hasDisplayableImageUri, getImageRatioLabel } from '../utils/ImageLayoutUtils';
+import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 
 @Component
 export struct ReviewPhotoBlock {
@@ -15,14 +15,17 @@ export struct ReviewPhotoBlock {
   @Builder
   Placeholder() {
     Column() {
-      Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed
-        ? '图片加载失败'
-        : getImageRatioLabel(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
+      Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '图片加载失败' : '照片预览')
         .fontSize(this.compact ? 14 : 18)
         .fontWeight(FontWeight.Medium)
         .fontColor('#1F2329')
-      if (!this.imageSizeFallbackUsed) {
-        Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '请返回重新选择照片' : `${this.imageWidth} x ${this.imageHeight}`)
+      if (hasDisplayableImageUri(this.imageUri) && this.loadFailed) {
+        Text('请重新选择照片')
+          .fontSize(12)
+          .fontColor('#68707D')
+          .margin({ top: 6 })
+      } else if (this.imageSizeFallbackUsed) {
+        Text('暂时无法读取照片信息')
           .fontSize(12)
           .fontColor('#68707D')
           .margin({ top: 6 })
