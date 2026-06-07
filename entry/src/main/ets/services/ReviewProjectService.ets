@@ -2,8 +2,10 @@ import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/Proj
 import {
   DEFAULT_PROJECT_ID,
   getReviewDocumentKey,
+  normalizeReviewJudgement,
   ReviewCardDocument,
-  ReviewCardHistoryItem
+  ReviewCardHistoryItem,
+  ReviewJudgementStatus
 } from '../model/ReviewCardModel';
 
 function ensureProjectId(document: ReviewCardDocument): string {
@@ -42,8 +44,22 @@ export class ReviewProjectService {
 
     summary.items = projectItems;
     summary.recordCount = projectItems.length;
+    summary.stats.totalCount = projectItems.length;
     summary.project.reviewIds = projectItems.map((item: ReviewCardHistoryItem): string => {
       return getReviewDocumentKey(item.document);
+    });
+
+    projectItems.forEach((item: ReviewCardHistoryItem): void => {
+      const judgement = normalizeReviewJudgement(item.document.content.judgement);
+      if (judgement === ReviewJudgementStatus.VALID) {
+        summary.stats.validCount += 1;
+        return;
+      }
+      if (judgement === ReviewJudgementStatus.INVALID) {
+        summary.stats.invalidCount += 1;
+        return;
+      }
+      summary.stats.unsureCount += 1;
     });
 
     if (projectItems.length > 0) {

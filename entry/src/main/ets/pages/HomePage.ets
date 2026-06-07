@@ -76,7 +76,24 @@ struct HomePage {
 
   @Builder
   StartReviewPanel() {
-    Column() {
+    Column({ space: 16 }) {
+      Column({ space: 8 }) {
+        Text('摄影复盘卡')
+          .fontSize(26)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .lineHeight(32)
+          .width('100%')
+
+        Text('选择照片，写下观察，把每次拍摄沉淀成可回看的复盘记录')
+          .fontSize(15)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(23)
+          .width('100%')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
+
       PrimaryButton({
         label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘',
         onTap: () => {
@@ -86,6 +103,50 @@ struct HomePage {
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
+  }
+
+  @Builder
+  OverviewStat(label: string, value: number) {
+    Column({ space: 6 }) {
+      Text(`${value}`)
+        .fontSize(20)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+        .maxLines(1)
+
+      Text(label)
+        .fontSize(12)
+        .fontColor(AppColors.secondaryText)
+        .maxLines(1)
+    }
+    .justifyContent(FlexAlign.Center)
+    .layoutWeight(1)
+    .height(64)
+    .borderRadius(8)
+    .backgroundColor(AppColors.surfaceMuted)
+  }
+
+  @Builder
+  ReviewOverviewPanel() {
+    Column() {
+      Text('复盘概览')
+        .fontSize(17)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+        .width('100%')
+
+      Row({ space: 8 }) {
+        this.OverviewStat('总复盘', this.projectSummary.stats.totalCount)
+        this.OverviewStat('成立', this.projectSummary.stats.validCount)
+        this.OverviewStat('待判断', this.projectSummary.stats.unsureCount)
+        this.OverviewStat('不成立', this.projectSummary.stats.invalidCount)
+      }
+      .width('100%')
+      .margin({ top: 12 })
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+    .margin({ top: 22 })
   }
 
   @Builder
@@ -158,6 +219,8 @@ struct HomePage {
     Scroll() {
       Column() {
         this.StartReviewPanel()
+
+        this.ReviewOverviewPanel()
 
         this.LatestReviewPanel()
 

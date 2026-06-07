@@ -8,10 +8,18 @@ export interface ReviewProject {
   reviewIds: Array<string>;
 }
 
+export interface ReviewProjectStats {
+  totalCount: number;
+  validCount: number;
+  unsureCount: number;
+  invalidCount: number;
+}
+
 export interface ReviewProjectSummary {
   project: ReviewProject;
   items: Array<ReviewCardHistoryItem>;
   recordCount: number;
+  stats: ReviewProjectStats;
   latestUpdatedAt: number;
   latestItem?: ReviewCardHistoryItem;
 }
@@ -30,6 +38,12 @@ export function createDefaultProjectSummary(): ReviewProjectSummary {
     },
     items: [],
     recordCount: 0,
+    stats: {
+      totalCount: 0,
+      validCount: 0,
+      unsureCount: 0,
+      invalidCount: 0
+    },
     latestUpdatedAt: 0
   };
 }
