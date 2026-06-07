@@ -1,5 +1,6 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
+import display from '@ohos.display';
 import { PREVIEW_PAGE } from '../app/AppRouter';
 import {
   createDefaultReviewCardDocument,
@@ -13,7 +14,17 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 
 const EDITOR_BOTTOM_ACTION_PADDING: number = 126;
-const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 420;
+const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 360;
+const EDITOR_PAGE_HORIZONTAL_PADDING: number = 20;
+const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
+const EDITOR_VIEWPORT_FALLBACK_HEIGHT: number = 720;
+const EDITOR_PHOTO_TITLE_HEIGHT: number = 24;
+const EDITOR_PHOTO_TITLE_GAP: number = 8;
+const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 8;
+const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 10;
+const EDITOR_PHOTO_MIN_HEIGHT: number = 188;
+const EDITOR_PHOTO_MAX_HEIGHT: number = 340;
+const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.4;
 const EDITOR_TITLE_FIELD_HEIGHT: number = 78;
 const EDITOR_FIELD_LABEL_HEIGHT: number = 18;
 const EDITOR_FIELD_LABEL_GAP: number = 10;
@@ -21,7 +32,11 @@ const EDITOR_FIELD_GAP: number = 18;
 const EDITOR_TEXTAREA_LINE_HEIGHT: number = 28;
 const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
 const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 14;
-const EDITOR_FIXED_PHOTO_HEIGHT: number = 312;
+
+interface EditorPhotoFrameSize {
+  width: number;
+  height: number;
+}
 
 @Entry
 @Component
@@ -42,12 +57,15 @@ struct EditorPage {
   @State imageWidth: number = 1600;
   @State imageHeight: number = 1000;
   @State imageSizeFallbackUsed: boolean = false;
+  @State viewportWidth: number = EDITOR_CONTENT_FALLBACK_WIDTH + EDITOR_PAGE_HORIZONTAL_PADDING * 2;
+  @State viewportHeight: number = EDITOR_VIEWPORT_FALLBACK_HEIGHT;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
   }
 
   aboutToAppear(): void {
+    this.captureStableViewportSize();
     this.document = ReviewCardStore.getCurrentDocument();
     this.imageUri = this.document.imageUri;
     this.imageWidth = this.document.imageWidth;
@@ -62,6 +80,17 @@ struct EditorPage {
     this.judgement = normalizeReviewJudgement(this.document.content.judgement);
     this.extendedUnderstanding = this.document.content.extendedUnderstanding;
     this.currentBlocker = this.document.content.currentBlocker;
+  }
+
+  private captureStableViewportSize(): void {
+    try {
+      const currentDisplay = display.getDefaultDisplaySync();
+      this.viewportWidth = px2vp(currentDisplay.width);
+      this.viewportHeight = px2vp(currentDisplay.height);
+    } catch (error) {
+      this.viewportWidth = EDITOR_CONTENT_FALLBACK_WIDTH + EDITOR_PAGE_HORIZONTAL_PADDING * 2;
+      this.viewportHeight = EDITOR_VIEWPORT_FALLBACK_HEIGHT;
+    }
   }
 
   aboutToDisappear(): void {
@@ -93,6 +122,10 @@ struct EditorPage {
   }
 
   private getDefaultLines(field: string): number {
+    if (field === 'title') {
+      return 1;
+    }
+
     switch (field) {
       case 'visualPath':
       case 'visibleFacts':
@@ -102,6 +135,60 @@ struct EditorPage {
       default:
         return 2;
     }
+  }
+
+  private getContentWidth(): number {
+    return Math.max(280, this.viewportWidth - EDITOR_PAGE_HORIZONTAL_PADDING * 2);
+  }
+
+  private getPhotoMaxHeight(): number {
+    return Math.min(
+      EDITOR_PHOTO_MAX_HEIGHT,
+      Math.max(EDITOR_PHOTO_MIN_HEIGHT, this.viewportHeight * EDITOR_PHOTO_VIEWPORT_RATIO)
+    );
+  }
+
+  private getPhotoAspectRatio(): number {
+    if (this.imageWidth > 0 && this.imageHeight > 0) {
+      return this.imageWidth / this.imageHeight;
+    }
+
+    return 1;
+  }
+
+  private getPhotoFrameSize(): EditorPhotoFrameSize {
+    const contentWidth: number = this.getContentWidth();
+    const maxHeight: number = this.getPhotoMaxHeight();
+    const aspectRatio: number = this.getPhotoAspectRatio();
+    const widthBasedHeight: number = contentWidth / aspectRatio;
+
+    if (widthBasedHeight <= maxHeight) {
+      return {
+        width: contentWidth,
+        height: Math.max(EDITOR_PHOTO_MIN_HEIGHT, widthBasedHeight)
+      };
+    }
+
+    return {
+      width: Math.min(contentWidth, maxHeight * aspectRatio),
+      height: maxHeight
+    };
+  }
+
+  private getPhotoFrameWidth(): number {
+    return this.getPhotoFrameSize().width;
+  }
+
+  private getPhotoFrameHeight(): number {
+    return this.getPhotoFrameSize().height;
+  }
+
+  private getPhotoHeaderHeight(): number {
+    return EDITOR_PHOTO_HEADER_TOP_PADDING +
+      EDITOR_PHOTO_TITLE_HEIGHT +
+      EDITOR_PHOTO_TITLE_GAP +
+      this.getPhotoFrameHeight() +
+      EDITOR_PHOTO_HEADER_BOTTOM_PADDING;
   }
 
   private estimateTextAreaHeight(field: string, value: string): number {
@@ -190,10 +277,7 @@ struct EditorPage {
     this.focusedField = field;
     setTimeout(() => {
       this.scrollFieldIntoView(field);
-    }, 80);
-    setTimeout(() => {
-      this.scrollFieldIntoView(field);
-    }, 260);
+    }, 180);
   }
 
   @Builder
@@ -213,7 +297,7 @@ struct EditorPage {
 
   @Builder
   PhotoHeader() {
-    Column({ space: 10 }) {
+    Column({ space: EDITOR_PHOTO_TITLE_GAP }) {
       Text('写复盘')
         .fontSize(17)
         .fontWeight(FontWeight.Bold)
@@ -228,12 +312,19 @@ struct EditorPage {
         imageSizeFallbackUsed: this.imageSizeFallbackUsed,
         fixedFrame: true
       })
-        .layoutWeight(1)
+        .width(this.getPhotoFrameWidth())
+        .height(this.getPhotoFrameHeight())
+        .alignSelf(ItemAlign.Center)
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ left: 20, right: 20, top: 12, bottom: 12 })
+    .padding({
+      left: EDITOR_PAGE_HORIZONTAL_PADDING,
+      right: EDITOR_PAGE_HORIZONTAL_PADDING,
+      top: EDITOR_PHOTO_HEADER_TOP_PADDING,
+      bottom: EDITOR_PHOTO_HEADER_BOTTOM_PADDING
+    })
     .width('100%')
-    .height(EDITOR_FIXED_PHOTO_HEIGHT)
+    .height(this.getPhotoHeaderHeight())
     .backgroundColor(AppColors.pageBackground)
     .zIndex(2)
   }
