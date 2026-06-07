@@ -14,7 +14,6 @@ import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDes
 @Entry
 @Component
 struct EditorPage {
-  private scroller: Scroller = new Scroller();
   private document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State title: string = DEFAULT_REVIEW_TITLE;
   @State firstLook: string = '';
@@ -60,63 +59,16 @@ struct EditorPage {
     router.replaceUrl({ url: PREVIEW_PAGE });
   }
 
-  private goBack(): void {
-    this.syncDocumentFromInput();
-    ReviewCardStore.saveCurrentDocument(this.document);
-    router.back();
-  }
-
-  private getFocusScrollOffset(field: string): number {
-    let offset: number = 0;
-    if (field === 'title') {
-      offset = 180;
-    } else if (field === 'firstLook') {
-      offset = 560;
-    } else if (field === 'judgement') {
-      offset = 900;
-    } else if (field === 'blocker') {
-      offset = 1260;
-    }
-
-    return offset;
-  }
-
-  private scrollToFocusedField(field: string): void {
-    const offset: number = this.getFocusScrollOffset(field);
-    setTimeout(() => {
-      this.scroller.scrollTo({
-        xOffset: 0,
-        yOffset: offset,
-        animation: { duration: 180, curve: Curve.EaseOut }
-      });
-    }, 260);
-  }
-
   build() {
     Column() {
-      Scroll(this.scroller) {
+      Scroll() {
         Column() {
-          Row() {
-            Button('返回')
-              .height(34)
-              .width(64)
-              .borderRadius(7)
-              .fontSize(13)
-              .fontColor(AppColors.secondaryText)
-              .backgroundColor('#00000000')
-              .onClick(() => {
-                this.goBack();
-              })
-
-            Text('写复盘')
-              .fontSize(20)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .lineHeight(28)
-            Blank()
-          }
-          .alignItems(VerticalAlign.Center)
-          .width('100%')
+          Text('写复盘')
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(28)
+            .width('100%')
 
           PhotoWritingHero({
             imageUri: this.imageUri,
@@ -131,8 +83,7 @@ struct EditorPage {
             firstLook: $firstLook,
             judgement: $judgement,
             blocker: $blocker,
-            onFieldFocus: (field: string) => {
-              this.scrollToFocusedField(field);
+            onFieldFocus: (_field: string) => {
             },
             onFieldBlur: () => {
             }

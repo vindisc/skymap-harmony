@@ -2,23 +2,13 @@ import {
   createDefaultReviewCardDocument,
   ReviewCardDocument
 } from '../model/ReviewCardModel';
-import { formatReviewTime, getImageRatioLabel, getImageSizeText } from '../utils/ImageLayoutUtils';
+import { getImageSizeText } from '../utils/ImageLayoutUtils';
 import { AppColors } from './AppDesign';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 @Component
 export struct ReadingReviewRecord {
   @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
-
-  @Builder
-  MetaLabel(label: string) {
-    Text(label)
-      .fontSize(12)
-      .fontColor(AppColors.mutedText)
-      .padding({ left: 8, right: 8, top: 5, bottom: 5 })
-      .borderRadius(5)
-      .backgroundColor('#EEE9E0')
-  }
 
   @Builder
   Section(label: string, value: string) {
@@ -75,17 +65,6 @@ export struct ReadingReviewRecord {
           .width('100%')
           .wordBreak(WordBreak.BREAK_WORD)
           .margin({ top: 22 })
-
-        Row({ space: 8 }) {
-          this.MetaLabel(formatReviewTime(this.document.updatedAt))
-          this.MetaLabel(getImageRatioLabel(
-            this.document.imageWidth,
-            this.document.imageHeight,
-            this.document.imageSizeFallbackUsed
-          ))
-        }
-        .width('100%')
-        .margin({ top: 14 })
 
         if (this.document.imageSizeFallbackUsed) {
           Text(getImageSizeText(this.document.imageWidth, this.document.imageHeight, true))

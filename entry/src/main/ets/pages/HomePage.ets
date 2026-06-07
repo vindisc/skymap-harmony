@@ -68,7 +68,12 @@ struct HomePage {
   }
 
   private openProject(): void {
-    router.pushUrl({ url: PROJECT_DETAIL_PAGE });
+    router.pushUrl({
+      url: PROJECT_DETAIL_PAGE,
+      params: {
+        projectId: 'default'
+      }
+    });
   }
 
   private getRecentItems(): Array<ReviewCardHistoryItem> {

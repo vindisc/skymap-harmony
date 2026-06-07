@@ -226,19 +226,6 @@ export struct PhotoWritingHero {
         fitMode: ImageFit.Contain,
         cornerRadius: 12
       })
-
-      Row({ space: 10 }) {
-        Text(getImageRatioLabel(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
-          .fontSize(12)
-          .fontColor(AppColors.secondaryText)
-        Text(getImageSizeText(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
-          .fontSize(12)
-          .fontColor(AppColors.mutedText)
-          .layoutWeight(1)
-          .textAlign(TextAlign.End)
-      }
-      .width('100%')
-      .margin({ top: 10 })
     }
     .width('100%')
   }
@@ -316,6 +303,7 @@ export struct ProjectHomeCard {
     .alignItems(VerticalAlign.Center)
     .padding(14)
     .width('100%')
+    .constraintSize({ minHeight: 124 })
     .borderRadius(12)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
