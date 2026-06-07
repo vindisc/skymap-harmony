@@ -162,18 +162,18 @@ function getJudgementBadgeText(value: string): string {
   if (judgement === ReviewJudgementStatus.INVALID) {
     return '✕ 不成立';
   }
-  return '？待判断';
+  return '待判断？';
 }
 
 function getJudgementBadgeColor(value: string): string {
   const judgement: ReviewJudgementStatus = normalizeReviewJudgement(value);
   if (judgement === ReviewJudgementStatus.VALID) {
-    return '#587363';
+    return '#6B7A70';
   }
   if (judgement === ReviewJudgementStatus.INVALID) {
-    return '#805A55';
+    return '#866B66';
   }
-  return '#776C52';
+  return '#7B7568';
 }
 
 function getJudgementBadgeBackground(_value: string): string {
@@ -194,6 +194,7 @@ export struct ReviewJudgementBadge {
       .backgroundColor(getJudgementBadgeBackground(this.value))
       .textAlign(TextAlign.Center)
       .maxLines(1)
+      .opacity(0.78)
   }
 }
 

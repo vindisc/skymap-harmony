@@ -19,20 +19,20 @@ function normalizeExcerpt(value: string): string {
 export function getReviewProjectExcerpt(document: ReviewCardDocument): string {
   const coreRelation = normalizeExcerpt(document.content.coreRelation);
   if (coreRelation.length > 0) {
-    return coreRelation.slice(0, 32);
+    return `核心关系：${coreRelation}`;
+  }
+
+  const currentBlocker = normalizeExcerpt(document.content.currentBlocker);
+  if (currentBlocker.length > 0) {
+    return currentBlocker;
   }
 
   const extendedUnderstanding = normalizeExcerpt(document.content.extendedUnderstanding);
   if (extendedUnderstanding.length > 0) {
-    return extendedUnderstanding.slice(0, 32);
+    return extendedUnderstanding;
   }
 
-  const visualFocus = normalizeExcerpt(document.content.visualFocus);
-  if (visualFocus.length > 0) {
-    return visualFocus.slice(0, 32);
-  }
-
-  return '还没有写下复盘摘要。';
+  return '还没有提炼核心关系';
 }
 
 export class ReviewProjectService {
