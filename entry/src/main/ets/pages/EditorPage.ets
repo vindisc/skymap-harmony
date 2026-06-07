@@ -15,15 +15,13 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 
-const EDITOR_BOTTOM_ACTION_PADDING: number = 126;
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = 20;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
 const EDITOR_VIEWPORT_FALLBACK_HEIGHT: number = 720;
-const EDITOR_ACTION_BAR_HEIGHT: number = 78;
-const EDITOR_KEYBOARD_ACTION_BAR_HEIGHT: number = 64;
-const EDITOR_ACTION_EXTRA_BOTTOM_PADDING: number = 24;
+const EDITOR_FORM_BOTTOM_PADDING: number = 34;
+const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 42;
 const EDITOR_FIELD_SAFE_TOP_GAP: number = 12;
-const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 18;
+const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 26;
 const EDITOR_KEYBOARD_SCROLL_DELAY: number = 220;
 const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 80;
 const EDITOR_PHOTO_TITLE_HEIGHT: number = 24;
@@ -196,14 +194,11 @@ struct EditorPage {
   }
 
   private getEditorBottomPadding(): number {
-    return Math.max(
-      EDITOR_BOTTOM_ACTION_PADDING,
-      this.getActionBarHeight() + EDITOR_ACTION_EXTRA_BOTTOM_PADDING + this.getKeyboardInset()
-    );
-  }
+    if (this.isKeyboardActive()) {
+      return this.getKeyboardInset() + EDITOR_KEYBOARD_BOTTOM_PADDING;
+    }
 
-  private getActionBarHeight(): number {
-    return this.isKeyboardActive() ? EDITOR_KEYBOARD_ACTION_BAR_HEIGHT : EDITOR_ACTION_BAR_HEIGHT;
+    return EDITOR_FORM_BOTTOM_PADDING;
   }
 
   private getDefaultLines(field: string): number {
@@ -365,7 +360,7 @@ struct EditorPage {
   private getFormVisibleHeight(): number {
     return Math.max(
       120,
-      this.viewportHeight - this.getPhotoHeaderHeight() - this.getActionBarHeight() - this.getKeyboardInset()
+      this.viewportHeight - this.getPhotoHeaderHeight() - this.getKeyboardInset()
     );
   }
 
@@ -422,25 +417,18 @@ struct EditorPage {
   }
 
   @Builder
-  BottomActionBar() {
+  SaveActionSection() {
     Column() {
-      PrimaryButton({
-        label: '保存并进入阅读',
-        onTap: () => {
-          this.saveAndPreview();
-        }
-      })
+      if (!this.isKeyboardActive()) {
+        PrimaryButton({
+          label: '保存并进入阅读',
+          onTap: () => {
+            this.saveAndPreview();
+          }
+        })
+      }
     }
-    .padding({
-      left: 20,
-      right: 20,
-      top: this.isKeyboardActive() ? 8 : 10,
-      bottom: this.isKeyboardActive() ? 8 : 20
-    })
     .width('100%')
-    .backgroundColor(AppColors.pageBackground)
-    .translate({ y: 0 - this.getKeyboardInset() })
-    .zIndex(3)
   }
 
   @Builder
@@ -479,49 +467,41 @@ struct EditorPage {
 
   build() {
     Column() {
-      Stack({ alignContent: Alignment.Bottom }) {
-        Column() {
-          this.PhotoHeader()
+      this.PhotoHeader()
 
-          Scroll(this.editorScroller) {
-            Column() {
-              ReviewInputForm({
-                title: $title,
-                visualFocus: $visualFocus,
-                focusReason: $focusReason,
-                visualPath: $visualPath,
-                visibleFacts: $visibleFacts,
-                coreRelation: $coreRelation,
-                judgement: $judgement,
-                extendedUnderstanding: $extendedUnderstanding,
-                currentBlocker: $currentBlocker,
-                onFieldFocus: (field: string) => {
-                  this.focusField(field);
-                },
-                onFieldBlur: () => {
-                  this.focusedField = '';
-                }
-              })
+      Scroll(this.editorScroller) {
+        Column({ space: 18 }) {
+          ReviewInputForm({
+            title: $title,
+            visualFocus: $visualFocus,
+            focusReason: $focusReason,
+            visualPath: $visualPath,
+            visibleFacts: $visibleFacts,
+            coreRelation: $coreRelation,
+            judgement: $judgement,
+            extendedUnderstanding: $extendedUnderstanding,
+            currentBlocker: $currentBlocker,
+            onFieldFocus: (field: string) => {
+              this.focusField(field);
+            },
+            onFieldBlur: () => {
+              this.focusedField = '';
             }
-            .padding({
-              left: 20,
-              right: 20,
-              top: 0,
-              bottom: this.getEditorBottomPadding()
-            })
-            .width('100%')
-          }
-          .layoutWeight(1)
-          .width('100%')
-          .scrollBar(BarState.Off)
-        }
-        .width('100%')
-        .height('100%')
+          })
 
-        this.BottomActionBar()
+          this.SaveActionSection()
+        }
+        .padding({
+          left: 20,
+          right: 20,
+          top: 0,
+          bottom: this.getEditorBottomPadding()
+        })
+        .width('100%')
       }
       .layoutWeight(1)
       .width('100%')
+      .scrollBar(BarState.Off)
     }
     .width('100%')
     .height('100%')
