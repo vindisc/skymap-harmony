@@ -12,13 +12,23 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 
 const EDITOR_BOTTOM_ACTION_PADDING: number = 126;
-const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 34;
-const EDITOR_STICKY_PHOTO_HEIGHT: string = '26%';
+const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 420;
+const EDITOR_STICKY_PHOTO_HEIGHT: string = '32%';
+const EDITOR_TITLE_FIELD_HEIGHT: number = 84;
+const EDITOR_FIELD_LABEL_HEIGHT: number = 18;
+const EDITOR_FIELD_LABEL_GAP: number = 10;
+const EDITOR_FIELD_GAP: number = 18;
+const EDITOR_TEXTAREA_MIN_LINES: number = 3;
+const EDITOR_TEXTAREA_MAX_LINES: number = 8;
+const EDITOR_TEXTAREA_LINE_HEIGHT: number = 28;
+const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
+const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 14;
 
 @Entry
 @Component
 struct EditorPage {
   private document: ReviewCardDocument = createDefaultReviewCardDocument();
+  private editorScroller: Scroller = new Scroller();
   @State title: string = DEFAULT_REVIEW_TITLE;
   @State visualFocus: string = '';
   @State focusReason: string = '';
@@ -80,6 +90,100 @@ struct EditorPage {
     return this.focusedField.length > 0;
   }
 
+  private estimateTextAreaHeight(value: string): number {
+    const minHeight: number = EDITOR_TEXTAREA_MIN_LINES * EDITOR_TEXTAREA_LINE_HEIGHT
+      + EDITOR_TEXTAREA_VERTICAL_PADDING;
+    const maxHeight: number = EDITOR_TEXTAREA_MAX_LINES * EDITOR_TEXTAREA_LINE_HEIGHT
+      + EDITOR_TEXTAREA_VERTICAL_PADDING;
+
+    if (value.length === 0) {
+      return minHeight;
+    }
+
+    const rows: Array<string> = value.split('\n');
+    let lineCount: number = 0;
+    for (let index = 0; index < rows.length; index += 1) {
+      lineCount += Math.max(1, Math.ceil(rows[index].length / EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE));
+    }
+
+    const visibleLines: number = Math.min(EDITOR_TEXTAREA_MAX_LINES, Math.max(EDITOR_TEXTAREA_MIN_LINES, lineCount));
+    return Math.min(maxHeight, Math.max(minHeight, visibleLines * EDITOR_TEXTAREA_LINE_HEIGHT + EDITOR_TEXTAREA_VERTICAL_PADDING));
+  }
+
+  private getReviewFieldHeight(value: string): number {
+    return EDITOR_FIELD_LABEL_HEIGHT + EDITOR_FIELD_LABEL_GAP + this.estimateTextAreaHeight(value);
+  }
+
+  private getFieldValue(field: string): string {
+    switch (field) {
+      case 'visualFocus':
+        return this.visualFocus;
+      case 'focusReason':
+        return this.focusReason;
+      case 'visualPath':
+        return this.visualPath;
+      case 'visibleFacts':
+        return this.visibleFacts;
+      case 'coreRelation':
+        return this.coreRelation;
+      case 'extendedUnderstanding':
+        return this.extendedUnderstanding;
+      case 'currentBlocker':
+        return this.currentBlocker;
+      default:
+        return '';
+    }
+  }
+
+  private getFieldScrollOffset(field: string): number {
+    if (field === 'title') {
+      return 0;
+    }
+
+    const fieldOrder: Array<string> = [
+      'visualFocus',
+      'focusReason',
+      'visualPath',
+      'visibleFacts',
+      'coreRelation',
+      'extendedUnderstanding',
+      'currentBlocker'
+    ];
+    let offset: number = EDITOR_TITLE_FIELD_HEIGHT + EDITOR_FIELD_GAP;
+
+    for (let index = 0; index < fieldOrder.length; index += 1) {
+      const fieldKey: string = fieldOrder[index];
+      if (fieldKey === field) {
+        return Math.max(0, offset - 16);
+      }
+      offset += this.getReviewFieldHeight(this.getFieldValue(fieldKey)) + EDITOR_FIELD_GAP;
+    }
+
+    return 0;
+  }
+
+  private scrollFieldIntoView(field: string): void {
+    const targetOffset: number = this.getFieldScrollOffset(field);
+    this.editorScroller.scrollTo({
+      xOffset: 0,
+      yOffset: targetOffset,
+      animation: {
+        duration: 240,
+        curve: Curve.EaseOut
+      }
+    });
+  }
+
+  private focusField(field: string): void {
+    this.focusedField = field;
+    setTimeout(() => {
+      this.scrollFieldIntoView(field);
+    }, 80);
+    setTimeout(() => {
+      this.scrollFieldIntoView(field);
+    }, 260);
+  }
+
   @Builder
   BottomActionBar() {
     Column() {
@@ -127,33 +231,33 @@ struct EditorPage {
         Column() {
           this.StickyPhotoHeader()
 
-          Scroll() {
-          Column() {
-            ReviewInputForm({
-              title: $title,
-              visualFocus: $visualFocus,
-              focusReason: $focusReason,
-              visualPath: $visualPath,
-              visibleFacts: $visibleFacts,
-              coreRelation: $coreRelation,
-              extendedUnderstanding: $extendedUnderstanding,
-              currentBlocker: $currentBlocker,
-              onFieldFocus: (field: string) => {
-                this.focusedField = field;
-              },
-              onFieldBlur: () => {
-                this.focusedField = '';
-              }
+          Scroll(this.editorScroller) {
+            Column() {
+              ReviewInputForm({
+                title: $title,
+                visualFocus: $visualFocus,
+                focusReason: $focusReason,
+                visualPath: $visualPath,
+                visibleFacts: $visibleFacts,
+                coreRelation: $coreRelation,
+                extendedUnderstanding: $extendedUnderstanding,
+                currentBlocker: $currentBlocker,
+                onFieldFocus: (field: string) => {
+                  this.focusField(field);
+                },
+                onFieldBlur: () => {
+                  this.focusedField = '';
+                }
+              })
+            }
+            .padding({
+              left: 20,
+              right: 20,
+              top: 8,
+              bottom: this.isKeyboardActive() ? EDITOR_KEYBOARD_BOTTOM_PADDING : EDITOR_BOTTOM_ACTION_PADDING
             })
+            .width('100%')
           }
-          .padding({
-            left: 20,
-            right: 20,
-            top: 8,
-            bottom: this.isKeyboardActive() ? EDITOR_KEYBOARD_BOTTOM_PADDING : EDITOR_BOTTOM_ACTION_PADDING
-          })
-          .width('100%')
-        }
           .layoutWeight(1)
           .width('100%')
           .scrollBar(BarState.Off)

@@ -24,7 +24,7 @@ export struct ReviewInfoItem {
           .strokeWidth(1)
           .color(this.dividerColor)
           .width('100%')
-          .opacity(0.24)
+          .opacity(0.14)
           .margin({ bottom: this.dividerBottomGap })
       }
       Text(this.label)

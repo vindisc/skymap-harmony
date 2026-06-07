@@ -9,15 +9,15 @@ import { ReviewCardTitle } from './ReviewCardTitle';
 import { ReviewInfoGroup } from './ReviewInfoGroup';
 
 export class CompactReviewTextStyle {
-  static readonly titleSize: number = 38;
-  static readonly titleLineHeight: number = 52;
-  static readonly labelSize: number = 16;
-  static readonly labelLineHeight: number = 22;
-  static readonly bodySize: number = 24;
-  static readonly bodyLineHeight: number = 34;
-  static readonly valueTopGap: number = 6;
-  static readonly dividerBottomGap: number = 10;
-  static readonly itemBottomGap: number = 12;
+  static readonly titleSize: number = 32;
+  static readonly titleLineHeight: number = 44;
+  static readonly labelSize: number = 15;
+  static readonly labelLineHeight: number = 20;
+  static readonly bodySize: number = 22;
+  static readonly bodyLineHeight: number = 31;
+  static readonly valueTopGap: number = 4;
+  static readonly dividerBottomGap: number = 7;
+  static readonly itemBottomGap: number = 9;
 }
 
 @Component
@@ -61,14 +61,14 @@ export struct LongFormExportReviewCard {
           dividerBottomGap: CompactReviewTextStyle.dividerBottomGap,
           itemBottomGap: CompactReviewTextStyle.itemBottomGap
         })
-          .margin({ top: 18 })
+          .margin({ top: 14 })
       }
-      .padding({ top: 24 })
+      .padding({ top: 18 })
       .alignItems(HorizontalAlign.Start)
       .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
-    .padding(58)
+    .padding(48)
     .width('100%')
     .borderRadius(0)
     .backgroundColor(ReviewCardStyleTokens.canvasColor)

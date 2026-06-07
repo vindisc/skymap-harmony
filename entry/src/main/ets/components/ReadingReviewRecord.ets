@@ -33,9 +33,9 @@ export struct ReadingReviewRecord {
         Divider()
           .strokeWidth(1)
           .color(AppColors.border)
-          .opacity(0.32)
+          .opacity(0.18)
           .width('100%')
-          .margin({ bottom: 18 })
+          .margin({ bottom: 10 })
       }
 
       Text(label)
@@ -45,17 +45,17 @@ export struct ReadingReviewRecord {
         .width('100%')
 
       Text(value.length > 0 ? value : '待补充')
-        .fontSize(16)
+        .fontSize(15)
         .fontColor(value.length > 0 ? AppColors.text : AppColors.secondaryText)
-        .lineHeight(25)
+        .lineHeight(23)
         .width('100%')
         .wordBreak(WordBreak.BREAK_WORD)
         .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
-        .margin({ top: 7 })
+        .margin({ top: 5 })
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-    .padding({ top: showDivider ? 0 : 2, bottom: 18 })
+    .padding({ top: showDivider ? 0 : 2, bottom: 14 })
   }
 
   build() {
@@ -74,13 +74,13 @@ export struct ReadingReviewRecord {
 
       Column() {
         Text(this.document.content.title.length > 0 ? this.document.content.title : '这张照片是否成立')
-          .fontSize(30)
+          .fontSize(24)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
-          .lineHeight(40)
+          .lineHeight(32)
           .width('100%')
           .wordBreak(WordBreak.BREAK_WORD)
-          .margin({ top: 28 })
+          .margin({ top: 18 })
 
         Row({ space: 10 }) {
           Text(formatReviewTime(this.document.updatedAt))
@@ -93,7 +93,7 @@ export struct ReadingReviewRecord {
         }
         .alignItems(VerticalAlign.Center)
         .width('100%')
-        .margin({ top: 12 })
+        .margin({ top: 8 })
 
         Column() {
           if (this.hasValue(this.document.content.visualFocus)) {
@@ -152,7 +152,7 @@ export struct ReadingReviewRecord {
             )
           }
         }
-        .margin({ top: 18 })
+        .margin({ top: 12 })
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
