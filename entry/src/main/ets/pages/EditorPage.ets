@@ -1,6 +1,8 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import display from '@ohos.display';
+import window from '@ohos.window';
+import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { PREVIEW_PAGE } from '../app/AppRouter';
 import {
   createDefaultReviewCardDocument,
@@ -14,17 +16,23 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 
 const EDITOR_BOTTOM_ACTION_PADDING: number = 126;
-const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 360;
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = 20;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
 const EDITOR_VIEWPORT_FALLBACK_HEIGHT: number = 720;
+const EDITOR_ACTION_BAR_HEIGHT: number = 78;
+const EDITOR_KEYBOARD_ACTION_BAR_HEIGHT: number = 64;
+const EDITOR_ACTION_EXTRA_BOTTOM_PADDING: number = 24;
+const EDITOR_FIELD_SAFE_TOP_GAP: number = 12;
+const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 18;
+const EDITOR_KEYBOARD_SCROLL_DELAY: number = 220;
+const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 80;
 const EDITOR_PHOTO_TITLE_HEIGHT: number = 24;
 const EDITOR_PHOTO_TITLE_GAP: number = 8;
 const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 8;
 const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 10;
 const EDITOR_PHOTO_MIN_HEIGHT: number = 188;
-const EDITOR_PHOTO_MAX_HEIGHT: number = 340;
-const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.4;
+const EDITOR_PHOTO_MAX_HEIGHT: number = 300;
+const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.32;
 const EDITOR_TITLE_FIELD_HEIGHT: number = 78;
 const EDITOR_FIELD_LABEL_HEIGHT: number = 18;
 const EDITOR_FIELD_LABEL_GAP: number = 10;
@@ -43,6 +51,11 @@ interface EditorPhotoFrameSize {
 struct EditorPage {
   private document: ReviewCardDocument = createDefaultReviewCardDocument();
   private editorScroller: Scroller = new Scroller();
+  private hostWindow: window.Window | null = null;
+  private keyboardHeightChangeCallback: ((height: number) => void) | null = null;
+  private previousKeyboardAvoidMode: KeyboardAvoidMode = KeyboardAvoidMode.OFFSET;
+  private isPageAlive: boolean = false;
+  private scrollRequestId: number = 0;
   @State title: string = DEFAULT_REVIEW_TITLE;
   @State visualFocus: string = '';
   @State focusReason: string = '';
@@ -59,13 +72,17 @@ struct EditorPage {
   @State imageSizeFallbackUsed: boolean = false;
   @State viewportWidth: number = EDITOR_CONTENT_FALLBACK_WIDTH + EDITOR_PAGE_HORIZONTAL_PADDING * 2;
   @State viewportHeight: number = EDITOR_VIEWPORT_FALLBACK_HEIGHT;
+  @State keyboardHeight: number = 0;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
   }
 
   aboutToAppear(): void {
+    this.isPageAlive = true;
     this.captureStableViewportSize();
+    this.disableSystemKeyboardAvoidance();
+    this.registerKeyboardHeightObserver();
     this.document = ReviewCardStore.getCurrentDocument();
     this.imageUri = this.document.imageUri;
     this.imageWidth = this.document.imageWidth;
@@ -82,6 +99,56 @@ struct EditorPage {
     this.currentBlocker = this.document.content.currentBlocker;
   }
 
+  private disableSystemKeyboardAvoidance(): void {
+    try {
+      this.previousKeyboardAvoidMode = this.getUIContext().getKeyboardAvoidMode();
+      this.getUIContext().setKeyboardAvoidMode(KeyboardAvoidMode.NONE);
+    } catch (error) {
+      this.previousKeyboardAvoidMode = KeyboardAvoidMode.OFFSET;
+    }
+  }
+
+  private restoreSystemKeyboardAvoidance(): void {
+    try {
+      this.getUIContext().setKeyboardAvoidMode(this.previousKeyboardAvoidMode);
+    } catch (error) {
+    }
+  }
+
+  private registerKeyboardHeightObserver(): void {
+    this.keyboardHeightChangeCallback = (height: number): void => {
+      this.keyboardHeight = Math.max(0, px2vp(height));
+      if (this.keyboardHeight === 0) {
+        return;
+      }
+
+      this.scheduleFieldIntoView(this.focusedField, EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY);
+    };
+
+    window.getLastWindow(this.getAbilityContext()).then((targetWindow: window.Window) => {
+      if (!this.isPageAlive || this.keyboardHeightChangeCallback === null) {
+        return;
+      }
+
+      this.hostWindow = targetWindow;
+      targetWindow.on('keyboardHeightChange', this.keyboardHeightChangeCallback);
+    });
+  }
+
+  private unregisterKeyboardHeightObserver(): void {
+    if (this.hostWindow === null || this.keyboardHeightChangeCallback === null) {
+      return;
+    }
+
+    try {
+      this.hostWindow.off('keyboardHeightChange', this.keyboardHeightChangeCallback);
+    } catch (error) {
+    }
+
+    this.hostWindow = null;
+    this.keyboardHeightChangeCallback = null;
+  }
+
   private captureStableViewportSize(): void {
     try {
       const currentDisplay = display.getDefaultDisplaySync();
@@ -94,6 +161,9 @@ struct EditorPage {
   }
 
   aboutToDisappear(): void {
+    this.isPageAlive = false;
+    this.unregisterKeyboardHeightObserver();
+    this.restoreSystemKeyboardAvoidance();
     this.syncDocumentFromInput();
     ReviewCardStore.saveCurrentDocument(this.document);
   }
@@ -118,7 +188,22 @@ struct EditorPage {
   }
 
   private isKeyboardActive(): boolean {
-    return this.focusedField.length > 0;
+    return this.keyboardHeight > 0;
+  }
+
+  private getKeyboardInset(): number {
+    return this.isKeyboardActive() ? this.keyboardHeight : 0;
+  }
+
+  private getEditorBottomPadding(): number {
+    return Math.max(
+      EDITOR_BOTTOM_ACTION_PADDING,
+      this.getActionBarHeight() + EDITOR_ACTION_EXTRA_BOTTOM_PADDING + this.getKeyboardInset()
+    );
+  }
+
+  private getActionBarHeight(): number {
+    return this.isKeyboardActive() ? EDITOR_KEYBOARD_ACTION_BAR_HEIGHT : EDITOR_ACTION_BAR_HEIGHT;
   }
 
   private getDefaultLines(field: string): number {
@@ -233,7 +318,7 @@ struct EditorPage {
     }
   }
 
-  private getFieldScrollOffset(field: string): number {
+  private getFieldTopOffset(field: string): number {
     if (field === 'title') {
       return 0;
     }
@@ -253,12 +338,54 @@ struct EditorPage {
     for (let index = 0; index < fieldOrder.length; index += 1) {
       const fieldKey: string = fieldOrder[index];
       if (fieldKey === field) {
-        return Math.max(0, offset - 16);
+        return offset;
       }
       offset += this.getReviewFieldHeight(fieldKey, this.getFieldValue(fieldKey)) + EDITOR_FIELD_GAP;
     }
 
     return 0;
+  }
+
+  private getFocusedFieldHeight(field: string): number {
+    if (field === 'title') {
+      return EDITOR_TITLE_FIELD_HEIGHT;
+    }
+
+    return this.getReviewFieldHeight(field, this.getFieldValue(field));
+  }
+
+  private getCurrentScrollOffset(): number {
+    try {
+      return this.editorScroller.currentOffset().yOffset;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  private getFormVisibleHeight(): number {
+    return Math.max(
+      120,
+      this.viewportHeight - this.getPhotoHeaderHeight() - this.getActionBarHeight() - this.getKeyboardInset()
+    );
+  }
+
+  private getFieldScrollOffset(field: string): number {
+    const fieldTop: number = this.getFieldTopOffset(field);
+    const fieldBottom: number = fieldTop + this.getFocusedFieldHeight(field);
+    const currentOffset: number = this.getCurrentScrollOffset();
+    const visibleHeight: number = this.getFormVisibleHeight();
+    const safeTop: number = currentOffset + EDITOR_FIELD_SAFE_TOP_GAP;
+    const safeBottom: number = currentOffset + visibleHeight - EDITOR_FIELD_SAFE_BOTTOM_GAP;
+
+    if (fieldBottom > safeBottom) {
+      return Math.max(0, fieldBottom - visibleHeight + EDITOR_FIELD_SAFE_BOTTOM_GAP);
+    }
+
+    if (fieldTop < safeTop) {
+      return Math.max(0, fieldTop - EDITOR_FIELD_SAFE_TOP_GAP);
+    }
+
+    return Math.max(0, currentOffset);
   }
 
   private scrollFieldIntoView(field: string): void {
@@ -275,9 +402,23 @@ struct EditorPage {
 
   private focusField(field: string): void {
     this.focusedField = field;
+    this.scheduleFieldIntoView(field, EDITOR_KEYBOARD_SCROLL_DELAY);
+  }
+
+  private scheduleFieldIntoView(field: string, delay: number): void {
+    if (field.length === 0) {
+      return;
+    }
+
+    this.scrollRequestId += 1;
+    const requestId: number = this.scrollRequestId;
     setTimeout(() => {
+      if (requestId !== this.scrollRequestId || this.focusedField !== field) {
+        return;
+      }
+
       this.scrollFieldIntoView(field);
-    }, 180);
+    }, delay);
   }
 
   @Builder
@@ -290,9 +431,16 @@ struct EditorPage {
         }
       })
     }
-    .padding({ left: 20, right: 20, top: 10, bottom: 20 })
+    .padding({
+      left: 20,
+      right: 20,
+      top: this.isKeyboardActive() ? 8 : 10,
+      bottom: this.isKeyboardActive() ? 8 : 20
+    })
     .width('100%')
     .backgroundColor(AppColors.pageBackground)
+    .translate({ y: 0 - this.getKeyboardInset() })
+    .zIndex(3)
   }
 
   @Builder
@@ -359,7 +507,7 @@ struct EditorPage {
               left: 20,
               right: 20,
               top: 0,
-              bottom: this.isKeyboardActive() ? EDITOR_KEYBOARD_BOTTOM_PADDING : EDITOR_BOTTOM_ACTION_PADDING
+              bottom: this.getEditorBottomPadding()
             })
             .width('100%')
           }
@@ -370,9 +518,7 @@ struct EditorPage {
         .width('100%')
         .height('100%')
 
-        if (!this.isKeyboardActive()) {
-          this.BottomActionBar()
-        }
+        this.BottomActionBar()
       }
       .layoutWeight(1)
       .width('100%')
