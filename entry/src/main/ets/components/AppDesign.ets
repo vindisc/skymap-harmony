@@ -216,6 +216,13 @@ export struct PhotoWritingHero {
   @Prop imageSizeFallbackUsed: boolean = false;
   @State loadFailed: boolean = false;
 
+  private getAspectRatioValue(): number {
+    if (this.imageWidth > 0 && this.imageHeight > 0) {
+      return this.imageWidth / this.imageHeight;
+    }
+    return 1;
+  }
+
   @Builder
   Placeholder() {
     Column() {
@@ -236,7 +243,7 @@ export struct PhotoWritingHero {
         Image(this.imageUri)
           .width('100%')
           .height('100%')
-          .objectFit(ImageFit.Cover)
+          .objectFit(ImageFit.Contain)
           .syncLoad(true)
           .onError(() => {
             this.loadFailed = true;
@@ -245,8 +252,9 @@ export struct PhotoWritingHero {
         this.Placeholder()
       }
     }
-    .width('100%')
-    .height('100%')
+    .width('94%')
+    .aspectRatio(this.getAspectRatioValue())
+    .alignSelf(ItemAlign.Center)
     .borderRadius(12)
     .clip(true)
     .backgroundColor('#E9E5DC')

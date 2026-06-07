@@ -13,16 +13,17 @@ import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDes
 
 const EDITOR_BOTTOM_ACTION_PADDING: number = 126;
 const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 420;
-const EDITOR_STICKY_PHOTO_HEIGHT: string = '32%';
 const EDITOR_TITLE_FIELD_HEIGHT: number = 84;
 const EDITOR_FIELD_LABEL_HEIGHT: number = 18;
 const EDITOR_FIELD_LABEL_GAP: number = 10;
 const EDITOR_FIELD_GAP: number = 18;
-const EDITOR_TEXTAREA_MIN_LINES: number = 3;
-const EDITOR_TEXTAREA_MAX_LINES: number = 8;
+const EDITOR_TEXTAREA_MIN_LINES: number = 2;
+const EDITOR_TEXTAREA_MAX_LINES: number = 10;
 const EDITOR_TEXTAREA_LINE_HEIGHT: number = 28;
 const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
 const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 14;
+const EDITOR_PHOTO_REFERENCE_WIDTH: number = 330;
+const EDITOR_PHOTO_HEADER_EXTRA_HEIGHT: number = 82;
 
 @Entry
 @Component
@@ -93,6 +94,17 @@ struct EditorPage {
     return this.focusedField.length > 0;
   }
 
+  private getPhotoAspectRatio(): number {
+    if (this.imageWidth > 0 && this.imageHeight > 0) {
+      return this.imageWidth / this.imageHeight;
+    }
+    return 1;
+  }
+
+  private getPhotoHeaderHeight(): number {
+    return EDITOR_PHOTO_HEADER_EXTRA_HEIGHT + EDITOR_PHOTO_REFERENCE_WIDTH / this.getPhotoAspectRatio();
+  }
+
   private estimateTextAreaHeight(value: string): number {
     const minHeight: number = EDITOR_TEXTAREA_MIN_LINES * EDITOR_TEXTAREA_LINE_HEIGHT
       + EDITOR_TEXTAREA_VERTICAL_PADDING;
@@ -155,7 +167,7 @@ struct EditorPage {
       'extendedUnderstanding',
       'currentBlocker'
     ];
-    let offset: number = EDITOR_TITLE_FIELD_HEIGHT + EDITOR_FIELD_GAP;
+    let offset: number = this.getPhotoHeaderHeight() + EDITOR_TITLE_FIELD_HEIGHT + EDITOR_FIELD_GAP;
 
     for (let index = 0; index < fieldOrder.length; index += 1) {
       const fieldKey: string = fieldOrder[index];
@@ -206,7 +218,7 @@ struct EditorPage {
   }
 
   @Builder
-  StickyPhotoHeader() {
+  PhotoHeader() {
     Column({ space: 10 }) {
       Text('写复盘')
         .fontSize(17)
@@ -221,23 +233,20 @@ struct EditorPage {
         imageHeight: this.imageHeight,
         imageSizeFallbackUsed: this.imageSizeFallbackUsed
       })
-        .layoutWeight(1)
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ left: 20, right: 20, top: 12, bottom: 10 })
+    .padding({ left: 20, right: 20, top: 12, bottom: 16 })
     .width('100%')
-    .height(EDITOR_STICKY_PHOTO_HEIGHT)
     .backgroundColor(AppColors.pageBackground)
-    .zIndex(2)
   }
 
   build() {
     Column() {
       Stack({ alignContent: Alignment.Bottom }) {
-        Column() {
-          this.StickyPhotoHeader()
+        Scroll(this.editorScroller) {
+          Column() {
+            this.PhotoHeader()
 
-          Scroll(this.editorScroller) {
             Column() {
               ReviewInputForm({
                 title: $title,
@@ -260,17 +269,16 @@ struct EditorPage {
             .padding({
               left: 20,
               right: 20,
-              top: 8,
+              top: 0,
               bottom: this.isKeyboardActive() ? EDITOR_KEYBOARD_BOTTOM_PADDING : EDITOR_BOTTOM_ACTION_PADDING
             })
             .width('100%')
           }
-          .layoutWeight(1)
           .width('100%')
-          .scrollBar(BarState.Off)
         }
         .width('100%')
         .height('100%')
+        .scrollBar(BarState.Off)
 
         if (!this.isKeyboardActive()) {
           this.BottomActionBar()
