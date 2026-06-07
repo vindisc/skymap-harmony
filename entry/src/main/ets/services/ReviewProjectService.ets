@@ -20,9 +20,9 @@ export function getReviewProjectExcerpt(document: ReviewCardDocument): string {
     return judgement.slice(0, 32);
   }
 
-  const blocker = normalizeExcerpt(document.content.blocker);
-  if (blocker.length > 0) {
-    return blocker.slice(0, 32);
+  const strongestRelation = normalizeExcerpt(document.content.strongestRelation);
+  if (strongestRelation.length > 0) {
+    return strongestRelation.slice(0, 32);
   }
 
   const firstLook = normalizeExcerpt(document.content.firstLook);

@@ -3,6 +3,7 @@ import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import { EDITOR_PAGE } from '../app/AppRouter';
 import {
+  cloneReviewCardDocument,
   createDefaultReviewCardDocument,
   getReviewDocumentKey,
   ReviewCardDocument,
@@ -55,28 +56,10 @@ struct PreviewPage {
         return;
       }
 
-      const next: ReviewCardDocument = {
-        version: this.document.version,
-        projectId: this.document.projectId,
-        imageUri: this.document.imageUri,
-        imageWidth: size.width,
-        imageHeight: size.height,
-        imageSizeFallbackUsed: false,
-        content: {
-          title: this.document.content.title,
-          firstLook: this.document.content.firstLook,
-          judgement: this.document.content.judgement,
-          blocker: this.document.content.blocker
-        },
-        config: {
-          templateId: this.document.config.templateId,
-          layoutMode: this.document.config.layoutMode,
-          background: this.document.config.background,
-          textSize: this.document.config.textSize
-        },
-        createdAt: this.document.createdAt,
-        updatedAt: this.document.updatedAt
-      };
+      const next: ReviewCardDocument = cloneReviewCardDocument(this.document);
+      next.imageWidth = size.width;
+      next.imageHeight = size.height;
+      next.imageSizeFallbackUsed = false;
       this.document = next;
       ReviewCardStore.setCurrentDocument(next);
       await ReviewCardHistoryService.updateDocument(this.getAbilityContext(), next);

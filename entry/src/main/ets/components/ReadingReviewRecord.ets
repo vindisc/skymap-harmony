@@ -11,6 +11,10 @@ export struct ReadingReviewRecord {
   @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
   @Prop saveStateLabel: string = '';
 
+  private hasValue(value: string): boolean {
+    return value.trim().length > 0;
+  }
+
   @Builder
   MetaTag(label: string) {
     Text(label)
@@ -92,9 +96,49 @@ export struct ReadingReviewRecord {
         .margin({ top: 12 })
 
         Column() {
-          this.Section('第一眼落点', this.document.content.firstLook, false)
-          this.Section('是否成立', this.document.content.judgement, true)
-          this.Section('卡点', this.document.content.blocker, true)
+          if (this.hasValue(this.document.content.firstLook)) {
+            this.Section('第一眼落点', this.document.content.firstLook, false)
+          }
+          if (this.hasValue(this.document.content.reason)) {
+            this.Section('原因', this.document.content.reason, this.hasValue(this.document.content.firstLook))
+          }
+          if (this.hasValue(this.document.content.visualPath)) {
+            this.Section(
+              '视线路径',
+              this.document.content.visualPath,
+              this.hasValue(this.document.content.firstLook) || this.hasValue(this.document.content.reason)
+            )
+          }
+          if (this.hasValue(this.document.content.strongestRelation)) {
+            this.Section(
+              '最强关系',
+              this.document.content.strongestRelation,
+              this.hasValue(this.document.content.firstLook)
+                || this.hasValue(this.document.content.reason)
+                || this.hasValue(this.document.content.visualPath)
+            )
+          }
+          if (this.hasValue(this.document.content.judgement)) {
+            this.Section(
+              '是否成立',
+              this.document.content.judgement,
+              this.hasValue(this.document.content.firstLook)
+                || this.hasValue(this.document.content.reason)
+                || this.hasValue(this.document.content.visualPath)
+                || this.hasValue(this.document.content.strongestRelation)
+            )
+          }
+          if (this.hasValue(this.document.content.blocker)) {
+            this.Section(
+              '卡点',
+              this.document.content.blocker,
+              this.hasValue(this.document.content.firstLook)
+                || this.hasValue(this.document.content.reason)
+                || this.hasValue(this.document.content.visualPath)
+                || this.hasValue(this.document.content.strongestRelation)
+                || this.hasValue(this.document.content.judgement)
+            )
+          }
         }
         .margin({ top: 18 })
       }

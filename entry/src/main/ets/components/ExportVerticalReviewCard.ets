@@ -45,6 +45,9 @@ export struct ExportVerticalReviewCard {
 
         ReviewInfoGroup({
           firstLook: this.document.content.firstLook,
+          reason: this.document.content.reason,
+          visualPath: this.document.content.visualPath,
+          strongestRelation: this.document.content.strongestRelation,
           judgement: this.document.content.judgement,
           blocker: this.document.content.blocker,
           labelSize: this.getPreset().labelSize,

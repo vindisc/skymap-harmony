@@ -74,7 +74,7 @@ struct ProjectDetailPage {
   }
 
   build() {
-    Scroll() {
+    Column() {
       Column() {
         AppPageHeader({
           title: this.summary.project.name,
@@ -87,44 +87,54 @@ struct ProjectDetailPage {
           .lineHeight(22)
           .width('100%')
           .margin({ top: 10 })
+      }
+      .padding({ left: 20, right: 20, top: 24, bottom: 0 })
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
 
-        if (this.summary.recordCount === 0) {
+      if (this.summary.recordCount === 0) {
+        Column() {
           EmptyState({
             title: '暂无复盘记录',
             message: '请回到首页选择照片开始复盘'
           })
-            .margin({ top: 18 })
-        } else {
-          List({ space: 8 }) {
-            ForEach(this.summary.items, (item: ReviewCardHistoryItem) => {
-              ListItem() {
-                ProjectReviewCard({
-                  item: item,
-                  onTap: () => {
-                    this.openHistory(item.document);
-                  }
-                })
-              }
-              .swipeAction({
-                end: () => {
-                  this.DeleteSwipeAction(item.document);
-                },
-                edgeEffect: SwipeEdgeEffect.Spring
-              })
-            }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
-          }
-          .width('100%')
-          .height(this.summary.items.length * 92)
-          .scrollBar(BarState.Off)
-          .margin({ top: 18 })
         }
+        .padding({ left: 20, right: 20, top: 18, bottom: 32 })
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+      } else {
+        List({ space: 8 }) {
+          ForEach(this.summary.items, (item: ReviewCardHistoryItem) => {
+            ListItem() {
+              ProjectReviewCard({
+                item: item,
+                onTap: () => {
+                  this.openHistory(item.document);
+                }
+              })
+            }
+            .swipeAction({
+              end: () => {
+                this.DeleteSwipeAction(item.document);
+              },
+              edgeEffect: SwipeEdgeEffect.Spring
+            })
+          }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
+          ListItem() {
+            Column()
+              .height(28)
+              .width('100%')
+          }
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .scrollBar(BarState.Off)
+        .padding({ left: 20, right: 20, top: 18 })
       }
-      .padding({ left: 20, right: 20, top: 24, bottom: 32 })
-      .width('100%')
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

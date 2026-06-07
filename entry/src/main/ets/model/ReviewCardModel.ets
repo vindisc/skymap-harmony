@@ -37,6 +37,9 @@ export enum ReviewCardTextSize {
 export interface ReviewContent {
   title: string;
   firstLook: string;
+  reason: string;
+  visualPath: string;
+  strongestRelation: string;
   judgement: string;
   blocker: string;
 }
@@ -69,10 +72,20 @@ export interface ReviewCardHistoryItem {
 export const DEFAULT_REVIEW_TITLE: string = '这张照片是否成立';
 export const DEFAULT_PROJECT_ID: string = 'default';
 
+function normalizeReviewText(value: string | undefined, fallback: string = ''): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return fallback;
+}
+
 export function createDefaultReviewContent(): ReviewContent {
   return {
     title: DEFAULT_REVIEW_TITLE,
     firstLook: '',
+    reason: '',
+    visualPath: '',
+    strongestRelation: '',
     judgement: '',
     blocker: ''
   };
@@ -100,6 +113,7 @@ export function createDefaultReviewCardDocument(): ReviewCardDocument {
 }
 
 export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCardDocument {
+  const sourceContent = document.content ? document.content : createDefaultReviewContent();
   return {
     version: document.version,
     projectId: document.projectId && document.projectId.length > 0 ? document.projectId : DEFAULT_PROJECT_ID,
@@ -108,10 +122,13 @@ export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCar
     imageHeight: document.imageHeight,
     imageSizeFallbackUsed: document.imageSizeFallbackUsed === true,
     content: {
-      title: document.content.title,
-      firstLook: document.content.firstLook,
-      judgement: document.content.judgement,
-      blocker: document.content.blocker
+      title: normalizeReviewText(sourceContent.title, DEFAULT_REVIEW_TITLE),
+      firstLook: normalizeReviewText(sourceContent.firstLook),
+      reason: normalizeReviewText(sourceContent.reason),
+      visualPath: normalizeReviewText(sourceContent.visualPath),
+      strongestRelation: normalizeReviewText(sourceContent.strongestRelation),
+      judgement: normalizeReviewText(sourceContent.judgement),
+      blocker: normalizeReviewText(sourceContent.blocker)
     },
     config: {
       templateId: document.config.templateId,
