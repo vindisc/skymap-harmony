@@ -8,6 +8,7 @@ import { ReviewCardStyleTokens } from './ReviewCardStyleTokens';
 import { ReviewPhotoArea } from './ReviewPhotoArea';
 import { ReviewCardTitle } from './ReviewCardTitle';
 import { ReviewInfoGroup } from './ReviewInfoGroup';
+import { formatReviewTime } from '../utils/ImageLayoutUtils';
 
 export class CompactReviewTextStyle {
   static readonly titleSize: number = 32;
@@ -23,6 +24,9 @@ export class CompactReviewTextStyle {
 
 const EXPORT_CARD_CANVAS_PADDING: number = 48;
 const EXPORT_CARD_TEXT_TOP_PADDING: number = 18;
+const EXPORT_CARD_META_TOP_MARGIN: number = 6;
+const EXPORT_CARD_META_LINE_HEIGHT: number = 24;
+const EXPORT_CARD_META_SIZE: number = 18;
 const EXPORT_CARD_INFO_TOP_MARGIN: number = 14;
 const EXPORT_CARD_DIVIDER_HEIGHT: number = 1;
 const EXPORT_CARD_MIN_HEIGHT: number = 640;
@@ -56,6 +60,17 @@ function getExportFieldValues(document: ReviewCardDocument): Array<string> {
   return fieldValues.filter((value: string): boolean => normalizeExportText(value).length > 0);
 }
 
+function getExportJudgementText(value: string): string {
+  const judgement = normalizeReviewJudgement(value);
+  if (judgement === '成立') {
+    return '成立';
+  }
+  if (judgement === '不成立') {
+    return '不成立';
+  }
+  return '待判断';
+}
+
 export function resolveLongFormExportCardHeight(document: ReviewCardDocument, canvasWidth: number): number {
   const contentWidth: number = Math.max(1, canvasWidth - EXPORT_CARD_CANVAS_PADDING * 2);
   const aspectRatio: number = resolveReviewCardLayoutResolution(document).aspectRatio;
@@ -78,6 +93,8 @@ export function resolveLongFormExportCardHeight(document: ReviewCardDocument, ca
 
   const textHeight: number = EXPORT_CARD_TEXT_TOP_PADDING
     + titleHeight
+    + EXPORT_CARD_META_TOP_MARGIN
+    + EXPORT_CARD_META_LINE_HEIGHT
     + (fieldValues.length > 0 ? EXPORT_CARD_INFO_TOP_MARGIN + infoHeight : 0);
   return Math.max(
     EXPORT_CARD_MIN_HEIGHT,
@@ -118,6 +135,25 @@ export struct LongFormExportReviewCard {
           titleLineHeight: CompactReviewTextStyle.titleLineHeight
         })
 
+        Row() {
+          Text(formatReviewTime(this.document.updatedAt))
+            .fontSize(EXPORT_CARD_META_SIZE)
+            .lineHeight(EXPORT_CARD_META_LINE_HEIGHT)
+            .fontColor('#8D929A')
+            .maxLines(1)
+
+          Blank()
+
+          Text(getExportJudgementText(this.document.content.judgement))
+            .fontSize(EXPORT_CARD_META_SIZE)
+            .lineHeight(EXPORT_CARD_META_LINE_HEIGHT)
+            .fontColor('#8D929A')
+            .textAlign(TextAlign.End)
+            .maxLines(1)
+        }
+        .width('100%')
+        .margin({ top: EXPORT_CARD_META_TOP_MARGIN })
+
         ReviewInfoGroup({
           visualFocus: this.document.content.visualFocus,
           focusReason: this.document.content.focusReason,
@@ -138,7 +174,7 @@ export struct LongFormExportReviewCard {
           dividerBottomGap: CompactReviewTextStyle.dividerBottomGap,
           itemBottomGap: CompactReviewTextStyle.itemBottomGap
         })
-          .margin({ top: 14 })
+          .margin({ top: EXPORT_CARD_INFO_TOP_MARGIN })
       }
       .padding({ top: 18 })
       .alignItems(HorizontalAlign.Start)

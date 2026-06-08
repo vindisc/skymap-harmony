@@ -3,6 +3,7 @@
     "pages/HomePage",
     "pages/EditorPage",
     "pages/PreviewPage",
-    "pages/ProjectDetailPage"
+    "pages/ProjectDetailPage",
+    "pages/ReviewSettingsPage"
   ]
 }

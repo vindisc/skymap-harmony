@@ -15,7 +15,7 @@
 | `fileName` | string | 照片文件名 | 从照片 URI 尝试解析；无法读取时为空字符串。 |
 | `titleText` | string | 标题 | 对应手机端 `title`。 |
 | `reviewTimeText` | string | 复盘时间 | 使用 `YYYY-MM-DD HH:mm` 格式。 |
-| `reviewerText` | string | 用户昵称 | 当前无昵称来源时输出空字符串。 |
+| `reviewerText` | string | 复盘设置中的复盘人 | 未设置时输出空字符串。 |
 | `reviewStructure` | string | 复盘结构 | 固定为 `quickReview`。 |
 | `decision` | string | 是否成立 | 使用英文枚举，便于 Mac 端解析。 |
 | `firstLookText` | string | 视觉落点 | 第一眼先看到哪里。 |

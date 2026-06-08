@@ -26,6 +26,15 @@ export interface ReviewProjectSummary {
 
 export const DEFAULT_PROJECT_NAME: string = '我的摄影复盘';
 
+export function createEmptyProjectStats(): ReviewProjectStats {
+  return {
+    totalCount: 0,
+    validCount: 0,
+    unsureCount: 0,
+    invalidCount: 0
+  };
+}
+
 export function createDefaultProjectSummary(): ReviewProjectSummary {
   const now: number = Date.now();
   return {
@@ -38,12 +47,7 @@ export function createDefaultProjectSummary(): ReviewProjectSummary {
     },
     items: [],
     recordCount: 0,
-    stats: {
-      totalCount: 0,
-      validCount: 0,
-      unsureCount: 0,
-      invalidCount: 0
-    },
+    stats: createEmptyProjectStats(),
     latestUpdatedAt: 0
   };
 }

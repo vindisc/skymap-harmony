@@ -19,6 +19,7 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
+import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { AppColors } from '../components/AppDesign';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
@@ -33,7 +34,6 @@ enum PreviewSaveState {
 @Component
 struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
-  @State exportMessage: string = '';
   @State isExporting: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
@@ -91,10 +91,8 @@ struct PreviewPage {
       this.document = ReviewCardStore.saveCurrentDocument(this.document);
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
       this.saveStateLabel = PreviewSaveState.SAVED;
-      this.exportMessage = '已保存';
       promptAction.showToast({ message: '已保存复盘记录' });
     } catch (error) {
-      this.exportMessage = '保存失败，请稍后重试';
       promptAction.showToast({ message: '保存失败，请稍后重试' });
     }
   }
@@ -111,7 +109,6 @@ struct PreviewPage {
         this.getAbilityContext(),
         this.getExportComponentId()
       );
-      this.exportMessage = result.message;
       if (result.savedToPhotoLibrary) {
         await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path);
         this.saveStateLabel = PreviewSaveState.EXPORTED;
@@ -125,13 +122,12 @@ struct PreviewPage {
 
   private async copyReviewData(): Promise<void> {
     try {
-      const exchangeJson: string = stringifyReviewCardExchangeSchemaV1(this.document);
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+      const exchangeJson: string = stringifyReviewCardExchangeSchemaV1(this.document, reviewerName);
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, exchangeJson);
       await pasteboard.getSystemPasteboard().setData(data);
-      this.exportMessage = '已复制复盘数据';
       promptAction.showToast({ message: '已复制复盘数据' });
     } catch (error) {
-      this.exportMessage = '复制失败，请稍后重试';
       promptAction.showToast({ message: '复制失败，请稍后重试' });
     }
   }
@@ -225,16 +221,6 @@ struct PreviewPage {
             document: this.document,
             saveStateLabel: this.saveStateLabel === PreviewSaveState.UNSAVED ? '' : this.saveStateLabel
           })
-
-          if (this.exportMessage.length > 0) {
-            Text(this.exportMessage)
-              .fontSize(12)
-              .fontColor(AppColors.secondaryText)
-              .lineHeight(18)
-              .maxLines(2)
-              .width('100%')
-              .margin({ top: 14 })
-          }
         }
         .alignItems(HorizontalAlign.Start)
         .padding({ left: 20, right: 20, top: 6, bottom: 28 })
@@ -248,23 +234,20 @@ struct PreviewPage {
   }
 
   build() {
-    if (this.isExportSnapshotMode) {
-      Column() {
-        this.ExportSnapshotCard()
+    Stack({ alignContent: Alignment.TopStart }) {
+      this.ReadingPage()
+
+      if (this.isExportSnapshotMode) {
+        Column() {
+          this.ExportSnapshotCard()
+        }
+        .width(this.getExportCanvasWidth())
+        .height(this.getExportCanvasHeight())
+        .position({ x: -this.getExportCanvasWidth() - 80, y: 0 })
       }
-      .justifyContent(FlexAlign.Start)
-      .alignItems(HorizontalAlign.Center)
-      .padding({ top: 24, bottom: 24 })
-      .width('100%')
-      .height(this.getExportCanvasHeight() + 48)
-      .backgroundColor(AppColors.pageBackground)
-    } else {
-      Column() {
-        this.ReadingPage()
-      }
-      .width('100%')
-      .height('100%')
-      .backgroundColor(AppColors.pageBackground)
     }
+    .width('100%')
+    .height('100%')
+    .backgroundColor(AppColors.pageBackground)
   }
 }

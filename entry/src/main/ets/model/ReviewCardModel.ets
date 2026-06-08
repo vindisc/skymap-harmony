@@ -120,8 +120,14 @@ export function normalizeReviewJudgement(value: string | undefined): ReviewJudge
   if (trimmedValue === ReviewJudgementStatus.UNSURE) {
     return ReviewJudgementStatus.UNSURE;
   }
+  if (trimmedValue === '待判断') {
+    return ReviewJudgementStatus.UNSURE;
+  }
   if (trimmedValue.includes(ReviewJudgementStatus.INVALID)) {
     return ReviewJudgementStatus.INVALID;
+  }
+  if (trimmedValue.includes('待判断')) {
+    return ReviewJudgementStatus.UNSURE;
   }
   if (trimmedValue.includes(ReviewJudgementStatus.UNSURE)) {
     return ReviewJudgementStatus.UNSURE;

@@ -22,6 +22,10 @@ struct ProjectDetailPage {
     this.reloadData();
   }
 
+  onPageShow(): void {
+    this.reloadData();
+  }
+
   private async reloadData(): Promise<void> {
     const items = await ReviewCardHistoryService.load(this.getAbilityContext());
     this.summary = ReviewProjectService.buildDefaultProjectSummary(items);

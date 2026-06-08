@@ -18,6 +18,20 @@ function createHistoryItem(document: ReviewCardDocument, exportedPath: string = 
   };
 }
 
+function normalizeHistoryItem(rawItem: ReviewCardHistoryItem | ReviewCardDocument): ReviewCardHistoryItem | undefined {
+  const historyItem = rawItem as ReviewCardHistoryItem;
+  if (historyItem.document) {
+    return createHistoryItem(historyItem.document, historyItem.exportedPath ? historyItem.exportedPath : '');
+  }
+
+  const legacyDocument = rawItem as ReviewCardDocument;
+  if (legacyDocument.content) {
+    return createHistoryItem(legacyDocument);
+  }
+
+  return undefined;
+}
+
 export class ReviewCardHistoryService {
   private static async getStore(context: common.UIAbilityContext): Promise<preferences.Preferences> {
     return preferences.getPreferences(context, { name: PREFERENCES_NAME });
@@ -31,13 +45,15 @@ export class ReviewCardHistoryService {
         return [];
       }
 
-      const parsed = JSON.parse(rawValue) as Array<ReviewCardHistoryItem>;
-      return parsed.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
-        return {
-          document: cloneReviewCardDocument(item.document),
-          exportedPath: item.exportedPath ? item.exportedPath : ''
-        };
+      const parsed = JSON.parse(rawValue) as Array<ReviewCardHistoryItem | ReviewCardDocument>;
+      const normalizedItems: Array<ReviewCardHistoryItem> = [];
+      parsed.forEach((item: ReviewCardHistoryItem | ReviewCardDocument): void => {
+        const normalizedItem = normalizeHistoryItem(item);
+        if (normalizedItem) {
+          normalizedItems.push(normalizedItem);
+        }
       });
+      return normalizedItems;
     } catch (error) {
       return [];
     }

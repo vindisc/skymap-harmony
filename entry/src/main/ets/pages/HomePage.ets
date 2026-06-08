@@ -1,12 +1,17 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { EDITOR_PAGE, PREVIEW_PAGE, PROJECT_DETAIL_PAGE } from '../app/AppRouter';
+import { EDITOR_PAGE, PREVIEW_PAGE, PROJECT_DETAIL_PAGE, REVIEW_SETTINGS_PAGE } from '../app/AppRouter';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { ReviewProjectStats, ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
+import {
+  ReviewProjectStats,
+  ReviewProjectSummary,
+  createDefaultProjectSummary,
+  createEmptyProjectStats
+} from '../model/ProjectModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import {
   AppColors,
@@ -18,15 +23,16 @@ import {
 @Entry
 @Component
 struct HomePage {
+  private reloadRequestId: number = 0;
   @State isPickingPhoto: boolean = false;
-  @State historyItems: Array<ReviewCardHistoryItem> = [];
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
-  @State totalReviewCount: number = 0;
-  @State validReviewCount: number = 0;
-  @State unsureReviewCount: number = 0;
-  @State invalidReviewCount: number = 0;
+  @State overviewStats: ReviewProjectStats = createEmptyProjectStats();
 
   aboutToAppear(): void {
+    this.reloadHistory();
+  }
+
+  onPageShow(): void {
     this.reloadHistory();
   }
 
@@ -35,13 +41,17 @@ struct HomePage {
   }
 
   private async reloadHistory(): Promise<void> {
-    this.historyItems = await ReviewCardHistoryService.load(this.getAbilityContext());
-    const globalStats: ReviewProjectStats = ReviewProjectService.buildGlobalStats(this.historyItems);
-    this.totalReviewCount = globalStats.totalCount;
-    this.validReviewCount = globalStats.validCount;
-    this.unsureReviewCount = globalStats.unsureCount;
-    this.invalidReviewCount = globalStats.invalidCount;
-    this.projectSummary = ReviewProjectService.buildDefaultProjectSummary(this.historyItems);
+    const requestId: number = this.reloadRequestId + 1;
+    this.reloadRequestId = requestId;
+    const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(this.getAbilityContext());
+    if (requestId !== this.reloadRequestId) {
+      return;
+    }
+
+    const nextProjectSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
+    const nextGlobalStats: ReviewProjectStats = ReviewProjectService.buildGlobalStats(items);
+    this.projectSummary = nextProjectSummary;
+    this.overviewStats = nextGlobalStats;
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -56,6 +66,10 @@ struct HomePage {
         projectId: 'default'
       }
     });
+  }
+
+  private openReviewSettings(): void {
+    router.pushUrl({ url: REVIEW_SETTINGS_PAGE });
   }
 
   private async startPhotoDraft(): Promise<void> {
@@ -86,21 +100,36 @@ struct HomePage {
   @Builder
   StartReviewPanel() {
     Column({ space: 16 }) {
-      Column({ space: 8 }) {
-        Text('摄影复盘卡')
-          .fontSize(26)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.text)
-          .lineHeight(32)
-          .width('100%')
+      Row({ space: 12 }) {
+        Column({ space: 8 }) {
+          Text('摄影复盘卡')
+            .fontSize(26)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(32)
+            .width('100%')
 
-        Text('选择照片，写下观察，把每次拍摄沉淀成可回看的复盘记录')
-          .fontSize(15)
+          Text('选择照片，写下观察，把每次拍摄沉淀成可回看的复盘记录')
+            .fontSize(15)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(23)
+            .width('100%')
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+
+        Button('复盘设置')
+          .height(30)
+          .padding({ left: 10, right: 10 })
+          .borderRadius(15)
+          .fontSize(13)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(23)
-          .width('100%')
+          .backgroundColor('#ECE8DF')
+          .onClick(() => {
+            this.openReviewSettings();
+          })
       }
-      .alignItems(HorizontalAlign.Start)
+      .alignItems(VerticalAlign.Top)
       .width('100%')
 
       PrimaryButton({
@@ -145,10 +174,10 @@ struct HomePage {
         .width('100%')
 
       Row({ space: 8 }) {
-        this.OverviewStat('总复盘', this.totalReviewCount)
-        this.OverviewStat('成立', this.validReviewCount)
-        this.OverviewStat('待判断', this.unsureReviewCount)
-        this.OverviewStat('不成立', this.invalidReviewCount)
+        this.OverviewStat('总复盘', this.overviewStats.totalCount)
+        this.OverviewStat('成立', this.overviewStats.validCount)
+        this.OverviewStat('待判断', this.overviewStats.unsureCount)
+        this.OverviewStat('不成立', this.overviewStats.invalidCount)
       }
       .width('100%')
       .margin({ top: 12 })

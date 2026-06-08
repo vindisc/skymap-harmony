@@ -69,12 +69,15 @@ export function resolveReviewCardExchangeFileName(document: ReviewCardDocument):
   }
 }
 
-export function createReviewCardExchangeSchemaV1(document: ReviewCardDocument): ReviewCardExchangeSchemaV1 {
+export function createReviewCardExchangeSchemaV1(
+  document: ReviewCardDocument,
+  reviewerText: string = ''
+): ReviewCardExchangeSchemaV1 {
   return {
     fileName: resolveReviewCardExchangeFileName(document),
     titleText: normalizeExchangeText(document.content.title),
     reviewTimeText: formatReviewTime(document.updatedAt),
-    reviewerText: '',
+    reviewerText: normalizeExchangeText(reviewerText).trim(),
     reviewStructure: REVIEW_CARD_EXCHANGE_STRUCTURE_QUICK_REVIEW,
     decision: mapReviewJudgementToExchangeDecision(document.content.judgement),
     firstLookText: normalizeExchangeText(document.content.visualFocus),
@@ -87,6 +90,6 @@ export function createReviewCardExchangeSchemaV1(document: ReviewCardDocument): 
   };
 }
 
-export function stringifyReviewCardExchangeSchemaV1(document: ReviewCardDocument): string {
-  return JSON.stringify(createReviewCardExchangeSchemaV1(document), null, 2);
+export function stringifyReviewCardExchangeSchemaV1(document: ReviewCardDocument, reviewerText: string = ''): string {
+  return JSON.stringify(createReviewCardExchangeSchemaV1(document, reviewerText), null, 2);
 }
