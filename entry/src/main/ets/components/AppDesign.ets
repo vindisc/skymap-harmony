@@ -510,52 +510,54 @@ export struct ProjectReviewCard {
   onTap: () => void = () => {};
 
   build() {
-    Row({ space: 10 }) {
-      ReviewPhotoBlock({
-        imageUri: this.item.document.imageUri,
-        imageWidth: this.item.document.imageWidth,
-        imageHeight: this.item.document.imageHeight,
-        imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
-        aspectRatioValue: 1,
-        compact: true,
-        fitMode: ImageFit.Cover,
-        cornerRadius: 9
-      })
-        .width(76)
+    Stack({ alignContent: Alignment.TopEnd }) {
+      Row({ space: 10 }) {
+        ReviewPhotoBlock({
+          imageUri: this.item.document.imageUri,
+          imageWidth: this.item.document.imageWidth,
+          imageHeight: this.item.document.imageHeight,
+          imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
+          aspectRatioValue: 1,
+          compact: true,
+          fitMode: ImageFit.Cover,
+          cornerRadius: 9
+        })
+          .width(76)
 
-      Column({ space: 5 }) {
-        Row({ space: 8 }) {
+        Column({ space: 5 }) {
           Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
             .fontSize(15)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .layoutWeight(1)
+            .width('100%')
+            .padding({ right: 74 })
 
-          ReviewJudgementBadge({ value: this.item.document.content.judgement })
+          Text(getReviewProjectExcerpt(this.item.document))
+            .fontSize(13)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(18)
+            .width('100%')
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text(formatReviewTime(this.item.document.updatedAt))
+            .fontSize(12)
+            .fontColor(AppColors.mutedText)
+            .width('100%')
         }
-        .alignItems(VerticalAlign.Center)
-        .width('100%')
-
-        Text(getReviewProjectExcerpt(this.item.document))
-          .fontSize(13)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(18)
-          .width('100%')
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-        Text(formatReviewTime(this.item.document.updatedAt))
-          .fontSize(12)
-          .fontColor(AppColors.mutedText)
-          .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
       }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
+      .alignItems(VerticalAlign.Center)
+      .padding({ left: 10, right: 10, top: 10, bottom: 10 })
+      .width('100%')
+      .constraintSize({ minHeight: 96 })
+
+      ReviewJudgementBadge({ value: this.item.document.content.judgement })
+        .margin({ top: 10, right: 10 })
     }
-    .alignItems(VerticalAlign.Center)
-    .padding({ left: 10, right: 10, top: 10, bottom: 10 })
     .width('100%')
     .constraintSize({ minHeight: 96 })
     .borderRadius(11)
