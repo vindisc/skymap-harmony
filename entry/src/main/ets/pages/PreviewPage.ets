@@ -217,10 +217,7 @@ struct PreviewPage {
 
       Scroll() {
         Column() {
-          ReadingReviewRecord({
-            document: this.document,
-            saveStateLabel: this.saveStateLabel === PreviewSaveState.UNSAVED ? '' : this.saveStateLabel
-          })
+          ReadingReviewRecord({ document: this.document })
         }
         .alignItems(HorizontalAlign.Start)
         .padding({ left: 20, right: 20, top: 6, bottom: 28 })
@@ -231,20 +228,29 @@ struct PreviewPage {
     }
     .width('100%')
     .height('100%')
+    .backgroundColor(AppColors.pageBackground)
+    .zIndex(1)
+  }
+
+  @Builder
+  HiddenExportSnapshotLayer() {
+    Column() {
+      this.ExportSnapshotCard()
+    }
+    .width(this.getExportCanvasWidth())
+    .height(this.getExportCanvasHeight())
+    .position({ x: 0, y: 0 })
+    .hitTestBehavior(HitTestMode.None)
+    .zIndex(0)
   }
 
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
-      this.ReadingPage()
-
       if (this.isExportSnapshotMode) {
-        Column() {
-          this.ExportSnapshotCard()
-        }
-        .width(this.getExportCanvasWidth())
-        .height(this.getExportCanvasHeight())
-        .position({ x: -this.getExportCanvasWidth() - 80, y: 0 })
+        this.HiddenExportSnapshotLayer()
       }
+
+      this.ReadingPage()
     }
     .width('100%')
     .height('100%')

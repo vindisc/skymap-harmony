@@ -1,5 +1,6 @@
 import {
   createDefaultReviewCardDocument,
+  normalizeReviewJudgement,
   ReviewCardDocument
 } from '../model/ReviewCardModel';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
@@ -9,10 +10,20 @@ import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 @Component
 export struct ReadingReviewRecord {
   @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
-  @Prop saveStateLabel: string = '';
 
   private hasValue(value: string): boolean {
     return value.trim().length > 0;
+  }
+
+  private getJudgementLabel(): string {
+    const judgement = normalizeReviewJudgement(this.document.content.judgement);
+    if (judgement === '成立') {
+      return '成立';
+    }
+    if (judgement === '不成立') {
+      return '不成立';
+    }
+    return '待判断';
   }
 
   @Builder
@@ -87,9 +98,9 @@ export struct ReadingReviewRecord {
             .fontSize(12)
             .fontColor(AppColors.secondaryText)
 
-          if (this.saveStateLabel.length > 0) {
-            this.MetaTag(this.saveStateLabel)
-          }
+          Blank()
+
+          this.MetaTag(this.getJudgementLabel())
         }
         .alignItems(VerticalAlign.Center)
         .width('100%')
@@ -131,7 +142,7 @@ export struct ReadingReviewRecord {
           if (this.hasValue(this.document.content.judgement)) {
             this.Section(
               '是否成立',
-              this.document.content.judgement,
+              this.getJudgementLabel(),
               this.hasValue(this.document.content.visualFocus)
                 || this.hasValue(this.document.content.focusReason)
                 || this.hasValue(this.document.content.visualPath)
