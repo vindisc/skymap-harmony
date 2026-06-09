@@ -2,7 +2,7 @@
 
 ## 主链路
 
-- [ ] 首页显示摄影复盘卡、副标题、开始复盘、复盘概览、最近一次复盘、我的项目。
+- [ ] 首页显示摄影复盘卡、开始复盘、复盘概览、最近一次复盘、我的项目。
 - [ ] 点击开始复盘后可选择系统相册照片。
 - [ ] 编辑页可填写标题和八个复盘字段。
 - [ ] 点击保存并进入阅读后，立即进入「复盘记录」详情。
@@ -103,3 +103,22 @@ DEVECO_SDK_HOME=/Applications/DevEco-Studio.app/Contents/sdk \
 - `CompileArkTS` 通过。
 - `PackageHap` 通过。
 - 如果 `SignHap` 因本机签名或 keystore 环境失败，需要记录具体错误；这类失败不等同于代码编译失败。
+
+## 逻辑脚本验证
+
+推荐命令：
+
+```bash
+node scripts/verify_review_logic.mjs
+node scripts/verify_home_stats.mjs
+node scripts/verify_image_layout.mjs
+```
+
+验收标准：
+
+- 是否成立归一化、`decision` 映射通过。
+- 复制 JSON 字段完整，空字段保留 key。
+- 首页统计按全项目历史记录计算。
+- 摘要 fallback 顺序为核心关系、当前卡点、延伸理解、默认文案。
+- 横图 / 竖图 / 方图方向判断与兜底尺寸兼容。
+- 旧数据字段映射和缺字段兼容通过。
