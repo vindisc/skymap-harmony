@@ -81,7 +81,11 @@ async function saveJpgToPhotoLibrary(context: common.UIAbilityContext, outputPat
 export class ReviewCardExportService {
   private static isExporting: boolean = false;
 
-  static async exportSnapshot(context: common.UIAbilityContext, componentId: string): Promise<ReviewCardExportResult> {
+  static async exportSnapshot(
+    context: common.UIAbilityContext,
+    componentId: string,
+    onSnapshotReady: () => void = () => {}
+  ): Promise<ReviewCardExportResult> {
     if (ReviewCardExportService.isExporting) {
       return {
         success: false,
@@ -105,6 +109,10 @@ export class ReviewCardExportService {
 
       const title = createExportTitle();
       backupPath = saveJpgToSandbox(context, data, title);
+      try {
+        onSnapshotReady();
+      } catch (error) {
+      }
       const mediaUri = await saveJpgToPhotoLibrary(context, backupPath, title);
 
       return {

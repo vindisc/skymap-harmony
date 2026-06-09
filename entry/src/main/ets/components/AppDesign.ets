@@ -40,10 +40,10 @@ export class AppMetrics {
 }
 
 export class AppTypography {
-  static readonly level1: number = 38;
-  static readonly level1LineHeight: number = 46;
-  static readonly level2: number = 24;
-  static readonly level2LineHeight: number = 32;
+  static readonly level1: number = 30;
+  static readonly level1LineHeight: number = 38;
+  static readonly level2: number = 22;
+  static readonly level2LineHeight: number = 30;
   static readonly body: number = 16;
   static readonly bodyLineHeight: number = 24;
   static readonly auxiliary: number = 14;
@@ -87,7 +87,7 @@ export struct PrimaryButton {
 
   build() {
     Button(this.label)
-      .height(48)
+      .height(44)
       .width('100%')
       .borderRadius(AppMetrics.buttonRadius)
       .fontSize(AppTypography.body)
@@ -113,7 +113,7 @@ export struct SecondaryButton {
 
   build() {
     Button(this.label)
-      .height(44)
+      .height(36)
       .width('100%')
       .borderRadius(AppMetrics.capsuleRadius)
       .fontSize(AppTypography.auxiliary)
@@ -481,9 +481,9 @@ export struct RecentReviewCard {
           fitMode: ImageFit.Cover,
           cornerRadius: 8
         })
-          .width(72)
+          .width(64)
 
-        Column({ space: AppMetrics.space8 }) {
+        Column({ space: AppMetrics.space4 }) {
           Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
             .fontSize(AppTypography.body)
             .fontWeight(FontWeight.Medium)
@@ -491,7 +491,7 @@ export struct RecentReviewCard {
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .width('100%')
-            .padding({ right: 76 })
+            .padding({ right: 72 })
 
           Text(getReviewProjectExcerpt(this.item.document))
             .fontSize(AppTypography.auxiliary)
@@ -510,15 +510,15 @@ export struct RecentReviewCard {
         .layoutWeight(1)
       }
       .alignItems(VerticalAlign.Center)
-      .padding(AppMetrics.space12)
+      .padding(AppMetrics.space8)
       .width('100%')
-      .constraintSize({ minHeight: 96 })
+      .constraintSize({ minHeight: 84 })
 
       ReviewJudgementBadge({ value: this.item.document.content.judgement })
-        .margin({ top: AppMetrics.space12, right: AppMetrics.space12 })
+        .margin({ top: AppMetrics.space8, right: AppMetrics.space8 })
     }
     .width('100%')
-    .constraintSize({ minHeight: 96 })
+    .constraintSize({ minHeight: 84 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
@@ -547,11 +547,11 @@ export struct ProjectReviewCard {
           aspectRatioValue: 1,
           compact: true,
           fitMode: ImageFit.Cover,
-          cornerRadius: 9
+          cornerRadius: 8
         })
-          .width(76)
+          .width(68)
 
-        Column({ space: AppMetrics.space8 }) {
+        Column({ space: AppMetrics.space4 }) {
           Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
             .fontSize(AppTypography.body)
             .fontWeight(FontWeight.Medium)
@@ -559,7 +559,7 @@ export struct ProjectReviewCard {
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .width('100%')
-            .padding({ right: 76 })
+            .padding({ right: 72 })
 
           Text(getReviewProjectExcerpt(this.item.document))
             .fontSize(AppTypography.auxiliary)
@@ -578,15 +578,15 @@ export struct ProjectReviewCard {
         .layoutWeight(1)
       }
       .alignItems(VerticalAlign.Center)
-      .padding(AppMetrics.space12)
+      .padding(AppMetrics.space8)
       .width('100%')
-      .constraintSize({ minHeight: 96 })
+      .constraintSize({ minHeight: 84 })
 
       ReviewJudgementBadge({ value: this.item.document.content.judgement })
-        .margin({ top: AppMetrics.space12, right: AppMetrics.space12 })
+        .margin({ top: AppMetrics.space8, right: AppMetrics.space8 })
     }
     .width('100%')
-    .constraintSize({ minHeight: 96 })
+    .constraintSize({ minHeight: 84 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })

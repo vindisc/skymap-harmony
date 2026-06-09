@@ -37,7 +37,7 @@ const EDITOR_FIELD_LABEL_GAP: number = 10;
 const EDITOR_FIELD_GAP: number = 18;
 const EDITOR_TEXTAREA_LINE_HEIGHT: number = 28;
 const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
-const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 14;
+const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 10;
 
 interface EditorPhotoFrameSize {
   width: number;

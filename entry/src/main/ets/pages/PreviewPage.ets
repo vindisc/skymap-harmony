@@ -107,7 +107,10 @@ struct PreviewPage {
       await this.waitForExportLayout();
       const result: ReviewCardExportResult = await ReviewCardExportService.exportSnapshot(
         this.getAbilityContext(),
-        this.getExportComponentId()
+        this.getExportComponentId(),
+        () => {
+          this.isExportSnapshotMode = false;
+        }
       );
       if (result.savedToPhotoLibrary) {
         await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path);
@@ -158,13 +161,13 @@ struct PreviewPage {
   @Builder
   ActionButton(label: string, emphasized: boolean, onTap: () => void) {
     Button(label)
-      .height(32)
+      .height(28)
       .padding({ left: emphasized ? AppMetrics.space12 : AppMetrics.space8, right: emphasized ? AppMetrics.space12 : AppMetrics.space8 })
       .borderRadius(AppMetrics.capsuleRadius)
       .fontSize(AppTypography.caption)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(emphasized ? AppColors.text : AppColors.secondaryText)
-      .backgroundColor(emphasized ? AppColors.surfaceMuted : '#00000000')
+      .backgroundColor('#00000000')
       .border(emphasized ? { width: 1, color: AppColors.border } : { width: 0 })
       .stateEffect(true)
       .onClick(() => {
@@ -213,7 +216,7 @@ struct PreviewPage {
         .opacity(this.isExporting ? 0.8 : 1)
       }
       .alignItems(VerticalAlign.Center)
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space16, bottom: AppMetrics.space8 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space12, bottom: AppMetrics.space4 })
       .width('100%')
 
       Scroll() {
@@ -240,9 +243,9 @@ struct PreviewPage {
     }
     .width(this.getExportCanvasWidth())
     .height(this.getExportCanvasHeight())
-    .position({ x: 0, y: 0 })
+    .position({ x: -20000, y: -20000 })
     .hitTestBehavior(HitTestMode.None)
-    .zIndex(0)
+    .zIndex(-1)
   }
 
   build() {

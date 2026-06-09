@@ -7,7 +7,7 @@ import {
 
 const REVIEW_TEXTAREA_LINE_HEIGHT: number = 28;
 const REVIEW_TEXTAREA_VERTICAL_PADDING: number = 28;
-const REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE: number = 14;
+const REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE: number = 10;
 const PRIMARY_FIELD_LABEL_SIZE: number = AppTypography.body;
 const PRIMARY_FIELD_INPUT_SIZE: number = AppTypography.body;
 const SECONDARY_FIELD_LABEL_SIZE: number = AppTypography.auxiliary;

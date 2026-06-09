@@ -28,7 +28,7 @@ struct HomeOverviewStatCard {
   build() {
     Column({ space: AppMetrics.space4 }) {
       Text(`${this.value}`)
-        .fontSize(AppTypography.body)
+        .fontSize(AppTypography.auxiliary)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
         .maxLines(1)
@@ -40,7 +40,7 @@ struct HomeOverviewStatCard {
     }
     .justifyContent(FlexAlign.Center)
     .layoutWeight(1)
-    .height(64)
+    .height(52)
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surfaceMuted)
   }
@@ -135,21 +135,14 @@ struct HomePage {
 
   @Builder
   StartReviewPanel() {
-    Column({ space: AppMetrics.space24 }) {
+    Column({ space: AppMetrics.space16 }) {
       Row() {
-        Column({ space: AppMetrics.space12 }) {
+        Column() {
           Text('摄影复盘卡')
             .fontSize(AppTypography.level1)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.text)
             .lineHeight(AppTypography.level1LineHeight)
-            .width('100%')
-
-          Text('让每一次按下快门\n都留下思考')
-            .fontSize(AppTypography.level2)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.level2LineHeight)
             .width('100%')
         }
         .alignItems(HorizontalAlign.Start)
@@ -167,19 +160,6 @@ struct HomePage {
           })
       }
       .alignItems(VerticalAlign.Top)
-      .width('100%')
-
-      Row({ space: AppMetrics.space12 }) {
-        Text(`${this.totalReviewCount} 张照片`)
-          .fontSize(AppTypography.body)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.bodyLineHeight)
-
-        Text(`${this.totalReviewCount} 次复盘`)
-          .fontSize(AppTypography.body)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.bodyLineHeight)
-      }
       .width('100%')
 
       PrimaryButton({
@@ -210,17 +190,17 @@ struct HomePage {
         HomeOverviewStatCard({ label: '不成立', value: this.invalidReviewCount })
       }
       .width('100%')
-      .margin({ top: AppMetrics.space16 })
+      .margin({ top: AppMetrics.space12 })
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-    .margin({ top: AppMetrics.space32 })
+    .margin({ top: AppMetrics.space24 })
   }
 
   @Builder
   LatestReviewPanel() {
     Column() {
-      Text('最近一次复盘')
+      Text('最近一次')
         .fontSize(AppTypography.level2)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
@@ -236,7 +216,7 @@ struct HomePage {
             }
           }
         })
-          .margin({ top: AppMetrics.space16 })
+          .margin({ top: AppMetrics.space12 })
       } else {
         Row({ space: AppMetrics.space12 }) {
           Column() {
@@ -276,12 +256,12 @@ struct HomePage {
         .borderRadius(AppMetrics.cardRadius)
         .backgroundColor(AppColors.surface)
         .border({ width: 1, color: AppColors.border })
-        .margin({ top: AppMetrics.space16 })
+        .margin({ top: AppMetrics.space12 })
       }
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-    .margin({ top: AppMetrics.space32 })
+    .margin({ top: AppMetrics.space24 })
   }
 
   build() {
@@ -309,12 +289,12 @@ struct HomePage {
               this.openProject();
             }
           })
-            .margin({ top: AppMetrics.space16 })
+            .margin({ top: AppMetrics.space12 })
         }
         .width('100%')
-        .margin({ top: AppMetrics.space32 })
+        .margin({ top: AppMetrics.space24 })
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space32, bottom: AppMetrics.space32 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space24 })
       .width('100%')
     }
     .width('100%')
