@@ -5,7 +5,7 @@
 ## 使用场景
 
 1. 白天在 HarmonyOS 手机端完成摄影复盘。
-2. 在阅读页点击「复制复盘数据」，复制 pretty print JSON。
+2. 在阅读页点击「复制复盘数据」，复制 pretty print JSON，并只显示 Toast「已复制复盘数据」。
 3. 晚上粘贴到 Mac 端边框 App 继续排版导出，或直接发给 GPT 交流。
 
 ## 字段定义
@@ -28,6 +28,8 @@
 
 所有字段必须保留。旧记录缺少字段时，对应字段输出空字符串，不删除 key。
 
+`reviewerText` 来自「复盘设置」中的复盘人名称；未设置时输出空字符串。复制动作读取已保存配置，不读取未保存的输入框临时值。
+
 ## decision 枚举
 
 手机端中文状态先经过 `normalizeReviewJudgement` 统一清洗，再映射为协议枚举：
@@ -39,6 +41,14 @@
 | 不成立 | `notWorks` |
 
 JSON 协议不直接输出中文状态；手机端 UI 仍保留中文显示。
+
+## 手机端生成规则
+
+- `reviewStructure` 固定为 `quickReview`。
+- `decision` 必须经过 `normalizeReviewJudgement` 后再映射，兼容旧记录中的「待判断」和「不确定」。
+- 空字段保留 key，值为空字符串。
+- JSON 使用 `JSON.stringify(value, null, 2)` pretty print。
+- 复制内容不包含导出路径、页面状态、Toast 文案或 UI 按钮文案。
 
 ## 示例 JSON
 
