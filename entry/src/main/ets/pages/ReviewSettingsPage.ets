@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import { AppColors, PrimaryButton } from '../components/AppDesign';
@@ -48,17 +47,6 @@ struct ReviewSettingsPage {
   @Builder
   Header() {
     Row() {
-      Button('返回')
-        .height(30)
-        .padding({ left: 8, right: 8 })
-        .borderRadius(15)
-        .fontSize(13)
-        .fontColor(AppColors.secondaryText)
-        .backgroundColor('#00000000')
-        .onClick(() => {
-          router.back();
-        })
-
       Blank()
 
       Text('复盘设置')
@@ -67,12 +55,10 @@ struct ReviewSettingsPage {
         .fontColor(AppColors.text)
 
       Blank()
-
-      Text('')
-        .width(46)
     }
     .alignItems(VerticalAlign.Center)
     .width('100%')
+    .height(30)
   }
 
   build() {

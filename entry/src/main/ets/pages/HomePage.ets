@@ -7,7 +7,6 @@ import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerServi
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import {
-  ReviewProjectStats,
   ReviewProjectSummary,
   createDefaultProjectSummary
 } from '../model/ProjectModel';
@@ -18,6 +17,32 @@ import {
   ProjectHomeCard,
   RecentReviewCard
 } from '../components/AppDesign';
+
+@Component
+struct HomeOverviewStatCard {
+  @Prop label: string = '';
+  @Prop value: number = 0;
+
+  build() {
+    Column({ space: 6 }) {
+      Text(`${this.value}`)
+        .fontSize(20)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+        .maxLines(1)
+
+      Text(this.label)
+        .fontSize(12)
+        .fontColor(AppColors.secondaryText)
+        .maxLines(1)
+    }
+    .justifyContent(FlexAlign.Center)
+    .layoutWeight(1)
+    .height(64)
+    .borderRadius(8)
+    .backgroundColor(AppColors.surfaceMuted)
+  }
+}
 
 @Entry
 @Component
@@ -55,7 +80,7 @@ struct HomePage {
 
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
     const nextProjectSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
-    const nextOverviewStats: ReviewProjectStats = ReviewProjectService.buildGlobalStats(items);
+    const nextOverviewStats = ReviewProjectService.buildGlobalStats(items);
     this.totalReviewCount = nextOverviewStats.totalCount;
     this.validReviewCount = nextOverviewStats.validCount;
     this.unsureReviewCount = nextOverviewStats.unsureCount;
@@ -153,27 +178,6 @@ struct HomePage {
   }
 
   @Builder
-  OverviewStat(label: string, value: number) {
-    Column({ space: 6 }) {
-      Text(`${value}`)
-        .fontSize(20)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .maxLines(1)
-
-      Text(label)
-        .fontSize(12)
-        .fontColor(AppColors.secondaryText)
-        .maxLines(1)
-    }
-    .justifyContent(FlexAlign.Center)
-    .layoutWeight(1)
-    .height(64)
-    .borderRadius(8)
-    .backgroundColor(AppColors.surfaceMuted)
-  }
-
-  @Builder
   ReviewOverviewPanel() {
     Column() {
       Text('复盘概览')
@@ -183,10 +187,10 @@ struct HomePage {
         .width('100%')
 
       Row({ space: 8 }) {
-        this.OverviewStat('总复盘', this.totalReviewCount)
-        this.OverviewStat('成立', this.validReviewCount)
-        this.OverviewStat('待判断', this.unsureReviewCount)
-        this.OverviewStat('不成立', this.invalidReviewCount)
+        HomeOverviewStatCard({ label: '总复盘', value: this.totalReviewCount })
+        HomeOverviewStatCard({ label: '成立', value: this.validReviewCount })
+        HomeOverviewStatCard({ label: '待判断', value: this.unsureReviewCount })
+        HomeOverviewStatCard({ label: '不成立', value: this.invalidReviewCount })
       }
       .width('100%')
       .margin({ top: 12 })

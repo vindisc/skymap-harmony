@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
+const settingsPageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewSettingsPage.ets', 'utf8');
 
 const requiredPrimitiveStates = [
   '@State totalReviewCount: number',
@@ -22,9 +23,34 @@ if (homePageSource.includes('@State overviewStats')) {
   console.error('HomePage must not render overview numbers from object @State overviewStats.');
 }
 
+if (homePageSource.includes('@Builder\n  OverviewStat(label: string, value: number)') ||
+  homePageSource.includes('@Builder\r\n  OverviewStat(label: string, value: number)')) {
+  failed = true;
+  console.error('HomePage overview must not pass changing stat values through @Builder parameters.');
+}
+
 if (!homePageSource.includes('this.totalReviewCount = nextOverviewStats.totalCount')) {
   failed = true;
   console.error('HomePage must assign totalReviewCount directly from loaded stats.');
+}
+
+const requiredOverviewBindings = [
+  "HomeOverviewStatCard({ label: '总复盘', value: this.totalReviewCount })",
+  "HomeOverviewStatCard({ label: '成立', value: this.validReviewCount })",
+  "HomeOverviewStatCard({ label: '待判断', value: this.unsureReviewCount })",
+  "HomeOverviewStatCard({ label: '不成立', value: this.invalidReviewCount })"
+];
+
+for (const binding of requiredOverviewBindings) {
+  if (!homePageSource.includes(binding)) {
+    failed = true;
+    console.error(`HomePage missing overview stat component binding: ${binding}`);
+  }
+}
+
+if (settingsPageSource.includes("Button('返回')") || settingsPageSource.includes('router.back()')) {
+  failed = true;
+  console.error('ReviewSettingsPage must not render or handle an explicit back button.');
 }
 
 function normalizeReviewJudgement(value) {
