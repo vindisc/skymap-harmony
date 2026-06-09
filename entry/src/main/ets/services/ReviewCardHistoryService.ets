@@ -53,6 +53,12 @@ export class ReviewCardHistoryService {
           normalizedItems.push(normalizedItem);
         }
       });
+      normalizedItems.sort((left: ReviewCardHistoryItem, right: ReviewCardHistoryItem): number => {
+        if (right.document.updatedAt !== left.document.updatedAt) {
+          return right.document.updatedAt - left.document.updatedAt;
+        }
+        return right.document.createdAt - left.document.createdAt;
+      });
       return normalizedItems;
     } catch (error) {
       return [];

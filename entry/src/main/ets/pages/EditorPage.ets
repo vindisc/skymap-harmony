@@ -163,7 +163,7 @@ struct EditorPage {
     this.unregisterKeyboardHeightObserver();
     this.restoreSystemKeyboardAvoidance();
     this.syncDocumentFromInput();
-    ReviewCardStore.saveCurrentDocument(this.document);
+    ReviewCardStore.setCurrentDocument(this.document);
   }
 
   private syncDocumentFromInput(): void {
