@@ -4,8 +4,10 @@ const VERTICAL_ASPECT_RATIO = 0.87;
 function resolveReviewImageLayout(width, height, fallbackUsed = false) {
   if (fallbackUsed || width <= 0 || height <= 0) {
     return {
-      layoutType: 'unknown',
-      aspectRatio: 1
+      layoutType: 'square',
+      aspectRatio: 1,
+      usedFallbackSize: true,
+      hasExactSize: false
     };
   }
 
@@ -13,20 +15,26 @@ function resolveReviewImageLayout(width, height, fallbackUsed = false) {
   if (aspectRatio >= HORIZONTAL_ASPECT_RATIO) {
     return {
       layoutType: 'horizontal',
-      aspectRatio
+      aspectRatio,
+      usedFallbackSize: false,
+      hasExactSize: true
     };
   }
 
   if (aspectRatio <= VERTICAL_ASPECT_RATIO) {
     return {
       layoutType: 'vertical',
-      aspectRatio
+      aspectRatio,
+      usedFallbackSize: false,
+      hasExactSize: true
     };
   }
 
   return {
     layoutType: 'square',
-    aspectRatio
+    aspectRatio,
+    usedFallbackSize: false,
+    hasExactSize: true
   };
 }
 
@@ -34,7 +42,7 @@ const cases = [
   { name: 'horizontal', width: 1600, height: 1000, expectedType: 'horizontal', expectedRatio: 1.6, expectedStructure: 'top-image-bottom-text' },
   { name: 'vertical', width: 1152, height: 1536, expectedType: 'vertical', expectedRatio: 0.75, expectedStructure: 'top-image-bottom-text' },
   { name: 'square', width: 1200, height: 1200, expectedType: 'square', expectedRatio: 1, expectedStructure: 'top-image-bottom-text' },
-  { name: 'fallback', width: 1600, height: 1000, fallbackUsed: true, expectedType: 'unknown', expectedRatio: 1, expectedStructure: 'top-image-bottom-text' }
+  { name: 'fallback', width: 1600, height: 1000, fallbackUsed: true, expectedType: 'square', expectedRatio: 1, expectedStructure: 'top-image-bottom-text' }
 ];
 
 const recoveredFallbackCase = {
@@ -52,7 +60,7 @@ function resolveReviewCardStructure(layoutType) {
 }
 
 function resolveExportCanvasWidth() {
-  return 560;
+  return 1520;
 }
 
 let failed = false;
@@ -91,8 +99,8 @@ if (failed) {
 }
 
 const exportCanvasWidth = resolveExportCanvasWidth();
-if (exportCanvasWidth !== 560) {
-  console.error(`export canvas: expected 560, got ${exportCanvasWidth}`);
+if (exportCanvasWidth !== 1520) {
+  console.error(`export canvas: expected 1520, got ${exportCanvasWidth}`);
   process.exit(1);
 }
 console.log(`export canvas: width=${exportCanvasWidth}`);
