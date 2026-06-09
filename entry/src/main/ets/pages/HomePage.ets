@@ -9,8 +9,7 @@ import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardMo
 import {
   ReviewProjectStats,
   ReviewProjectSummary,
-  createDefaultProjectSummary,
-  createEmptyProjectStats
+  createDefaultProjectSummary
 } from '../model/ProjectModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import {
@@ -26,7 +25,10 @@ struct HomePage {
   private reloadRequestId: number = 0;
   @State isPickingPhoto: boolean = false;
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
-  @State overviewStats: ReviewProjectStats = createEmptyProjectStats();
+  @State totalReviewCount: number = 0;
+  @State validReviewCount: number = 0;
+  @State unsureReviewCount: number = 0;
+  @State invalidReviewCount: number = 0;
 
   aboutToAppear(): void {
     this.reloadHistory();
@@ -48,10 +50,17 @@ struct HomePage {
       return;
     }
 
+    this.applyHomeData(items);
+  }
+
+  private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
     const nextProjectSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
-    const nextGlobalStats: ReviewProjectStats = ReviewProjectService.buildGlobalStats(items);
+    const nextOverviewStats: ReviewProjectStats = ReviewProjectService.buildGlobalStats(items);
+    this.totalReviewCount = nextOverviewStats.totalCount;
+    this.validReviewCount = nextOverviewStats.validCount;
+    this.unsureReviewCount = nextOverviewStats.unsureCount;
+    this.invalidReviewCount = nextOverviewStats.invalidCount;
     this.projectSummary = nextProjectSummary;
-    this.overviewStats = nextGlobalStats;
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -174,10 +183,10 @@ struct HomePage {
         .width('100%')
 
       Row({ space: 8 }) {
-        this.OverviewStat('总复盘', this.overviewStats.totalCount)
-        this.OverviewStat('成立', this.overviewStats.validCount)
-        this.OverviewStat('待判断', this.overviewStats.unsureCount)
-        this.OverviewStat('不成立', this.overviewStats.invalidCount)
+        this.OverviewStat('总复盘', this.totalReviewCount)
+        this.OverviewStat('成立', this.validReviewCount)
+        this.OverviewStat('待判断', this.unsureReviewCount)
+        this.OverviewStat('不成立', this.invalidReviewCount)
       }
       .width('100%')
       .margin({ top: 12 })
