@@ -4,7 +4,7 @@ import {
   ReviewCardDocument
 } from '../model/ReviewCardModel';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
-import { AppColors } from './AppDesign';
+import { AppColors, AppMetrics, AppTypography } from './AppDesign';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 @Component
@@ -29,12 +29,12 @@ export struct ReadingReviewRecord {
   @Builder
   MetaTag(label: string) {
     Text(label)
-      .fontSize(11)
+      .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.secondaryText)
-      .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-      .borderRadius(6)
-      .backgroundColor('#F1ECE3')
+      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: AppMetrics.space4, bottom: AppMetrics.space4 })
+      .borderRadius(AppMetrics.space4)
+      .backgroundColor(AppColors.surfaceMuted)
   }
 
   @Builder
@@ -46,27 +46,27 @@ export struct ReadingReviewRecord {
           .color(AppColors.border)
           .opacity(0.18)
           .width('100%')
-          .margin({ bottom: 10 })
+          .margin({ bottom: AppMetrics.space12 })
       }
 
       Text(label)
-        .fontSize(12)
+        .fontSize(AppTypography.auxiliary)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.mutedText)
         .width('100%')
 
       Text(value.length > 0 ? value : '待补充')
-        .fontSize(15)
+        .fontSize(AppTypography.body)
         .fontColor(value.length > 0 ? AppColors.text : AppColors.secondaryText)
-        .lineHeight(23)
+        .lineHeight(AppTypography.bodyLineHeight)
         .width('100%')
         .wordBreak(WordBreak.BREAK_WORD)
         .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
-        .margin({ top: 5 })
+        .margin({ top: AppMetrics.space8 })
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-    .padding({ top: showDivider ? 0 : 2, bottom: 14 })
+    .padding({ top: 0, bottom: AppMetrics.space16 })
   }
 
   build() {
@@ -85,17 +85,17 @@ export struct ReadingReviewRecord {
 
       Column() {
         Text(this.document.content.title.length > 0 ? this.document.content.title : '这张照片是否成立')
-          .fontSize(24)
+          .fontSize(AppTypography.level2)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
-          .lineHeight(32)
+          .lineHeight(AppTypography.level2LineHeight)
           .width('100%')
           .wordBreak(WordBreak.BREAK_WORD)
-          .margin({ top: 18 })
+          .margin({ top: AppMetrics.space24 })
 
-        Row({ space: 10 }) {
+        Row({ space: AppMetrics.space12 }) {
           Text(formatReviewTime(this.document.updatedAt))
-            .fontSize(12)
+            .fontSize(AppTypography.auxiliary)
             .fontColor(AppColors.secondaryText)
 
           Blank()
@@ -104,7 +104,7 @@ export struct ReadingReviewRecord {
         }
         .alignItems(VerticalAlign.Center)
         .width('100%')
-        .margin({ top: 8 })
+        .margin({ top: AppMetrics.space12 })
 
         Column() {
           if (this.hasValue(this.document.content.visualFocus)) {
@@ -176,7 +176,7 @@ export struct ReadingReviewRecord {
             )
           }
         }
-        .margin({ top: 12 })
+        .margin({ top: AppMetrics.space16 })
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')

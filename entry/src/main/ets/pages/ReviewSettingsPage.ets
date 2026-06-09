@@ -1,6 +1,6 @@
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { AppColors, PrimaryButton } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppTypography, PrimaryButton } from '../components/AppDesign';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
 @Entry
@@ -50,36 +50,37 @@ struct ReviewSettingsPage {
       Blank()
 
       Text('复盘设置')
-        .fontSize(18)
+        .fontSize(AppTypography.level2)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
+        .lineHeight(AppTypography.level2LineHeight)
 
       Blank()
     }
     .alignItems(VerticalAlign.Center)
     .width('100%')
-    .height(30)
+    .height(AppTypography.level2LineHeight)
   }
 
   build() {
     Column() {
       this.Header()
 
-      Column({ space: 10 }) {
+      Column({ space: AppMetrics.space12 }) {
         Text('复盘人')
-          .fontSize(15)
+          .fontSize(AppTypography.body)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .width('100%')
 
         TextInput({ text: this.reviewerName, placeholder: '可留空' })
           .height(48)
-          .borderRadius(10)
-          .fontSize(16)
+          .borderRadius(AppMetrics.cardRadius)
+          .fontSize(AppTypography.body)
           .fontColor(AppColors.text)
           .placeholderColor('#9AA1AB')
           .backgroundColor(AppColors.surfaceMuted)
-          .padding({ left: 16, right: 16 })
+          .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
           .border({ width: 1, color: AppColors.border })
           .onChange((value: string) => {
             this.reviewerName = value;
@@ -87,7 +88,7 @@ struct ReviewSettingsPage {
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
-      .margin({ top: 28 })
+      .margin({ top: AppMetrics.space32 })
 
       Blank()
 
@@ -100,7 +101,7 @@ struct ReviewSettingsPage {
       })
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ left: 22, right: 22, top: 18, bottom: 34 })
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
     .width('100%')
     .height('100%')
     .backgroundColor(AppColors.pageBackground)

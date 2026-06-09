@@ -20,7 +20,7 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
-import { AppColors } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 
@@ -158,14 +158,14 @@ struct PreviewPage {
   @Builder
   ActionButton(label: string, emphasized: boolean, onTap: () => void) {
     Button(label)
-      .height(30)
-      .padding({ left: emphasized ? 12 : 8, right: emphasized ? 12 : 8 })
-      .borderRadius(15)
-      .fontSize(13)
+      .height(32)
+      .padding({ left: emphasized ? AppMetrics.space12 : AppMetrics.space8, right: emphasized ? AppMetrics.space12 : AppMetrics.space8 })
+      .borderRadius(AppMetrics.capsuleRadius)
+      .fontSize(AppTypography.caption)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(emphasized ? AppColors.text : AppColors.secondaryText)
-      .backgroundColor(emphasized ? '#ECE7DE' : '#00000000')
-      .border(emphasized ? { width: 1, color: '#E2DCCD' } : { width: 0 })
+      .backgroundColor(emphasized ? AppColors.surfaceMuted : '#00000000')
+      .border(emphasized ? { width: 1, color: AppColors.border } : { width: 0 })
       .stateEffect(true)
       .onClick(() => {
         onTap();
@@ -192,13 +192,14 @@ struct PreviewPage {
     Column() {
       Row() {
         Text('复盘记录')
-          .fontSize(18)
+          .fontSize(AppTypography.level2)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
+          .lineHeight(AppTypography.level2LineHeight)
 
         Blank()
 
-        Row({ space: 8 }) {
+        Row({ space: AppMetrics.space8 }) {
           this.ActionButton('编辑', false, () => {
             router.replaceUrl({ url: EDITOR_PAGE });
           })
@@ -212,7 +213,7 @@ struct PreviewPage {
         .opacity(this.isExporting ? 0.8 : 1)
       }
       .alignItems(VerticalAlign.Center)
-      .padding({ left: 20, right: 20, top: 14, bottom: 6 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space16, bottom: AppMetrics.space8 })
       .width('100%')
 
       Scroll() {
@@ -220,7 +221,7 @@ struct PreviewPage {
           ReadingReviewRecord({ document: this.document })
         }
         .alignItems(HorizontalAlign.Start)
-        .padding({ left: 20, right: 20, top: 6, bottom: 28 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space8, bottom: AppMetrics.space32 })
         .width('100%')
       }
       .layoutWeight(1)

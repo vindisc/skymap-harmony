@@ -13,6 +13,8 @@ import {
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import {
   AppColors,
+  AppMetrics,
+  AppTypography,
   PrimaryButton,
   ProjectHomeCard,
   RecentReviewCard
@@ -24,22 +26,22 @@ struct HomeOverviewStatCard {
   @Prop value: number = 0;
 
   build() {
-    Column({ space: 6 }) {
+    Column({ space: AppMetrics.space4 }) {
       Text(`${this.value}`)
-        .fontSize(20)
+        .fontSize(AppTypography.body)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
         .maxLines(1)
 
       Text(this.label)
-        .fontSize(12)
+        .fontSize(AppTypography.caption)
         .fontColor(AppColors.secondaryText)
         .maxLines(1)
     }
     .justifyContent(FlexAlign.Center)
     .layoutWeight(1)
     .height(64)
-    .borderRadius(8)
+    .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surfaceMuted)
   }
 }
@@ -133,37 +135,51 @@ struct HomePage {
 
   @Builder
   StartReviewPanel() {
-    Column({ space: 16 }) {
-      Row({ space: 12 }) {
-        Column({ space: 8 }) {
+    Column({ space: AppMetrics.space24 }) {
+      Row() {
+        Column({ space: AppMetrics.space12 }) {
           Text('摄影复盘卡')
-            .fontSize(26)
+            .fontSize(AppTypography.level1)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.text)
-            .lineHeight(32)
+            .lineHeight(AppTypography.level1LineHeight)
             .width('100%')
 
-          Text('选择照片，写下观察，把每次拍摄沉淀成可回看的复盘记录')
-            .fontSize(15)
+          Text('让每一次按下快门\n都留下思考')
+            .fontSize(AppTypography.level2)
+            .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.secondaryText)
-            .lineHeight(23)
+            .lineHeight(AppTypography.level2LineHeight)
             .width('100%')
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
 
         Button('复盘设置')
-          .height(30)
-          .padding({ left: 10, right: 10 })
-          .borderRadius(15)
-          .fontSize(13)
+          .height(32)
+          .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
+          .borderRadius(AppMetrics.capsuleRadius)
+          .fontSize(AppTypography.caption)
           .fontColor(AppColors.secondaryText)
-          .backgroundColor('#ECE8DF')
+          .backgroundColor(AppColors.surfaceMuted)
           .onClick(() => {
             this.openReviewSettings();
           })
       }
       .alignItems(VerticalAlign.Top)
+      .width('100%')
+
+      Row({ space: AppMetrics.space12 }) {
+        Text(`${this.totalReviewCount} 张照片`)
+          .fontSize(AppTypography.body)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.bodyLineHeight)
+
+        Text(`${this.totalReviewCount} 次复盘`)
+          .fontSize(AppTypography.body)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.bodyLineHeight)
+      }
       .width('100%')
 
       PrimaryButton({
@@ -181,32 +197,34 @@ struct HomePage {
   ReviewOverviewPanel() {
     Column() {
       Text('复盘概览')
-        .fontSize(17)
+        .fontSize(AppTypography.level2)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
+        .lineHeight(AppTypography.level2LineHeight)
         .width('100%')
 
-      Row({ space: 8 }) {
+      Row({ space: AppMetrics.space8 }) {
         HomeOverviewStatCard({ label: '总复盘', value: this.totalReviewCount })
         HomeOverviewStatCard({ label: '成立', value: this.validReviewCount })
         HomeOverviewStatCard({ label: '待判断', value: this.unsureReviewCount })
         HomeOverviewStatCard({ label: '不成立', value: this.invalidReviewCount })
       }
       .width('100%')
-      .margin({ top: 12 })
+      .margin({ top: AppMetrics.space16 })
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-    .margin({ top: 22 })
+    .margin({ top: AppMetrics.space32 })
   }
 
   @Builder
   LatestReviewPanel() {
     Column() {
       Text('最近一次复盘')
-        .fontSize(17)
+        .fontSize(AppTypography.level2)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
+        .lineHeight(AppTypography.level2LineHeight)
         .width('100%')
 
       if (this.projectSummary.latestItem) {
@@ -218,33 +236,33 @@ struct HomePage {
             }
           }
         })
-          .margin({ top: 12 })
+          .margin({ top: AppMetrics.space16 })
       } else {
-        Row({ space: 10 }) {
+        Row({ space: AppMetrics.space12 }) {
           Column() {
             Text('照片')
-              .fontSize(12)
+              .fontSize(AppTypography.caption)
               .fontColor(AppColors.mutedText)
           }
           .justifyContent(FlexAlign.Center)
           .width(72)
           .height(72)
-          .borderRadius(9)
+          .borderRadius(AppMetrics.cardRadius)
           .backgroundColor(AppColors.surfaceMuted)
 
-          Column({ space: 5 }) {
+          Column({ space: AppMetrics.space4 }) {
             Text('还没有复盘记录')
-              .fontSize(15)
+              .fontSize(AppTypography.body)
               .fontWeight(FontWeight.Medium)
               .fontColor(AppColors.text)
               .width('100%')
             Text('开始第一次复盘后会出现在这里')
-              .fontSize(13)
+              .fontSize(AppTypography.auxiliary)
               .fontColor(AppColors.secondaryText)
-              .lineHeight(18)
+              .lineHeight(AppTypography.auxiliaryLineHeight)
               .width('100%')
             Text('等待开始')
-              .fontSize(12)
+              .fontSize(AppTypography.caption)
               .fontColor(AppColors.mutedText)
               .width('100%')
           }
@@ -252,18 +270,18 @@ struct HomePage {
           .layoutWeight(1)
         }
         .alignItems(VerticalAlign.Center)
-        .padding({ left: 10, right: 10, top: 10, bottom: 10 })
+        .padding(AppMetrics.space12)
         .width('100%')
-        .constraintSize({ minHeight: 92 })
-        .borderRadius(11)
+        .constraintSize({ minHeight: 96 })
+        .borderRadius(AppMetrics.cardRadius)
         .backgroundColor(AppColors.surface)
         .border({ width: 1, color: AppColors.border })
-        .margin({ top: 12 })
+        .margin({ top: AppMetrics.space16 })
       }
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-    .margin({ top: 22 })
+    .margin({ top: AppMetrics.space32 })
   }
 
   build() {
@@ -278,9 +296,10 @@ struct HomePage {
         Column() {
           Row() {
             Text('我的项目')
-              .fontSize(19)
+              .fontSize(AppTypography.level2)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.text)
+              .lineHeight(AppTypography.level2LineHeight)
           }
           .width('100%')
 
@@ -290,12 +309,12 @@ struct HomePage {
               this.openProject();
             }
           })
-            .margin({ top: 12 })
+            .margin({ top: AppMetrics.space16 })
         }
         .width('100%')
-        .margin({ top: 24 })
+        .margin({ top: AppMetrics.space32 })
       }
-      .padding({ left: 22, right: 22, top: 28, bottom: 36 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space32, bottom: AppMetrics.space32 })
       .width('100%')
     }
     .width('100%')

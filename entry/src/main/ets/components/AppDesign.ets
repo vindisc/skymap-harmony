@@ -10,9 +10,9 @@ import { formatReviewTime, getImageRatioLabel, getImageSizeText, hasDisplayableI
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
-  static readonly pageBackground: string = '#F4F1EC';
+  static readonly pageBackground: string = '#F7F6F3';
   static readonly surface: string = '#FFFEFC';
-  static readonly surfaceMuted: string = '#F7F5F1';
+  static readonly surfaceMuted: string = '#F1EFE9';
   static readonly border: string = '#E5E0D7';
   static readonly text: string = '#171A1F';
   static readonly secondaryText: string = '#5E6470';
@@ -26,10 +26,30 @@ export class AppColors {
 }
 
 export class AppMetrics {
-  static readonly pagePadding: number = 20;
-  static readonly cardRadius: number = 10;
-  static readonly buttonRadius: number = 7;
+  static readonly space4: number = 4;
+  static readonly space8: number = 8;
+  static readonly space12: number = 12;
+  static readonly space16: number = 16;
+  static readonly space24: number = 24;
+  static readonly space32: number = 32;
+  static readonly pagePadding: number = 24;
+  static readonly cardRadius: number = 8;
+  static readonly buttonRadius: number = 8;
+  static readonly capsuleRadius: number = 16;
   static readonly panelRadius: number = 8;
+}
+
+export class AppTypography {
+  static readonly level1: number = 38;
+  static readonly level1LineHeight: number = 46;
+  static readonly level2: number = 24;
+  static readonly level2LineHeight: number = 32;
+  static readonly body: number = 16;
+  static readonly bodyLineHeight: number = 24;
+  static readonly auxiliary: number = 14;
+  static readonly auxiliaryLineHeight: number = 22;
+  static readonly caption: number = 12;
+  static readonly captionLineHeight: number = 18;
 }
 
 @Component
@@ -40,17 +60,17 @@ export struct AppPageHeader {
   build() {
     Column() {
       Text(this.title)
-        .fontSize(26)
+        .fontSize(AppTypography.level1)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
-        .lineHeight(32)
+        .lineHeight(AppTypography.level1LineHeight)
         .width('100%')
       if (this.subtitle.length > 0) {
         Text(this.subtitle)
-          .fontSize(15)
+          .fontSize(AppTypography.body)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(23)
-          .margin({ top: 8 })
+          .lineHeight(AppTypography.bodyLineHeight)
+          .margin({ top: AppMetrics.space12 })
           .width('100%')
       }
     }
@@ -70,7 +90,7 @@ export struct PrimaryButton {
       .height(48)
       .width('100%')
       .borderRadius(AppMetrics.buttonRadius)
-      .fontSize(16)
+      .fontSize(AppTypography.body)
       .fontWeight(FontWeight.Medium)
       .fontColor('#FFFFFF')
       .backgroundColor(this.isDisabled ? '#B8C6B9' : AppColors.primary)
@@ -95,11 +115,11 @@ export struct SecondaryButton {
     Button(this.label)
       .height(44)
       .width('100%')
-      .borderRadius(AppMetrics.buttonRadius)
-      .fontSize(15)
+      .borderRadius(AppMetrics.capsuleRadius)
+      .fontSize(AppTypography.auxiliary)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
-      .backgroundColor('#ECE8DF')
+      .backgroundColor(AppColors.surfaceMuted)
       .stateEffect(true)
       .onClick(() => {
         this.onTap();
@@ -115,21 +135,21 @@ export struct EmptyState {
   build() {
     Column() {
       Text(this.title)
-        .fontSize(17)
+        .fontSize(AppTypography.body)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.text)
         .width('100%')
       if (this.message.length > 0) {
         Text(this.message)
-          .fontSize(14)
+          .fontSize(AppTypography.auxiliary)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(22)
-          .margin({ top: 8 })
+          .lineHeight(AppTypography.auxiliaryLineHeight)
+          .margin({ top: AppMetrics.space8 })
           .width('100%')
       }
     }
     .alignItems(HorizontalAlign.Start)
-    .padding(18)
+    .padding(AppMetrics.space16)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -145,11 +165,11 @@ export struct TagLabel {
 
   build() {
     Text(this.label)
-      .fontSize(11)
+      .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.color)
-      .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-      .borderRadius(4)
+      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: AppMetrics.space4, bottom: AppMetrics.space4 })
+      .borderRadius(AppMetrics.space4)
       .backgroundColor(this.tagBackground)
   }
 }
@@ -186,11 +206,11 @@ export struct ReviewJudgementBadge {
 
   build() {
     Text(getJudgementBadgeText(this.value))
-      .fontSize(10)
+      .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Regular)
       .fontColor(getJudgementBadgeColor(this.value))
-      .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-      .borderRadius(4)
+      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: AppMetrics.space4, bottom: AppMetrics.space4 })
+      .borderRadius(AppMetrics.space4)
       .backgroundColor(getJudgementBadgeBackground(this.value))
       .textAlign(TextAlign.Center)
       .maxLines(1)
@@ -206,8 +226,8 @@ export struct PhotoSummaryCard {
   @Prop imageSizeFallbackUsed: boolean = false;
 
   build() {
-    Column({ space: 8 }) {
-      Row({ space: 12 }) {
+    Column({ space: AppMetrics.space8 }) {
+      Row({ space: AppMetrics.space12 }) {
         ReviewPhotoBlock({
           imageUri: this.imageUri,
           imageWidth: this.imageWidth,
@@ -221,25 +241,25 @@ export struct PhotoSummaryCard {
 
         Column() {
           Text(getImageRatioLabel(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
-            .fontSize(15)
+            .fontSize(AppTypography.body)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .width('100%')
 
           if (!this.imageSizeFallbackUsed) {
             Text(getImageSizeText(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
-              .fontSize(12)
+              .fontSize(AppTypography.caption)
               .fontColor(AppColors.mutedText)
-              .margin({ top: 7 })
+              .margin({ top: AppMetrics.space8 })
               .width('100%')
           }
 
           if (this.imageSizeFallbackUsed) {
             Text('照片信息暂不可显示，可继续填写。')
-              .fontSize(12)
+              .fontSize(AppTypography.caption)
               .fontColor(AppColors.mutedText)
-              .lineHeight(18)
-              .margin({ top: 7 })
+              .lineHeight(AppTypography.captionLineHeight)
+              .margin({ top: AppMetrics.space8 })
               .width('100%')
           }
         }
@@ -249,7 +269,7 @@ export struct PhotoSummaryCard {
       .alignItems(VerticalAlign.Center)
       .width('100%')
     }
-    .padding(12)
+    .padding(AppMetrics.space12)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -277,7 +297,7 @@ export struct PhotoWritingHero {
   Placeholder() {
     Column() {
       Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '图片加载失败' : '照片预览')
-        .fontSize(14)
+        .fontSize(AppTypography.auxiliary)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.text)
     }
@@ -325,7 +345,7 @@ export struct PhotoWritingHero {
         .width('94%')
         .aspectRatio(this.getAspectRatioValue())
         .alignSelf(ItemAlign.Center)
-        .borderRadius(12)
+        .borderRadius(AppMetrics.cardRadius)
         .clip(true)
         .backgroundColor('#E9E5DC')
         .border({ width: 1, color: AppColors.border })
@@ -356,50 +376,50 @@ export struct ProjectHomeCard {
       Column()
         .width(47)
         .height(47)
-        .backgroundColor('#ECE8DF')
+        .backgroundColor(AppColors.surfaceMuted)
     }
   }
 
   @Builder
   ProjectCoverMosaic() {
-    Column({ space: 2 }) {
-      Row({ space: 2 }) {
+    Column({ space: AppMetrics.space4 }) {
+      Row({ space: AppMetrics.space4 }) {
         this.CoverTile(0)
         this.CoverTile(1)
       }
 
-      Row({ space: 2 }) {
+      Row({ space: AppMetrics.space4 }) {
         this.CoverTile(2)
         this.CoverTile(3)
       }
     }
     .width(96)
     .height(96)
-    .borderRadius(10)
+    .borderRadius(AppMetrics.cardRadius)
     .clip(true)
     .backgroundColor(AppColors.surfaceMuted)
   }
 
   build() {
-    Row({ space: 14 }) {
+    Row({ space: AppMetrics.space16 }) {
       if (this.summary.recordCount > 0) {
         this.ProjectCoverMosaic()
       } else {
         Column() {
           Text('暂无记录')
-            .fontSize(13)
+            .fontSize(AppTypography.caption)
             .fontColor(AppColors.mutedText)
         }
         .justifyContent(FlexAlign.Center)
         .width(96)
         .height(96)
-        .borderRadius(10)
+        .borderRadius(AppMetrics.cardRadius)
         .backgroundColor(AppColors.surfaceMuted)
       }
 
-      Column({ space: 9 }) {
+      Column({ space: AppMetrics.space8 }) {
         Text(this.summary.project.name)
-          .fontSize(18)
+          .fontSize(AppTypography.body)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
           .width('100%')
@@ -407,26 +427,31 @@ export struct ProjectHomeCard {
           .textOverflow({ overflow: TextOverflow.Ellipsis })
 
         Text(this.summary.recordCount > 0
-          ? `${this.summary.recordCount} 张照片 · ${this.summary.recordCount} 次思考`
+          ? `${this.summary.recordCount}张照片 · ${this.summary.recordCount}次思考`
           : '等待第一张照片')
-          .fontSize(13)
+          .fontSize(AppTypography.body)
           .fontColor(AppColors.secondaryText)
           .width('100%')
 
-        Text(this.summary.recordCount > 0 ? `最近更新 ${formatReviewTime(this.summary.latestUpdatedAt)}` : '还没有保存过复盘记录')
-          .fontSize(12)
+        Text(this.summary.recordCount > 0 ? `最近更新\n${formatReviewTime(this.summary.latestUpdatedAt)}` : '还没有保存过复盘记录')
+          .fontSize(AppTypography.auxiliary)
           .fontColor(AppColors.mutedText)
           .width('100%')
-          .lineHeight(18)
+          .lineHeight(AppTypography.auxiliaryLineHeight)
       }
       .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)
+
+      Text('>')
+        .fontSize(AppTypography.body)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.mutedText)
     }
     .alignItems(VerticalAlign.Center)
-    .padding(14)
+    .padding(AppMetrics.space16)
     .width('100%')
     .constraintSize({ minHeight: 124 })
-    .borderRadius(12)
+    .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
     .onClick(() => {
@@ -444,55 +469,57 @@ export struct RecentReviewCard {
   onTap: () => void = () => {};
 
   build() {
-    Row({ space: 10 }) {
-      ReviewPhotoBlock({
-        imageUri: this.item.document.imageUri,
-        imageWidth: this.item.document.imageWidth,
-        imageHeight: this.item.document.imageHeight,
-        imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
-        aspectRatioValue: 1,
-        compact: true,
-        fitMode: ImageFit.Cover,
-        cornerRadius: 9
-      })
-        .width(72)
+    Stack({ alignContent: Alignment.TopEnd }) {
+      Row({ space: AppMetrics.space12 }) {
+        ReviewPhotoBlock({
+          imageUri: this.item.document.imageUri,
+          imageWidth: this.item.document.imageWidth,
+          imageHeight: this.item.document.imageHeight,
+          imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
+          aspectRatioValue: 1,
+          compact: true,
+          fitMode: ImageFit.Cover,
+          cornerRadius: 8
+        })
+          .width(72)
 
-      Column({ space: 5 }) {
-        Row({ space: 8 }) {
+        Column({ space: AppMetrics.space8 }) {
           Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-            .fontSize(15)
+            .fontSize(AppTypography.body)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .layoutWeight(1)
+            .width('100%')
+            .padding({ right: 76 })
 
-          ReviewJudgementBadge({ value: this.item.document.content.judgement })
+          Text(getReviewProjectExcerpt(this.item.document))
+            .fontSize(AppTypography.auxiliary)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.auxiliaryLineHeight)
+            .width('100%')
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text(formatReviewTime(this.item.document.updatedAt))
+            .fontSize(AppTypography.caption)
+            .fontColor(AppColors.mutedText)
+            .width('100%')
         }
-        .alignItems(VerticalAlign.Center)
-        .width('100%')
-
-        Text(getReviewProjectExcerpt(this.item.document))
-          .fontSize(13)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(18)
-          .width('100%')
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-        Text(formatReviewTime(this.item.document.updatedAt))
-          .fontSize(12)
-          .fontColor(AppColors.mutedText)
-          .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
       }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
+      .alignItems(VerticalAlign.Center)
+      .padding(AppMetrics.space12)
+      .width('100%')
+      .constraintSize({ minHeight: 96 })
+
+      ReviewJudgementBadge({ value: this.item.document.content.judgement })
+        .margin({ top: AppMetrics.space12, right: AppMetrics.space12 })
     }
-    .alignItems(VerticalAlign.Center)
-    .padding({ left: 10, right: 10, top: 10, bottom: 10 })
     .width('100%')
-    .constraintSize({ minHeight: 92 })
-    .borderRadius(11)
+    .constraintSize({ minHeight: 96 })
+    .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
     .onClick(() => {
@@ -511,7 +538,7 @@ export struct ProjectReviewCard {
 
   build() {
     Stack({ alignContent: Alignment.TopEnd }) {
-      Row({ space: 10 }) {
+      Row({ space: AppMetrics.space12 }) {
         ReviewPhotoBlock({
           imageUri: this.item.document.imageUri,
           imageWidth: this.item.document.imageWidth,
@@ -524,26 +551,26 @@ export struct ProjectReviewCard {
         })
           .width(76)
 
-        Column({ space: 5 }) {
+        Column({ space: AppMetrics.space8 }) {
           Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-            .fontSize(15)
+            .fontSize(AppTypography.body)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .width('100%')
-            .padding({ right: 74 })
+            .padding({ right: 76 })
 
           Text(getReviewProjectExcerpt(this.item.document))
-            .fontSize(13)
+            .fontSize(AppTypography.auxiliary)
             .fontColor(AppColors.secondaryText)
-            .lineHeight(18)
+            .lineHeight(AppTypography.auxiliaryLineHeight)
             .width('100%')
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
 
           Text(formatReviewTime(this.item.document.updatedAt))
-            .fontSize(12)
+            .fontSize(AppTypography.caption)
             .fontColor(AppColors.mutedText)
             .width('100%')
         }
@@ -551,16 +578,16 @@ export struct ProjectReviewCard {
         .layoutWeight(1)
       }
       .alignItems(VerticalAlign.Center)
-      .padding({ left: 10, right: 10, top: 10, bottom: 10 })
+      .padding(AppMetrics.space12)
       .width('100%')
       .constraintSize({ minHeight: 96 })
 
       ReviewJudgementBadge({ value: this.item.document.content.judgement })
-        .margin({ top: 10, right: 10 })
+        .margin({ top: AppMetrics.space12, right: AppMetrics.space12 })
     }
     .width('100%')
     .constraintSize({ minHeight: 96 })
-    .borderRadius(11)
+    .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
     .onClick(() => {
@@ -590,11 +617,11 @@ export struct InfoBlockCard {
         .lineHeight(this.bodySize + 6)
         .maxLines(this.maxLines)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
-        .margin({ top: 8 })
+        .margin({ top: AppMetrics.space8 })
         .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
-    .padding(13)
+    .padding(AppMetrics.space12)
     .width('100%')
     .borderRadius(AppMetrics.panelRadius)
     .backgroundColor(AppColors.surfaceMuted)

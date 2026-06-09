@@ -1,4 +1,4 @@
-import { AppColors } from './AppDesign';
+import { AppColors, AppMetrics, AppTypography } from './AppDesign';
 import {
   getReviewJudgementIndex,
   normalizeReviewJudgement,
@@ -8,10 +8,10 @@ import {
 const REVIEW_TEXTAREA_LINE_HEIGHT: number = 28;
 const REVIEW_TEXTAREA_VERTICAL_PADDING: number = 28;
 const REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE: number = 14;
-const PRIMARY_FIELD_LABEL_SIZE: number = 16;
-const PRIMARY_FIELD_INPUT_SIZE: number = 16;
-const SECONDARY_FIELD_LABEL_SIZE: number = 14;
-const SECONDARY_FIELD_INPUT_SIZE: number = 15;
+const PRIMARY_FIELD_LABEL_SIZE: number = AppTypography.body;
+const PRIMARY_FIELD_INPUT_SIZE: number = AppTypography.body;
+const SECONDARY_FIELD_LABEL_SIZE: number = AppTypography.auxiliary;
+const SECONDARY_FIELD_INPUT_SIZE: number = AppTypography.body;
 
 function estimateVisualLineCount(value: string, defaultLines: number): number {
   if (value.length === 0) {
@@ -49,7 +49,7 @@ export struct ReviewInputForm {
 
   @Builder
   FieldLabel(label: string, labelSize: number = PRIMARY_FIELD_LABEL_SIZE) {
-    Column({ space: 6 }) {
+    Column({ space: AppMetrics.space8 }) {
       Text(label)
         .fontSize(labelSize)
         .fontWeight(FontWeight.Medium)
@@ -66,7 +66,7 @@ export struct ReviewInputForm {
 
   @Builder
   JudgementSelect() {
-    Column({ space: 10 }) {
+    Column({ space: AppMetrics.space12 }) {
       this.FieldLabel('是否成立', SECONDARY_FIELD_LABEL_SIZE)
       Select([
         { value: ReviewJudgementStatus.VALID },
@@ -77,7 +77,7 @@ export struct ReviewInputForm {
         .value(normalizeReviewJudgement(this.judgement))
         .height(48)
         .width('100%')
-        .borderRadius(10)
+        .borderRadius(AppMetrics.cardRadius)
         .font({ size: SECONDARY_FIELD_INPUT_SIZE, weight: FontWeight.Medium })
         .fontColor(AppColors.text)
         .selectedOptionFont({ size: SECONDARY_FIELD_INPUT_SIZE, weight: FontWeight.Medium })
@@ -85,7 +85,7 @@ export struct ReviewInputForm {
         .optionFont({ size: SECONDARY_FIELD_INPUT_SIZE })
         .optionFontColor(AppColors.secondaryText)
         .backgroundColor(AppColors.surfaceMuted)
-        .padding({ left: 16, right: 16 })
+        .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
         .border({ width: 1, color: AppColors.border })
         .onSelect((index: number, value: string) => {
           this.judgement = normalizeReviewJudgement(value);
@@ -105,17 +105,17 @@ export struct ReviewInputForm {
     inputSize: number,
     onChange: (value: string) => void
   ) {
-    Column({ space: 10 }) {
+    Column({ space: AppMetrics.space12 }) {
       this.FieldLabel(label, labelSize)
       TextArea({ text: value, placeholder: placeholder })
         .height(this.getTextAreaHeight(value, defaultLines))
-        .borderRadius(10)
+        .borderRadius(AppMetrics.cardRadius)
         .fontSize(inputSize)
         .lineHeight(REVIEW_TEXTAREA_LINE_HEIGHT)
         .fontColor(AppColors.text)
         .placeholderColor('#9AA1AB')
         .backgroundColor(AppColors.surfaceMuted)
-        .padding({ left: 16, right: 16, top: 14, bottom: 14 })
+        .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space16, bottom: AppMetrics.space16 })
         .border({ width: 1, color: AppColors.border })
         .onFocus(() => {
           this.onFieldFocus(fieldKey);
@@ -131,17 +131,17 @@ export struct ReviewInputForm {
   }
 
   build() {
-    Column({ space: 18 }) {
-      Column({ space: 10 }) {
+    Column({ space: AppMetrics.space16 }) {
+      Column({ space: AppMetrics.space12 }) {
         this.FieldLabel('标题', PRIMARY_FIELD_LABEL_SIZE)
         TextInput({ text: this.title, placeholder: '这张照片是否成立' })
           .height(48)
-          .borderRadius(10)
+          .borderRadius(AppMetrics.cardRadius)
           .fontSize(PRIMARY_FIELD_INPUT_SIZE)
           .fontColor(AppColors.text)
           .placeholderColor('#9AA1AB')
           .backgroundColor(AppColors.surfaceMuted)
-          .padding({ left: 16, right: 16 })
+          .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
           .border({ width: 1, color: AppColors.border })
           .onFocus(() => {
             this.onFieldFocus('title');

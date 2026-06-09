@@ -2,7 +2,7 @@ import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import { PREVIEW_PAGE } from '../app/AppRouter';
-import { AppColors, AppPageHeader, EmptyState, ProjectReviewCard } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState, ProjectReviewCard } from '../components/AppDesign';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
@@ -66,9 +66,9 @@ struct ProjectDetailPage {
   DeleteSwipeAction(document: ReviewCardDocument) {
     Button('删除')
       .height(64)
-      .width(76)
-      .borderRadius(8)
-      .fontSize(14)
+      .width(72)
+      .borderRadius(AppMetrics.cardRadius)
+      .fontSize(AppTypography.auxiliary)
       .fontWeight(FontWeight.Medium)
       .fontColor('#FFFFFF')
       .backgroundColor('#B73A31')
@@ -86,13 +86,13 @@ struct ProjectDetailPage {
         })
 
         Text(`${this.summary.recordCount} 条复盘记录`)
-          .fontSize(14)
+          .fontSize(AppTypography.auxiliary)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(22)
+          .lineHeight(AppTypography.auxiliaryLineHeight)
           .width('100%')
-          .margin({ top: 10 })
+          .margin({ top: AppMetrics.space12 })
       }
-      .padding({ left: 20, right: 20, top: 24, bottom: 0 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: 0 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
 
@@ -103,12 +103,12 @@ struct ProjectDetailPage {
             message: '请回到首页选择照片开始复盘'
           })
         }
-        .padding({ left: 20, right: 20, top: 18, bottom: 32 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
         .width('100%')
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
       } else {
-        List({ space: 8 }) {
+        List({ space: AppMetrics.space8 }) {
           ForEach(this.summary.items, (item: ReviewCardHistoryItem) => {
             ListItem() {
               ProjectReviewCard({
@@ -135,7 +135,7 @@ struct ProjectDetailPage {
         .width('100%')
         .edgeEffect(EdgeEffect.None)
         .scrollBar(BarState.Off)
-        .padding({ left: 20, right: 20, top: 18 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24 })
       }
     }
     .width('100%')

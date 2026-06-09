@@ -13,9 +13,9 @@ import {
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
-import { AppColors, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppTypography, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 
-const EDITOR_PAGE_HORIZONTAL_PADDING: number = 20;
+const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
 const EDITOR_VIEWPORT_FALLBACK_HEIGHT: number = 720;
 const EDITOR_FORM_BOTTOM_PADDING: number = 34;
@@ -24,10 +24,10 @@ const EDITOR_FIELD_SAFE_TOP_GAP: number = 12;
 const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 26;
 const EDITOR_KEYBOARD_SCROLL_DELAY: number = 220;
 const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 80;
-const EDITOR_PHOTO_TITLE_HEIGHT: number = 24;
+const EDITOR_PHOTO_TITLE_HEIGHT: number = AppTypography.level2LineHeight;
 const EDITOR_PHOTO_TITLE_GAP: number = 8;
 const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 8;
-const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 10;
+const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 16;
 const EDITOR_PHOTO_MIN_HEIGHT: number = 188;
 const EDITOR_PHOTO_MAX_HEIGHT: number = 300;
 const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.32;
@@ -435,10 +435,10 @@ struct EditorPage {
   PhotoHeader() {
     Column({ space: EDITOR_PHOTO_TITLE_GAP }) {
       Text('写复盘')
-        .fontSize(17)
+        .fontSize(AppTypography.level2)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
-        .lineHeight(24)
+        .lineHeight(AppTypography.level2LineHeight)
         .width('100%')
 
       PhotoWritingHero({
@@ -470,7 +470,7 @@ struct EditorPage {
       this.PhotoHeader()
 
       Scroll(this.editorScroller) {
-        Column({ space: 18 }) {
+        Column({ space: AppMetrics.space16 }) {
           ReviewInputForm({
             title: $title,
             visualFocus: $visualFocus,
@@ -492,8 +492,8 @@ struct EditorPage {
           this.SaveActionSection()
         }
         .padding({
-          left: 20,
-          right: 20,
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
           top: 0,
           bottom: this.getEditorBottomPadding()
         })
