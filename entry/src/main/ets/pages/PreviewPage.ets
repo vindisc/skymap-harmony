@@ -19,6 +19,7 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
+import { ReviewCardReviewFileService, ReviewCardReviewFileExportResult } from '../services/ReviewCardReviewFileService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
@@ -35,6 +36,7 @@ enum PreviewSaveState {
 struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State isExporting: boolean = false;
+  @State isExportingReviewFile: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
 
@@ -135,6 +137,25 @@ struct PreviewPage {
     }
   }
 
+  private async exportReviewFile(): Promise<void> {
+    if (this.isExportingReviewFile) {
+      return;
+    }
+
+    this.isExportingReviewFile = true;
+    try {
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+      const result: ReviewCardReviewFileExportResult = await ReviewCardReviewFileService.exportReviewJson(
+        this.getAbilityContext(),
+        this.document,
+        reviewerName
+      );
+      promptAction.showToast({ message: result.message });
+    } finally {
+      this.isExportingReviewFile = false;
+    }
+  }
+
   private async waitForExportLayout(): Promise<void> {
     return new Promise<void>((resolve: () => void) => {
       setTimeout(() => {
@@ -193,29 +214,39 @@ struct PreviewPage {
   @Builder
   ReadingPage() {
     Column() {
-      Row() {
+      Column() {
         Text('复盘记录')
           .fontSize(AppTypography.level2)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
           .lineHeight(AppTypography.level2LineHeight)
+          .width('100%')
 
-        Blank()
-
-        Row({ space: AppMetrics.space8 }) {
-          this.ActionButton('编辑', false, () => {
-            router.replaceUrl({ url: EDITOR_PAGE });
-          })
-          this.ActionButton('复制复盘数据', false, () => {
-            this.copyReviewData();
-          })
-          this.ActionButton(this.isExporting ? '导出中' : '导出', true, () => {
-            this.exportImage();
-          })
+        Scroll() {
+          Row({ space: AppMetrics.space8 }) {
+            this.ActionButton('编辑', false, () => {
+              router.replaceUrl({ url: EDITOR_PAGE });
+            })
+            this.ActionButton('复制复盘数据', false, () => {
+              this.copyReviewData();
+            })
+            this.ActionButton(this.isExporting ? '导出中' : '导出图片', true, () => {
+              this.exportImage();
+            })
+            this.ActionButton(this.isExportingReviewFile ? '导出中' : '导出复盘文件', false, () => {
+              this.exportReviewFile();
+            })
+          }
+          .height(32)
         }
-        .opacity(this.isExporting ? 0.8 : 1)
+        .scrollable(ScrollDirection.Horizontal)
+        .scrollBar(BarState.Off)
+        .width('100%')
+        .height(32)
+        .margin({ top: AppMetrics.space8 })
+        .opacity((this.isExporting || this.isExportingReviewFile) ? 0.8 : 1)
       }
-      .alignItems(VerticalAlign.Center)
+      .alignItems(HorizontalAlign.Start)
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space12, bottom: AppMetrics.space4 })
       .width('100%')
 

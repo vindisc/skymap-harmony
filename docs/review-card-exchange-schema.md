@@ -1,12 +1,12 @@
 # ReviewCardExchangeSchema v1
 
-`ReviewCardExchangeSchema v1` 用于在 HarmonyOS 手机端、Mac 端边框 App 和 GPT 交流之间传递一次摄影复盘的结构化字段。本协议只描述复盘字段 JSON，不包含云同步、文件导入导出、二维码、账号或导出图片版式。
+`ReviewCardExchangeSchema v1` 用于在 HarmonyOS 手机端、Mac 端边框 App 和 GPT 交流之间传递一次摄影复盘的结构化字段。本协议只描述复盘字段 JSON，不包含云同步、二维码、账号或导出图片版式。
 
 ## 使用场景
 
 1. 白天在 HarmonyOS 手机端完成摄影复盘。
-2. 在阅读页点击「复制复盘数据」，复制 pretty print JSON，并只显示 Toast「已复制复盘数据」。
-3. 晚上粘贴到 Mac 端边框 App 继续排版导出，或直接发给 GPT 交流。
+2. 在阅读页点击「复制复盘数据」复制 pretty print JSON，或点击「导出复盘文件」保存 `*.review.json`。
+3. 晚上在 Mac 端边框 App 粘贴或导入 JSON，继续排版导出，或直接发给 GPT 交流。
 
 ## 字段定义
 
@@ -48,7 +48,7 @@ JSON 协议不直接输出中文状态；手机端 UI 仍保留中文显示。
 - `decision` 必须经过 `normalizeReviewJudgement` 后再映射，兼容旧记录中的「待判断」和「不确定」。
 - 空字段保留 key，值为空字符串。
 - JSON 使用 `JSON.stringify(value, null, 2)` pretty print。
-- 复制内容不包含导出路径、页面状态、Toast 文案或 UI 按钮文案。
+- 复制内容和导出文件内容一致，不包含导出路径、页面状态、Toast 文案或 UI 按钮文案。
 
 ## 示例 JSON
 

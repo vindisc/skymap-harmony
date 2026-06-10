@@ -226,6 +226,94 @@ function createReviewCardExchangeSchemaV1(document, reviewerText = '') {
   };
 }
 
+function removeLastFileExtension(fileName) {
+  const dotIndex = fileName.lastIndexOf('.');
+  return dotIndex > 0 ? fileName.slice(0, dotIndex) : fileName;
+}
+
+function sanitizeReviewJsonBaseName(fileName) {
+  return removeLastFileExtension(fileName).trim().replace(/[\\/:*?"<>|\r\n\t]+/g, '-').trim();
+}
+
+function resolveReviewCardExchangeReviewJsonFileName(document) {
+  const sourceFileName = sanitizeReviewJsonBaseName(resolveFileName(document));
+  if (sourceFileName.length > 0) {
+    return `${sourceFileName}.review.json`;
+  }
+
+  const timestamp = document.updatedAt > 0 ? document.updatedAt : Date.now();
+  return `review-${timestamp}.json`;
+}
+
+function normalizeExchangeSchema(source) {
+  const schema = source || {};
+  return {
+    fileName: normalizeText(schema.fileName),
+    titleText: normalizeText(schema.titleText),
+    reviewTimeText: normalizeText(schema.reviewTimeText),
+    reviewerText: normalizeText(schema.reviewerText),
+    reviewStructure: normalizeText(schema.reviewStructure),
+    decision: normalizeText(schema.decision),
+    firstLookText: normalizeText(schema.firstLookText),
+    attentionReasonText: normalizeText(schema.attentionReasonText),
+    eyePathText: normalizeText(schema.eyePathText),
+    visualFactText: normalizeText(schema.visualFactText),
+    strongestRelationText: normalizeText(schema.strongestRelationText),
+    extensionReasonText: normalizeText(schema.extensionReasonText),
+    blockerText: normalizeText(schema.blockerText)
+  };
+}
+
+function parseReviewCardExchangeSchemaV1(jsonText) {
+  return normalizeExchangeSchema(JSON.parse(jsonText));
+}
+
+function mapExchangeDecisionToReviewJudgement(value) {
+  if (value === 'works') {
+    return REVIEW_JUDGEMENT.VALID;
+  }
+  if (value === 'notWorks') {
+    return REVIEW_JUDGEMENT.INVALID;
+  }
+  return REVIEW_JUDGEMENT.UNSURE;
+}
+
+function parseReviewTimeText(value) {
+  const sections = normalizeText(value).trim().split(' ');
+  if (sections.length !== 2) {
+    return 0;
+  }
+  const dateParts = sections[0].split('-').map(Number);
+  const timeParts = sections[1].split(':').map(Number);
+  if (dateParts.length !== 3 || timeParts.length !== 2) {
+    return 0;
+  }
+  const [year, month, day] = dateParts;
+  const [hour, minute] = timeParts;
+  if (year <= 0 || month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return 0;
+  }
+  const timestamp = new Date(year, month - 1, day, hour, minute, 0, 0).getTime();
+  return timestamp > 0 ? timestamp : 0;
+}
+
+function createReviewCardDocumentFromExchangeSchemaV1(schema, baseDocument = undefined) {
+  const normalizedSchema = normalizeExchangeSchema(schema);
+  const next = baseDocument ? cloneReviewCardDocument(baseDocument) : createDefaultDocument();
+  const importedReviewTime = parseReviewTimeText(normalizedSchema.reviewTimeText);
+  next.content.title = normalizedSchema.titleText.length > 0 ? normalizedSchema.titleText : '这张照片是否成立';
+  next.content.visualFocus = normalizedSchema.firstLookText;
+  next.content.focusReason = normalizedSchema.attentionReasonText;
+  next.content.visualPath = normalizedSchema.eyePathText;
+  next.content.visibleFacts = normalizedSchema.visualFactText;
+  next.content.coreRelation = normalizedSchema.strongestRelationText;
+  next.content.judgement = mapExchangeDecisionToReviewJudgement(normalizedSchema.decision);
+  next.content.extendedUnderstanding = normalizedSchema.extensionReasonText;
+  next.content.currentBlocker = normalizedSchema.blockerText;
+  next.updatedAt = importedReviewTime > 0 ? importedReviewTime : Date.now();
+  return cloneReviewCardDocument(next);
+}
+
 function buildGlobalStats(items) {
   const stats = {
     totalCount: items.length,
@@ -337,6 +425,8 @@ assert(exchangeSchemaSource.includes("WORKS = 'works'"), 'exchange decision enum
 assert(exchangeSchemaSource.includes("UNCERTAIN = 'uncertain'"), 'exchange decision enum missing uncertain');
 assert(exchangeSchemaSource.includes("NOT_WORKS = 'notWorks'"), 'exchange decision enum missing notWorks');
 assert(exchangeSchemaSource.includes('reviewerText: normalizeExchangeText(reviewerText).trim()'), 'reviewerText should come from saved reviewer text and be trimmed');
+assert(exchangeSchemaSource.includes('resolveReviewCardExchangeReviewJsonFileName'), 'review JSON export file name resolver is missing');
+assert(exchangeSchemaSource.includes('createReviewCardDocumentFromExchangeSchemaV1'), 'review JSON import mapping helper is missing');
 assert(historyServiceSource.includes('const MAX_HISTORY_COUNT: number = 200;'), 'MAX_HISTORY_COUNT should support long-term review accumulation at 200 records');
 
 assert(mapReviewJudgementToExchangeDecision('成立') === 'works', '成立 should map to works');
@@ -348,23 +438,48 @@ sparseDocument.imageUri = 'file:///photos/DSC%2001.jpg?size=large';
 sparseDocument.updatedAt = Date.UTC(2026, 5, 7, 13, 8);
 sparseDocument.content = {
   title: '测试复盘',
-  visualFocus: '主体',
-  focusReason: '',
-  visualPath: '',
-  visibleFacts: '',
-  coreRelation: '',
-  judgement: '待判断',
-  extendedUnderstanding: '',
-  currentBlocker: ''
+  visualFocus: '视觉落点',
+  focusReason: '落点原因',
+  visualPath: '视线路径',
+  visibleFacts: '画面事实',
+  coreRelation: '核心关系',
+  judgement: '成立',
+  extendedUnderstanding: '延伸理解',
+  currentBlocker: '当前卡点'
 };
 
 const schema = createReviewCardExchangeSchemaV1(sparseDocument, '  Bo  ');
 assert(JSON.stringify(Object.keys(schema)) === JSON.stringify(REVIEW_SCHEMA_KEYS), 'exchange schema keys changed or missing');
 assert(schema.fileName === 'DSC 01.jpg', `fileName should decode URI file name, got ${schema.fileName}`);
 assert(schema.reviewerText === 'Bo', `reviewerText should be trimmed, got ${schema.reviewerText}`);
-assert(schema.decision === 'uncertain', `decision should be uncertain, got ${schema.decision}`);
-assert(schema.attentionReasonText === '', 'empty attentionReasonText key should be retained');
-assert(schema.blockerText === '', 'empty blockerText key should be retained');
+assert(schema.decision === 'works', `decision should be works, got ${schema.decision}`);
+assert(schema.firstLookText === sparseDocument.content.visualFocus, 'firstLookText should match current document visualFocus');
+assert(schema.attentionReasonText === sparseDocument.content.focusReason, 'attentionReasonText should match current document focusReason');
+assert(schema.eyePathText === sparseDocument.content.visualPath, 'eyePathText should match current document visualPath');
+assert(schema.visualFactText === sparseDocument.content.visibleFacts, 'visualFactText should match current document visibleFacts');
+assert(schema.strongestRelationText === sparseDocument.content.coreRelation, 'strongestRelationText should match current document coreRelation');
+assert(schema.extensionReasonText === sparseDocument.content.extendedUnderstanding, 'extensionReasonText should match current document extendedUnderstanding');
+assert(schema.blockerText === sparseDocument.content.currentBlocker, 'blockerText should match current document currentBlocker');
+assert(resolveReviewCardExchangeReviewJsonFileName(sparseDocument) === 'DSC 01.review.json', 'review JSON file name should remove the photo extension');
+
+const fallbackFileNameDocument = createDefaultDocument();
+fallbackFileNameDocument.updatedAt = 1234567890;
+assert(resolveReviewCardExchangeReviewJsonFileName(fallbackFileNameDocument) === 'review-1234567890.json', 'empty source file name should fall back to review timestamp JSON name');
+
+const parsedSchema = parseReviewCardExchangeSchemaV1(JSON.stringify(schema, null, 2));
+const importedDocument = createReviewCardDocumentFromExchangeSchemaV1(parsedSchema);
+assert(parsedSchema.reviewerText === 'Bo', 'import parser should preserve reviewerText for Mac-side model fill');
+assert(parsedSchema.reviewTimeText === schema.reviewTimeText, 'import parser should preserve reviewTimeText for Mac-side model fill');
+assert(importedDocument.content.title === sparseDocument.content.title, 'import should recover title');
+assert(importedDocument.content.visualFocus === sparseDocument.content.visualFocus, 'import should recover visual focus');
+assert(importedDocument.content.focusReason === sparseDocument.content.focusReason, 'import should recover focus reason');
+assert(importedDocument.content.visualPath === sparseDocument.content.visualPath, 'import should recover visual path');
+assert(importedDocument.content.visibleFacts === sparseDocument.content.visibleFacts, 'import should recover visual facts');
+assert(importedDocument.content.coreRelation === sparseDocument.content.coreRelation, 'import should recover core relation');
+assert(importedDocument.content.judgement === REVIEW_JUDGEMENT.VALID, 'import should recover judgement from decision');
+assert(importedDocument.content.extendedUnderstanding === sparseDocument.content.extendedUnderstanding, 'import should recover extended understanding');
+assert(importedDocument.content.currentBlocker === sparseDocument.content.currentBlocker, 'import should recover current blocker');
+assert(formatReviewTime(importedDocument.updatedAt) === schema.reviewTimeText, 'import should recover review time into updatedAt');
 
 const statsItems = [
   ['default', '成立'],
