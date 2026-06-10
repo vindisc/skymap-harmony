@@ -9,7 +9,7 @@ import {
 
 const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
-const MAX_HISTORY_COUNT: number = 20;
+const MAX_HISTORY_COUNT: number = 200;
 
 function createHistoryItem(document: ReviewCardDocument, exportedPath: string = ''): ReviewCardHistoryItem {
   return {
@@ -111,8 +111,9 @@ export class ReviewCardHistoryService {
       nextItems.unshift(createHistoryItem(document, exportedPath));
     }
 
-    await ReviewCardHistoryService.persist(context, nextItems.slice(0, MAX_HISTORY_COUNT));
-    return nextItems;
+    const persistedItems: Array<ReviewCardHistoryItem> = nextItems.slice(0, MAX_HISTORY_COUNT);
+    await ReviewCardHistoryService.persist(context, persistedItems);
+    return persistedItems;
   }
 
   static async deleteDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {

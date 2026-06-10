@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+
 const HORIZONTAL_ASPECT_RATIO = 1.15;
 const VERTICAL_ASPECT_RATIO = 0.87;
 
@@ -64,6 +66,11 @@ function resolveExportCanvasWidth() {
 }
 
 let failed = false;
+const exportServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardExportService.ets', 'utf8');
+if (!exportServiceSource.includes('waitForSnapshotLayerRemoval')) {
+  failed = true;
+  console.error('ReviewCardExportService should wait for the hidden snapshot layer to be removed before showing the system save dialog.');
+}
 for (const testCase of cases) {
   const result = resolveReviewImageLayout(testCase.width, testCase.height, testCase.fallbackUsed === true);
   const ratioMatches = Math.abs(result.aspectRatio - testCase.expectedRatio) < 0.0001;

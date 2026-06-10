@@ -34,6 +34,17 @@ if (!homePageSource.includes('this.totalReviewCount = nextOverviewStats.totalCou
   console.error('HomePage must assign totalReviewCount directly from loaded stats.');
 }
 
+if (!homePageSource.includes('ReviewCardHistoryService.load(this.getAbilityContext())')) {
+  failed = true;
+  console.error('HomePage must load history through ReviewCardHistoryService.load.');
+}
+
+if (!homePageSource.includes('ReviewProjectService.buildDefaultProjectSummary(items)') ||
+  !homePageSource.includes('ReviewProjectService.buildGlobalStats(items)')) {
+  failed = true;
+  console.error('HomePage must derive project card and overview stats from the same loaded history items.');
+}
+
 const requiredOverviewBindings = [
   "HomeOverviewStatCard({ label: '总复盘', value: this.totalReviewCount })",
   "HomeOverviewStatCard({ label: '成立', value: this.validReviewCount })",
@@ -100,6 +111,18 @@ function buildGlobalStats(items) {
   return stats;
 }
 
+function buildDefaultProjectSummary(items) {
+  const projectItems = items.filter((item) => {
+    return !item.document.projectId || item.document.projectId === 'default';
+  });
+
+  return {
+    recordCount: projectItems.length,
+    stats: buildGlobalStats(projectItems),
+    latestItem: projectItems[0]
+  };
+}
+
 const twelveReviewItems = [
   '成立',
   '成立',
@@ -128,6 +151,7 @@ const twelveReviewItems = [
 });
 
 const stats = buildGlobalStats(twelveReviewItems);
+const defaultProjectSummary = buildDefaultProjectSummary(twelveReviewItems);
 const statusSum = stats.validCount + stats.unsureCount + stats.invalidCount;
 if (stats.totalCount !== 12) {
   failed = true;
@@ -140,6 +164,10 @@ if (statusSum !== stats.totalCount) {
 if (stats.validCount !== 4 || stats.unsureCount !== 5 || stats.invalidCount !== 3) {
   failed = true;
   console.error(`Unexpected status split: ${JSON.stringify(stats)}`);
+}
+if (defaultProjectSummary.recordCount !== stats.totalCount) {
+  failed = true;
+  console.error(`Expected default project count to match home total in single-project mode, got ${defaultProjectSummary.recordCount}/${stats.totalCount}`);
 }
 
 if (failed) {

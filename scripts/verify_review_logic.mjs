@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+
 const REVIEW_JUDGEMENT = {
   VALID: '成立',
   UNSURE: '不确定',
@@ -30,6 +32,32 @@ function assert(condition, message) {
     failed = true;
     console.error(message);
   }
+}
+
+function readText(path) {
+  return fs.readFileSync(path, 'utf8');
+}
+
+function parseExchangeInterfaceKeys(source) {
+  const match = source.match(/export interface ReviewCardExchangeSchemaV1\s*\{([\s\S]*?)\n\}/);
+  if (!match) {
+    return [];
+  }
+  return match[1]
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => line.split(':')[0].trim());
+}
+
+function parseExchangeDocKeys(markdown) {
+  return markdown
+    .split('\n')
+    .map((line) => {
+      const match = line.match(/^\| `([^`]+)` \|/);
+      return match ? match[1] : '';
+    })
+    .filter((key) => key.length > 0);
 }
 
 function normalizeReviewJudgement(value) {
@@ -297,6 +325,19 @@ const judgementCases = [
 judgementCases.forEach(([input, expected]) => {
   assert(normalizeReviewJudgement(input) === expected, `normalizeReviewJudgement(${input}) should be ${expected}`);
 });
+
+const exchangeSchemaSource = readText('entry/src/main/ets/services/ReviewCardExchangeSchema.ets');
+const exchangeSchemaDoc = readText('docs/review-card-exchange-schema.md');
+const historyServiceSource = readText('entry/src/main/ets/services/ReviewCardHistoryService.ets');
+const sourceSchemaKeys = parseExchangeInterfaceKeys(exchangeSchemaSource);
+const docSchemaKeys = parseExchangeDocKeys(exchangeSchemaDoc);
+assert(JSON.stringify(sourceSchemaKeys) === JSON.stringify(REVIEW_SCHEMA_KEYS), 'ReviewCardExchangeSchemaV1 interface keys differ from expected v1 keys');
+assert(JSON.stringify(docSchemaKeys) === JSON.stringify(REVIEW_SCHEMA_KEYS), 'review-card-exchange-schema.md field table differs from expected v1 keys');
+assert(exchangeSchemaSource.includes("WORKS = 'works'"), 'exchange decision enum missing works');
+assert(exchangeSchemaSource.includes("UNCERTAIN = 'uncertain'"), 'exchange decision enum missing uncertain');
+assert(exchangeSchemaSource.includes("NOT_WORKS = 'notWorks'"), 'exchange decision enum missing notWorks');
+assert(exchangeSchemaSource.includes('reviewerText: normalizeExchangeText(reviewerText).trim()'), 'reviewerText should come from saved reviewer text and be trimmed');
+assert(historyServiceSource.includes('const MAX_HISTORY_COUNT: number = 200;'), 'MAX_HISTORY_COUNT should support long-term review accumulation at 200 records');
 
 assert(mapReviewJudgementToExchangeDecision('成立') === 'works', '成立 should map to works');
 assert(mapReviewJudgementToExchangeDecision('待判断') === 'uncertain', '待判断 should map to uncertain');

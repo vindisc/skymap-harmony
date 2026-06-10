@@ -51,6 +51,14 @@ function copySandboxFileToMediaUri(sourcePath: string, mediaUri: string): void {
   }
 }
 
+async function waitForSnapshotLayerRemoval(): Promise<void> {
+  return new Promise<void>((resolve: () => void) => {
+    setTimeout(() => {
+      resolve();
+    }, 120);
+  });
+}
+
 async function saveJpgToPhotoLibrary(context: common.UIAbilityContext, outputPath: string, title: string): Promise<string> {
   const helper = photoAccessHelper.getPhotoAccessHelper(context);
   try {
@@ -113,6 +121,7 @@ export class ReviewCardExportService {
         onSnapshotReady();
       } catch (error) {
       }
+      await waitForSnapshotLayerRemoval();
       const mediaUri = await saveJpgToPhotoLibrary(context, backupPath, title);
 
       return {

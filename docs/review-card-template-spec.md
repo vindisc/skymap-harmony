@@ -76,7 +76,7 @@
 
 ## 4. 本地记录
 
-当前版本使用 `@ohos.data.preferences` 保存最近复盘记录，最多保留 20 条。记录内容直接序列化 `ReviewCardDocument`，并额外记录导出文件路径。
+当前版本使用 `@ohos.data.preferences` 保存最近复盘记录，最多保留 200 条。记录内容直接序列化 `ReviewCardDocument`，并额外记录导出文件路径。200 条用于支撑默认项目的长期回看沉淀，同时仍保持 preferences 存储体量可控；后续若进入多项目或大量图片元数据阶段，再迁移到数据库。
 
 保存时机：
 
