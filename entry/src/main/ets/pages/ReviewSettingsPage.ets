@@ -1,7 +1,12 @@
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import { AppColors, AppMetrics, AppTypography, PrimaryButton } from '../components/AppDesign';
-import { HomeStorageOperationResult, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
+import {
+  HomeStorageOperationResult,
+  HomeStorageProtocol,
+  HomeStorageService,
+  HomeStorageSettings
+} from '../services/HomeStorageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
 @Entry
@@ -9,6 +14,7 @@ import { ReviewSettingsService } from '../services/ReviewSettingsService';
 struct ReviewSettingsPage {
   private loadRequestId: number = 0;
   @State reviewerName: string = '';
+  @State homeStorageProtocol: string = HomeStorageProtocol.WEBDAV;
   @State homeStorageEndpointUrl: string = '';
   @State homeStorageUsername: string = '';
   @State homeStoragePassword: string = '';
@@ -33,6 +39,7 @@ struct ReviewSettingsPage {
       return;
     }
     this.reviewerName = reviewerName;
+    this.homeStorageProtocol = homeStorageSettings.protocol;
     this.homeStorageEndpointUrl = homeStorageSettings.endpointUrl;
     this.homeStorageUsername = homeStorageSettings.username;
     this.homeStoragePassword = homeStorageSettings.password;
@@ -41,6 +48,7 @@ struct ReviewSettingsPage {
 
   private currentHomeStorageSettings(): HomeStorageSettings {
     return {
+      protocol: this.homeStorageProtocol,
       endpointUrl: this.homeStorageEndpointUrl,
       username: this.homeStorageUsername,
       password: this.homeStoragePassword,
@@ -60,6 +68,7 @@ struct ReviewSettingsPage {
         this.getAbilityContext(),
         this.currentHomeStorageSettings()
       );
+      this.homeStorageProtocol = homeStorageSettings.protocol;
       this.homeStorageEndpointUrl = homeStorageSettings.endpointUrl;
       this.homeStorageUsername = homeStorageSettings.username;
       this.homeStoragePassword = homeStorageSettings.password;
@@ -70,6 +79,10 @@ struct ReviewSettingsPage {
     } finally {
       this.isSaving = false;
     }
+  }
+
+  private isHomeStorageProtocol(protocol: HomeStorageProtocol): boolean {
+    return this.homeStorageProtocol === protocol;
   }
 
   private async testHomeStorage(): Promise<void> {
@@ -159,6 +172,23 @@ struct ReviewSettingsPage {
       })
   }
 
+  @Builder
+  ProtocolButton(label: string, protocol: HomeStorageProtocol) {
+    Button(label)
+      .height(40)
+      .layoutWeight(1)
+      .borderRadius(AppMetrics.cardRadius)
+      .fontSize(AppTypography.auxiliary)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(this.isHomeStorageProtocol(protocol) ? '#FFFFFF' : AppColors.text)
+      .backgroundColor(this.isHomeStorageProtocol(protocol) ? AppColors.primary : AppColors.surfaceMuted)
+      .border({ width: 1, color: this.isHomeStorageProtocol(protocol) ? AppColors.primary : AppColors.border })
+      .stateEffect(true)
+      .onClick(() => {
+        this.homeStorageProtocol = protocol;
+      })
+  }
+
   build() {
     Column() {
       this.Header()
@@ -170,27 +200,43 @@ struct ReviewSettingsPage {
           })
 
           Column({ space: AppMetrics.space12 }) {
-            Text('家庭存储 WebDAV')
+            Text('家庭存储')
               .fontSize(AppTypography.body)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.text)
               .width('100%')
 
-            this.SettingsInput('WebDAV 地址', this.homeStorageEndpointUrl, 'https://nas.example.com/webdav', (value: string) => {
-              this.homeStorageEndpointUrl = value;
-            })
+            Row({ space: AppMetrics.space8 }) {
+              this.ProtocolButton('WebDAV', HomeStorageProtocol.WEBDAV)
+              this.ProtocolButton('SMB', HomeStorageProtocol.SMB_SYSTEM_PICKER)
+            }
+            .width('100%')
 
-            this.SettingsInput('用户名', this.homeStorageUsername, '可留空', (value: string) => {
-              this.homeStorageUsername = value;
-            })
+            if (this.isHomeStorageProtocol(HomeStorageProtocol.WEBDAV)) {
+              this.SettingsInput('WebDAV 地址', this.homeStorageEndpointUrl, 'https://nas.example.com/webdav', (value: string) => {
+                this.homeStorageEndpointUrl = value;
+              })
 
-            this.SettingsInput('密码或 Token', this.homeStoragePassword, '建议使用专用应用密码', (value: string) => {
-              this.homeStoragePassword = value;
-            }, true)
+              this.SettingsInput('用户名', this.homeStorageUsername, '可留空', (value: string) => {
+                this.homeStorageUsername = value;
+              })
 
-            this.SettingsInput('远程目录', this.homeStorageRemoteDirectory, '摄影资料库/Reviews', (value: string) => {
-              this.homeStorageRemoteDirectory = value;
-            })
+              this.SettingsInput('密码或 Token', this.homeStoragePassword, '建议使用专用应用密码', (value: string) => {
+                this.homeStoragePassword = value;
+              }, true)
+
+              this.SettingsInput('远程目录', this.homeStorageRemoteDirectory, '摄影资料库/Reviews', (value: string) => {
+                this.homeStorageRemoteDirectory = value;
+              })
+            }
+
+            if (this.isHomeStorageProtocol(HomeStorageProtocol.SMB_SYSTEM_PICKER)) {
+              Text('上传时选择系统文件中的 SMB 共享目录')
+                .fontSize(AppTypography.auxiliary)
+                .fontColor(AppColors.secondaryText)
+                .lineHeight(AppTypography.auxiliaryLineHeight)
+                .width('100%')
+            }
           }
           .alignItems(HorizontalAlign.Start)
           .width('100%')

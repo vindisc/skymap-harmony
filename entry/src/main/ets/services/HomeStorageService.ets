@@ -6,8 +6,10 @@ import {
   resolveReviewCardExchangeReviewJsonFileName,
   stringifyReviewCardExchangeSchemaV1
 } from './ReviewCardExchangeSchema';
+import { ReviewCardReviewFileExportResult, ReviewCardReviewFileService } from './ReviewCardReviewFileService';
 
 const PREFERENCES_NAME: string = 'home_storage_settings';
+const PROTOCOL_KEY: string = 'protocol';
 const ENDPOINT_URL_KEY: string = 'endpoint_url';
 const USERNAME_KEY: string = 'username';
 const PASSWORD_KEY: string = 'password';
@@ -16,7 +18,13 @@ const DEFAULT_REMOTE_DIRECTORY: string = '摄影资料库/Reviews';
 const REQUEST_TIMEOUT_MS: number = 20000;
 const BASE64_ALPHABET: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
+export enum HomeStorageProtocol {
+  WEBDAV = 'webdav',
+  SMB_SYSTEM_PICKER = 'smbSystemPicker'
+}
+
 export interface HomeStorageSettings {
+  protocol: string;
   endpointUrl: string;
   username: string;
   password: string;
@@ -36,6 +44,13 @@ function normalizeText(value: string | undefined): string {
   return '';
 }
 
+function normalizeProtocol(value: string | undefined): HomeStorageProtocol {
+  if (value === HomeStorageProtocol.SMB_SYSTEM_PICKER) {
+    return HomeStorageProtocol.SMB_SYSTEM_PICKER;
+  }
+  return HomeStorageProtocol.WEBDAV;
+}
+
 function normalizeEndpointUrl(value: string | undefined): string {
   const trimmed: string = normalizeText(value);
   return trimmed.replace(/\/+$/g, '');
@@ -52,6 +67,7 @@ function normalizeRemoteDirectory(value: string | undefined): string {
 function normalizeSettings(settings: HomeStorageSettings | undefined): HomeStorageSettings {
   const source: HomeStorageSettings = settings ? settings : {} as HomeStorageSettings;
   return {
+    protocol: normalizeProtocol(source.protocol),
     endpointUrl: normalizeEndpointUrl(source.endpointUrl),
     username: normalizeText(source.username),
     password: normalizeText(source.password),
@@ -188,6 +204,7 @@ export class HomeStorageService {
 
   static defaultSettings(): HomeStorageSettings {
     return {
+      protocol: HomeStorageProtocol.WEBDAV,
       endpointUrl: '',
       username: '',
       password: '',
@@ -198,11 +215,13 @@ export class HomeStorageService {
   static async loadSettings(context: common.UIAbilityContext): Promise<HomeStorageSettings> {
     try {
       const store = await HomeStorageService.getStore(context);
+      const protocol = await store.get(PROTOCOL_KEY, HomeStorageProtocol.WEBDAV);
       const endpointUrl = await store.get(ENDPOINT_URL_KEY, '');
       const username = await store.get(USERNAME_KEY, '');
       const password = await store.get(PASSWORD_KEY, '');
       const remoteDirectory = await store.get(REMOTE_DIRECTORY_KEY, DEFAULT_REMOTE_DIRECTORY);
       return normalizeSettings({
+        protocol: typeof protocol === 'string' ? protocol : HomeStorageProtocol.WEBDAV,
         endpointUrl: typeof endpointUrl === 'string' ? endpointUrl : '',
         username: typeof username === 'string' ? username : '',
         password: typeof password === 'string' ? password : '',
@@ -219,6 +238,7 @@ export class HomeStorageService {
   ): Promise<HomeStorageSettings> {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
     const store = await HomeStorageService.getStore(context);
+    await store.put(PROTOCOL_KEY, normalized.protocol);
     await store.put(ENDPOINT_URL_KEY, normalized.endpointUrl);
     await store.put(USERNAME_KEY, normalized.username);
     await store.put(PASSWORD_KEY, normalized.password);
@@ -229,6 +249,9 @@ export class HomeStorageService {
 
   static validateSettings(settings: HomeStorageSettings): string {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
+    if (normalized.protocol === HomeStorageProtocol.SMB_SYSTEM_PICKER) {
+      return '';
+    }
     if (normalized.endpointUrl.length === 0) {
       return '请先填写 WebDAV 地址';
     }
@@ -240,6 +263,14 @@ export class HomeStorageService {
 
   static async testConnection(settings: HomeStorageSettings): Promise<HomeStorageOperationResult> {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
+    if (normalized.protocol === HomeStorageProtocol.SMB_SYSTEM_PICKER) {
+      return {
+        success: true,
+        remotePath: '',
+        message: 'SMB 将在上传时打开系统保存面板'
+      };
+    }
+
     const validationMessage: string = HomeStorageService.validateSettings(normalized);
     if (validationMessage.length > 0) {
       return {
@@ -273,6 +304,19 @@ export class HomeStorageService {
     reviewerText: string = ''
   ): Promise<HomeStorageOperationResult> {
     const settings: HomeStorageSettings = await HomeStorageService.loadSettings(context);
+    if (settings.protocol === HomeStorageProtocol.SMB_SYSTEM_PICKER) {
+      const result: ReviewCardReviewFileExportResult = await ReviewCardReviewFileService.exportReviewJson(
+        context,
+        document,
+        reviewerText
+      );
+      return {
+        success: result.success,
+        remotePath: result.path,
+        message: result.success ? '已保存到家庭存储' : result.message
+      };
+    }
+
     const validationMessage: string = HomeStorageService.validateSettings(settings);
     if (validationMessage.length > 0) {
       return {
