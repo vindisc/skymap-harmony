@@ -200,18 +200,24 @@ struct PreviewPage {
     return resolveLongFormExportCardHeight(this.document, this.getExportCanvasWidth());
   }
 
+  private isActionBusy(): boolean {
+    return this.isExporting || this.isExportingReviewFile || this.isUploadingHomeStorage;
+  }
+
   @Builder
-  ActionButton(label: string, emphasized: boolean, onTap: () => void) {
+  ActionButton(label: string, emphasized: boolean, isDisabled: boolean, onTap: () => void) {
     Button(label)
       .height(28)
       .padding({ left: emphasized ? AppMetrics.space12 : AppMetrics.space8, right: emphasized ? AppMetrics.space12 : AppMetrics.space8 })
       .borderRadius(AppMetrics.capsuleRadius)
       .fontSize(AppTypography.caption)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
-      .fontColor(emphasized ? AppColors.text : AppColors.secondaryText)
+      .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.text : AppColors.secondaryText))
       .backgroundColor('#00000000')
-      .border(emphasized ? { width: 1, color: AppColors.border } : { width: 0 })
-      .stateEffect(true)
+      .border(emphasized ? { width: 1, color: isDisabled ? '#E4E7EC' : AppColors.border } : { width: 0 })
+      .opacity(isDisabled ? 0.52 : 1)
+      .stateEffect(!isDisabled)
+      .enabled(!isDisabled)
       .onClick(() => {
         onTap();
       })
@@ -245,13 +251,13 @@ struct PreviewPage {
 
         Column({ space: AppMetrics.space8 }) {
           Row({ space: AppMetrics.space8 }) {
-            this.ActionButton('编辑', false, () => {
+            this.ActionButton('编辑', false, this.isActionBusy(), () => {
               router.replaceUrl({ url: EDITOR_PAGE });
             })
-            this.ActionButton('复制复盘数据', false, () => {
+            this.ActionButton('复制复盘数据', false, this.isActionBusy(), () => {
               this.copyReviewData();
             })
-            this.ActionButton(this.isExporting ? '导出中' : '导出图片', true, () => {
+            this.ActionButton(this.isExporting ? '导出中' : '导出图片', true, this.isActionBusy(), () => {
               this.exportImage();
             })
           }
@@ -259,18 +265,25 @@ struct PreviewPage {
           .width('100%')
 
           Row({ space: AppMetrics.space8 }) {
-            this.ActionButton(this.isExportingReviewFile ? '导出中' : '导出复盘文件', false, () => {
-              this.exportReviewFile();
-            })
-            this.ActionButton(this.isUploadingHomeStorage ? '上传中' : '上传家庭存储', false, () => {
-              this.uploadReviewFileToHomeStorage();
-            })
+            this.ActionButton(
+              this.isExportingReviewFile ? '导出中' : '导出复盘文件',
+              false,
+              this.isActionBusy(),
+              () => {
+                this.exportReviewFile();
+              })
+            this.ActionButton(
+              this.isUploadingHomeStorage ? '上传中' : '上传家庭存储',
+              false,
+              this.isActionBusy(),
+              () => {
+                this.uploadReviewFileToHomeStorage();
+              })
           }
           .height(32)
         }
         .width('100%')
         .margin({ top: AppMetrics.space8 })
-        .opacity((this.isExporting || this.isExportingReviewFile || this.isUploadingHomeStorage) ? 0.8 : 1)
       }
       .alignItems(HorizontalAlign.Start)
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space12, bottom: AppMetrics.space4 })

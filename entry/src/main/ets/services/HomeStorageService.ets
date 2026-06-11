@@ -6,13 +6,14 @@ import {
   resolveReviewCardExchangeReviewJsonFileName,
   stringifyReviewCardExchangeSchemaV1
 } from './ReviewCardExchangeSchema';
+import { HomeStorageSecretService } from './HomeStorageSecretService';
 import { Smb2Client, Smb2UploadOptions } from './Smb2Client';
 
 const PREFERENCES_NAME: string = 'home_storage_settings';
 const PROTOCOL_KEY: string = 'protocol';
 const ENDPOINT_URL_KEY: string = 'endpoint_url';
 const USERNAME_KEY: string = 'username';
-const PASSWORD_KEY: string = 'password';
+const LEGACY_PASSWORD_KEY: string = 'password';
 const REMOTE_DIRECTORY_KEY: string = 'remote_directory';
 const SMB_HOST_KEY: string = 'smb_host';
 const SMB_PORT_KEY: string = 'smb_port';
@@ -245,6 +246,30 @@ export class HomeStorageService {
     return preferences.getPreferences(context, { name: PREFERENCES_NAME });
   }
 
+  private static async clearLegacyPassword(store: preferences.Preferences): Promise<void> {
+    try {
+      await store.delete(LEGACY_PASSWORD_KEY);
+    } catch (error) {
+    }
+  }
+
+  private static async migrateLegacyPassword(store: preferences.Preferences): Promise<string> {
+    const legacyPassword = await store.get(LEGACY_PASSWORD_KEY, '');
+    if (typeof legacyPassword !== 'string' || legacyPassword.length === 0) {
+      return '';
+    }
+
+    try {
+      await HomeStorageSecretService.savePassword(legacyPassword);
+      return legacyPassword;
+    } catch (error) {
+      return '';
+    } finally {
+      await HomeStorageService.clearLegacyPassword(store);
+      await store.flush();
+    }
+  }
+
   static defaultSettings(): HomeStorageSettings {
     return {
       protocol: HomeStorageProtocol.WEBDAV,
@@ -265,7 +290,10 @@ export class HomeStorageService {
       const protocol = await store.get(PROTOCOL_KEY, HomeStorageProtocol.WEBDAV);
       const endpointUrl = await store.get(ENDPOINT_URL_KEY, '');
       const username = await store.get(USERNAME_KEY, '');
-      const password = await store.get(PASSWORD_KEY, '');
+      let password = await HomeStorageSecretService.loadPassword();
+      if (password.length === 0) {
+        password = await HomeStorageService.migrateLegacyPassword(store);
+      }
       const remoteDirectory = await store.get(REMOTE_DIRECTORY_KEY, DEFAULT_REMOTE_DIRECTORY);
       const smbHost = await store.get(SMB_HOST_KEY, '');
       const smbPort = await store.get(SMB_PORT_KEY, DEFAULT_SMB_PORT);
@@ -275,7 +303,7 @@ export class HomeStorageService {
         protocol: typeof protocol === 'string' ? protocol : HomeStorageProtocol.WEBDAV,
         endpointUrl: typeof endpointUrl === 'string' ? endpointUrl : '',
         username: typeof username === 'string' ? username : '',
-        password: typeof password === 'string' ? password : '',
+        password: password,
         remoteDirectory: typeof remoteDirectory === 'string' ? remoteDirectory : DEFAULT_REMOTE_DIRECTORY,
         smbHost: typeof smbHost === 'string' ? smbHost : '',
         smbPort: typeof smbPort === 'string' ? smbPort : DEFAULT_SMB_PORT,
@@ -292,11 +320,12 @@ export class HomeStorageService {
     settings: HomeStorageSettings
   ): Promise<HomeStorageSettings> {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
+    await HomeStorageSecretService.savePassword(normalized.password);
     const store = await HomeStorageService.getStore(context);
     await store.put(PROTOCOL_KEY, normalized.protocol);
     await store.put(ENDPOINT_URL_KEY, normalized.endpointUrl);
     await store.put(USERNAME_KEY, normalized.username);
-    await store.put(PASSWORD_KEY, normalized.password);
+    await HomeStorageService.clearLegacyPassword(store);
     await store.put(REMOTE_DIRECTORY_KEY, normalized.remoteDirectory);
     await store.put(SMB_HOST_KEY, normalized.smbHost);
     await store.put(SMB_PORT_KEY, normalized.smbPort);
