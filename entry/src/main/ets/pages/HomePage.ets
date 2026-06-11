@@ -15,7 +15,7 @@ import {
   AppColors,
   AppMetrics,
   AppTypography,
-  PrimaryButton,
+  CompactPrimaryButton,
   ProjectHomeCard,
   RecentReviewCard
 } from '../components/AppDesign';
@@ -162,8 +162,10 @@ struct HomePage {
       .alignItems(VerticalAlign.Top)
       .width('100%')
 
-      PrimaryButton({
-        label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘',
+      CompactPrimaryButton({
+        label: this.isPickingPhoto ? '打开相册中' : '开始复盘',
+        isDisabled: this.isPickingPhoto,
+        buttonWidth: 168,
         onTap: () => {
           this.startPhotoDraft();
         }

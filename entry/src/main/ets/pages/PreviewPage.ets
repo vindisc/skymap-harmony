@@ -207,14 +207,14 @@ struct PreviewPage {
   @Builder
   ActionButton(label: string, emphasized: boolean, isDisabled: boolean, onTap: () => void) {
     Button(label)
-      .height(28)
-      .padding({ left: emphasized ? AppMetrics.space12 : AppMetrics.space8, right: emphasized ? AppMetrics.space12 : AppMetrics.space8 })
+      .height(34)
+      .padding({ left: emphasized ? AppMetrics.space16 : AppMetrics.space12, right: emphasized ? AppMetrics.space16 : AppMetrics.space12 })
       .borderRadius(AppMetrics.capsuleRadius)
-      .fontSize(AppTypography.caption)
+      .fontSize(AppTypography.auxiliary)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.text : AppColors.secondaryText))
-      .backgroundColor('#00000000')
-      .border(emphasized ? { width: 1, color: isDisabled ? '#E4E7EC' : AppColors.border } : { width: 0 })
+      .backgroundColor(emphasized ? AppColors.surfaceMuted : '#00000000')
+      .border(emphasized ? { width: 1, color: isDisabled ? '#E4E7EC' : AppColors.border } : { width: 1, color: '#00000000' })
       .opacity(isDisabled ? 0.52 : 1)
       .stateEffect(!isDisabled)
       .enabled(!isDisabled)
@@ -254,7 +254,7 @@ struct PreviewPage {
             this.ActionButton('编辑', false, this.isActionBusy(), () => {
               router.replaceUrl({ url: EDITOR_PAGE });
             })
-            this.ActionButton('复制复盘数据', false, this.isActionBusy(), () => {
+            this.ActionButton('复制数据', false, this.isActionBusy(), () => {
               this.copyReviewData();
             })
             this.ActionButton(this.isExporting ? '导出中' : '导出图片', true, this.isActionBusy(), () => {
@@ -266,14 +266,14 @@ struct PreviewPage {
 
           Row({ space: AppMetrics.space8 }) {
             this.ActionButton(
-              this.isExportingReviewFile ? '导出中' : '导出复盘文件',
+              this.isExportingReviewFile ? '导出中' : '导出文件',
               false,
               this.isActionBusy(),
               () => {
                 this.exportReviewFile();
-              })
+            })
             this.ActionButton(
-              this.isUploadingHomeStorage ? '上传中' : '上传家庭存储',
+              this.isUploadingHomeStorage ? '上传中' : '上传存储',
               false,
               this.isActionBusy(),
               () => {

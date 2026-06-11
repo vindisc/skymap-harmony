@@ -2,7 +2,7 @@ import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
-import { AppColors, AppMetrics, AppTypography, PrimaryButton } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppTypography, CompactPrimaryButton, CompactTonalButton } from '../components/AppDesign';
 import {
   HomeStorageOperationResult,
   HomeStorageProtocol,
@@ -399,19 +399,26 @@ struct ReviewSettingsPage {
           .alignItems(HorizontalAlign.Start)
           .width('100%')
 
-          Column({ space: AppMetrics.space12 }) {
-            this.SecondaryButton(this.isTestingHomeStorage ? '测试中...' : '测试连接', this.isTestingHomeStorage, () => {
-              this.testHomeStorage();
+          Row({ space: AppMetrics.space12 }) {
+            CompactTonalButton({
+              label: this.isTestingHomeStorage ? '测试中' : '测试连接',
+              isDisabled: this.isTestingHomeStorage || this.isSaving,
+              buttonWidth: 122,
+              onTap: () => {
+                this.testHomeStorage();
+              }
             })
 
-            PrimaryButton({
+            CompactPrimaryButton({
               label: this.isSaving ? '保存中...' : '保存',
-              isDisabled: this.isSaving,
+              isDisabled: this.isSaving || this.isTestingHomeStorage,
+              buttonWidth: 144,
               onTap: () => {
                 this.saveSettings();
               }
             })
           }
+          .justifyContent(FlexAlign.Center)
           .width('100%')
         }
         .alignItems(HorizontalAlign.Start)

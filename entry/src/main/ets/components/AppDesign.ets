@@ -128,6 +128,63 @@ export struct SecondaryButton {
 }
 
 @Component
+export struct CompactPrimaryButton {
+  @Prop label: string = '';
+  @Prop isDisabled: boolean = false;
+  @Prop buttonWidth: number = 156;
+  onTap: () => void = () => {};
+
+  build() {
+    Button(this.label)
+      .height(42)
+      .width(this.buttonWidth)
+      .borderRadius(AppMetrics.capsuleRadius)
+      .fontSize(AppTypography.auxiliary)
+      .fontWeight(FontWeight.Medium)
+      .fontColor('#FFFFFF')
+      .backgroundColor(this.isDisabled ? '#AEB4B0' : AppColors.primary)
+      .opacity(this.isDisabled ? 0.66 : 1)
+      .enabled(!this.isDisabled)
+      .stateEffect(!this.isDisabled)
+      .onClick(() => {
+        if (this.isDisabled) {
+          return;
+        }
+        this.onTap();
+      })
+  }
+}
+
+@Component
+export struct CompactTonalButton {
+  @Prop label: string = '';
+  @Prop isDisabled: boolean = false;
+  @Prop buttonWidth: number = 128;
+  onTap: () => void = () => {};
+
+  build() {
+    Button(this.label)
+      .height(42)
+      .width(this.buttonWidth)
+      .borderRadius(AppMetrics.capsuleRadius)
+      .fontSize(AppTypography.auxiliary)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(this.isDisabled ? AppColors.mutedText : AppColors.text)
+      .backgroundColor(AppColors.surfaceMuted)
+      .border({ width: 1, color: AppColors.border })
+      .opacity(this.isDisabled ? 0.62 : 1)
+      .enabled(!this.isDisabled)
+      .stateEffect(!this.isDisabled)
+      .onClick(() => {
+        if (this.isDisabled) {
+          return;
+        }
+        this.onTap();
+      })
+  }
+}
+
+@Component
 export struct EmptyState {
   @Prop title: string = '';
   @Prop message: string = '';
