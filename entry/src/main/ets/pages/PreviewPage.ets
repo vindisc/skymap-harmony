@@ -243,7 +243,7 @@ struct PreviewPage {
           .lineHeight(AppTypography.level2LineHeight)
           .width('100%')
 
-        Scroll() {
+        Column({ space: AppMetrics.space8 }) {
           Row({ space: AppMetrics.space8 }) {
             this.ActionButton('编辑', false, () => {
               router.replaceUrl({ url: EDITOR_PAGE });
@@ -254,6 +254,11 @@ struct PreviewPage {
             this.ActionButton(this.isExporting ? '导出中' : '导出图片', true, () => {
               this.exportImage();
             })
+          }
+          .height(32)
+          .width('100%')
+
+          Row({ space: AppMetrics.space8 }) {
             this.ActionButton(this.isExportingReviewFile ? '导出中' : '导出复盘文件', false, () => {
               this.exportReviewFile();
             })
@@ -263,10 +268,7 @@ struct PreviewPage {
           }
           .height(32)
         }
-        .scrollable(ScrollDirection.Horizontal)
-        .scrollBar(BarState.Off)
         .width('100%')
-        .height(32)
         .margin({ top: AppMetrics.space8 })
         .opacity((this.isExporting || this.isExportingReviewFile || this.isUploadingHomeStorage) ? 0.8 : 1)
       }
