@@ -19,6 +19,10 @@ struct ReviewSettingsPage {
   @State homeStorageUsername: string = '';
   @State homeStoragePassword: string = '';
   @State homeStorageRemoteDirectory: string = '';
+  @State homeStorageSmbHost: string = '';
+  @State homeStorageSmbPort: string = '';
+  @State homeStorageSmbShareName: string = '';
+  @State homeStorageSmbDomain: string = '';
   @State isSaving: boolean = false;
   @State isTestingHomeStorage: boolean = false;
 
@@ -44,6 +48,10 @@ struct ReviewSettingsPage {
     this.homeStorageUsername = homeStorageSettings.username;
     this.homeStoragePassword = homeStorageSettings.password;
     this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;
+    this.homeStorageSmbHost = homeStorageSettings.smbHost;
+    this.homeStorageSmbPort = homeStorageSettings.smbPort;
+    this.homeStorageSmbShareName = homeStorageSettings.smbShareName;
+    this.homeStorageSmbDomain = homeStorageSettings.smbDomain;
   }
 
   private currentHomeStorageSettings(): HomeStorageSettings {
@@ -52,7 +60,11 @@ struct ReviewSettingsPage {
       endpointUrl: this.homeStorageEndpointUrl,
       username: this.homeStorageUsername,
       password: this.homeStoragePassword,
-      remoteDirectory: this.homeStorageRemoteDirectory
+      remoteDirectory: this.homeStorageRemoteDirectory,
+      smbHost: this.homeStorageSmbHost,
+      smbPort: this.homeStorageSmbPort,
+      smbShareName: this.homeStorageSmbShareName,
+      smbDomain: this.homeStorageSmbDomain
     };
   }
 
@@ -73,6 +85,10 @@ struct ReviewSettingsPage {
       this.homeStorageUsername = homeStorageSettings.username;
       this.homeStoragePassword = homeStorageSettings.password;
       this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;
+      this.homeStorageSmbHost = homeStorageSettings.smbHost;
+      this.homeStorageSmbPort = homeStorageSettings.smbPort;
+      this.homeStorageSmbShareName = homeStorageSettings.smbShareName;
+      this.homeStorageSmbDomain = homeStorageSettings.smbDomain;
       promptAction.showToast({ message: '已保存复盘设置' });
     } catch (error) {
       promptAction.showToast({ message: '保存失败，请稍后重试' });
@@ -208,7 +224,7 @@ struct ReviewSettingsPage {
 
             Row({ space: AppMetrics.space8 }) {
               this.ProtocolButton('WebDAV', HomeStorageProtocol.WEBDAV)
-              this.ProtocolButton('SMB', HomeStorageProtocol.SMB_SYSTEM_PICKER)
+              this.ProtocolButton('SMB', HomeStorageProtocol.SMB)
             }
             .width('100%')
 
@@ -230,12 +246,34 @@ struct ReviewSettingsPage {
               })
             }
 
-            if (this.isHomeStorageProtocol(HomeStorageProtocol.SMB_SYSTEM_PICKER)) {
-              Text('上传时选择系统文件中的 SMB 共享目录')
-                .fontSize(AppTypography.auxiliary)
-                .fontColor(AppColors.secondaryText)
-                .lineHeight(AppTypography.auxiliaryLineHeight)
-                .width('100%')
+            if (this.isHomeStorageProtocol(HomeStorageProtocol.SMB)) {
+              this.SettingsInput('SMB 地址或 IP', this.homeStorageSmbHost, '192.168.3.10', (value: string) => {
+                this.homeStorageSmbHost = value;
+              })
+
+              this.SettingsInput('SMB 端口', this.homeStorageSmbPort, '445', (value: string) => {
+                this.homeStorageSmbPort = value;
+              })
+
+              this.SettingsInput('共享名', this.homeStorageSmbShareName, 'Photos', (value: string) => {
+                this.homeStorageSmbShareName = value;
+              })
+
+              this.SettingsInput('远程目录', this.homeStorageRemoteDirectory, '摄影资料库/Reviews', (value: string) => {
+                this.homeStorageRemoteDirectory = value;
+              })
+
+              this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号', (value: string) => {
+                this.homeStorageUsername = value;
+              })
+
+              this.SettingsInput('密码', this.homeStoragePassword, '家庭存储密码', (value: string) => {
+                this.homeStoragePassword = value;
+              }, true)
+
+              this.SettingsInput('工作组或域', this.homeStorageSmbDomain, '可留空', (value: string) => {
+                this.homeStorageSmbDomain = value;
+              })
             }
           }
           .alignItems(HorizontalAlign.Start)

@@ -6,7 +6,7 @@ import {
   resolveReviewCardExchangeReviewJsonFileName,
   stringifyReviewCardExchangeSchemaV1
 } from './ReviewCardExchangeSchema';
-import { ReviewCardReviewFileExportResult, ReviewCardReviewFileService } from './ReviewCardReviewFileService';
+import { Smb2Client, Smb2UploadOptions } from './Smb2Client';
 
 const PREFERENCES_NAME: string = 'home_storage_settings';
 const PROTOCOL_KEY: string = 'protocol';
@@ -14,13 +14,18 @@ const ENDPOINT_URL_KEY: string = 'endpoint_url';
 const USERNAME_KEY: string = 'username';
 const PASSWORD_KEY: string = 'password';
 const REMOTE_DIRECTORY_KEY: string = 'remote_directory';
+const SMB_HOST_KEY: string = 'smb_host';
+const SMB_PORT_KEY: string = 'smb_port';
+const SMB_SHARE_NAME_KEY: string = 'smb_share_name';
+const SMB_DOMAIN_KEY: string = 'smb_domain';
 const DEFAULT_REMOTE_DIRECTORY: string = '摄影资料库/Reviews';
+const DEFAULT_SMB_PORT: string = '445';
 const REQUEST_TIMEOUT_MS: number = 20000;
 const BASE64_ALPHABET: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 export enum HomeStorageProtocol {
   WEBDAV = 'webdav',
-  SMB_SYSTEM_PICKER = 'smbSystemPicker'
+  SMB = 'smb'
 }
 
 export interface HomeStorageSettings {
@@ -29,6 +34,10 @@ export interface HomeStorageSettings {
   username: string;
   password: string;
   remoteDirectory: string;
+  smbHost: string;
+  smbPort: string;
+  smbShareName: string;
+  smbDomain: string;
 }
 
 export interface HomeStorageOperationResult {
@@ -45,8 +54,8 @@ function normalizeText(value: string | undefined): string {
 }
 
 function normalizeProtocol(value: string | undefined): HomeStorageProtocol {
-  if (value === HomeStorageProtocol.SMB_SYSTEM_PICKER) {
-    return HomeStorageProtocol.SMB_SYSTEM_PICKER;
+  if (value === HomeStorageProtocol.SMB || value === 'smbSystemPicker') {
+    return HomeStorageProtocol.SMB;
   }
   return HomeStorageProtocol.WEBDAV;
 }
@@ -64,6 +73,14 @@ function normalizeRemoteDirectory(value: string | undefined): string {
   return trimmed.replace(/^\/+/g, '').replace(/\/+$/g, '');
 }
 
+function normalizeSmbPort(value: string | undefined): string {
+  const trimmed: string = normalizeText(value);
+  if (trimmed.length === 0) {
+    return DEFAULT_SMB_PORT;
+  }
+  return trimmed;
+}
+
 function normalizeSettings(settings: HomeStorageSettings | undefined): HomeStorageSettings {
   const source: HomeStorageSettings = settings ? settings : {} as HomeStorageSettings;
   return {
@@ -71,12 +88,24 @@ function normalizeSettings(settings: HomeStorageSettings | undefined): HomeStora
     endpointUrl: normalizeEndpointUrl(source.endpointUrl),
     username: normalizeText(source.username),
     password: normalizeText(source.password),
-    remoteDirectory: normalizeRemoteDirectory(source.remoteDirectory)
+    remoteDirectory: normalizeRemoteDirectory(source.remoteDirectory),
+    smbHost: normalizeText(source.smbHost).replace(/^smb:\/\//i, '').replace(/\/+$/g, ''),
+    smbPort: normalizeSmbPort(source.smbPort),
+    smbShareName: normalizeText(source.smbShareName).replace(/^\/+/g, '').replace(/\/+$/g, ''),
+    smbDomain: normalizeText(source.smbDomain)
   };
 }
 
 function isValidEndpointUrl(value: string): boolean {
   return value.startsWith('https://') || value.startsWith('http://');
+}
+
+function parsePort(value: string): number {
+  const port: number = Number.parseInt(value, 10);
+  if (Number.isNaN(port)) {
+    return 0;
+  }
+  return port;
 }
 
 function utf8Bytes(value: string): Array<number> {
@@ -174,6 +203,20 @@ function statusMessage(statusCode: number): string {
   return `家庭存储返回 ${statusCode}`;
 }
 
+function createSmbUploadOptions(settings: HomeStorageSettings, fileName: string, body: string): Smb2UploadOptions {
+  return {
+    host: settings.smbHost,
+    port: parsePort(settings.smbPort),
+    shareName: settings.smbShareName,
+    remoteDirectory: settings.remoteDirectory,
+    username: settings.username,
+    password: settings.password,
+    domain: settings.smbDomain,
+    fileName: fileName,
+    content: body
+  };
+}
+
 async function requestWebDav(
   method: http.RequestMethod,
   url: string,
@@ -208,7 +251,11 @@ export class HomeStorageService {
       endpointUrl: '',
       username: '',
       password: '',
-      remoteDirectory: DEFAULT_REMOTE_DIRECTORY
+      remoteDirectory: DEFAULT_REMOTE_DIRECTORY,
+      smbHost: '',
+      smbPort: DEFAULT_SMB_PORT,
+      smbShareName: '',
+      smbDomain: ''
     };
   }
 
@@ -220,12 +267,20 @@ export class HomeStorageService {
       const username = await store.get(USERNAME_KEY, '');
       const password = await store.get(PASSWORD_KEY, '');
       const remoteDirectory = await store.get(REMOTE_DIRECTORY_KEY, DEFAULT_REMOTE_DIRECTORY);
+      const smbHost = await store.get(SMB_HOST_KEY, '');
+      const smbPort = await store.get(SMB_PORT_KEY, DEFAULT_SMB_PORT);
+      const smbShareName = await store.get(SMB_SHARE_NAME_KEY, '');
+      const smbDomain = await store.get(SMB_DOMAIN_KEY, '');
       return normalizeSettings({
         protocol: typeof protocol === 'string' ? protocol : HomeStorageProtocol.WEBDAV,
         endpointUrl: typeof endpointUrl === 'string' ? endpointUrl : '',
         username: typeof username === 'string' ? username : '',
         password: typeof password === 'string' ? password : '',
-        remoteDirectory: typeof remoteDirectory === 'string' ? remoteDirectory : DEFAULT_REMOTE_DIRECTORY
+        remoteDirectory: typeof remoteDirectory === 'string' ? remoteDirectory : DEFAULT_REMOTE_DIRECTORY,
+        smbHost: typeof smbHost === 'string' ? smbHost : '',
+        smbPort: typeof smbPort === 'string' ? smbPort : DEFAULT_SMB_PORT,
+        smbShareName: typeof smbShareName === 'string' ? smbShareName : '',
+        smbDomain: typeof smbDomain === 'string' ? smbDomain : ''
       });
     } catch (error) {
       return HomeStorageService.defaultSettings();
@@ -243,13 +298,27 @@ export class HomeStorageService {
     await store.put(USERNAME_KEY, normalized.username);
     await store.put(PASSWORD_KEY, normalized.password);
     await store.put(REMOTE_DIRECTORY_KEY, normalized.remoteDirectory);
+    await store.put(SMB_HOST_KEY, normalized.smbHost);
+    await store.put(SMB_PORT_KEY, normalized.smbPort);
+    await store.put(SMB_SHARE_NAME_KEY, normalized.smbShareName);
+    await store.put(SMB_DOMAIN_KEY, normalized.smbDomain);
     await store.flush();
     return normalized;
   }
 
   static validateSettings(settings: HomeStorageSettings): string {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
-    if (normalized.protocol === HomeStorageProtocol.SMB_SYSTEM_PICKER) {
+    if (normalized.protocol === HomeStorageProtocol.SMB) {
+      const port: number = parsePort(normalized.smbPort);
+      if (normalized.smbHost.length === 0) {
+        return '请先填写 SMB 地址或 IP';
+      }
+      if (port <= 0 || port > 65535) {
+        return 'SMB 端口需要在 1-65535 之间';
+      }
+      if (normalized.smbShareName.length === 0) {
+        return '请先填写 SMB 共享名';
+      }
       return '';
     }
     if (normalized.endpointUrl.length === 0) {
@@ -263,14 +332,6 @@ export class HomeStorageService {
 
   static async testConnection(settings: HomeStorageSettings): Promise<HomeStorageOperationResult> {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
-    if (normalized.protocol === HomeStorageProtocol.SMB_SYSTEM_PICKER) {
-      return {
-        success: true,
-        remotePath: '',
-        message: 'SMB 将在上传时打开系统保存面板'
-      };
-    }
-
     const validationMessage: string = HomeStorageService.validateSettings(normalized);
     if (validationMessage.length > 0) {
       return {
@@ -278,6 +339,25 @@ export class HomeStorageService {
         remotePath: '',
         message: validationMessage
       };
+    }
+
+    if (normalized.protocol === HomeStorageProtocol.SMB) {
+      const client: Smb2Client = new Smb2Client();
+      try {
+        await client.testConnection(createSmbUploadOptions(normalized, 'connection-test.review.json', '{}'));
+        return {
+          success: true,
+          remotePath: `\\\\${normalized.smbHost}\\${normalized.smbShareName}`,
+          message: 'SMB 连接成功'
+        };
+      } catch (error) {
+        await client.close();
+        return {
+          success: false,
+          remotePath: `\\\\${normalized.smbHost}\\${normalized.smbShareName}`,
+          message: error instanceof Error ? error.message : 'SMB 连接失败，请检查地址、账号和共享名'
+        };
+      }
     }
 
     const remotePath: string = resolveRemoteUrl(normalized);
@@ -304,19 +384,6 @@ export class HomeStorageService {
     reviewerText: string = ''
   ): Promise<HomeStorageOperationResult> {
     const settings: HomeStorageSettings = await HomeStorageService.loadSettings(context);
-    if (settings.protocol === HomeStorageProtocol.SMB_SYSTEM_PICKER) {
-      const result: ReviewCardReviewFileExportResult = await ReviewCardReviewFileService.exportReviewJson(
-        context,
-        document,
-        reviewerText
-      );
-      return {
-        success: result.success,
-        remotePath: result.path,
-        message: result.success ? '已保存到家庭存储' : result.message
-      };
-    }
-
     const validationMessage: string = HomeStorageService.validateSettings(settings);
     if (validationMessage.length > 0) {
       return {
@@ -327,8 +394,27 @@ export class HomeStorageService {
     }
 
     const fileName: string = resolveReviewCardExchangeReviewJsonFileName(document);
-    const remotePath: string = resolveRemoteUrl(settings, fileName);
     const body: string = stringifyReviewCardExchangeSchemaV1(document, reviewerText);
+    if (settings.protocol === HomeStorageProtocol.SMB) {
+      const client: Smb2Client = new Smb2Client();
+      try {
+        const remotePath: string = await client.uploadText(createSmbUploadOptions(settings, fileName, body));
+        return {
+          success: true,
+          remotePath: remotePath,
+          message: '已上传到家庭存储'
+        };
+      } catch (error) {
+        await client.close();
+        return {
+          success: false,
+          remotePath: `\\\\${settings.smbHost}\\${settings.smbShareName}\\${settings.remoteDirectory}\\${fileName}`,
+          message: error instanceof Error ? error.message : 'SMB 上传失败，请检查网络、账号和目录'
+        };
+      }
+    }
+
+    const remotePath: string = resolveRemoteUrl(settings, fileName);
     try {
       const response: http.HttpResponse = await requestWebDav(http.RequestMethod.PUT, remotePath, settings, body);
       const statusCode: number = response.responseCode;
