@@ -6,6 +6,7 @@
 
 产品层文档包括：
 
+- `README.md`
 - `VISION.md`
 - `FEATURE_MATRIX.md`
 - `DATA_MODEL.md`
@@ -63,6 +64,8 @@ Mac 后补
 - 验证结果。
 - 能力矩阵状态变化。
 - 已知限制。
+- 如果改动涉及 `docs/product/`，必须列出 Mac Client 与 Harmony Client 两个仓库的对应 commit。
+- 如果另一个客户端仓库尚未同步对应 Product Layer commit，本 PR 不得合并。
 
 如果一个功能只在单端落地，PR 描述必须写明另一端状态，不能用“后面再说”代替产品判断。
 
@@ -90,9 +93,36 @@ review.json 是产品层交换文件，不是某个客户端的私有备份。
 
 在独立产品仓库建立前：
 
-- 两个客户端仓库中的 `docs/product/` 应保持内容一致。
-- 任一端修改产品层文档时，必须同步另一端，或在 PR 中明确说明同步阻塞原因。
+- 两个客户端仓库中的 `docs/product/` 必须保持内容一致。
+- 任一端修改 `docs/product/` 任意文件时，必须同步另一个客户端仓库的对应文件。
+- PR 描述必须列出两个仓库的对应 commit。
+- 未同步另一个客户端仓库、未列出对应 commit 或同步校验失败时，不得合并。
+- 合并前必须运行 `bash scripts/verify_product_docs_sync.sh` 并记录结果。
 - 如果后续建立独立产品仓库，产品仓库成为唯一来源，客户端仓库只保留链接或快照。
+
+## 本地同步校验
+
+两个客户端仓库都必须保留同步校验脚本：
+
+```bash
+bash scripts/verify_product_docs_sync.sh
+```
+
+脚本会自动尝试定位另一个客户端仓库。如果无法自动定位，可以传入：
+
+```bash
+SKymap_OTHER_REPO_PATH=/path/to/other/repo \
+bash scripts/verify_product_docs_sync.sh
+```
+
+或：
+
+```bash
+SKymap_PRODUCT_DOCS_OTHER_PATH=/path/to/other/repo/docs/product \
+bash scripts/verify_product_docs_sync.sh
+```
+
+脚本失败时，说明 Product Layer 镜像已经漂移，相关 PR 不得合并。
 
 ## 合并顺序建议
 
