@@ -587,6 +587,10 @@ assert(filterReviewLibraryItems(libraryItems, { ...createEmptyReviewLibraryFilte
 assert(filterReviewLibraryItems(libraryItems, { ...createEmptyReviewLibraryFilters(), blocker: '关系不足' }).length === 2, 'library blocker filter should match current blocker');
 assert(filterReviewLibraryItems(libraryItems, { ...createEmptyReviewLibraryFilters(), reviewer: 'Bo' }).length === 2, 'library reviewer filter should match reviewerText');
 
+const legacyReviewerItems = libraryItems.concat([{ ...libraryItems[0], reviewerText: '' }]);
+assert(filterReviewLibraryItems(legacyReviewerItems, createEmptyReviewLibraryFilters()).length === 4, 'legacy empty reviewer items should stay visible without reviewer filter');
+assert(filterReviewLibraryItems(legacyReviewerItems, { ...createEmptyReviewLibraryFilters(), reviewer: 'Bo' }).length === 2, 'legacy empty reviewer items should not match a concrete reviewer filter');
+
 const layoutCases = [
   [1600, 1000, false, 'horizontal', 1.6, false, true],
   [1152, 1536, false, 'vertical', 0.75, false, true],

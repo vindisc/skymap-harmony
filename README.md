@@ -57,6 +57,9 @@ DEVECO_SDK_HOME=/Applications/DevEco-Studio.app/Contents/sdk \
 node scripts/verify_review_logic.mjs
 node scripts/verify_home_stats.mjs
 node scripts/verify_image_layout.mjs
+node scripts/verify_button_taste.mjs
+node scripts/verify_security_hardening.mjs
+bash scripts/verify_product_docs_sync.sh
 ```
 
 脚本失败会以非 0 状态退出。

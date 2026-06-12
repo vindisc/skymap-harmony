@@ -56,7 +56,7 @@ struct ProjectDetailPage {
   private confirmDeleteHistory(document: ReviewCardDocument): void {
     AlertDialog.show({
       title: '删除这条复盘记录？',
-      message: '删除后无法恢复',
+      message: '只会删除复盘库记录，不会删除原照片或已导出的文件。',
       autoCancel: true,
       primaryButton: {
         value: '取消',
