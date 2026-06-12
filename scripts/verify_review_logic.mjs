@@ -361,6 +361,51 @@ function getReviewProjectExcerpt(document) {
   return '还没有提炼核心关系';
 }
 
+function createEmptyReviewLibraryFilters() {
+  return {
+    query: '',
+    judgement: '全部判断',
+    blocker: '全部卡点',
+    reviewer: '全部复盘人'
+  };
+}
+
+function reviewLibrarySearchableText(item) {
+  const content = item.document.content;
+  return [
+    content.title,
+    content.visibleFacts,
+    content.coreRelation,
+    content.extendedUnderstanding,
+    content.currentBlocker,
+    content.visualFocus,
+    content.focusReason,
+    content.visualPath
+  ].map((value) => normalizeText(value).trim()).join('\n');
+}
+
+function filterReviewLibraryItems(items, filters) {
+  const query = normalizeText(filters.query).trim().toLocaleLowerCase();
+  const judgement = normalizeText(filters.judgement).trim();
+  const blocker = normalizeText(filters.blocker).trim();
+  const reviewer = normalizeText(filters.reviewer).trim();
+  return items.filter((item) => {
+    if (query.length > 0 && !reviewLibrarySearchableText(item).toLocaleLowerCase().includes(query)) {
+      return false;
+    }
+    if (judgement.length > 0 && judgement !== '全部判断' && normalizeReviewJudgement(item.document.content.judgement) !== judgement) {
+      return false;
+    }
+    if (blocker.length > 0 && blocker !== '全部卡点' && !normalizeText(item.document.content.currentBlocker).toLocaleLowerCase().includes(blocker.toLocaleLowerCase())) {
+      return false;
+    }
+    if (reviewer.length > 0 && reviewer !== '全部复盘人' && normalizeText(item.reviewerText).trim().toLocaleLowerCase() !== reviewer.toLocaleLowerCase()) {
+      return false;
+    }
+    return true;
+  });
+}
+
 function resolveReviewImageLayout(width, height, fallbackUsed = false) {
   const hasExactSize = !fallbackUsed && width > 0 && height > 0;
   if (!hasExactSize) {
@@ -417,6 +462,9 @@ judgementCases.forEach(([input, expected]) => {
 const exchangeSchemaSource = readText('entry/src/main/ets/services/ReviewCardExchangeSchema.ets');
 const exchangeSchemaDoc = readText('docs/review-card-exchange-schema.md');
 const historyServiceSource = readText('entry/src/main/ets/services/ReviewCardHistoryService.ets');
+const reviewCardModelSource = readText('entry/src/main/ets/model/ReviewCardModel.ets');
+const reviewLibraryServiceSource = readText('entry/src/main/ets/services/ReviewLibraryService.ets');
+const projectDetailPageSource = readText('entry/src/main/ets/pages/ProjectDetailPage.ets');
 const sourceSchemaKeys = parseExchangeInterfaceKeys(exchangeSchemaSource);
 const docSchemaKeys = parseExchangeDocKeys(exchangeSchemaDoc);
 assert(JSON.stringify(sourceSchemaKeys) === JSON.stringify(REVIEW_SCHEMA_KEYS), 'ReviewCardExchangeSchemaV1 interface keys differ from expected v1 keys');
@@ -428,6 +476,13 @@ assert(exchangeSchemaSource.includes('reviewerText: normalizeExchangeText(review
 assert(exchangeSchemaSource.includes('resolveReviewCardExchangeReviewJsonFileName'), 'review JSON export file name resolver is missing');
 assert(exchangeSchemaSource.includes('createReviewCardDocumentFromExchangeSchemaV1'), 'review JSON import mapping helper is missing');
 assert(historyServiceSource.includes('const MAX_HISTORY_COUNT: number = 200;'), 'MAX_HISTORY_COUNT should support long-term review accumulation at 200 records');
+assert(reviewCardModelSource.includes('reviewerText?: string;'), 'ReviewCardHistoryItem should persist optional reviewerText for library filters');
+assert(historyServiceSource.includes('reviewerText: normalizeHistoryReviewerText(reviewerText)'), 'history service should persist reviewerText');
+assert(reviewLibraryServiceSource.includes('export class ReviewLibraryService'), 'ReviewLibraryService is missing');
+assert(reviewLibraryServiceSource.includes('static filter(items: Array<ReviewCardHistoryItem>, filters: ReviewLibraryFilters)'), 'ReviewLibraryService.filter is missing');
+assert(projectDetailPageSource.includes("TextInput({ placeholder: '搜索标题、画面事实、核心关系、延伸理解、卡点'"), 'Review Library search input is missing');
+assert(projectDetailPageSource.includes("Select([") && projectDetailPageSource.includes("'全部判断'"), 'Review Library decision filter is missing');
+assert(projectDetailPageSource.includes("'全部卡点'") && projectDetailPageSource.includes("'全部复盘人'"), 'Review Library blocker/reviewer filters are missing');
 
 assert(mapReviewJudgementToExchangeDecision('成立') === 'works', '成立 should map to works');
 assert(mapReviewJudgementToExchangeDecision('待判断') === 'uncertain', '待判断 should map to uncertain');
@@ -510,6 +565,27 @@ excerptDocument.content.currentBlocker = ' 当前卡点 ';
 assert(getReviewProjectExcerpt(excerptDocument) === '当前卡点', 'currentBlocker fallback changed');
 excerptDocument.content.coreRelation = ' 核心关系 ';
 assert(getReviewProjectExcerpt(excerptDocument) === '核心关系：核心关系', 'coreRelation fallback changed');
+
+const libraryItems = [
+  ['窗内的人', '画面里有窗', '窗内 ↔ 窗外', '关系不足', '不成立', 'Bo'],
+  ['桥上的影子', '桥和人影', '人 ↔ 桥', '主体弱', '成立', 'Lin'],
+  ['街角', '街道转角', '光线 ↔ 人', '关系不足', '不确定', 'Bo']
+].map(([title, visibleFacts, coreRelation, blocker, judgement, reviewerText], index) => {
+  const document = createDefaultDocument();
+  document.content.title = title;
+  document.content.visibleFacts = visibleFacts;
+  document.content.coreRelation = coreRelation;
+  document.content.currentBlocker = blocker;
+  document.content.judgement = judgement;
+  document.createdAt = index + 10;
+  document.updatedAt = index + 10;
+  return { document, exportedPath: '', reviewerText };
+});
+
+assert(filterReviewLibraryItems(libraryItems, { ...createEmptyReviewLibraryFilters(), query: '窗' }).length === 1, 'library search should match title/facts');
+assert(filterReviewLibraryItems(libraryItems, { ...createEmptyReviewLibraryFilters(), judgement: '不成立' }).length === 1, 'library decision filter should match invalid reviews');
+assert(filterReviewLibraryItems(libraryItems, { ...createEmptyReviewLibraryFilters(), blocker: '关系不足' }).length === 2, 'library blocker filter should match current blocker');
+assert(filterReviewLibraryItems(libraryItems, { ...createEmptyReviewLibraryFilters(), reviewer: 'Bo' }).length === 2, 'library reviewer filter should match reviewerText');
 
 const layoutCases = [
   [1600, 1000, false, 'horizontal', 1.6, false, true],

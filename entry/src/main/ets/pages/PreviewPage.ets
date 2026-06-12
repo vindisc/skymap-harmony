@@ -69,7 +69,8 @@ struct PreviewPage {
       next.imageSizeFallbackUsed = false;
       this.document = next;
       ReviewCardStore.setCurrentDocument(next);
-      await ReviewCardHistoryService.updateDocument(this.getAbilityContext(), next);
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+      await ReviewCardHistoryService.updateDocument(this.getAbilityContext(), next, reviewerName);
     } catch (error) {
     }
   }
@@ -93,7 +94,8 @@ struct PreviewPage {
   private async saveDraft(): Promise<void> {
     try {
       this.document = ReviewCardStore.saveCurrentDocument(this.document);
-      await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+      await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document, reviewerName);
       this.saveStateLabel = PreviewSaveState.SAVED;
       promptAction.showToast({ message: '已保存复盘记录' });
     } catch (error) {
@@ -117,7 +119,8 @@ struct PreviewPage {
         }
       );
       if (result.savedToPhotoLibrary) {
-        await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path);
+        const reviewerName: string = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+        await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path, reviewerName);
         this.saveStateLabel = PreviewSaveState.EXPORTED;
       }
       promptAction.showToast({ message: result.message });

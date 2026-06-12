@@ -13,6 +13,7 @@ import {
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { AppColors, AppMetrics, AppTypography, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
@@ -181,7 +182,8 @@ struct EditorPage {
   private async saveAndPreview(): Promise<void> {
     this.syncDocumentFromInput();
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
-    await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+    const reviewerName: string = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+    await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document, reviewerName);
     router.replaceUrl({ url: PREVIEW_PAGE });
   }
 

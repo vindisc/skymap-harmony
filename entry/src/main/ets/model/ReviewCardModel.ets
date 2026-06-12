@@ -84,6 +84,7 @@ export interface ReviewCardDocument {
 export interface ReviewCardHistoryItem {
   document: ReviewCardDocument;
   exportedPath: string;
+  reviewerText?: string;
 }
 
 export const DEFAULT_REVIEW_TITLE: string = '这张照片是否成立';

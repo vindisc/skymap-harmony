@@ -11,17 +11,29 @@ const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
 const MAX_HISTORY_COUNT: number = 200;
 
-function createHistoryItem(document: ReviewCardDocument, exportedPath: string = ''): ReviewCardHistoryItem {
+function normalizeHistoryReviewerText(value: string | undefined): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return '';
+}
+
+function createHistoryItem(document: ReviewCardDocument, exportedPath: string = '', reviewerText: string = ''): ReviewCardHistoryItem {
   return {
     document: cloneReviewCardDocument(document),
-    exportedPath: exportedPath
+    exportedPath: exportedPath,
+    reviewerText: normalizeHistoryReviewerText(reviewerText)
   };
 }
 
 function normalizeHistoryItem(rawItem: ReviewCardHistoryItem | ReviewCardDocument): ReviewCardHistoryItem | undefined {
   const historyItem = rawItem as ReviewCardHistoryItem;
   if (historyItem.document) {
-    return createHistoryItem(historyItem.document, historyItem.exportedPath ? historyItem.exportedPath : '');
+    return createHistoryItem(
+      historyItem.document,
+      historyItem.exportedPath ? historyItem.exportedPath : '',
+      historyItem.reviewerText ? historyItem.reviewerText : ''
+    );
   }
 
   const legacyDocument = rawItem as ReviewCardDocument;
@@ -65,15 +77,15 @@ export class ReviewCardHistoryService {
     }
   }
 
-  static async saveDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
+  static async saveDocument(context: common.UIAbilityContext, document: ReviewCardDocument, reviewerText: string = ''): Promise<Array<ReviewCardHistoryItem>> {
     const items = await ReviewCardHistoryService.load(context);
     const key = getReviewDocumentKey(document);
     const nextItems: Array<ReviewCardHistoryItem> = [];
-    nextItems.push(createHistoryItem(document));
+    nextItems.push(createHistoryItem(document, '', reviewerText));
 
     items.forEach((item: ReviewCardHistoryItem) => {
       if (getReviewDocumentKey(item.document) !== key && nextItems.length < MAX_HISTORY_COUNT) {
-        nextItems.push(createHistoryItem(item.document, item.exportedPath));
+        nextItems.push(createHistoryItem(item.document, item.exportedPath, item.reviewerText));
       }
     });
 
@@ -81,14 +93,14 @@ export class ReviewCardHistoryService {
     return nextItems;
   }
 
-  static async updateDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
+  static async updateDocument(context: common.UIAbilityContext, document: ReviewCardDocument, reviewerText: string = ''): Promise<Array<ReviewCardHistoryItem>> {
     const items = await ReviewCardHistoryService.load(context);
     const key = getReviewDocumentKey(document);
     const nextItems = items.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
       if (getReviewDocumentKey(item.document) === key) {
-        return createHistoryItem(document, item.exportedPath);
+        return createHistoryItem(document, item.exportedPath, reviewerText.length > 0 ? reviewerText : item.reviewerText);
       }
-      return createHistoryItem(item.document, item.exportedPath);
+      return createHistoryItem(item.document, item.exportedPath, item.reviewerText);
     });
 
     if (nextItems.some((item: ReviewCardHistoryItem): boolean => getReviewDocumentKey(item.document) === key)) {
@@ -97,18 +109,18 @@ export class ReviewCardHistoryService {
     return nextItems;
   }
 
-  static async markExported(context: common.UIAbilityContext, document: ReviewCardDocument, exportedPath: string): Promise<Array<ReviewCardHistoryItem>> {
+  static async markExported(context: common.UIAbilityContext, document: ReviewCardDocument, exportedPath: string, reviewerText: string = ''): Promise<Array<ReviewCardHistoryItem>> {
     const items = await ReviewCardHistoryService.load(context);
     const key = getReviewDocumentKey(document);
     const nextItems = items.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
       if (getReviewDocumentKey(item.document) === key) {
-        return createHistoryItem(document, exportedPath);
+        return createHistoryItem(document, exportedPath, reviewerText.length > 0 ? reviewerText : item.reviewerText);
       }
-      return createHistoryItem(item.document, item.exportedPath);
+      return createHistoryItem(item.document, item.exportedPath, item.reviewerText);
     });
 
     if (!nextItems.some((item: ReviewCardHistoryItem): boolean => getReviewDocumentKey(item.document) === key)) {
-      nextItems.unshift(createHistoryItem(document, exportedPath));
+      nextItems.unshift(createHistoryItem(document, exportedPath, reviewerText));
     }
 
     const persistedItems: Array<ReviewCardHistoryItem> = nextItems.slice(0, MAX_HISTORY_COUNT);

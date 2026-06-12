@@ -277,7 +277,7 @@ struct HomePage {
 
         Column() {
           Row() {
-            Text('我的项目')
+            Text('复盘库')
               .fontSize(AppTypography.level2)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.text)
