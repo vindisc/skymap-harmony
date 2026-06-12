@@ -62,6 +62,7 @@
 
 - [ ] 阅读页保留「复制复盘数据」入口。
 - [ ] 复制内容为 `ReviewCardExchangeSchema v1`。
+- [ ] 明确区分跨端导入 JSON 与 Mac sidecar archive。
 - [ ] JSON 字段完整，空字段保留 key。
 - [ ] `reviewStructure` 固定为 `quickReview`。
 - [ ] `decision` 使用英文枚举。

@@ -1,12 +1,14 @@
 # ReviewCardExchangeSchema v1
 
-`ReviewCardExchangeSchema v1` 用于在 HarmonyOS 手机端、Mac 端边框 App 和 GPT 交流之间传递一次摄影复盘的结构化字段。本协议只描述复盘字段 JSON，不包含云同步、文件导入导出、二维码、账号或导出图片版式。
+`ReviewCardExchangeSchema v1` 是 HarmonyOS 到 Mac 的跨端导入协议，对应 Mac `ReviewCardImportPayload`。它不是 Mac 本地 `ReviewArchive` sidecar archive。
+
+完整边界见 [photoreview-cross-platform-contract.md](./photoreview-cross-platform-contract.md)。本协议只描述跨端导入的扁平复盘字段 JSON，不包含云同步、二维码、账号或导出图片版式。
 
 ## 使用场景
 
 1. 白天在 HarmonyOS 手机端完成摄影复盘。
 2. 在阅读页点击「复制复盘数据」，复制 pretty print JSON，并只显示 Toast「已复制复盘数据」。
-3. 晚上粘贴到 Mac 端边框 App 继续排版导出，或直接发给 GPT 交流。
+3. 晚上把这份 JSON 粘贴或导入到 Mac 端继续排版导出，或直接发给 GPT 交流。
 
 ## 字段定义
 
@@ -29,6 +31,12 @@
 所有字段必须保留。旧记录缺少字段时，对应字段输出空字符串，不删除 key。
 
 `reviewerText` 来自「复盘设置」中的复盘人名称；未设置时输出空字符串。复制动作读取已保存配置，不读取未保存的输入框临时值。
+
+补充边界：
+
+- `reviewTimeText` / `reviewerText` 在本协议里是顶层字段
+- 这两个字段不是 Mac sidecar archive 顶层字段
+- HarmonyOS 不需要为了兼容 Mac sidecar 去改动这里的字段名或层级
 
 ## decision 枚举
 

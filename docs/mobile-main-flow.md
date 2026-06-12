@@ -100,7 +100,7 @@
 
 ## 复制 JSON 协议
 
-阅读页「复制复盘数据」复制 `ReviewCardExchangeSchema v1` 的 pretty print JSON。协议字段见 [review-card-exchange-schema.md](./review-card-exchange-schema.md)。
+阅读页「复制复盘数据」复制 `ReviewCardExchangeSchema v1` 的 pretty print JSON。它对应 Mac `ReviewCardImportPayload`，不是 Mac sidecar archive。协议字段见 [review-card-exchange-schema.md](./review-card-exchange-schema.md) 和 [photoreview-cross-platform-contract.md](./photoreview-cross-platform-contract.md)。
 
 关键约束：
 
