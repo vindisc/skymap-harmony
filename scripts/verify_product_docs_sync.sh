@@ -25,6 +25,7 @@ require_file "docs/mobile-main-flow.md"
 require_file "docs/product/FEATURE_MATRIX.md"
 require_file "docs/product/ROADMAP.md"
 require_file "docs/product/REVIEW_LIBRARY_V0_AUDIT.md"
+require_file "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md"
 
 require_text "docs/review-library-v0.md" "ReviewExchangeJSON"
 require_text "docs/review-library-v0.md" "reviewerText"
@@ -64,6 +65,13 @@ require_text "docs/product/REVIEW_LIBRARY_V0_AUDIT.md" "旧 Harmony 历史记录
 require_text "docs/product/REVIEW_LIBRARY_V0_AUDIT.md" "载入当前照片"
 require_text "docs/product/REVIEW_LIBRARY_V0_AUDIT.md" "不删除原照片"
 
+require_text "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" "localPhotoPath"
+require_text "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" "不把缩略图写入跨端协议"
+require_text "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" "Finder 定位只影响 Mac 本地"
+require_text "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" '不会自动覆盖原始 `review.json`'
+require_text "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" "复盘人为空时不显示复盘人文本"
+require_text "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" "不新增标签、收藏、批注、成长统计或 AI 分析"
+
 SIBLING_AUDIT="$ROOT/../skymap-mac/docs/product/REVIEW_LIBRARY_V0_AUDIT.md"
 if [ -f "$SIBLING_AUDIT" ]; then
   cmp -s "$ROOT/docs/product/REVIEW_LIBRARY_V0_AUDIT.md" "$SIBLING_AUDIT" \
@@ -80,6 +88,12 @@ SIBLING_ROADMAP="$ROOT/../skymap-mac/docs/product/ROADMAP.md"
 if [ -f "$SIBLING_ROADMAP" ]; then
   cmp -s "$ROOT/docs/product/ROADMAP.md" "$SIBLING_ROADMAP" \
     || fail "Mac and Harmony roadmap docs are not identical"
+fi
+
+SIBLING_V1_ACCEPTANCE="$ROOT/../skymap-mac/docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md"
+if [ -f "$SIBLING_V1_ACCEPTANCE" ]; then
+  cmp -s "$ROOT/docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" "$SIBLING_V1_ACCEPTANCE" \
+    || fail "Mac and Harmony v1 acceptance docs are not identical"
 fi
 
 echo "product docs sync: ok"
