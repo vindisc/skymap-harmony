@@ -1,5 +1,6 @@
 import common from '@ohos.app.ability.common';
 import fs from '@ohos.file.fs';
+import picker from '@ohos.file.picker';
 import {
   ReviewCardDocument
 } from '../model/ReviewCardModel';
@@ -14,6 +15,9 @@ export interface ReviewJsonExportResult {
   path: string;
   directory: string;
   fileName: string;
+  userSelectedUri: string;
+  backupPath: string;
+  exportedToUserFiles: boolean;
   message: string;
 }
 
@@ -76,6 +80,34 @@ function writeReviewJson(outputPath: string, rawText: string): void {
   }
 }
 
+function copySandboxFileToUri(sourcePath: string, targetUri: string): void {
+  const sourceFile = fs.openSync(sourcePath, fs.OpenMode.READ_ONLY);
+  const targetFile = fs.openSync(targetUri, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+  try {
+    fs.copyFileSync(sourceFile.fd, targetFile.fd);
+  } finally {
+    fs.closeSync(sourceFile);
+    fs.closeSync(targetFile);
+  }
+}
+
+async function exportToUserSelectedDocument(
+  context: common.UIAbilityContext,
+  sandboxPath: string,
+  fileName: string
+): Promise<string> {
+  const documentPicker = new picker.DocumentViewPicker(context);
+  const selectedUris: Array<string> = await documentPicker.save({
+    newFileNames: [fileName],
+    fileSuffixChoices: ['JSON 文件|json']
+  });
+  const targetUri: string = selectedUris.length > 0 ? selectedUris[0] : '';
+  if (targetUri.length > 0) {
+    copySandboxFileToUri(sandboxPath, targetUri);
+  }
+  return targetUri;
+}
+
 export class ReviewJsonExportService {
   static async exportReviewJson(
     context: common.UIAbilityContext,
@@ -88,12 +120,28 @@ export class ReviewJsonExportService {
       const fileName: string = resolveExportFileName(document);
       const outputPath: string = `${directory}/${fileName}`;
       writeReviewJson(outputPath, reviewJson);
+      const targetUri: string = await exportToUserSelectedDocument(context, outputPath, fileName);
+      if (targetUri.length === 0) {
+        return {
+          success: false,
+          path: '',
+          directory: directory,
+          fileName: fileName,
+          userSelectedUri: '',
+          backupPath: outputPath,
+          exportedToUserFiles: false,
+          message: '未完成导出到文件，已保留应用内备份，请重新选择保存位置'
+        };
+      }
       return {
         success: true,
-        path: outputPath,
+        path: targetUri,
         directory: directory,
         fileName: fileName,
-        message: `review.json 已导出到 ${outputPath}，可传到 Mac 导入`
+        userSelectedUri: targetUri,
+        backupPath: outputPath,
+        exportedToUserFiles: true,
+        message: `review.json 已导出到系统文件：${fileName}，现在可直接发送给 Mac 导入`
       };
     } catch (error) {
       return {
@@ -101,6 +149,9 @@ export class ReviewJsonExportService {
         path: '',
         directory: '',
         fileName: '',
+        userSelectedUri: '',
+        backupPath: '',
+        exportedToUserFiles: false,
         message: 'review.json 导出失败，请稍后重试'
       };
     }

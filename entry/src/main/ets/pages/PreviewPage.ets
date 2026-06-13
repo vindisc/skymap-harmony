@@ -38,7 +38,7 @@ struct PreviewPage {
   @State isExporting: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
-  @State lastReviewJsonExportPath: string = '';
+  @State lastReviewJsonExportMessage: string = '';
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -142,9 +142,9 @@ struct PreviewPage {
       this.getAbilityContext(),
       this.document
     );
-    if (result.success) {
-      this.lastReviewJsonExportPath = result.path;
-    }
+    this.lastReviewJsonExportMessage = result.success
+      ? `review.json 已保存到系统文件：${result.fileName}。现在可直接发送给 Mac 导入。`
+      : result.message;
     promptAction.showToast({ message: result.message });
   }
 
@@ -235,9 +235,9 @@ struct PreviewPage {
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space12, bottom: AppMetrics.space4 })
       .width('100%')
 
-      if (this.lastReviewJsonExportPath.length > 0) {
+      if (this.lastReviewJsonExportMessage.length > 0) {
         Row() {
-          Text(`review.json 已导出：${this.lastReviewJsonExportPath}，可传到 Mac 导入`)
+          Text(this.lastReviewJsonExportMessage)
             .fontSize(AppTypography.caption)
             .fontColor(AppColors.secondaryText)
             .maxLines(2)

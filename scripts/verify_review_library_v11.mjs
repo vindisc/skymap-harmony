@@ -39,8 +39,8 @@ for (const token of requiredDetailTokens) {
 }
 
 const requiredExportTokens = [
-  "review.json 已导出到 ${outputPath}，可传到 Mac 导入",
-  "review.json 已导出：${this.lastReviewJsonExportPath}，可传到 Mac 导入"
+  "review.json 已导出到系统文件：${fileName}，现在可直接发送给 Mac 导入",
+  "review.json 已保存到系统文件：${result.fileName}。现在可直接发送给 Mac 导入。"
 ];
 
 if (!exportServiceSource.includes(requiredExportTokens[0])) {
