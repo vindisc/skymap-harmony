@@ -98,6 +98,17 @@ DEVECO_SDK_HOME=/Applications/DevEco-Studio.app/Contents/sdk \
 --mode module -p module=entry -p product=default assembleHap --no-daemon
 ```
 
+如果当前终端或 DevEco Studio 遗留了错误的 `DEVECO_SDK_HOME`，优先执行：
+
+```bash
+bash scripts/build_hap.sh
+```
+
+脚本会自动停止旧 daemon，并固定使用：
+
+- `DEVECO_SDK_HOME=/Applications/DevEco-Studio.app/Contents/sdk`
+- `JAVA_HOME=/Applications/DevEco-Studio.app/Contents/jbr/Contents/Home`
+
 验收标准：
 
 - `CompileArkTS` 通过。
