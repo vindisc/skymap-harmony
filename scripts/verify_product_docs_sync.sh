@@ -19,6 +19,21 @@ require_text() {
   grep -Fq "$text" "$ROOT/$path" || fail "$path missing text: $text"
 }
 
+compare_product_docs_with_sibling() {
+  local sibling_root="$1"
+  local sibling_label="$2"
+
+  [ -d "$sibling_root" ] || return 0
+  [ -d "$sibling_root/docs/product" ] || fail "$sibling_label missing docs/product"
+
+  local diff_output
+  if ! diff_output="$(diff -qr "$ROOT/docs/product" "$sibling_root/docs/product")"; then
+    echo "product docs sync: docs/product differs from $sibling_label" >&2
+    echo "$diff_output" >&2
+    exit 1
+  fi
+}
+
 require_file "docs/review-library-v0.md"
 require_file "docs/review-library-v1.md"
 require_file "docs/mobile-main-flow.md"
@@ -72,28 +87,6 @@ require_text "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" '不会自动覆盖�
 require_text "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" "复盘人为空时不显示复盘人文本"
 require_text "docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" "不新增标签、收藏、批注、成长统计或 AI 分析"
 
-SIBLING_AUDIT="$ROOT/../skymap-mac/docs/product/REVIEW_LIBRARY_V0_AUDIT.md"
-if [ -f "$SIBLING_AUDIT" ]; then
-  cmp -s "$ROOT/docs/product/REVIEW_LIBRARY_V0_AUDIT.md" "$SIBLING_AUDIT" \
-    || fail "Mac and Harmony audit docs are not identical"
-fi
-
-SIBLING_MATRIX="$ROOT/../skymap-mac/docs/product/FEATURE_MATRIX.md"
-if [ -f "$SIBLING_MATRIX" ]; then
-  cmp -s "$ROOT/docs/product/FEATURE_MATRIX.md" "$SIBLING_MATRIX" \
-    || fail "Mac and Harmony feature matrix docs are not identical"
-fi
-
-SIBLING_ROADMAP="$ROOT/../skymap-mac/docs/product/ROADMAP.md"
-if [ -f "$SIBLING_ROADMAP" ]; then
-  cmp -s "$ROOT/docs/product/ROADMAP.md" "$SIBLING_ROADMAP" \
-    || fail "Mac and Harmony roadmap docs are not identical"
-fi
-
-SIBLING_V1_ACCEPTANCE="$ROOT/../skymap-mac/docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md"
-if [ -f "$SIBLING_V1_ACCEPTANCE" ]; then
-  cmp -s "$ROOT/docs/product/REVIEW_LIBRARY_V1_ACCEPTANCE.md" "$SIBLING_V1_ACCEPTANCE" \
-    || fail "Mac and Harmony v1 acceptance docs are not identical"
-fi
+compare_product_docs_with_sibling "$ROOT/../skymap-mac" "Mac"
 
 echo "product docs sync: ok"
