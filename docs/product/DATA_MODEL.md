@@ -45,17 +45,26 @@ Preset
 ExportJob
   ├─ consumes Photo, Review, Template and Preset
   └─ produces exported files and archive records
+
+SyncSystem
+  ├─ moves Review through review bundle
+  ├─ uses SMB, WebDAV or local folder as SyncTarget
+  └─ imports into Review Library through ImportRecord
 ```
 
 ## Review
 
 Review 表示一次针对照片的摄影复盘。
 
+`review.json` 的字段语义以 [`REVIEW_JSON_SEMANTICS.md`](./REVIEW_JSON_SEMANTICS.md) 为准；当前表格只定义 Review 领域对象中必须稳定存在的产品字段。
+
 | 字段 | 职责 | 归属 |
 | --- | --- | --- |
 | reviewId | 标识一次复盘，便于归档、同步和去重。 | 产品模型 |
 | photoRef | 关联被复盘的照片。 | 产品模型 |
 | titleText | 复盘标题，例如「这张照片是否成立」。 | 产品模型 |
+| reviewTimeText | 复盘时间文本，用于阅读页、导出图和跨端回看时的同一时间口径。 | 产品模型 |
+| reviewerText | 复盘人文本，用于标记这次复盘由谁完成。 | 产品模型 |
 | reviewStructure | 表示复盘框架，例如快速复盘、构图光线、故事表达。 | 产品模型 |
 | decision | 表示成立、不成立或不确定。 | 产品模型 |
 | firstLookText | 第一眼视觉落点。 | 产品模型 |
@@ -150,9 +159,99 @@ ExportJob 表示一次导出动作，不等同于单张导出按钮点击。
 | resultRefs | 导出产物引用。 | 客户端实现 |
 | errorSummary | 用户可理解的失败原因。 | 产品模型 |
 
+## SyncSystem
+
+SyncSystem 表示 Skymap 在 Harmony、家庭存储、Mac 和 Review Library 之间的同步能力。
+
+SyncSystem 是产品级文件流转模型，不是云服务器、账号系统或客户端内部数据库。SyncSystem v1 优先支持家庭存储：SMB、WebDAV 和本地同步目录。
+
+### SyncTarget
+
+SyncTarget 表示一个可被用户选择或配置的同步位置。
+
+| 字段 | 职责 | 归属 |
+| --- | --- | --- |
+| syncTargetId | 标识一个同步位置。 | 产品模型 |
+| kind | 区分 SMB、WebDAV 或本地文件夹。 | 产品模型 |
+| displayName | 用户可识别的中文名称。 | 产品模型 |
+| rootPath | 指向 `Skymap/` 根目录的位置描述。 | 客户端实现 |
+| lastScanAt | Mac 最近一次扫描时间。 | 客户端实现 |
+| status | 可用、不可用、权限失败或等待挂载。 | 产品模型 |
+| errorSummary | 用户可理解的失败原因。 | 产品模型 |
+
+### ReviewBundle
+
+ReviewBundle 表示一次复盘在家庭存储中的目录级同步单元。
+
+推荐结构：
+
+```text
+Skymap/
+└── Reviews/
+    └── 2026/
+        └── 06/
+            └── review-20260613-091530-a1b2c3/
+                ├── review.json
+                ├── manifest.json
+                ├── photo.jpg
+                └── preview.jpg
+```
+
+| 字段 | 职责 | 归属 |
+| --- | --- | --- |
+| bundleId | 标识一个 review bundle。 | 产品模型 |
+| reviewRef | 指向 bundle 内的 `review.json`。 | 产品模型 |
+| manifestRef | 指向 bundle 内的 `manifest.json`。 | 产品模型 |
+| photoRef | 可选照片副本。 | 产品模型 |
+| previewRef | 可选预览图。 | 产品模型 |
+| createdAt / updatedAt | 支持排序、扫描和冲突判断。 | 产品模型 |
+| sourceClient | 标记 Harmony、Mac 或手动导入来源。 | 产品模型 |
+
+### BundleManifest
+
+BundleManifest 表示 bundle 内的文件清单和完整性摘要，不替代 `review.json`。
+
+| 字段 | 职责 | 归属 |
+| --- | --- | --- |
+| manifestVersion | 清单版本。 | 产品模型 |
+| bundleId | 对应 ReviewBundle。 | 产品模型 |
+| reviewFile | `review.json` 文件名、大小和可选哈希。 | 产品模型 |
+| photoFile | 可选照片文件名、大小、像素尺寸和可选哈希。 | 产品模型 |
+| previewFile | 可选预览文件名、大小和可选哈希。 | 产品模型 |
+| sourceClient | 首次创建 bundle 的客户端。 | 产品模型 |
+| createdAt | bundle 创建时间。 | 产品模型 |
+
+### ImportRecord
+
+ImportRecord 表示 Mac 已经处理过的同步对象。
+
+| 字段 | 职责 | 归属 |
+| --- | --- | --- |
+| importRecordId | 标识一次导入记录。 | 客户端实现 |
+| bundleId | 已导入或已跳过的 bundle。 | 产品模型 |
+| reviewId | 关联导入后的 Review。 | 产品模型 |
+| sourcePath | 导入来源路径。 | 客户端实现 |
+| importedAt | 导入时间。 | 客户端实现 |
+| result | 已导入、已存在、冲突、失败或缺失文件。 | 产品模型 |
+| errorSummary | 用户可理解的失败原因。 | 产品模型 |
+
+### ConflictRecord
+
+ConflictRecord 表示无法自动判断的同步冲突。
+
+| 字段 | 职责 | 归属 |
+| --- | --- | --- |
+| conflictRecordId | 标识一次冲突。 | 客户端实现 |
+| conflictType | 同 ID 内容不同、疑似重复照片、缺失文件或来源移动。 | 产品模型 |
+| primaryRef | 已存在记录。 | 产品模型 |
+| incomingRef | 新发现记录。 | 产品模型 |
+| detectedAt | 发现时间。 | 客户端实现 |
+| recommendedAction | 跳过、保留副本、手动选择或重新扫描。 | 产品模型 |
+
 ## 当前边界
 
 - Harmony Client 当前主要创建 Review、Photo 的轻量记录和单张复盘图 ExportJob。
 - Mac Client 当前主要消费 Photo、Template、Preset、Profile，并承担批量 ExportJob。
 - Review 与 review.json 是跨端优先级最高的统一模型。
+- SyncSystem v1 只设计家庭存储优先的文件同步，不引入云服务器、账号体系或第三方后端。
 - 搜索、筛选和成长统计需要基于上述产品模型建立，不能直接依赖某个客户端的页面列表状态。

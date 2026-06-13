@@ -10,6 +10,8 @@
 - `VISION.md`
 - `FEATURE_MATRIX.md`
 - `DATA_MODEL.md`
+- `REVIEW_JSON_SEMANTICS.md`
+- `SYNC_SYSTEM_V1.md`
 - `WORKFLOW.md`
 - `ROADMAP.md`
 - `CHANGE_RULES.md`
@@ -76,6 +78,7 @@ review.json 是产品层交换文件，不是某个客户端的私有备份。
 任何字段变更都必须先更新：
 
 - `DATA_MODEL.md`
+- `REVIEW_JSON_SEMANTICS.md`
 - `WORKFLOW.md`
 - `FEATURE_MATRIX.md`
 

@@ -7,6 +7,8 @@
 - `VISION.md`：产品愿景、核心用户、核心场景、长期目标和不做什么。
 - `FEATURE_MATRIX.md`：Mac Client 与 Harmony Client 的能力矩阵。
 - `DATA_MODEL.md`：Review、Photo、Template、Preset、Profile、ExportJob 等产品级领域模型。
+- `REVIEW_JSON_SEMANTICS.md`：`review.json` v1 字段语义、空值策略和双端责任分工。
+- `SYNC_SYSTEM_V1.md`：家庭存储优先的 SMB / WebDAV 同步系统 v1 架构设计。
 - `WORKFLOW.md`：跨端核心工作流。
 - `ROADMAP.md`：按用户价值组织的阶段路线图。
 - `CHANGE_RULES.md`：产品层变更和客户端实现顺序规则。
