@@ -24,7 +24,7 @@ export interface ReviewProjectSummary {
   latestItem?: ReviewCardHistoryItem;
 }
 
-export const DEFAULT_PROJECT_NAME: string = '我的摄影复盘';
+export const DEFAULT_PROJECT_NAME: string = '复盘库';
 
 export function createEmptyProjectStats(): ReviewProjectStats {
   return {

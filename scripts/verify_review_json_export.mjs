@@ -9,7 +9,7 @@ const requiredPreviewStrings = [
   "ActionButton('导出 review.json'",
   'private async exportReviewJson(): Promise<void>',
   'this.lastReviewJsonExportPath = result.path;',
-  '手动交换文件：${this.lastReviewJsonExportPath}'
+  'review.json 已导出：${this.lastReviewJsonExportPath}，可传到 Mac 导入'
 ];
 
 for (const token of requiredPreviewStrings) {
@@ -23,7 +23,7 @@ const requiredServiceStrings = [
   "const REVIEW_JSON_EXPORT_DIR_NAME: string = 'review_exchange';",
   "const REVIEW_JSON_EXTENSION: string = 'review.json';",
   'stringifyReviewCardExchangeSchemaV1(document, reviewerName)',
-  'review.json 已导出到 ${outputPath}',
+  'review.json 已导出到 ${outputPath}，可传到 Mac 导入',
   'review.json 导出失败，请稍后重试'
 ];
 

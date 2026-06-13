@@ -36,6 +36,52 @@ export function getReviewProjectExcerpt(document: ReviewCardDocument): string {
 }
 
 export class ReviewProjectService {
+  static resolvePhotoFileName(document: ReviewCardDocument): string {
+    const imageUri: string = typeof document.imageUri === 'string' ? document.imageUri.trim() : '';
+    if (imageUri.length === 0) {
+      return '';
+    }
+
+    const normalizedPath: string = imageUri.replace(/\\/g, '/');
+    const fileName: string = normalizedPath.slice(normalizedPath.lastIndexOf('/') + 1);
+    return fileName.trim();
+  }
+
+  static filterItems(
+    items: Array<ReviewCardHistoryItem>,
+    rawQuery: string,
+    decisionFilter: string
+  ): Array<ReviewCardHistoryItem> {
+    const query: string = rawQuery.trim().toLocaleLowerCase();
+    return items.filter((item: ReviewCardHistoryItem): boolean => {
+      const judgement = normalizeReviewJudgement(item.document.content.judgement);
+      if (decisionFilter === ReviewJudgementStatus.VALID && judgement !== ReviewJudgementStatus.VALID) {
+        return false;
+      }
+      if (decisionFilter === ReviewJudgementStatus.UNSURE && judgement !== ReviewJudgementStatus.UNSURE) {
+        return false;
+      }
+      if (decisionFilter === ReviewJudgementStatus.INVALID && judgement !== ReviewJudgementStatus.INVALID) {
+        return false;
+      }
+
+      if (query.length === 0) {
+        return true;
+      }
+
+      const searchableParts: Array<string> = [
+        item.document.content.title,
+        item.document.content.coreRelation,
+        item.document.content.currentBlocker,
+        ReviewProjectService.resolvePhotoFileName(item.document)
+      ];
+      const searchableText: string = searchableParts
+        .map((value: string): string => normalizeExcerpt(value).toLocaleLowerCase())
+        .join('\n');
+      return searchableText.includes(query);
+    });
+  }
+
   static buildGlobalStats(items: Array<ReviewCardHistoryItem>): ReviewProjectStats {
     const stats: ReviewProjectStats = {
       totalCount: items.length,

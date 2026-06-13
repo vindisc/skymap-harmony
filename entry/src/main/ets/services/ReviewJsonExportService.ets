@@ -93,7 +93,7 @@ export class ReviewJsonExportService {
         path: outputPath,
         directory: directory,
         fileName: fileName,
-        message: `review.json 已导出到 ${outputPath}`
+        message: `review.json 已导出到 ${outputPath}，可传到 Mac 导入`
       };
     } catch (error) {
       return {

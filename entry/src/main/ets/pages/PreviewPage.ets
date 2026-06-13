@@ -237,7 +237,7 @@ struct PreviewPage {
 
       if (this.lastReviewJsonExportPath.length > 0) {
         Row() {
-          Text(`手动交换文件：${this.lastReviewJsonExportPath}`)
+          Text(`review.json 已导出：${this.lastReviewJsonExportPath}，可传到 Mac 导入`)
             .fontSize(AppTypography.caption)
             .fontColor(AppColors.secondaryText)
             .maxLines(2)
