@@ -465,6 +465,7 @@ const historyServiceSource = readText('entry/src/main/ets/services/ReviewCardHis
 const reviewCardModelSource = readText('entry/src/main/ets/model/ReviewCardModel.ets');
 const reviewLibraryServiceSource = readText('entry/src/main/ets/services/ReviewLibraryService.ets');
 const projectDetailPageSource = readText('entry/src/main/ets/pages/ProjectDetailPage.ets');
+const appDesignSource = readText('entry/src/main/ets/components/AppDesign.ets');
 const sourceSchemaKeys = parseExchangeInterfaceKeys(exchangeSchemaSource);
 const docSchemaKeys = parseExchangeDocKeys(exchangeSchemaDoc);
 assert(JSON.stringify(sourceSchemaKeys) === JSON.stringify(REVIEW_SCHEMA_KEYS), 'ReviewCardExchangeSchemaV1 interface keys differ from expected v1 keys');
@@ -483,6 +484,13 @@ assert(reviewLibraryServiceSource.includes('static filter(items: Array<ReviewCar
 assert(projectDetailPageSource.includes("TextInput({ placeholder: '搜索标题、画面事实、核心关系、延伸理解、卡点'"), 'Review Library search input is missing');
 assert(projectDetailPageSource.includes("Select([") && projectDetailPageSource.includes("'全部判断'"), 'Review Library decision filter is missing');
 assert(projectDetailPageSource.includes("'全部卡点'") && projectDetailPageSource.includes("'全部复盘人'"), 'Review Library blocker/reviewer filters are missing');
+assert(appDesignSource.includes('export struct ReviewLibraryListCard'), 'Review Library must use a dedicated mobile list card.');
+assert(appDesignSource.includes('getReviewerDisplayText(this.item).length > 0'), 'Review Library list card should hide empty reviewer text.');
+assert(appDesignSource.includes('getReviewBlockerText(this.item).length > 0'), 'Review Library list card should hide empty blocker rows.');
+assert(projectDetailPageSource.includes('ReviewLibraryListCard({'), 'ProjectDetailPage should render ReviewLibraryListCard.');
+assert(projectDetailPageSource.includes("title: '当前还没有复盘记录'"), 'Review Library empty state title should be explicit.');
+assert(projectDetailPageSource.includes("label: this.isCreatingReview ? '选择中...' : '创建第一条复盘'"), 'Review Library empty state should offer first review creation.');
+assert(projectDetailPageSource.includes('不会删除原照片或已导出的文件'), 'Review Library delete confirmation must preserve deletion boundary.');
 
 assert(mapReviewJudgementToExchangeDecision('成立') === 'works', '成立 should map to works');
 assert(mapReviewJudgementToExchangeDecision('待判断') === 'uncertain', '待判断 should map to uncertain');

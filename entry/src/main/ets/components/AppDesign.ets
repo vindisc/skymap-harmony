@@ -257,6 +257,33 @@ function getJudgementBadgeBackground(_value: string): string {
   return '#F3F0EA';
 }
 
+function normalizeDisplayText(value: string | undefined): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return '';
+}
+
+function getReviewTitleText(item: ReviewCardHistoryItem): string {
+  const title: string = normalizeDisplayText(item.document.content.title);
+  return title.length > 0 ? title : '未命名复盘';
+}
+
+function getReviewRelationText(item: ReviewCardHistoryItem): string {
+  const relation: string = normalizeDisplayText(item.document.content.coreRelation);
+  return relation.length > 0 ? relation : '还没有提炼核心关系';
+}
+
+function getReviewBlockerText(item: ReviewCardHistoryItem): string {
+  const blocker: string = normalizeDisplayText(item.document.content.currentBlocker);
+  return blocker.length > 0 ? blocker : '';
+}
+
+function getReviewerDisplayText(item: ReviewCardHistoryItem): string {
+  const reviewer: string = normalizeDisplayText(item.reviewerText);
+  return reviewer.length > 0 ? reviewer : '';
+}
+
 @Component
 export struct ReviewJudgementBadge {
   @Prop value: string = ReviewJudgementStatus.UNSURE;
@@ -644,6 +671,95 @@ export struct ProjectReviewCard {
     }
     .width('100%')
     .constraintSize({ minHeight: 84 })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+    .onClick(() => {
+      this.onTap();
+    })
+  }
+}
+
+@Component
+export struct ReviewLibraryListCard {
+  @Prop item: ReviewCardHistoryItem = {
+    document: createDefaultReviewCardDocument(),
+    exportedPath: ''
+  };
+  onTap: () => void = () => {};
+
+  build() {
+    Stack({ alignContent: Alignment.TopEnd }) {
+      Row({ space: AppMetrics.space12 }) {
+        ReviewPhotoBlock({
+          imageUri: this.item.document.imageUri,
+          imageWidth: this.item.document.imageWidth,
+          imageHeight: this.item.document.imageHeight,
+          imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
+          aspectRatioValue: 1,
+          compact: true,
+          fitMode: ImageFit.Cover,
+          cornerRadius: 8
+        })
+          .width(64)
+
+        Column({ space: AppMetrics.space4 }) {
+          Text(getReviewTitleText(this.item))
+            .fontSize(AppTypography.body)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+            .padding({ right: 72 })
+
+          Text(getReviewRelationText(this.item))
+            .fontSize(AppTypography.auxiliary)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.auxiliaryLineHeight)
+            .width('100%')
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Row({ space: AppMetrics.space8 }) {
+            Text(formatReviewTime(this.item.document.updatedAt))
+              .fontSize(AppTypography.caption)
+              .fontColor(AppColors.mutedText)
+              .maxLines(1)
+
+            if (getReviewerDisplayText(this.item).length > 0) {
+              Text(getReviewerDisplayText(this.item))
+                .fontSize(AppTypography.caption)
+                .fontColor(AppColors.mutedText)
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+            }
+          }
+          .width('100%')
+
+          if (getReviewBlockerText(this.item).length > 0) {
+            Text(`卡点：${getReviewBlockerText(this.item)}`)
+              .fontSize(AppTypography.caption)
+              .fontColor(AppColors.secondaryText)
+              .lineHeight(AppTypography.captionLineHeight)
+              .width('100%')
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+          }
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+      }
+      .alignItems(VerticalAlign.Center)
+      .padding(AppMetrics.space12)
+      .width('100%')
+      .constraintSize({ minHeight: 96 })
+
+      ReviewJudgementBadge({ value: this.item.document.content.judgement })
+        .margin({ top: AppMetrics.space12, right: AppMetrics.space12 })
+    }
+    .width('100%')
+    .constraintSize({ minHeight: 96 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })

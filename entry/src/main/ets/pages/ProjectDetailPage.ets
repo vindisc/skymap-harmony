@@ -1,14 +1,15 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { PREVIEW_PAGE } from '../app/AppRouter';
-import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState, ProjectReviewCard } from '../components/AppDesign';
+import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
+import { AppColors, AppMetrics, AppPageHeader, AppTypography, CompactPrimaryButton, EmptyState, ReviewLibraryListCard } from '../components/AppDesign';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewLibraryFilterOptions, ReviewLibraryFilters, ReviewLibraryService } from '../services/ReviewLibraryService';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
+import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 
 @Entry
 @Component
@@ -18,6 +19,7 @@ struct ProjectDetailPage {
   @State visibleItems: Array<ReviewCardHistoryItem> = [];
   @State filters: ReviewLibraryFilters = ReviewLibraryService.createEmptyFilters();
   @State filterOptions: ReviewLibraryFilterOptions = { blockers: [], reviewers: [] };
+  @State isCreatingReview: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -51,6 +53,31 @@ struct ProjectDetailPage {
   private openHistory(document: ReviewCardDocument): void {
     ReviewCardStore.setCurrentDocument(document);
     router.pushUrl({ url: PREVIEW_PAGE });
+  }
+
+  private async createFirstReview(): Promise<void> {
+    if (this.isCreatingReview) {
+      return;
+    }
+
+    this.isCreatingReview = true;
+    const result: PickedPhotoResult = await pickSinglePhoto();
+    this.isCreatingReview = false;
+
+    if (!result.success) {
+      if (!result.cancelled && result.message.length > 0) {
+        promptAction.showToast({ message: result.message });
+      }
+      return;
+    }
+
+    ReviewCardStore.createPhotoDraft(
+      result.imageUri,
+      result.imageWidth,
+      result.imageHeight,
+      result.imageSizeFallbackUsed
+    );
+    router.pushUrl({ url: EDITOR_PAGE });
   }
 
   private confirmDeleteHistory(document: ReviewCardDocument): void {
@@ -221,9 +248,19 @@ struct ProjectDetailPage {
       if (this.allItems.length === 0) {
         Column() {
           EmptyState({
-            title: '暂无复盘记录',
-            message: '请回到首页选择照片开始复盘'
+            title: '当前还没有复盘记录',
+            message: '可从摄影复盘入口创建第一条复盘'
           })
+
+          CompactPrimaryButton({
+            label: this.isCreatingReview ? '选择中...' : '创建第一条复盘',
+            isDisabled: this.isCreatingReview,
+            buttonWidth: 168,
+            onTap: () => {
+              this.createFirstReview();
+            }
+          })
+            .margin({ top: AppMetrics.space12 })
         }
         .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
         .width('100%')
@@ -244,7 +281,7 @@ struct ProjectDetailPage {
         List({ space: AppMetrics.space8 }) {
           ForEach(this.visibleItems, (item: ReviewCardHistoryItem) => {
             ListItem() {
-              ProjectReviewCard({
+              ReviewLibraryListCard({
                 item: item,
                 onTap: () => {
                   this.openHistory(item.document);
