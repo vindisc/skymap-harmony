@@ -56,6 +56,18 @@ struct ProjectDetailPage {
     router.back();
   }
 
+  private isFilterSelected(value: string): boolean {
+    return this.decisionFilter === value;
+  }
+
+  private resolveFilterChipTextColor(value: string): string {
+    return this.isFilterSelected(value) ? '#FFFFFF' : AppColors.secondaryText;
+  }
+
+  private resolveFilterChipBackgroundColor(value: string): string {
+    return this.isFilterSelected(value) ? AppColors.primary : AppColors.surfaceMuted;
+  }
+
   private openHistory(document: ReviewCardDocument): void {
     ReviewCardStore.setCurrentDocument(document);
     router.pushUrl({ url: PREVIEW_PAGE });
@@ -104,15 +116,14 @@ struct ProjectDetailPage {
 
   @Builder
   FilterChip(label: string, value: string) {
-    const isSelected: boolean = this.decisionFilter === value;
     Button(label)
       .height(32)
       .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
       .borderRadius(AppMetrics.capsuleRadius)
       .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
-      .fontColor(isSelected ? '#FFFFFF' : AppColors.secondaryText)
-      .backgroundColor(isSelected ? AppColors.primary : AppColors.surfaceMuted)
+      .fontColor(this.resolveFilterChipTextColor(value))
+      .backgroundColor(this.resolveFilterChipBackgroundColor(value))
       .onClick(() => {
         this.decisionFilter = value;
         this.applyFilters();
