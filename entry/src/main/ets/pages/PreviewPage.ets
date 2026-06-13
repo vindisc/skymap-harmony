@@ -21,6 +21,7 @@ import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID 
 import { ReviewJsonExportResult, ReviewJsonExportService } from '../services/ReviewJsonExportService';
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
+import { HomeStorageOperationResult, HomeStorageService } from '../services/HomeStorageService';
 import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
@@ -36,6 +37,7 @@ enum PreviewSaveState {
 struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State isExporting: boolean = false;
+  @State isUploadingHomeStorage: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
   @State lastReviewJsonExportMessage: string = '';
@@ -148,6 +150,25 @@ struct PreviewPage {
     promptAction.showToast({ message: result.message });
   }
 
+  private async uploadReviewJsonToHomeStorage(): Promise<void> {
+    if (this.isUploadingHomeStorage) {
+      return;
+    }
+
+    this.isUploadingHomeStorage = true;
+    try {
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+      const result: HomeStorageOperationResult = await HomeStorageService.uploadReviewJson(
+        this.getAbilityContext(),
+        this.document,
+        reviewerName
+      );
+      promptAction.showToast({ message: result.message });
+    } finally {
+      this.isUploadingHomeStorage = false;
+    }
+  }
+
   private async waitForExportLayout(): Promise<void> {
     return new Promise<void>((resolve: () => void) => {
       setTimeout(() => {
@@ -171,18 +192,24 @@ struct PreviewPage {
     return resolveLongFormExportCardHeight(this.document, this.getExportCanvasWidth());
   }
 
+  private isActionBusy(): boolean {
+    return this.isExporting || this.isUploadingHomeStorage;
+  }
+
   @Builder
-  ActionButton(label: string, emphasized: boolean, onTap: () => void) {
+  ActionButton(label: string, emphasized: boolean, isDisabled: boolean, onTap: () => void) {
     Button(label)
       .height(28)
       .padding({ left: emphasized ? AppMetrics.space12 : AppMetrics.space8, right: emphasized ? AppMetrics.space12 : AppMetrics.space8 })
       .borderRadius(AppMetrics.capsuleRadius)
       .fontSize(AppTypography.caption)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
-      .fontColor(emphasized ? AppColors.text : AppColors.secondaryText)
+      .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.text : AppColors.secondaryText))
       .backgroundColor('#00000000')
-      .border(emphasized ? { width: 1, color: AppColors.border } : { width: 0 })
-      .stateEffect(true)
+      .border(emphasized ? { width: 1, color: isDisabled ? '#E4E7EC' : AppColors.border } : { width: 0 })
+      .opacity(isDisabled ? 0.52 : 1)
+      .stateEffect(!isDisabled)
+      .enabled(!isDisabled)
       .onClick(() => {
         onTap();
       })
@@ -214,25 +241,36 @@ struct PreviewPage {
           .lineHeight(AppTypography.level2LineHeight)
 
         Blank()
-
-        Row({ space: AppMetrics.space8 }) {
-          this.ActionButton('编辑', false, () => {
-            router.replaceUrl({ url: EDITOR_PAGE });
-          })
-          this.ActionButton('导出 review.json', false, () => {
-            this.exportReviewJson();
-          })
-          this.ActionButton('复制复盘数据', false, () => {
-            this.copyReviewData();
-          })
-          this.ActionButton(this.isExporting ? '导出中' : '导出', true, () => {
-            this.exportImage();
-          })
-        }
-        .opacity(this.isExporting ? 0.8 : 1)
       }
       .alignItems(VerticalAlign.Center)
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space12, bottom: AppMetrics.space4 })
+      .width('100%')
+
+      Column({ space: AppMetrics.space8 }) {
+        Row({ space: AppMetrics.space8 }) {
+          this.ActionButton('编辑', false, this.isActionBusy(), () => {
+            router.replaceUrl({ url: EDITOR_PAGE });
+          })
+          this.ActionButton('导出 review.json', false, this.isActionBusy(), () => {
+            this.exportReviewJson();
+          })
+          this.ActionButton(this.isExporting ? '导出中' : '导出', true, this.isActionBusy(), () => {
+            this.exportImage();
+          })
+        }
+        .height(32)
+
+        Row({ space: AppMetrics.space8 }) {
+          this.ActionButton('复制复盘数据', false, this.isActionBusy(), () => {
+            this.copyReviewData();
+          })
+          this.ActionButton(this.isUploadingHomeStorage ? '上传中' : '上传到家庭存储', false, this.isActionBusy(), () => {
+            this.uploadReviewJsonToHomeStorage();
+          })
+        }
+        .height(32)
+      }
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space4 })
       .width('100%')
 
       if (this.lastReviewJsonExportMessage.length > 0) {
