@@ -14,6 +14,16 @@
 - `TemplateConfig` 结构变更。
 - Swift / ArkTS 业务代码变更。
 
+## 0.1 当前事实口径
+
+本文件描述的是 Sync System v1 的产品与架构目标，不代表当前 Beta 基线已经具备对应实现。
+
+需要特别区分：
+
+- Harmony 历史分支曾出现过家庭存储相关实现，包括 WebDAV 上传、SMB 直连上传、SMB 系统保存模式、设置页配置和阅读页上传入口。
+- 上述历史实现当前不在 Beta 候选分支里；当前 Harmony 基线只有 `review.json` 手动导出链路。
+- 因此，SMB / WebDAV 在 Product Layer 里应被视为“做过实现探索，但未纳入当前 Beta 主链路，且未完成当前真机验收”，而不是“当前已稳定支持”。
+
 Sync System v1 的目标不是做复杂云同步，而是把现有链路补成可理解、可验证、可逐步实现的家庭存储同步：
 
 ```text
