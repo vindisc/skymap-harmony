@@ -11,6 +11,10 @@ import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 
+interface ProjectDetailSelectOption {
+  value: string;
+}
+
 @Entry
 @Component
 struct ProjectDetailPage {
@@ -48,6 +52,22 @@ struct ProjectDetailPage {
   private resetFilters(): void {
     this.filters = ReviewLibraryService.createEmptyFilters();
     this.applyFilters();
+  }
+
+  private buildBlockerSelectOptions(): Array<ProjectDetailSelectOption> {
+    const options: Array<ProjectDetailSelectOption> = [{ value: '全部卡点' }];
+    this.filterOptions.blockers.forEach((blocker: string): void => {
+      options.push({ value: blocker });
+    });
+    return options;
+  }
+
+  private buildReviewerSelectOptions(): Array<ProjectDetailSelectOption> {
+    const options: Array<ProjectDetailSelectOption> = [{ value: '全部复盘人' }];
+    this.filterOptions.reviewers.forEach((reviewer: string): void => {
+      options.push({ value: reviewer });
+    });
+    return options;
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -147,9 +167,7 @@ struct ProjectDetailPage {
             this.applyFilters();
           })
 
-        Select([{ value: '全部卡点' }].concat(this.filterOptions.blockers.map((blocker: string) => {
-          return { value: blocker };
-        })))
+        Select(this.buildBlockerSelectOptions())
           .value(this.filters.blocker)
           .height(34)
           .font({ size: AppTypography.caption })
@@ -163,9 +181,7 @@ struct ProjectDetailPage {
             this.applyFilters();
           })
 
-        Select([{ value: '全部复盘人' }].concat(this.filterOptions.reviewers.map((reviewer: string) => {
-          return { value: reviewer };
-        })))
+        Select(this.buildReviewerSelectOptions())
           .value(this.filters.reviewer)
           .height(34)
           .font({ size: AppTypography.caption })
@@ -238,15 +254,18 @@ struct ProjectDetailPage {
           .width('100%')
           .margin({ top: AppMetrics.space12 })
 
-        this.SearchAndFilterPanel()
-          .margin({ top: AppMetrics.space16 })
+        Column() {
+          this.SearchAndFilterPanel()
+        }
+        .width('100%')
+        .margin({ top: AppMetrics.space16 })
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: 0 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
 
       if (this.allItems.length === 0) {
-        Column() {
+        Column({ space: AppMetrics.space12 }) {
           EmptyState({
             title: '当前还没有复盘记录',
             message: '可从摄影复盘入口创建第一条复盘'
@@ -260,7 +279,6 @@ struct ProjectDetailPage {
               this.createFirstReview();
             }
           })
-            .margin({ top: AppMetrics.space12 })
         }
         .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
         .width('100%')
