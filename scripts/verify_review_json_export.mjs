@@ -8,8 +8,8 @@ let failed = false;
 const requiredPreviewStrings = [
   "ActionButton('导出 review.json'",
   'private async exportReviewJson(): Promise<void>',
-  'this.lastReviewJsonExportPath = result.path;',
-  'review.json 已导出：${this.lastReviewJsonExportPath}，可传到 Mac 导入'
+  "review.json 已保存到系统文件：${result.fileName}。现在可直接发送给 Mac 导入。",
+  'Text(this.lastReviewJsonExportMessage)'
 ];
 
 for (const token of requiredPreviewStrings) {
@@ -23,7 +23,10 @@ const requiredServiceStrings = [
   "const REVIEW_JSON_EXPORT_DIR_NAME: string = 'review_exchange';",
   "const REVIEW_JSON_EXTENSION: string = 'review.json';",
   'stringifyReviewCardExchangeSchemaV1(document, reviewerName)',
-  'review.json 已导出到 ${outputPath}，可传到 Mac 导入',
+  'new picker.DocumentViewPicker(context)',
+  "fileSuffixChoices: ['JSON 文件|json']",
+  'review.json 已导出到系统文件：${fileName}，现在可直接发送给 Mac 导入',
+  '未完成导出到文件，已保留应用内备份，请重新选择保存位置',
   'review.json 导出失败，请稍后重试'
 ];
 
