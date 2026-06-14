@@ -24,7 +24,7 @@ const EDITOR_FIELD_SAFE_TOP_GAP: number = 12;
 const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 26;
 const EDITOR_KEYBOARD_SCROLL_DELAY: number = 220;
 const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 80;
-const EDITOR_PHOTO_TITLE_HEIGHT: number = AppTypography.level2LineHeight;
+const EDITOR_PHOTO_TITLE_HEIGHT: number = AppTypography.pageTitleLineHeight;
 const EDITOR_PHOTO_TITLE_GAP: number = 8;
 const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 8;
 const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 16;
@@ -435,10 +435,10 @@ struct EditorPage {
   PhotoHeader() {
     Column({ space: EDITOR_PHOTO_TITLE_GAP }) {
       Text('写复盘')
-        .fontSize(AppTypography.level2)
+        .fontSize(AppTypography.pageTitle)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
-        .lineHeight(AppTypography.level2LineHeight)
+        .lineHeight(AppTypography.pageTitleLineHeight)
         .width('100%')
 
       PhotoWritingHero({

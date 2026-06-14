@@ -140,9 +140,9 @@ export struct ProjectDetailPage {
   FilterChip(label: string, value: string) {
     Button(label)
       .height(AppMetrics.chipHeight)
-      .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+      .padding({ left: AppMetrics.cardGap, right: AppMetrics.cardGap })
       .borderRadius(AppMetrics.capsuleRadius)
-      .fontSize(AppTypography.auxiliary)
+      .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
@@ -173,9 +173,9 @@ export struct ProjectDetailPage {
 
         Column({ space: AppMetrics.space8 }) {
           TextInput({ text: this.searchText, placeholder: '搜索标题、核心关系、卡点、文件名' })
-            .height(AppMetrics.chipHeight)
+            .height(AppMetrics.searchHeight)
             .borderRadius(AppMetrics.cardRadius)
-            .fontSize(AppTypography.auxiliary)
+            .fontSize(AppTypography.listSubtitle)
             .fontColor(AppColors.text)
             .placeholderColor('#9AA1AB')
             .backgroundColor(AppColors.surface)
@@ -268,7 +268,7 @@ export struct ProjectDetailPage {
           }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
           ListItem() {
             Column()
-              .height(72)
+              .height(AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding)
               .width('100%')
           }
         }
@@ -276,7 +276,7 @@ export struct ProjectDetailPage {
         .width('100%')
         .edgeEffect(EdgeEffect.None)
         .scrollBar(BarState.Off)
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space16 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.cardGap })
       }
     }
     .width('100%')

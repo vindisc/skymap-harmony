@@ -105,18 +105,19 @@ export struct MyPage {
 
   @Builder
   LinkRow(title: string, value: string, onTap: () => void) {
-    Row({ space: AppMetrics.space16 }) {
+    Row({ space: AppMetrics.cardGap }) {
       Column({ space: AppMetrics.space8 }) {
         Text(title)
-          .fontSize(AppTypography.level3)
+          .fontSize(AppTypography.cardTitle)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
           .width('100%')
 
         Text(value)
-          .fontSize(AppTypography.auxiliary)
+          .fontSize(AppTypography.caption)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.auxiliaryLineHeight)
+          .lineHeight(AppTypography.captionLineHeight)
           .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
@@ -127,8 +128,9 @@ export struct MyPage {
         .fontColor(AppColors.mutedText)
     }
     .alignItems(VerticalAlign.Center)
-    .padding(AppMetrics.space16)
+    .padding(AppMetrics.cardPadding)
     .width('100%')
+    .constraintSize({ minHeight: 72, maxHeight: 84 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: '#ECE8E0' })
@@ -139,37 +141,33 @@ export struct MyPage {
 
   @Builder
   IdentityCard() {
-    Column({ space: AppMetrics.space16 }) {
+    Column({ space: AppMetrics.cardGap }) {
       Column({ space: AppMetrics.space8 }) {
         Text(this.resolveProfileName())
-          .fontSize(AppTypography.level2)
+          .fontSize(AppTypography.profileName)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
+          .lineHeight(AppTypography.profileNameLineHeight)
           .width('100%')
 
         Text('摄影复盘 Beta 用户')
-          .fontSize(AppTypography.auxiliary)
+          .fontSize(AppTypography.caption)
           .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
           .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
 
-      Row({ space: AppMetrics.space16 }) {
-        Text(`${this.reviewCount} 次复盘`)
-          .fontSize(AppTypography.body)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-
-        Text(`${this.validReviewCount} 次成立`)
-          .fontSize(AppTypography.body)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-      }
-      .width('100%')
+      Text(`${this.reviewCount} 次复盘 · ${this.validReviewCount} 次成立`)
+        .fontSize(AppTypography.body)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.bodyLineHeight)
+        .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
-    .padding(AppMetrics.space16)
+    .padding(AppMetrics.cardPadding)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -177,50 +175,51 @@ export struct MyPage {
   }
 
   build() {
-    Column({ space: AppMetrics.space16 }) {
-      AppPageHeader({
-        title: '我的',
-        subtitle: '管理复盘人、家庭存储和版本信息'
-      })
-
-      this.IdentityCard()
-
-      Column({ space: AppMetrics.space8 }) {
-        this.LinkRow('复盘人', this.resolveReviewerSummary(), () => {
-          this.openReviewerProfile();
+    Scroll() {
+      Column({ space: AppMetrics.sectionGap }) {
+        AppPageHeader({
+          title: '我的',
+          subtitle: '管理复盘人、家庭存储和版本信息'
         })
-      }
 
-      Column({ space: AppMetrics.space8 }) {
-        this.LinkRow(
-          '家庭存储',
-          this.resolveHomeStorageSummary(),
-          () => {
-            this.openHomeStorage();
-          }
-        )
-      }
+        this.IdentityCard()
 
-      Column({ space: AppMetrics.space8 }) {
-        this.SectionTitle('关于')
+        Column({ space: AppMetrics.cardGap }) {
+          this.LinkRow('复盘人', this.resolveReviewerSummary(), () => {
+            this.openReviewerProfile();
+          })
 
-        Column({ space: AppMetrics.space8 }) {
-          this.StatusRow('版本号', APP_VERSION_TEXT)
-          this.StatusRow('Build', APP_BUILD_TEXT)
-          this.StatusRow('产品说明', 'Skymap Harmony 摄影复盘 Beta')
+          this.LinkRow(
+            '家庭存储',
+            this.resolveHomeStorageSummary(),
+            () => {
+              this.openHomeStorage();
+            }
+          )
         }
-        .padding(AppMetrics.space16)
-        .width('100%')
-        .borderRadius(AppMetrics.cardRadius)
-        .backgroundColor(AppColors.surface)
-        .border({ width: 1, color: '#ECE8E0' })
+
+        Column({ space: AppMetrics.cardGap }) {
+          this.SectionTitle('关于')
+
+          Column({ space: AppMetrics.space8 }) {
+            this.StatusRow('版本号', APP_VERSION_TEXT)
+            this.StatusRow('Build', APP_BUILD_TEXT)
+            this.StatusRow('产品说明', 'Skymap Harmony 摄影复盘 Beta')
+          }
+          .padding(AppMetrics.cardPadding)
+          .width('100%')
+          .borderRadius(AppMetrics.cardRadius)
+          .backgroundColor(AppColors.surface)
+          .border({ width: 1, color: '#ECE8E0' })
+        }
       }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding })
     }
-    .justifyContent(FlexAlign.Start)
-    .alignItems(HorizontalAlign.Start)
     .width('100%')
     .height('100%')
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space24 })
+    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

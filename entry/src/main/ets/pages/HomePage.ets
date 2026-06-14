@@ -131,7 +131,7 @@ export struct HomePage {
 
   private resolveStreakText(): string {
     if (this.projectSummary.recordCount === 0 || this.dashboardStats.streakDays <= 0) {
-      return '暂无';
+      return '—';
     }
     return `${this.dashboardStats.streakDays}天`;
   }
@@ -144,15 +144,17 @@ export struct HomePage {
   StatItem(value: string, label: string) {
     Column({ space: AppMetrics.space8 }) {
       Text(value)
-        .fontSize(AppTypography.level2)
+        .fontSize(AppTypography.statNumber)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
+        .lineHeight(AppTypography.statNumberLineHeight)
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
 
       Text(label)
-        .fontSize(AppTypography.auxiliary)
+        .fontSize(AppTypography.meta)
         .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.metaLineHeight)
         .maxLines(1)
     }
     .alignItems(HorizontalAlign.Center)
@@ -161,32 +163,23 @@ export struct HomePage {
 
   @Builder
   GrowthStatsPanel() {
-    Column({ space: AppMetrics.space16 }) {
-      Column({ space: AppMetrics.space8 }) {
-        Text('复盘概览')
-          .fontSize(AppTypography.level2)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .width('100%')
-
-        Text(this.resolveStatsHintText())
-          .fontSize(AppTypography.auxiliary)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.auxiliaryLineHeight)
-          .width('100%')
-      }
-      .alignItems(HorizontalAlign.Start)
-      .width('100%')
+    Column({ space: AppMetrics.cardGap }) {
+      Text('复盘概览')
+        .fontSize(AppTypography.sectionTitle)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.sectionTitleLineHeight)
+        .width('100%')
 
       Row({ space: AppMetrics.space16 }) {
         this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')
         this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')
         this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')
-        this.StatItem(this.resolveStreakText(), '连续复盘')
+        this.StatItem(this.resolveStreakText(), '连续')
       }
       .width('100%')
     }
-    .padding(AppMetrics.space16)
+    .padding(AppMetrics.cardPadding)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -195,18 +188,19 @@ export struct HomePage {
 
   @Builder
   StartReviewPanel() {
-    Column({ space: AppMetrics.space16 }) {
+    Column({ space: AppMetrics.cardGap }) {
       Column({ space: AppMetrics.space8 }) {
         Text('开始新的复盘')
-          .fontSize(AppTypography.level3)
+          .fontSize(AppTypography.cardTitle)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
           .width('100%')
 
         Text('继续训练你的摄影判断。')
-          .fontSize(AppTypography.auxiliary)
+          .fontSize(AppTypography.body)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.auxiliaryLineHeight)
+          .lineHeight(AppTypography.bodyLineHeight)
           .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
@@ -229,7 +223,7 @@ export struct HomePage {
 
   build() {
     Scroll() {
-      Column({ space: AppMetrics.space16 }) {
+      Column({ space: AppMetrics.sectionGap }) {
         AppPageHeader({
           title: '摄影复盘',
           subtitle: '看见积累，继续下一次复盘。'
@@ -237,15 +231,16 @@ export struct HomePage {
 
         this.StartReviewPanel()
 
-        Column({ space: AppMetrics.space16 }) {
+        Column({ space: AppMetrics.cardGap }) {
           Text('最近一次')
-            .fontSize(AppTypography.level2)
+            .fontSize(AppTypography.sectionTitle)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
+            .lineHeight(AppTypography.sectionTitleLineHeight)
             .width('100%')
 
           if (this.projectSummary.latestItem) {
-            Column({ space: AppMetrics.space16 }) {
+            Column({ space: AppMetrics.cardGap }) {
               RecentReviewCard({
                 item: this.projectSummary.latestItem,
                 onTap: () => {
@@ -258,7 +253,7 @@ export struct HomePage {
                   .height(AppMetrics.compactControlHeight)
                   .layoutWeight(1)
                   .borderRadius(AppMetrics.capsuleRadius)
-                  .fontSize(AppTypography.auxiliary)
+                  .fontSize(AppTypography.buttonText)
                   .fontWeight(FontWeight.Medium)
                   .fontColor(AppColors.text)
                   .backgroundColor(AppColors.surfaceMuted)
@@ -270,7 +265,7 @@ export struct HomePage {
                   .height(AppMetrics.compactControlHeight)
                   .layoutWeight(1)
                   .borderRadius(AppMetrics.capsuleRadius)
-                  .fontSize(AppTypography.auxiliary)
+                  .fontSize(AppTypography.buttonText)
                   .fontWeight(FontWeight.Medium)
                   .fontColor('#FFFFFF')
                   .backgroundColor(AppColors.primary)
@@ -290,11 +285,12 @@ export struct HomePage {
 
         this.GrowthStatsPanel()
 
-        Column({ space: AppMetrics.space16 }) {
+        Column({ space: AppMetrics.cardGap }) {
           Text('当前状态')
-            .fontSize(AppTypography.level2)
+            .fontSize(AppTypography.sectionTitle)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
+            .lineHeight(AppTypography.sectionTitleLineHeight)
             .width('100%')
 
           Column({ space: AppMetrics.space8 }) {
@@ -315,7 +311,7 @@ export struct HomePage {
           .border({ width: 1, color: AppColors.border })
         }
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space32 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
     }

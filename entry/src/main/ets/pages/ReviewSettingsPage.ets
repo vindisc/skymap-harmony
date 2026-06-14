@@ -217,24 +217,25 @@ struct ReviewSettingsPage {
       Blank()
 
       Text('设置')
-        .fontSize(AppTypography.level2)
+        .fontSize(AppTypography.pageTitle)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
-        .lineHeight(AppTypography.level2LineHeight)
+        .lineHeight(AppTypography.pageTitleLineHeight)
 
       Blank()
     }
     .alignItems(VerticalAlign.Center)
     .width('100%')
-    .height(AppTypography.level2LineHeight)
+    .height(AppTypography.pageTitleLineHeight)
   }
 
   @Builder
   FieldLabel(label: string) {
     Text(label)
-      .fontSize(AppTypography.body)
+      .fontSize(AppTypography.cardTitle)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
+      .lineHeight(AppTypography.cardTitleLineHeight)
       .width('100%')
   }
 
@@ -281,9 +282,9 @@ struct ReviewSettingsPage {
   @Builder
   SecondaryActionButton(label: string, isDisabled: boolean, onTap: () => void) {
     Button(label)
-      .height(AppMetrics.controlHeight)
+      .height(AppMetrics.compactControlHeight)
       .borderRadius(AppMetrics.cardRadius)
-      .fontSize(AppTypography.body)
+      .fontSize(AppTypography.buttonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
       .backgroundColor(AppColors.surfaceMuted)
@@ -300,14 +301,14 @@ struct ReviewSettingsPage {
       this.Header()
 
       Scroll(this.settingsScroller) {
-        Column({ space: AppMetrics.space24 }) {
+        Column({ space: AppMetrics.sectionGap }) {
           this.SettingsInput('复盘人', this.reviewerName, '可留空', (value: string) => {
             this.reviewerName = value;
           }, false, 0)
 
-          Column({ space: AppMetrics.space16 }) {
+          Column({ space: AppMetrics.cardGap }) {
             Text('家庭存储')
-              .fontSize(AppTypography.level3)
+              .fontSize(AppTypography.cardTitle)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.text)
               .width('100%')
@@ -349,7 +350,7 @@ struct ReviewSettingsPage {
           .alignItems(HorizontalAlign.Start)
           .width('100%')
 
-          Column({ space: AppMetrics.space16 }) {
+          Column({ space: AppMetrics.cardGap }) {
             this.SecondaryActionButton(this.isTestingHomeStorage ? '测试中...' : '测试家庭存储连接', this.isTestingHomeStorage, () => {
               this.testHomeStorage();
             })
@@ -366,7 +367,7 @@ struct ReviewSettingsPage {
         }
         .alignItems(HorizontalAlign.Start)
         .width('100%')
-        .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() })
+        .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
       }
     }
     .alignItems(HorizontalAlign.Start)

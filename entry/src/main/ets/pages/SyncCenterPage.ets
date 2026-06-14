@@ -94,19 +94,20 @@ struct SyncCenterPage {
 
   build() {
     Column() {
-      Column({ space: AppMetrics.space16 }) {
+      Column({ space: AppMetrics.sectionGap }) {
         AppPageHeader({
           title: '同步中心',
           subtitle: '查看家庭存储状态，测试连接并进入同步配置。'
         })
 
-        Column({ space: AppMetrics.space16 }) {
+        Column({ space: AppMetrics.cardGap }) {
           Row() {
             Column({ space: AppMetrics.space8 }) {
               Text('家庭存储')
-                .fontSize(AppTypography.level3)
+                .fontSize(AppTypography.cardTitle)
                 .fontWeight(FontWeight.Bold)
                 .fontColor(AppColors.text)
+                .lineHeight(AppTypography.cardTitleLineHeight)
                 .width('100%')
 
               Text(this.resolveStatusText())
@@ -131,17 +132,17 @@ struct SyncCenterPage {
             this.InfoRow('最近测试', formatReviewTime(this.lastCheckedAt))
           }
         }
-        .padding(AppMetrics.space16)
+        .padding(AppMetrics.cardPadding)
         .width('100%')
         .borderRadius(AppMetrics.cardRadius)
         .backgroundColor(AppColors.surface)
         .border({ width: 1, color: AppColors.border })
 
         Button(this.isTesting ? '测试中...' : '测试连接')
-          .height(AppMetrics.controlHeight)
+          .height(AppMetrics.compactControlHeight)
           .width('100%')
           .borderRadius(AppMetrics.buttonRadius)
-          .fontSize(AppTypography.body)
+          .fontSize(AppTypography.buttonText)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .backgroundColor(AppColors.surfaceMuted)
@@ -159,7 +160,7 @@ struct SyncCenterPage {
           }
         })
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space24 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.pageBottomPadding })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
     }

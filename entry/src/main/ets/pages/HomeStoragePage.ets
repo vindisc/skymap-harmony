@@ -226,9 +226,10 @@ struct HomeStoragePage {
   @Builder
   FieldLabel(label: string) {
     Text(label)
-      .fontSize(AppTypography.body)
+      .fontSize(AppTypography.cardTitle)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
+      .lineHeight(AppTypography.cardTitleLineHeight)
       .width('100%')
   }
 
@@ -275,9 +276,9 @@ struct HomeStoragePage {
   @Builder
   SecondaryActionButton(label: string, isDisabled: boolean, onTap: () => void) {
     Button(label)
-      .height(AppMetrics.controlHeight)
+      .height(AppMetrics.compactControlHeight)
       .borderRadius(AppMetrics.cardRadius)
-      .fontSize(AppTypography.body)
+      .fontSize(AppTypography.buttonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
       .backgroundColor(AppColors.surfaceMuted)
@@ -315,18 +316,18 @@ struct HomeStoragePage {
       })
 
       Scroll(this.settingsScroller) {
-        Column({ space: AppMetrics.space24 }) {
-          Column({ space: AppMetrics.space16 }) {
+        Column({ space: AppMetrics.sectionGap }) {
+          Column({ space: AppMetrics.cardGap }) {
             this.StatusRow('连接状态', this.resolveConnectionStatusText())
             this.StatusRow('最近上传时间', this.resolveLastUploadedText())
           }
-          .padding(AppMetrics.space16)
+          .padding(AppMetrics.cardPadding)
           .width('100%')
           .borderRadius(AppMetrics.cardRadius)
           .backgroundColor(AppColors.surface)
           .border({ width: 1, color: AppColors.border })
 
-          Column({ space: AppMetrics.space16 }) {
+          Column({ space: AppMetrics.cardGap }) {
             Text('用于把复盘里的 review.json 上传到家庭存储，配置项与导出菜单保持一致。')
               .fontSize(AppTypography.auxiliary)
               .fontColor(AppColors.secondaryText)
@@ -364,7 +365,7 @@ struct HomeStoragePage {
           .alignItems(HorizontalAlign.Start)
           .width('100%')
 
-          Column({ space: AppMetrics.space16 }) {
+          Column({ space: AppMetrics.cardGap }) {
             this.SecondaryActionButton(this.isTestingHomeStorage ? '测试连接中...' : '测试连接', this.isTestingHomeStorage, () => {
               this.testHomeStorage();
             })
@@ -380,7 +381,7 @@ struct HomeStoragePage {
           .width('100%')
         }
         .alignItems(HorizontalAlign.Start)
-        .padding({ top: AppMetrics.space24, bottom: this.getSettingsBottomPadding() })
+        .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
       }
     }
     .alignItems(HorizontalAlign.Start)

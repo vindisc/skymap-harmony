@@ -12,13 +12,14 @@ enum RootTabKey {
 interface RootTabItem {
   key: RootTabKey;
   label: string;
-  icon: string;
+  activeIcon: Resource;
+  inactiveIcon: Resource;
 }
 
 const ROOT_TABS: Array<RootTabItem> = [
-  { key: RootTabKey.HOME, label: '首页', icon: '●' },
-  { key: RootTabKey.LIBRARY, label: '复盘库', icon: '■' },
-  { key: RootTabKey.MY, label: '我的', icon: '◆' }
+  { key: RootTabKey.HOME, label: '首页', activeIcon: $r('app.media.tab_home_active'), inactiveIcon: $r('app.media.tab_home') },
+  { key: RootTabKey.LIBRARY, label: '复盘库', activeIcon: $r('app.media.tab_library_active'), inactiveIcon: $r('app.media.tab_library') },
+  { key: RootTabKey.MY, label: '我的', activeIcon: $r('app.media.tab_user_active'), inactiveIcon: $r('app.media.tab_user') }
 ];
 
 @Entry
@@ -49,17 +50,15 @@ struct AppShellPage {
   @Builder
   TabButton(item: RootTabItem) {
     Column() {
-      Text(item.icon)
-        .fontSize(AppTypography.body)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(this.resolveTabLabelColor(item.key))
-        .lineHeight(AppTypography.bodyLineHeight)
+      Image(this.isCurrentTab(item.key) ? item.activeIcon : item.inactiveIcon)
+        .width(AppMetrics.tabIconSize)
+        .height(AppMetrics.tabIconSize)
 
       Text(item.label)
-        .fontSize(AppTypography.auxiliary)
+        .fontSize(AppTypography.tabLabel)
         .fontWeight(this.resolveTabLabelWeight(item.key))
         .fontColor(this.resolveTabLabelColor(item.key))
-        .lineHeight(AppTypography.auxiliaryLineHeight)
+        .lineHeight(AppTypography.tabLabelLineHeight)
     }
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
@@ -99,6 +98,7 @@ struct AppShellPage {
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space8, bottom: AppMetrics.space8 })
       .width('100%')
+      .height(AppMetrics.tabBarHeight)
       .backgroundColor(AppColors.pageBackground)
       .border({ width: 1, color: '#EEEAE4' })
     }

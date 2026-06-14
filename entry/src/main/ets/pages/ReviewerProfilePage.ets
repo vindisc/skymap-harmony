@@ -38,54 +38,52 @@ struct ReviewerProfilePage {
   }
 
   build() {
-    Scroll() {
-      Column({ space: AppMetrics.space24 }) {
-        AppPageHeader({
-          title: '复盘人',
-          subtitle: '设置这台设备默认使用的复盘人名称。'
-        })
+    Column({ space: AppMetrics.space32 }) {
+      AppPageHeader({
+        title: '复盘人',
+        subtitle: '设置这台设备默认使用的复盘人名称。'
+      })
 
-        Column({ space: AppMetrics.space16 }) {
-          Text('复盘人')
-            .fontSize(AppTypography.level3)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .width('100%')
+      Column({ space: AppMetrics.cardGap }) {
+        Text('复盘人')
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .width('100%')
 
-          TextInput({ text: this.reviewerName, placeholder: '可留空' })
-            .height(AppMetrics.controlHeight)
-            .borderRadius(AppMetrics.cardRadius)
-            .fontSize(AppTypography.body)
-            .fontColor(AppColors.text)
-            .placeholderColor('#9AA1AB')
-            .backgroundColor(AppColors.surfaceMuted)
-            .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-            .border({ width: 1, color: AppColors.border })
-            .onChange((value: string) => {
-              this.reviewerName = value;
-            })
-
-          PrimaryButton({
-            label: this.isSaving ? '保存中...' : '保存',
-            isDisabled: this.isSaving,
-            onTap: () => {
-              this.saveReviewerName();
-            }
+        TextInput({ text: this.reviewerName, placeholder: '可留空' })
+          .height(AppMetrics.controlHeight)
+          .borderRadius(AppMetrics.cardRadius)
+          .fontSize(AppTypography.body)
+          .fontColor(AppColors.text)
+          .placeholderColor('#9AA1AB')
+          .backgroundColor(AppColors.surfaceMuted)
+          .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+          .border({ width: 1, color: AppColors.border })
+          .onChange((value: string) => {
+            this.reviewerName = value;
           })
-        }
-        .padding(AppMetrics.space16)
-        .width('100%')
-        .borderRadius(AppMetrics.cardRadius)
-        .backgroundColor(AppColors.surface)
-        .border({ width: 1, color: AppColors.border })
+
+        PrimaryButton({
+          label: this.isSaving ? '保存中...' : '保存',
+          isDisabled: this.isSaving,
+          onTap: () => {
+            this.saveReviewerName();
+          }
+        })
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space24 })
+      .padding(AppMetrics.cardPadding)
       .width('100%')
-      .alignItems(HorizontalAlign.Start)
+      .borderRadius(AppMetrics.cardRadius)
+      .backgroundColor(AppColors.surface)
+      .border({ width: 1, color: AppColors.border })
     }
+    .justifyContent(FlexAlign.Start)
+    .alignItems(HorizontalAlign.Start)
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.pageBottomPadding })
     .backgroundColor(AppColors.pageBackground)
   }
 }

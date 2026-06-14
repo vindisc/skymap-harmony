@@ -30,32 +30,60 @@ export class AppMetrics {
   static readonly space16: number = 16;
   static readonly space24: number = 24;
   static readonly space32: number = 32;
-  static readonly space48: number = 48;
   static readonly pagePadding: number = 24;
-  static readonly pageTopPadding: number = 24;
+  static readonly pageTopPadding: number = 40;
+  static readonly pageBottomPadding: number = 24;
+  static readonly sectionGap: number = 24;
+  static readonly cardGap: number = 12;
+  static readonly cardPadding: number = 16;
+  static readonly listCardPadding: number = 12;
   static readonly cardRadius: number = 8;
   static readonly buttonRadius: number = 8;
   static readonly capsuleRadius: number = 16;
   static readonly panelRadius: number = 8;
   static readonly controlHeight: number = 48;
+  static readonly searchHeight: number = 44;
   static readonly compactControlHeight: number = 40;
-  static readonly chipHeight: number = 40;
+  static readonly chipHeight: number = 36;
+  static readonly tabBarHeight: number = 64;
   static readonly tabBarItemHeight: number = 56;
+  static readonly tabIconSize: number = 20;
+  static readonly listThumbnailSize: number = 72;
 }
 
 export class AppTypography {
-  static readonly level1: number = 48;
-  static readonly level1LineHeight: number = 56;
-  static readonly level2: number = 32;
-  static readonly level2LineHeight: number = 40;
-  static readonly level3: number = 26;
-  static readonly level3LineHeight: number = 34;
-  static readonly body: number = 20;
-  static readonly bodyLineHeight: number = 28;
-  static readonly auxiliary: number = 16;
-  static readonly auxiliaryLineHeight: number = 24;
-  static readonly caption: number = 16;
-  static readonly captionLineHeight: number = 24;
+  static readonly pageTitle: number = 34;
+  static readonly pageTitleLineHeight: number = 42;
+  static readonly pageSubtitle: number = 18;
+  static readonly pageSubtitleLineHeight: number = 26;
+  static readonly sectionTitle: number = 20;
+  static readonly sectionTitleLineHeight: number = 28;
+  static readonly cardTitle: number = 18;
+  static readonly cardTitleLineHeight: number = 24;
+  static readonly body: number = 16;
+  static readonly bodyLineHeight: number = 24;
+  static readonly listSubtitle: number = 15;
+  static readonly listSubtitleLineHeight: number = 22;
+  static readonly caption: number = 14;
+  static readonly captionLineHeight: number = 20;
+  static readonly meta: number = 13;
+  static readonly metaLineHeight: number = 18;
+  static readonly buttonText: number = 17;
+  static readonly buttonTextLineHeight: number = 24;
+  static readonly tabLabel: number = 12;
+  static readonly tabLabelLineHeight: number = 16;
+  static readonly profileName: number = 26;
+  static readonly profileNameLineHeight: number = 32;
+  static readonly statNumber: number = 24;
+  static readonly statNumberLineHeight: number = 30;
+  static readonly level1: number = 34;
+  static readonly level1LineHeight: number = 42;
+  static readonly level2: number = 20;
+  static readonly level2LineHeight: number = 28;
+  static readonly level3: number = 18;
+  static readonly level3LineHeight: number = 24;
+  static readonly auxiliary: number = 14;
+  static readonly auxiliaryLineHeight: number = 20;
 }
 
 @Component
@@ -66,16 +94,16 @@ export struct AppPageHeader {
   build() {
     Column() {
       Text(this.title)
-        .fontSize(AppTypography.level1)
+        .fontSize(AppTypography.pageTitle)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
-        .lineHeight(AppTypography.level1LineHeight)
+        .lineHeight(AppTypography.pageTitleLineHeight)
         .width('100%')
       if (this.subtitle.length > 0) {
         Text(this.subtitle)
-          .fontSize(AppTypography.body)
+          .fontSize(AppTypography.pageSubtitle)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.bodyLineHeight)
+          .lineHeight(AppTypography.pageSubtitleLineHeight)
           .margin({ top: AppMetrics.space8 })
           .width('100%')
       }
@@ -96,7 +124,7 @@ export struct PrimaryButton {
       .height(AppMetrics.controlHeight)
       .width('100%')
       .borderRadius(AppMetrics.buttonRadius)
-      .fontSize(AppTypography.body)
+      .fontSize(AppTypography.buttonText)
       .fontWeight(FontWeight.Medium)
       .fontColor('#FFFFFF')
       .backgroundColor(this.isDisabled ? '#B8C6B9' : AppColors.primary)
@@ -122,7 +150,7 @@ export struct SecondaryButton {
       .height(AppMetrics.compactControlHeight)
       .width('100%')
       .borderRadius(AppMetrics.capsuleRadius)
-      .fontSize(AppTypography.auxiliary)
+      .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
       .backgroundColor(AppColors.surfaceMuted)
@@ -141,7 +169,7 @@ export struct EmptyState {
   build() {
     Column() {
       Text(this.title)
-        .fontSize(AppTypography.body)
+        .fontSize(AppTypography.cardTitle)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.text)
         .width('100%')
@@ -171,10 +199,10 @@ export struct TagLabel {
 
   build() {
     Text(this.label)
-      .fontSize(AppTypography.caption)
+      .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.color)
-      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: AppMetrics.space8, bottom: AppMetrics.space8 })
+      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
       .borderRadius(AppMetrics.cardRadius)
       .backgroundColor(this.tagBackground)
   }
@@ -212,10 +240,10 @@ export struct ReviewJudgementBadge {
 
   build() {
     Text(getJudgementBadgeText(this.value))
-      .fontSize(AppTypography.caption)
+      .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Regular)
       .fontColor(getJudgementBadgeColor(this.value))
-      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: AppMetrics.space8, bottom: AppMetrics.space8 })
+      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
       .borderRadius(AppMetrics.cardRadius)
       .backgroundColor(getJudgementBadgeBackground(this.value))
       .textAlign(TextAlign.Center)
@@ -247,7 +275,7 @@ export struct PhotoSummaryCard {
 
         Column() {
           Text(getImageRatioLabel(this.imageWidth, this.imageHeight, this.imageSizeFallbackUsed))
-            .fontSize(AppTypography.body)
+            .fontSize(AppTypography.cardTitle)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .width('100%')
@@ -407,7 +435,7 @@ export struct ProjectHomeCard {
   }
 
   build() {
-    Row({ space: AppMetrics.space16 }) {
+    Row({ space: AppMetrics.cardGap }) {
       if (this.summary.recordCount > 0) {
         this.ProjectCoverMosaic()
       } else {
@@ -425,7 +453,7 @@ export struct ProjectHomeCard {
 
       Column({ space: AppMetrics.space8 }) {
         Text(this.summary.project.name)
-          .fontSize(AppTypography.body)
+          .fontSize(AppTypography.cardTitle)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
           .width('100%')
@@ -454,7 +482,7 @@ export struct ProjectHomeCard {
         .fontColor(AppColors.mutedText)
     }
     .alignItems(VerticalAlign.Center)
-    .padding(AppMetrics.space16)
+    .padding(AppMetrics.cardPadding)
     .width('100%')
     .constraintSize({ minHeight: 124 })
     .borderRadius(AppMetrics.cardRadius)
@@ -475,56 +503,52 @@ export struct RecentReviewCard {
   onTap: () => void = () => {};
 
   build() {
-    Stack({ alignContent: Alignment.TopEnd }) {
-      Row({ space: AppMetrics.space16 }) {
-        ReviewPhotoBlock({
-          imageUri: this.item.document.imageUri,
-          imageWidth: this.item.document.imageWidth,
-          imageHeight: this.item.document.imageHeight,
-          imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
-          aspectRatioValue: 1,
-          compact: true,
-          fitMode: ImageFit.Cover,
-          cornerRadius: 8
-        })
-          .width(64)
+    Row({ space: AppMetrics.cardGap }) {
+      ReviewPhotoBlock({
+        imageUri: this.item.document.imageUri,
+        imageWidth: this.item.document.imageWidth,
+        imageHeight: this.item.document.imageHeight,
+        imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
+        aspectRatioValue: 1,
+        compact: true,
+        fitMode: ImageFit.Cover,
+        cornerRadius: 8
+      })
+        .width(AppMetrics.listThumbnailSize)
 
-        Column({ space: AppMetrics.space8 }) {
-          Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-            .fontSize(AppTypography.body)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .width('100%')
-            .padding({ right: AppMetrics.space24 * 3 })
+      Column({ space: AppMetrics.space8 }) {
+        Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .width('100%')
 
-          Text(getReviewProjectExcerpt(this.item.document))
-            .fontSize(AppTypography.auxiliary)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.auxiliaryLineHeight)
-            .width('100%')
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        Text(getReviewProjectExcerpt(this.item.document))
+          .fontSize(AppTypography.listSubtitle)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.listSubtitleLineHeight)
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-          Text(formatReviewTime(this.item.document.updatedAt))
-            .fontSize(AppTypography.caption)
-            .fontColor(AppColors.mutedText)
-            .width('100%')
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
+        Text(formatReviewTime(this.item.document.updatedAt))
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.mutedText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
       }
-      .alignItems(VerticalAlign.Center)
-      .padding(AppMetrics.space8)
-      .width('100%')
-      .constraintSize({ minHeight: 84 })
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
 
       ReviewJudgementBadge({ value: this.item.document.content.judgement })
-        .margin({ top: AppMetrics.space8, right: AppMetrics.space8 })
     }
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.listCardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 84 })
+    .constraintSize({ minHeight: 96, maxHeight: 108 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
@@ -543,56 +567,52 @@ export struct ProjectReviewCard {
   onTap: () => void = () => {};
 
   build() {
-    Stack({ alignContent: Alignment.TopEnd }) {
-      Row({ space: AppMetrics.space16 }) {
-        ReviewPhotoBlock({
-          imageUri: this.item.document.imageUri,
-          imageWidth: this.item.document.imageWidth,
-          imageHeight: this.item.document.imageHeight,
-          imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
-          aspectRatioValue: 1,
-          compact: true,
-          fitMode: ImageFit.Cover,
-          cornerRadius: 8
-        })
-          .width(68)
+    Row({ space: AppMetrics.cardGap }) {
+      ReviewPhotoBlock({
+        imageUri: this.item.document.imageUri,
+        imageWidth: this.item.document.imageWidth,
+        imageHeight: this.item.document.imageHeight,
+        imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
+        aspectRatioValue: 1,
+        compact: true,
+        fitMode: ImageFit.Cover,
+        cornerRadius: 8
+      })
+        .width(AppMetrics.listThumbnailSize)
 
-        Column({ space: AppMetrics.space8 }) {
-          Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-            .fontSize(AppTypography.body)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .width('100%')
-            .padding({ right: AppMetrics.space24 * 3 })
+      Column({ space: AppMetrics.space8 }) {
+        Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .width('100%')
 
-          Text(getReviewProjectExcerpt(this.item.document))
-            .fontSize(AppTypography.auxiliary)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.auxiliaryLineHeight)
-            .width('100%')
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        Text(getReviewProjectExcerpt(this.item.document))
+          .fontSize(AppTypography.listSubtitle)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.listSubtitleLineHeight)
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-          Text(formatReviewTime(this.item.document.updatedAt))
-            .fontSize(AppTypography.caption)
-            .fontColor(AppColors.mutedText)
-            .width('100%')
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
+        Text(formatReviewTime(this.item.document.updatedAt))
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.mutedText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
       }
-      .alignItems(VerticalAlign.Center)
-      .padding(AppMetrics.space8)
-      .width('100%')
-      .constraintSize({ minHeight: 84 })
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
 
       ReviewJudgementBadge({ value: this.item.document.content.judgement })
-        .margin({ top: AppMetrics.space8, right: AppMetrics.space8 })
     }
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.listCardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 84 })
+    .constraintSize({ minHeight: 96, maxHeight: 108 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })

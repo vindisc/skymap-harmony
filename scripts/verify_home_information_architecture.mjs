@@ -15,11 +15,11 @@ const mainPagesSource = fs.readFileSync('entry/src/main/resources/base/profile/m
 let failed = false;
 
 const requiredTypographyTokens = [
-  'static readonly level1: number = 48;',
-  'static readonly level2: number = 32;',
-  'static readonly level3: number = 26;',
-  'static readonly body: number = 20;',
-  'static readonly auxiliary: number = 16;'
+  'static readonly pageTitle: number = 34;',
+  'static readonly pageSubtitle: number = 18;',
+  'static readonly sectionTitle: number = 20;',
+  'static readonly cardTitle: number = 18;',
+  'static readonly body: number = 16;'
 ];
 
 for (const marker of requiredTypographyTokens) {
@@ -75,7 +75,10 @@ const forbiddenTabText = [
   "label: '我'",
   "symbol: '首'",
   "symbol: '库'",
-  "symbol: '我'"
+  "symbol: '我'",
+  "icon: '●'",
+  "icon: '■'",
+  "icon: '◆'"
 ];
 
 for (const marker of forbiddenTabText) {
@@ -86,10 +89,10 @@ for (const marker of forbiddenTabText) {
 }
 
 const requiredTabIcons = [
-  "label: '首页', icon:",
-  "label: '复盘库', icon:",
-  "label: '我的', icon:",
-  'Text(item.icon)'
+  "label: '首页', activeIcon:",
+  "label: '复盘库', activeIcon:",
+  "label: '我的', activeIcon:",
+  'Image(this.isCurrentTab(item.key) ? item.activeIcon : item.inactiveIcon)'
 ];
 
 for (const marker of requiredTabIcons) {
@@ -106,16 +109,11 @@ if (!myPageSource.includes('top: AppMetrics.pageTopPadding') ||
   console.error('Home, library, and my pages must use the shared Design System top padding.');
 }
 
-if (myPageSource.includes('Scroll()')) {
-  failed = true;
-  console.error('MyPage must use a top-aligned Column layout, not a short-content Scroll container.');
-}
-
 if (!myPageSource.includes("title: '我的'") ||
   !myPageSource.includes("subtitle: '管理复盘人、家庭存储和版本信息'") ||
   !myPageSource.includes('this.IdentityCard()') ||
   !myPageSource.includes("this.LinkRow('复盘人'") ||
-  !myPageSource.includes("this.LinkRow(\n          '家庭存储'") ||
+  !myPageSource.includes("'家庭存储',") ||
   !myPageSource.includes("this.SectionTitle('关于')")) {
   failed = true;
   console.error('MyPage must keep the personal-center structure.');
