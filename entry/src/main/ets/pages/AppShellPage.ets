@@ -12,13 +12,12 @@ enum RootTabKey {
 interface RootTabItem {
   key: RootTabKey;
   label: string;
-  symbol: string;
 }
 
 const ROOT_TABS: Array<RootTabItem> = [
-  { key: RootTabKey.HOME, label: '首页', symbol: '首' },
-  { key: RootTabKey.LIBRARY, label: '复盘库', symbol: '库' },
-  { key: RootTabKey.MY, label: '我的', symbol: '我' }
+  { key: RootTabKey.HOME, label: '首页' },
+  { key: RootTabKey.LIBRARY, label: '复盘库' },
+  { key: RootTabKey.MY, label: '我的' }
 ];
 
 @Entry
@@ -34,16 +33,8 @@ struct AppShellPage {
     this.currentTab = key;
   }
 
-  private resolveTabSymbolColor(key: RootTabKey): string {
-    return this.isCurrentTab(key) ? AppColors.primary : AppColors.mutedText;
-  }
-
   private resolveTabLabelColor(key: RootTabKey): string {
     return this.isCurrentTab(key) ? AppColors.text : AppColors.secondaryText;
-  }
-
-  private resolveTabSymbolWeight(key: RootTabKey): number {
-    return this.isCurrentTab(key) ? FontWeight.Bold : FontWeight.Medium;
   }
 
   private resolveTabLabelWeight(key: RootTabKey): number {
@@ -51,27 +42,23 @@ struct AppShellPage {
   }
 
   private resolveTabBackground(key: RootTabKey): string {
-    return this.isCurrentTab(key) ? AppColors.surface : '#00000000';
+    return this.isCurrentTab(key) ? AppColors.surfaceMuted : '#00000000';
   }
 
   @Builder
   TabButton(item: RootTabItem) {
-    Column({ space: AppMetrics.space4 }) {
-      Text(item.symbol)
-        .fontSize(AppTypography.body)
-        .fontWeight(this.resolveTabSymbolWeight(item.key))
-        .fontColor(this.resolveTabSymbolColor(item.key))
-
+    Column() {
       Text(item.label)
-        .fontSize(AppTypography.caption)
+        .fontSize(AppTypography.auxiliary)
         .fontWeight(this.resolveTabLabelWeight(item.key))
         .fontColor(this.resolveTabLabelColor(item.key))
     }
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .layoutWeight(1)
-    .height(56)
-    .borderRadius(AppMetrics.cardRadius)
+    .height(44)
+    .padding({ left: AppMetrics.space8, right: AppMetrics.space8 })
+    .borderRadius(AppMetrics.buttonRadius)
     .backgroundColor(this.resolveTabBackground(item.key))
     .onClick(() => {
       this.selectTab(item.key);
@@ -102,7 +89,7 @@ struct AppShellPage {
           this.TabButton(item);
         }, (item: RootTabItem) => item.key)
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space8, bottom: AppMetrics.space8 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 6, bottom: 6 })
       .width('100%')
       .backgroundColor(AppColors.pageBackground)
       .border({ width: 1, color: AppColors.border })

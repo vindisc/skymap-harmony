@@ -10,8 +10,10 @@ const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/Review
 let failed = false;
 
 const requiredHomeTokens = [
-  "Text('复盘库')",
-  'ProjectHomeCard({'
+  "title: '摄影复盘'",
+  "Text('复盘概览')",
+  "Text('开始新的复盘')",
+  "Text('当前状态')"
 ];
 
 for (const token of requiredHomeTokens) {

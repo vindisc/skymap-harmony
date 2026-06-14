@@ -6,7 +6,7 @@ const exportServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewJ
 let failed = false;
 
 const requiredPreviewStrings = [
-  "ActionButton('导出 review.json'",
+  "this.ExportSheetAction('导出 review.json'",
   'private async exportReviewJson(): Promise<void>',
   "review.json 已保存到系统文件：${result.fileName}。现在可直接发送给 Mac 导入。",
   'Text(this.lastReviewJsonExportMessage)'

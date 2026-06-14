@@ -65,9 +65,9 @@ export struct MyPage {
   @Builder
   SectionTitle(title: string) {
     Text(title)
-      .fontSize(AppTypography.auxiliary)
+      .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.text)
+      .fontColor(AppColors.secondaryText)
       .width('100%')
   }
 
@@ -109,15 +109,15 @@ export struct MyPage {
       .layoutWeight(1)
 
       Text('>')
-        .fontSize(AppTypography.body)
+        .fontSize(AppTypography.auxiliary)
         .fontColor(AppColors.mutedText)
     }
     .alignItems(VerticalAlign.Center)
-    .padding(AppMetrics.space16)
+    .padding(AppMetrics.space12)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: AppColors.border })
+    .border({ width: 1, color: '#ECE8E0' })
     .onClick(() => {
       onTap();
     })
@@ -125,20 +125,20 @@ export struct MyPage {
 
   build() {
     Scroll() {
-      Column({ space: AppMetrics.space24 }) {
+      Column({ space: AppMetrics.space16 }) {
         AppPageHeader({
           title: '我的',
-          subtitle: '管理复盘人、家庭存储和当前版本信息。'
+          subtitle: '管理复盘人、家庭存储和版本信息。'
         })
 
-        Column({ space: AppMetrics.space12 }) {
+        Column({ space: AppMetrics.space8 }) {
           this.SectionTitle('个人信息')
           this.LinkRow('复盘人', this.resolveReviewerSummary(), () => {
             this.openReviewerProfile();
           })
         }
 
-        Column({ space: AppMetrics.space12 }) {
+        Column({ space: AppMetrics.space8 }) {
           this.SectionTitle('家庭存储')
           this.LinkRow(
             '家庭存储',
@@ -149,19 +149,19 @@ export struct MyPage {
           )
         }
 
-        Column({ space: AppMetrics.space12 }) {
+        Column({ space: AppMetrics.space8 }) {
           this.SectionTitle('关于')
 
-          Column({ space: AppMetrics.space12 }) {
+          Column({ space: 10 }) {
             this.StatusRow('版本号', APP_VERSION_TEXT)
             this.StatusRow('Build', APP_BUILD_TEXT)
             this.StatusRow('产品说明', 'Skymap Harmony 摄影复盘 Beta')
           }
-          .padding(AppMetrics.space16)
+          .padding(AppMetrics.space12)
           .width('100%')
           .borderRadius(AppMetrics.cardRadius)
           .backgroundColor(AppColors.surface)
-          .border({ width: 1, color: AppColors.border })
+          .border({ width: 1, color: '#ECE8E0' })
         }
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space24 })

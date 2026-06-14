@@ -7,10 +7,11 @@ const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/Review
 let failed = false;
 
 const requiredHomeSections = [
-  "this.QuickEntryItem(\n            '拍'",
-  "this.QuickEntryItem(\n            '库'",
-  "this.QuickEntryItem(\n            '传'",
-  "this.QuickEntryItem(\n            '设'"
+  "title: '摄影复盘'",
+  "Text('复盘概览')",
+  "Text('开始新的复盘')",
+  "Text('最近一次')",
+  "Text('当前状态')"
 ];
 
 for (const marker of requiredHomeSections) {
@@ -20,21 +21,16 @@ for (const marker of requiredHomeSections) {
   }
 }
 
-if (homePageSource.includes("Text('最近一次')")) {
-  failed = true;
-  console.error('HomePage must not render an independent 最近一次 module.');
-}
-
-if (!homePageSource.includes("label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘'")) {
-  if (!homePageSource.includes("this.isPickingPhoto ? '打开相册中' : '立即开始'")) {
+if (!homePageSource.includes("label: this.isPickingPhoto ? '打开相册中...' : '开始复盘'")) {
+  if (!homePageSource.includes("label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘'")) {
     failed = true;
     console.error('HomePage must expose 开始复盘 quick action state.');
   }
 }
 
-if (!homePageSource.includes("return this.isHomeStorageConfigured() ? 'SMB 已连接' : '未配置家庭存储';")) {
+if (!homePageSource.includes("return this.isHomeStorageConfigured() ? '已配置' : '未配置';")) {
   failed = true;
-  console.error('HomePage must expose sync status text for the sync center entry.');
+  console.error('HomePage must expose configured/unconfigured home storage state without realtime connection wording.');
 }
 
 if (!homePageSource.includes("Text('当前状态')")) {
@@ -148,4 +144,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log(`home architecture: sections=4, total=${stats.totalCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}`);
+console.log(`home stats: sections=5, total=${stats.totalCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}`);

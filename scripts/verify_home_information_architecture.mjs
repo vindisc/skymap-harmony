@@ -8,22 +8,18 @@ const mainPagesSource = fs.readFileSync('entry/src/main/resources/base/profile/m
 
 let failed = false;
 
-if (homePageSource.includes("Text('最近一次')")) {
-  failed = true;
-  console.error('HomePage still renders 独立最近一次模块.');
-}
-
-const requiredQuickEntries = [
-  "this.QuickEntryItem(\n            '拍'",
-  "this.QuickEntryItem(\n            '库'",
-  "this.QuickEntryItem(\n            '传'",
-  "this.QuickEntryItem(\n            '设'"
+const requiredHomeSections = [
+  "title: '摄影复盘'",
+  "Text('复盘概览')",
+  "Text('开始新的复盘')",
+  "Text('最近一次')",
+  "Text('当前状态')"
 ];
 
-for (const marker of requiredQuickEntries) {
+for (const marker of requiredHomeSections) {
   if (!homePageSource.includes(marker)) {
     failed = true;
-    console.error(`HomePage missing quick entry: ${marker}`);
+    console.error(`HomePage missing fixed section: ${marker}`);
   }
 }
 
@@ -51,7 +47,7 @@ for (const marker of disallowedTopLevelActions) {
 }
 
 const requiredExportSheetActions = [
-  "this.ExportSheetAction(this.isExporting ? '导出图片中...' : '导出图片'",
+  "this.ExportSheetAction(this.isExporting ? '导出复盘图片中...' : '导出复盘图片'",
   "this.ExportSheetAction('导出 review.json'",
   "this.ExportSheetAction(this.isUploadingHomeStorage ? '上传到家庭存储中...' : '上传到家庭存储'",
   "this.ExportSheetAction('复制复盘数据'"
@@ -93,4 +89,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('home information architecture verified: sync center exists, latest module removed, export entry consolidated');
+console.log('home information architecture verified: fixed tabs, home sections, sync center, export entry consolidated');

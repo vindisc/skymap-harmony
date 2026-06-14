@@ -10,10 +10,10 @@ const moduleSource = fs.readFileSync('entry/src/main/module.json5', 'utf8');
 let failed = false;
 
 const requiredPreviewTokens = [
-  "ActionButton(this.isUploadingHomeStorage ? '上传中' : '上传到家庭存储'",
+  "this.ExportSheetAction(this.isUploadingHomeStorage ? '上传到家庭存储中...' : '上传到家庭存储'",
   'private async uploadReviewJsonToHomeStorage(): Promise<void>',
   'HomeStorageService.uploadReviewJson(',
-  "ActionButton('导出 review.json'"
+  "this.ExportSheetAction('导出 review.json'"
 ];
 
 for (const token of requiredPreviewTokens) {

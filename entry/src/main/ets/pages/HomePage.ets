@@ -145,6 +145,10 @@ export struct HomePage {
     return this.dashboardStats.streakDays > 0 ? `${this.dashboardStats.streakDays}天` : '0天';
   }
 
+  private resolveStatsHintText(): string {
+    return this.dashboardStats.totalCount > 0 ? '每一次判断都会留下可回看的线索。' : '还没有记录，第一条复盘会从这里开始。';
+  }
+
   @Builder
   StatItem(value: string, label: string) {
     Column({ space: AppMetrics.space4 }) {
@@ -163,12 +167,22 @@ export struct HomePage {
 
   @Builder
   GrowthStatsPanel() {
-    Column({ space: AppMetrics.space16 }) {
-      Text('成长统计')
-        .fontSize(AppTypography.auxiliary)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.text)
-        .width('100%')
+    Column({ space: AppMetrics.space12 }) {
+      Column({ space: AppMetrics.space4 }) {
+        Text('复盘概览')
+          .fontSize(AppTypography.body)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .width('100%')
+
+        Text(this.resolveStatsHintText())
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
 
       Row({ space: AppMetrics.space12 }) {
         this.StatItem(`${this.dashboardStats.totalCount}`, '总复盘')
@@ -182,7 +196,7 @@ export struct HomePage {
       }
       .width('100%')
     }
-    .padding(AppMetrics.space16)
+    .padding(AppMetrics.space12)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -193,12 +207,20 @@ export struct HomePage {
   StartReviewPanel() {
     Column({ space: AppMetrics.space12 }) {
       Column({ space: AppMetrics.space4 }) {
-        Text('摄影复盘')
+        Text('开始新的复盘')
           .fontSize(AppTypography.body)
-          .fontWeight(FontWeight.Bold)
+          .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .width('100%')
+
+        Text('继续训练你的摄影判断。')
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
       }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
 
       PrimaryButton({
         label: this.isPickingPhoto ? '打开相册中...' : '开始复盘',
@@ -208,7 +230,7 @@ export struct HomePage {
         }
       })
     }
-    .padding(AppMetrics.space16)
+    .padding(AppMetrics.space12)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -217,10 +239,10 @@ export struct HomePage {
 
   build() {
     Scroll() {
-      Column({ space: AppMetrics.space24 }) {
+      Column({ space: AppMetrics.space16 }) {
         AppPageHeader({
-          title: '首页',
-          subtitle: '先看成长反馈，再从最近一次继续，或直接开始新复盘。'
+          title: '摄影复盘',
+          subtitle: '看见积累，继续下一次复盘。'
         })
 
         this.GrowthStatsPanel()
@@ -286,7 +308,7 @@ export struct HomePage {
             .width('100%')
 
           Column({ space: AppMetrics.space12 }) {
-            Text(`复盘库：${this.projectSummary.recordCount} 条记录`)
+            Text(`复盘记录：${this.projectSummary.recordCount} 条`)
               .fontSize(AppTypography.auxiliary)
               .fontColor(AppColors.text)
               .width('100%')
@@ -306,14 +328,14 @@ export struct HomePage {
               .fontColor(AppColors.text)
               .width('100%')
           }
-          .padding(AppMetrics.space16)
+          .padding(AppMetrics.space12)
           .width('100%')
           .borderRadius(AppMetrics.cardRadius)
           .backgroundColor(AppColors.surface)
           .border({ width: 1, color: AppColors.border })
         }
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space24 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
     }

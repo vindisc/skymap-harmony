@@ -87,7 +87,7 @@ export struct ProjectDetailPage {
   }
 
   private resolveFilterChipBackgroundColor(value: string): string {
-    return this.isFilterSelected(value) ? AppColors.primary : AppColors.surfaceMuted;
+    return this.isFilterSelected(value) ? AppColors.primary : '#00000000';
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -139,13 +139,14 @@ export struct ProjectDetailPage {
   @Builder
   FilterChip(label: string, value: string) {
     Button(label)
-      .height(32)
+      .height(28)
       .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
       .borderRadius(AppMetrics.capsuleRadius)
       .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
+      .border({ width: this.isFilterSelected(value) ? 0 : 1, color: AppColors.border })
       .onClick(() => {
         this.decisionFilter = value;
         this.applyFilters();
@@ -167,18 +168,19 @@ export struct ProjectDetailPage {
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.auxiliaryLineHeight)
           .width('100%')
-          .margin({ top: AppMetrics.space12 })
+          .opacity(0.72)
+          .margin({ top: AppMetrics.space8 })
 
-        Column({ space: AppMetrics.space12 }) {
+        Column({ space: AppMetrics.space8 }) {
           TextInput({ text: this.searchText, placeholder: '搜索标题、核心关系、卡点、文件名' })
-            .height(44)
+            .height(38)
             .borderRadius(AppMetrics.cardRadius)
             .fontSize(AppTypography.auxiliary)
             .fontColor(AppColors.text)
             .placeholderColor('#9AA1AB')
-            .backgroundColor(AppColors.surfaceMuted)
-            .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-            .border({ width: 1, color: AppColors.border })
+            .backgroundColor(AppColors.surface)
+            .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
+            .border({ width: 1, color: '#ECE8E0' })
             .onChange((value: string) => {
               this.searchText = value;
               this.applyFilters();
@@ -192,9 +194,9 @@ export struct ProjectDetailPage {
           }
           .width('100%')
         }
-        .margin({ top: AppMetrics.space16 })
+        .margin({ top: AppMetrics.space12 })
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: 0 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 20, bottom: 0 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
 
@@ -266,7 +268,7 @@ export struct ProjectDetailPage {
           }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
           ListItem() {
             Column()
-              .height(28)
+              .height(72)
               .width('100%')
           }
         }
@@ -274,7 +276,7 @@ export struct ProjectDetailPage {
         .width('100%')
         .edgeEffect(EdgeEffect.None)
         .scrollBar(BarState.Off)
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space16 })
       }
     }
     .width('100%')
