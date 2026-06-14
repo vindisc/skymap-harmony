@@ -123,8 +123,8 @@ export struct MyPage {
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
 
-      Text('>')
-        .fontSize(AppTypography.meta)
+      Text('›')
+        .fontSize(AppTypography.cardTitle)
         .fontColor(AppColors.mutedText)
         .opacity(0.56)
     }
@@ -134,7 +134,8 @@ export struct MyPage {
     .constraintSize({ minHeight: 68, maxHeight: 76 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: '#ECE8E0' })
+    .border({ width: 1, color: AppColors.border })
+
     .onClick(() => {
       onTap();
     })

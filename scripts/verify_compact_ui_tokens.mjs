@@ -44,19 +44,21 @@ for (const marker of requiredTokens) {
 }
 
 const requiredDesignTokens = [
-  'static readonly PageTitle: number = 30;',
-  'static readonly PageSubtitle: number = 16;',
-  'static readonly SectionTitle: number = 20;',
-  'static readonly CardTitle: number = 18;',
-  'static readonly CardBody: number = 15;',
-  'static readonly ListTitle: number = 17;',
-  'static readonly ListBody: number = 14;',
+  'static readonly PageTitle: number = 26;',
+  'static readonly PageSubtitle: number = 15;',
+  'static readonly SectionTitle: number = 18;',
+  'static readonly CardTitle: number = 17;',
+  'static readonly CardBody: number = 16;',
+  'static readonly ListTitle: number = 16;',
+  'static readonly ListBody: number = 15;',
   'static readonly CardMeta: number = 13;',
   'static readonly ButtonText: number = 16;',
   'static readonly TabLabel: number = 12;',
-  'static readonly SearchHeight: number = 42;',
-  'static readonly ChipHeight: number = 32;',
-  'static readonly TabBarHeight: number = 60;',
+  'static readonly SearchHeight: number = 44;',
+  'static readonly ChipHeight: number = 44;',
+  'static readonly SecondaryButtonHeight: number = 44;',
+  'static readonly PrimaryButtonHeight: number = 48;',
+  'static readonly TabBarHeight: number = 68;',
   'static readonly ListThumbnailSize: number = 72;'
 ];
 
@@ -130,7 +132,7 @@ assertIncludes(appShellSource, "$r('app.media.tab_home_active')", 'TabBar must u
 assertIncludes(appShellSource, "$r('app.media.tab_library_active')", 'TabBar must use the library line icon resource.');
 assertIncludes(appShellSource, "$r('app.media.tab_user_active')", 'TabBar must use the user line icon resource.');
 assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use 12fp Compact token.');
-assertIncludes(appShellSource, '.height(AppMetrics.tabBarHeight)', 'TabBar must use 60vp Compact token.');
+assertIncludes(appShellSource, '.height(AppMetrics.tabBarHeight)', 'TabBar must use shared touch-safe token.');
 
 const iconFiles = [
   'tab_home.svg',
@@ -155,8 +157,8 @@ if (homePageSource.includes('0天')) {
   console.error('Home page must not render 0天.');
 }
 
-assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use 42vp Compact token.');
-assertIncludes(projectDetailSource, '.height(AppMetrics.chipHeight)', 'Library chips must use 32vp Compact token.');
+assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use shared touch-safe token.');
+assertIncludes(projectDetailSource, '.height(AppMetrics.chipHeight)', 'Library chips must use shared touch-safe token.');
 assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use 72vp thumbnail token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use 17fp Compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use 14fp Compact token.');

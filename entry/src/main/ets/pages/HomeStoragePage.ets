@@ -1,3 +1,4 @@
+import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
@@ -223,6 +224,10 @@ struct HomeStoragePage {
     return this.lastUploadedAt > 0 ? formatReviewTime(this.lastUploadedAt) : '暂无上传记录';
   }
 
+  private goBack(): void {
+    router.back();
+  }
+
   @Builder
   FieldLabel(label: string) {
     Text(label)
@@ -251,7 +256,7 @@ struct HomeStoragePage {
         .borderRadius(AppMetrics.cardRadius)
         .fontSize(AppTypography.inputText)
         .fontColor(AppColors.text)
-        .placeholderColor('#9AA1AB')
+        .placeholderColor(AppColors.placeholderText)
         .backgroundColor(AppColors.surfaceMuted)
         .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
         .border({ width: 1, color: AppColors.border })
@@ -310,6 +315,19 @@ struct HomeStoragePage {
 
   build() {
     Column() {
+      Button('返回')
+        .height(AppMetrics.compactControlHeight)
+        .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+        .borderRadius(AppMetrics.capsuleRadius)
+        .fontSize(AppTypography.smallButtonText)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.secondaryText)
+        .backgroundColor(AppColors.surfaceMuted)
+        .stateEffect(true)
+        .onClick(() => {
+          this.goBack();
+        })
+
       AppPageHeader({
         title: '家庭存储',
         subtitle: '管理 SMB 设置、测试连接，并查看最近上传状态。'

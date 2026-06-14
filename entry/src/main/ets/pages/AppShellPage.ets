@@ -58,7 +58,7 @@ struct AppShellPage {
   }
 
   private resolveTabBackground(key: RootTabKey): string {
-    return '#00000000';
+    return this.isCurrentTab(key) ? AppColors.primarySoft : '#00000000';
   }
 
   @Builder
@@ -114,7 +114,7 @@ struct AppShellPage {
       .width('100%')
       .height(AppMetrics.tabBarHeight)
       .backgroundColor(AppColors.pageBackground)
-      .border({ width: 1, color: '#EEEAE4' })
+      .border({ width: 1, color: AppColors.border })
     }
     .width('100%')
     .height('100%')

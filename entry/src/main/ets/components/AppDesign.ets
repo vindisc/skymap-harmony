@@ -15,15 +15,22 @@ export class AppColors {
   static readonly surface: string = '#FFFEFC';
   static readonly surfaceMuted: string = '#F1EFE9';
   static readonly border: string = '#E5E0D7';
+  static readonly borderStrong: string = '#CFC7BA';
   static readonly text: string = '#171A1F';
   static readonly secondaryText: string = '#5E6470';
   static readonly mutedText: string = '#8A8F98';
+  static readonly placeholderText: string = '#6F7682';
   static readonly primary: string = '#1B1E23';
   static readonly primaryPressed: string = '#333840';
+  static readonly primarySoft: string = '#E6E9E5';
+  static readonly onPrimary: string = '#FFFFFF';
+  static readonly danger: string = '#B73A31';
   static readonly tagBlue: string = '#EEF4F0';
   static readonly tagBlueText: string = '#496A52';
   static readonly tagGreen: string = '#EAF5ED';
   static readonly tagGreenText: string = '#2E7D5B';
+  static readonly tagAmber: string = '#F4EDE1';
+  static readonly tagAmberText: string = '#8A6B2F';
 }
 
 export class AppMetrics {
@@ -42,6 +49,7 @@ export class AppMetrics {
   static readonly buttonRadius: number = 8;
   static readonly capsuleRadius: number = 16;
   static readonly panelRadius: number = 8;
+  static readonly pressInset: number = 8;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
   static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
@@ -141,7 +149,7 @@ export struct PrimaryButton {
       .borderRadius(AppMetrics.buttonRadius)
       .fontSize(AppTypography.buttonText)
       .fontWeight(FontWeight.Medium)
-      .fontColor('#FFFFFF')
+      .fontColor(AppColors.onPrimary)
       .backgroundColor(this.isDisabled ? '#B8C6B9' : AppColors.primary)
       .opacity(this.isDisabled ? 0.72 : 1)
       .enabled(!this.isDisabled)
@@ -169,7 +177,7 @@ export struct SecondaryButton {
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
       .backgroundColor(AppColors.surfaceMuted)
-      .stateEffect(true)
+
       .onClick(() => {
         this.onTap();
       })
@@ -226,27 +234,27 @@ export struct TagLabel {
 function getJudgementBadgeText(value: string): string {
   const judgement: ReviewJudgementStatus = normalizeReviewJudgement(value);
   if (judgement === ReviewJudgementStatus.VALID) {
-    return '✓ 成立';
+    return '成立';
   }
   if (judgement === ReviewJudgementStatus.INVALID) {
-    return '✕ 不成立';
+    return '不成立';
   }
-  return '待判断？';
+  return '待判断';
 }
 
 function getJudgementBadgeColor(value: string): string {
   const judgement: ReviewJudgementStatus = normalizeReviewJudgement(value);
   if (judgement === ReviewJudgementStatus.VALID) {
-    return '#6B7A70';
+    return AppColors.tagGreenText;
   }
   if (judgement === ReviewJudgementStatus.INVALID) {
-    return '#866B66';
+    return AppColors.tagAmberText;
   }
-  return '#7B7568';
+  return AppColors.secondaryText;
 }
 
 function getJudgementBadgeBackground(_value: string): string {
-  return '#F3F0EA';
+  return AppColors.surfaceMuted;
 }
 
 @Component
@@ -353,7 +361,7 @@ export struct PhotoWritingHero {
     .justifyContent(FlexAlign.Center)
     .width('100%')
     .height('100%')
-    .backgroundColor('#E9E5DC')
+    .backgroundColor(AppColors.surfaceMuted)
   }
 
   build() {
@@ -391,13 +399,13 @@ export struct PhotoWritingHero {
           this.Placeholder()
         }
       }
-        .width('94%')
-        .aspectRatio(this.getAspectRatioValue())
-        .alignSelf(ItemAlign.Center)
-        .borderRadius(AppMetrics.cardRadius)
-        .clip(true)
-        .backgroundColor('#E9E5DC')
-        .border({ width: 1, color: AppColors.border })
+      .width('94%')
+      .aspectRatio(this.getAspectRatioValue())
+      .alignSelf(ItemAlign.Center)
+      .borderRadius(AppMetrics.cardRadius)
+      .clip(true)
+      .backgroundColor(AppColors.surfaceMuted)
+      .border({ width: 1, color: AppColors.border })
     }
   }
 }
@@ -491,8 +499,8 @@ export struct ProjectHomeCard {
       .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)
 
-      Text('>')
-        .fontSize(AppTypography.body)
+      Text('›')
+        .fontSize(AppTypography.cardTitle)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.mutedText)
     }
@@ -503,6 +511,7 @@ export struct ProjectHomeCard {
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
+
     .onClick(() => {
       this.onTap();
     })
@@ -572,6 +581,7 @@ export struct RecentReviewCard {
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
+
     .onClick(() => {
       this.onTap();
     })
@@ -641,6 +651,7 @@ export struct ProjectReviewCard {
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
+
     .onClick(() => {
       this.onTap();
     })

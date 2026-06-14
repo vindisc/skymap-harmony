@@ -208,6 +208,10 @@ struct PreviewPage {
     this.isExportMenuVisible = false;
   }
 
+  private goBack(): void {
+    router.back();
+  }
+
   @Builder
   ActionButton(label: string, emphasized: boolean, isDisabled: boolean, onTap: () => void) {
     Button(label)
@@ -218,7 +222,7 @@ struct PreviewPage {
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.text : AppColors.secondaryText))
       .backgroundColor('#00000000')
-      .border(emphasized ? { width: 1, color: isDisabled ? '#E4E7EC' : AppColors.border } : { width: 0 })
+      .border(emphasized ? { width: 1, color: isDisabled ? AppColors.border : AppColors.border } : { width: 0 })
       .opacity(isDisabled ? 0.52 : 1)
       .stateEffect(!isDisabled)
       .enabled(!isDisabled)
@@ -239,7 +243,7 @@ struct PreviewPage {
     }
     .width(this.getExportCanvasWidth())
     .height(this.getExportCanvasHeight())
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(AppColors.onPrimary)
   }
 
   @Builder
@@ -263,11 +267,25 @@ struct PreviewPage {
   ReadingPage() {
     Column() {
       Row() {
+        Button('返回')
+          .height(AppMetrics.compactControlHeight)
+          .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+          .borderRadius(AppMetrics.capsuleRadius)
+          .fontSize(AppTypography.smallButtonText)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.secondaryText)
+          .backgroundColor(AppColors.surfaceMuted)
+          .stateEffect(true)
+          .onClick(() => {
+            this.goBack();
+          })
+
         Text('复盘记录')
           .fontSize(AppTypography.level1)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
           .lineHeight(AppTypography.level1LineHeight)
+          .margin({ left: AppMetrics.space8 })
 
         Blank()
       }

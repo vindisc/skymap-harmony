@@ -107,7 +107,7 @@ export struct ProjectDetailPage {
       },
       secondaryButton: {
         value: '删除',
-        fontColor: '#9A3328',
+        fontColor: AppColors.danger,
         action: () => {
           this.deleteHistory(document);
         }
@@ -129,8 +129,8 @@ export struct ProjectDetailPage {
       .borderRadius(AppMetrics.cardRadius)
       .fontSize(AppTypography.auxiliary)
       .fontWeight(FontWeight.Medium)
-      .fontColor('#FFFFFF')
-      .backgroundColor('#B73A31')
+      .fontColor(AppColors.onPrimary)
+      .backgroundColor(AppColors.danger)
       .onClick(() => {
         this.confirmDeleteHistory(document);
       })
@@ -146,7 +146,7 @@ export struct ProjectDetailPage {
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
-      .border({ width: 1, color: this.isFilterSelected(value) ? '#C8C0B3' : AppColors.border })
+      .border({ width: 1, color: this.isFilterSelected(value) ? AppColors.borderStrong : AppColors.border })
       .onClick(() => {
         this.decisionFilter = value;
         this.applyFilters();
@@ -177,10 +177,10 @@ export struct ProjectDetailPage {
             .borderRadius(AppMetrics.cardRadius)
             .fontSize(AppTypography.inputPlaceholder)
             .fontColor(AppColors.text)
-            .placeholderColor('#9AA1AB')
+            .placeholderColor(AppColors.placeholderText)
             .backgroundColor(AppColors.surface)
             .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-            .border({ width: 1, color: '#ECE8E0' })
+            .border({ width: 1, color: AppColors.border })
             .onChange((value: string) => {
               this.searchText = value;
               this.applyFilters();
@@ -213,7 +213,7 @@ export struct ProjectDetailPage {
             .borderRadius(AppMetrics.capsuleRadius)
             .fontSize(AppTypography.auxiliary)
             .fontWeight(FontWeight.Medium)
-            .fontColor('#FFFFFF')
+            .fontColor(AppColors.onPrimary)
             .backgroundColor(AppColors.primary)
             .margin({ top: AppMetrics.space16 })
             .onClick(() => {

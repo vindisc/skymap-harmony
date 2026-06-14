@@ -38,6 +38,7 @@ export struct HomePage {
   };
   @State reviewerName: string = '';
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
+  @State historyLoadFailed: boolean = false;
 
   aboutToAppear(): void {
     this.reloadHistory();
@@ -65,8 +66,12 @@ export struct HomePage {
       if (requestId !== this.reloadRequestId) {
         return;
       }
+      this.historyLoadFailed = false;
       this.applyHomeData(items);
     } catch (error) {
+      if (requestId === this.reloadRequestId) {
+        this.historyLoadFailed = true;
+      }
       return;
     }
 
@@ -149,17 +154,20 @@ export struct HomePage {
   }
 
   private resolveStatsHintText(): string {
+    if (this.historyLoadFailed) {
+      return '历史记录暂时读取失败，请重新进入首页或重启应用再试。';
+    }
     return this.projectSummary.recordCount > 0 ? '每一次判断都会留下可回看的线索。' : '还没有记录，第一条复盘会从这里开始。';
   }
 
   @Builder
-  StatItem(value: string, label: string) {
+  StatItem(value: string, label: string, emphasized: boolean = false) {
     Column({ space: AppMetrics.space8 }) {
       Text(value)
-        .fontSize(AppTypography.statNumber)
+        .fontSize((emphasized || label === '总复盘') ? AppTypography.statNumber + 4 : AppTypography.statNumber)
         .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.statNumberLineHeight)
+        .fontColor((emphasized || label === '总复盘') ? AppColors.primary : AppColors.text)
+        .lineHeight((emphasized || label === '总复盘') ? AppTypography.statNumberLineHeight + 4 : AppTypography.statNumberLineHeight)
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
 
@@ -176,12 +184,23 @@ export struct HomePage {
   @Builder
   GrowthStatsPanel() {
     Column({ space: AppMetrics.cardGap }) {
-      Text('复盘概览')
-        .fontSize(AppTypography.sectionTitle)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.sectionTitleLineHeight)
-        .width('100%')
+      Row() {
+        Text('复盘概览')
+          .fontSize(AppTypography.sectionTitle)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.sectionTitleLineHeight)
+
+        Blank()
+
+        Text(this.resolveStatsHintText())
+          .fontSize(AppTypography.meta)
+          .fontColor(this.historyLoadFailed ? AppColors.tagAmberText : AppColors.secondaryText)
+          .lineHeight(AppTypography.metaLineHeight)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      .width('100%')
 
       Row({ space: AppMetrics.space8 }) {
         this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')
@@ -194,8 +213,8 @@ export struct HomePage {
     .padding(AppMetrics.cardPadding)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: AppColors.border })
+    .backgroundColor(this.historyLoadFailed ? AppColors.tagAmber : AppColors.surface)
+    .border({ width: 1, color: this.historyLoadFailed ? AppColors.tagAmberText : AppColors.border })
   }
 
   @Builder
@@ -243,6 +262,8 @@ export struct HomePage {
 
         this.StartReviewPanel()
 
+        this.GrowthStatsPanel()
+
         Column({ space: AppMetrics.cardGap }) {
           Text('最近一次')
             .fontSize(AppTypography.sectionTitle)
@@ -279,7 +300,7 @@ export struct HomePage {
                   .borderRadius(AppMetrics.capsuleRadius)
                   .fontSize(AppTypography.smallButtonText)
                   .fontWeight(FontWeight.Medium)
-                  .fontColor('#FFFFFF')
+                  .fontColor(AppColors.onPrimary)
                   .backgroundColor(AppColors.primary)
                   .onClick(() => {
                     this.continueLatestReview();
@@ -294,8 +315,6 @@ export struct HomePage {
             })
           }
         }
-
-        this.GrowthStatsPanel()
 
         Column({ space: AppMetrics.cardGap }) {
           Text('当前状态')

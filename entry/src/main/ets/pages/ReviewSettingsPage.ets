@@ -257,7 +257,7 @@ struct ReviewSettingsPage {
         .borderRadius(AppMetrics.cardRadius)
         .fontSize(AppTypography.inputText)
         .fontColor(AppColors.text)
-        .placeholderColor('#9AA1AB')
+        .placeholderColor(AppColors.placeholderText)
         .backgroundColor(AppColors.surfaceMuted)
         .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
         .border({ width: 1, color: AppColors.border })
