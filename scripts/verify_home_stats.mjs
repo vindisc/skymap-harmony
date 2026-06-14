@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
+const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
 const settingsPageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewSettingsPage.ets', 'utf8');
 const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewProjectService.ets', 'utf8');
 
@@ -43,6 +44,15 @@ if (!homePageSource.includes("this.StatItem(`${this.projectSummary.recordCount}`
 if (!homePageSource.includes('ReviewProjectService.buildHomeSummary(items)')) {
   failed = true;
   console.error('HomePage stats must use the all-history home summary instead of the default-project summary.');
+}
+
+if (!homePageSource.includes("@Prop @Watch('refreshHomeData') refreshToken") ||
+  !homePageSource.includes('refreshHomeData(): void') ||
+  !appShellSource.includes('onPageShow(): void') ||
+  !appShellSource.includes('this.refreshHomeIfNeeded();') ||
+  !appShellSource.includes('HomePage({ refreshToken: this.homeRefreshToken })')) {
+  failed = true;
+  console.error('HomePage must reload when AppShell becomes visible again after editor/preview routes.');
 }
 
 if (homePageSource.includes('this.dashboardStats.totalCount') ||

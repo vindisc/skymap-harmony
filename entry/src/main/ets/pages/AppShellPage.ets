@@ -26,6 +26,17 @@ const ROOT_TABS: Array<RootTabItem> = [
 @Component
 struct AppShellPage {
   @State currentTab: RootTabKey = RootTabKey.HOME;
+  @State homeRefreshToken: number = 0;
+
+  onPageShow(): void {
+    this.refreshHomeIfNeeded();
+  }
+
+  private refreshHomeIfNeeded(): void {
+    if (this.currentTab === RootTabKey.HOME) {
+      this.homeRefreshToken += 1;
+    }
+  }
 
   private isCurrentTab(key: RootTabKey): boolean {
     return this.currentTab === key;
@@ -33,6 +44,9 @@ struct AppShellPage {
 
   private selectTab(key: RootTabKey): void {
     this.currentTab = key;
+    if (key === RootTabKey.HOME) {
+      this.homeRefreshToken += 1;
+    }
   }
 
   private resolveTabLabelColor(key: RootTabKey): string {
@@ -75,7 +89,7 @@ struct AppShellPage {
   @Builder
   CurrentTabPage() {
     if (this.currentTab === RootTabKey.HOME) {
-      HomePage()
+      HomePage({ refreshToken: this.homeRefreshToken })
     } else if (this.currentTab === RootTabKey.LIBRARY) {
       ProjectDetailPage()
     } else {

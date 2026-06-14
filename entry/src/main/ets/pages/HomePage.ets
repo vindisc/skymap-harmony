@@ -30,6 +30,7 @@ import {
 @Component
 export struct HomePage {
   private reloadRequestId: number = 0;
+  @Prop @Watch('refreshHomeData') refreshToken: number = 0;
   @State isPickingPhoto: boolean = false;
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
   @State dashboardStats: ReviewDashboardStats = {
@@ -43,6 +44,10 @@ export struct HomePage {
   }
 
   onPageShow(): void {
+    this.reloadHistory();
+  }
+
+  refreshHomeData(): void {
     this.reloadHistory();
   }
 
