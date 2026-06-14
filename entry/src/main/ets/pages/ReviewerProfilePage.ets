@@ -45,15 +45,15 @@ struct ReviewerProfilePage {
           subtitle: '设置这台设备默认使用的复盘人名称。'
         })
 
-        Column({ space: AppMetrics.space12 }) {
+        Column({ space: AppMetrics.space16 }) {
           Text('复盘人')
-            .fontSize(AppTypography.body)
+            .fontSize(AppTypography.level3)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .width('100%')
 
           TextInput({ text: this.reviewerName, placeholder: '可留空' })
-            .height(48)
+            .height(AppMetrics.controlHeight)
             .borderRadius(AppMetrics.cardRadius)
             .fontSize(AppTypography.body)
             .fontColor(AppColors.text)
@@ -79,7 +79,7 @@ struct ReviewerProfilePage {
         .backgroundColor(AppColors.surface)
         .border({ width: 1, color: AppColors.border })
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space24 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space24 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
     }

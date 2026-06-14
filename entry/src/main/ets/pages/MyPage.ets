@@ -2,6 +2,9 @@ import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import { HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE } from '../app/AppRouter';
 import { AppColors, AppMetrics, AppPageHeader, AppTypography } from '../components/AppDesign';
+import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
+import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import { ReviewProjectService } from '../services/ReviewProjectService';
 import { HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
@@ -13,6 +16,8 @@ export struct MyPage {
   private loadRequestId: number = 0;
   @State reviewerName: string = '';
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
+  @State reviewCount: number = 0;
+  @State validReviewCount: number = 0;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -32,7 +37,8 @@ export struct MyPage {
     const context = this.getAbilityContext();
     const results = await Promise.all([
       ReviewSettingsService.loadReviewerName(context),
-      HomeStorageService.loadSettings(context)
+      HomeStorageService.loadSettings(context),
+      ReviewCardHistoryService.load(context)
     ]);
     if (requestId !== this.loadRequestId) {
       return;
@@ -40,6 +46,10 @@ export struct MyPage {
 
     this.reviewerName = results[0] as string;
     this.homeStorageSettings = results[1] as HomeStorageSettings;
+    const historyItems: Array<ReviewCardHistoryItem> = results[2] as Array<ReviewCardHistoryItem>;
+    const summary = ReviewProjectService.buildDefaultProjectSummary(historyItems);
+    this.reviewCount = summary.recordCount;
+    this.validReviewCount = summary.stats.validCount;
   }
 
   private isHomeStorageConfigured(): boolean {
@@ -52,6 +62,10 @@ export struct MyPage {
 
   private resolveHomeStorageSummary(): string {
     return this.isHomeStorageConfigured() ? '已配置' : '未配置';
+  }
+
+  private resolveProfileName(): string {
+    return this.reviewerName.length > 0 ? this.reviewerName : '见遇';
   }
 
   private openReviewerProfile(): void {
@@ -73,7 +87,7 @@ export struct MyPage {
 
   @Builder
   StatusRow(label: string, value: string) {
-    Row({ space: AppMetrics.space12 }) {
+    Row({ space: AppMetrics.space16 }) {
       Text(label)
         .fontSize(AppTypography.auxiliary)
         .fontColor(AppColors.secondaryText)
@@ -91,10 +105,10 @@ export struct MyPage {
 
   @Builder
   LinkRow(title: string, value: string, onTap: () => void) {
-    Row({ space: AppMetrics.space12 }) {
-      Column({ space: AppMetrics.space4 }) {
+    Row({ space: AppMetrics.space16 }) {
+      Column({ space: AppMetrics.space8 }) {
         Text(title)
-          .fontSize(AppTypography.body)
+          .fontSize(AppTypography.level3)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .width('100%')
@@ -113,7 +127,7 @@ export struct MyPage {
         .fontColor(AppColors.mutedText)
     }
     .alignItems(VerticalAlign.Center)
-    .padding(AppMetrics.space12)
+    .padding(AppMetrics.space16)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -123,6 +137,45 @@ export struct MyPage {
     })
   }
 
+  @Builder
+  IdentityCard() {
+    Column({ space: AppMetrics.space16 }) {
+      Column({ space: AppMetrics.space8 }) {
+        Text(this.resolveProfileName())
+          .fontSize(AppTypography.level2)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .width('100%')
+
+        Text('摄影复盘 Beta 用户')
+          .fontSize(AppTypography.auxiliary)
+          .fontColor(AppColors.secondaryText)
+          .width('100%')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
+
+      Row({ space: AppMetrics.space16 }) {
+        Text(`${this.reviewCount} 次复盘`)
+          .fontSize(AppTypography.body)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+
+        Text(`${this.validReviewCount} 次成立`)
+          .fontSize(AppTypography.body)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+      }
+      .width('100%')
+    }
+    .alignItems(HorizontalAlign.Start)
+    .padding(AppMetrics.space16)
+    .width('100%')
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+  }
+
   build() {
     Column({ space: AppMetrics.space16 }) {
       AppPageHeader({
@@ -130,15 +183,15 @@ export struct MyPage {
         subtitle: '管理复盘人、家庭存储和版本信息'
       })
 
+      this.IdentityCard()
+
       Column({ space: AppMetrics.space8 }) {
-        this.SectionTitle('个人信息')
         this.LinkRow('复盘人', this.resolveReviewerSummary(), () => {
           this.openReviewerProfile();
         })
       }
 
       Column({ space: AppMetrics.space8 }) {
-        this.SectionTitle('家庭存储')
         this.LinkRow(
           '家庭存储',
           this.resolveHomeStorageSummary(),
@@ -151,12 +204,12 @@ export struct MyPage {
       Column({ space: AppMetrics.space8 }) {
         this.SectionTitle('关于')
 
-        Column({ space: 10 }) {
+        Column({ space: AppMetrics.space8 }) {
           this.StatusRow('版本号', APP_VERSION_TEXT)
           this.StatusRow('Build', APP_BUILD_TEXT)
           this.StatusRow('产品说明', 'Skymap Harmony 摄影复盘 Beta')
         }
-        .padding(AppMetrics.space12)
+        .padding(AppMetrics.space16)
         .width('100%')
         .borderRadius(AppMetrics.cardRadius)
         .backgroundColor(AppColors.surface)
@@ -167,7 +220,7 @@ export struct MyPage {
     .alignItems(HorizontalAlign.Start)
     .width('100%')
     .height('100%')
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 20, bottom: AppMetrics.space24 })
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space24 })
     .backgroundColor(AppColors.pageBackground)
   }
 }

@@ -1,4 +1,5 @@
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
+import { AppColors, AppMetrics, AppTypography } from './AppDesign';
 
 @Component
 export struct ReviewPhotoBlock {
@@ -16,25 +17,25 @@ export struct ReviewPhotoBlock {
   Placeholder() {
     Column() {
       Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '图片加载失败' : '照片预览')
-        .fontSize(this.compact ? 14 : 18)
+        .fontSize(this.compact ? AppTypography.auxiliary : AppTypography.body)
         .fontWeight(FontWeight.Medium)
-        .fontColor('#1F2329')
+        .fontColor(AppColors.text)
       if (hasDisplayableImageUri(this.imageUri) && this.loadFailed) {
         Text('请重新选择照片')
-          .fontSize(12)
-          .fontColor('#68707D')
-          .margin({ top: 6 })
+          .fontSize(AppTypography.auxiliary)
+          .fontColor(AppColors.secondaryText)
+          .margin({ top: AppMetrics.space8 })
       } else if (this.imageSizeFallbackUsed) {
         Text('暂时无法读取照片信息')
-          .fontSize(12)
-          .fontColor('#68707D')
-          .margin({ top: 6 })
+          .fontSize(AppTypography.auxiliary)
+          .fontColor(AppColors.secondaryText)
+          .margin({ top: AppMetrics.space8 })
       }
     }
     .justifyContent(FlexAlign.Center)
     .width('100%')
     .height('100%')
-    .backgroundColor('#E9E5DC')
+    .backgroundColor(AppColors.surfaceMuted)
   }
 
   build() {
@@ -56,6 +57,6 @@ export struct ReviewPhotoBlock {
     .aspectRatio(this.aspectRatioValue)
     .borderRadius(this.cornerRadius)
     .clip(true)
-    .backgroundColor('#E9E5DC')
+    .backgroundColor(AppColors.surfaceMuted)
   }
 }

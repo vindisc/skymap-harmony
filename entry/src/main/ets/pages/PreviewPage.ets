@@ -211,10 +211,10 @@ struct PreviewPage {
   @Builder
   ActionButton(label: string, emphasized: boolean, isDisabled: boolean, onTap: () => void) {
     Button(label)
-      .height(28)
-      .padding({ left: emphasized ? AppMetrics.space12 : AppMetrics.space8, right: emphasized ? AppMetrics.space12 : AppMetrics.space8 })
+      .height(AppMetrics.chipHeight)
+      .padding({ left: emphasized ? AppMetrics.space16 : AppMetrics.space8, right: emphasized ? AppMetrics.space16 : AppMetrics.space8 })
       .borderRadius(AppMetrics.capsuleRadius)
-      .fontSize(AppTypography.caption)
+      .fontSize(AppTypography.auxiliary)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.text : AppColors.secondaryText))
       .backgroundColor('#00000000')
@@ -245,7 +245,7 @@ struct PreviewPage {
   @Builder
   ExportSheetAction(label: string, onTap: () => void) {
     Button(label)
-      .height(52)
+      .height(AppMetrics.controlHeight)
       .width('100%')
       .borderRadius(AppMetrics.cardRadius)
       .fontSize(AppTypography.body)
@@ -264,15 +264,15 @@ struct PreviewPage {
     Column() {
       Row() {
         Text('复盘记录')
-          .fontSize(AppTypography.level2)
+          .fontSize(AppTypography.level1)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
-          .lineHeight(AppTypography.level2LineHeight)
+          .lineHeight(AppTypography.level1LineHeight)
 
         Blank()
       }
       .alignItems(VerticalAlign.Center)
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space12, bottom: AppMetrics.space4 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space8 })
       .width('100%')
 
       Column({ space: AppMetrics.space8 }) {
@@ -284,9 +284,9 @@ struct PreviewPage {
             this.openExportMenu();
           })
         }
-        .height(32)
+        .height(AppMetrics.chipHeight)
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space4 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space8 })
       .width('100%')
 
       if (this.lastReviewJsonExportMessage.length > 0) {
@@ -344,7 +344,7 @@ struct PreviewPage {
       Column({ space: AppMetrics.space8 }) {
         Column({ space: AppMetrics.space8 }) {
           Text('导出复盘')
-            .fontSize(AppTypography.body)
+            .fontSize(AppTypography.level2)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.text)
             .width('100%')
@@ -353,12 +353,12 @@ struct PreviewPage {
             this.exportReviewJson();
           })
 
-          this.ExportSheetAction(this.isExporting ? '导出复盘图片中...' : '导出复盘图片', () => {
-            this.exportImage();
-          })
-
           this.ExportSheetAction(this.isUploadingHomeStorage ? '上传到家庭存储中...' : '上传到家庭存储', () => {
             this.uploadReviewJsonToHomeStorage();
+          })
+
+          this.ExportSheetAction(this.isExporting ? '导出复盘图片中...' : '导出复盘图片', () => {
+            this.exportImage();
           })
 
           this.ExportSheetAction('复制复盘数据', () => {

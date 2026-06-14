@@ -246,7 +246,7 @@ struct HomeStoragePage {
 
       TextInput({ text: text, placeholder: placeholder })
         .type(isPassword ? InputType.Password : InputType.Normal)
-        .height(48)
+        .height(AppMetrics.controlHeight)
         .borderRadius(AppMetrics.cardRadius)
         .fontSize(AppTypography.body)
         .fontColor(AppColors.text)
@@ -275,7 +275,7 @@ struct HomeStoragePage {
   @Builder
   SecondaryActionButton(label: string, isDisabled: boolean, onTap: () => void) {
     Button(label)
-      .height(48)
+      .height(AppMetrics.controlHeight)
       .borderRadius(AppMetrics.cardRadius)
       .fontSize(AppTypography.body)
       .fontWeight(FontWeight.Medium)
@@ -316,7 +316,7 @@ struct HomeStoragePage {
 
       Scroll(this.settingsScroller) {
         Column({ space: AppMetrics.space24 }) {
-          Column({ space: AppMetrics.space12 }) {
+          Column({ space: AppMetrics.space16 }) {
             this.StatusRow('连接状态', this.resolveConnectionStatusText())
             this.StatusRow('最近上传时间', this.resolveLastUploadedText())
           }
@@ -326,7 +326,7 @@ struct HomeStoragePage {
           .backgroundColor(AppColors.surface)
           .border({ width: 1, color: AppColors.border })
 
-          Column({ space: AppMetrics.space12 }) {
+          Column({ space: AppMetrics.space16 }) {
             Text('用于把复盘里的 review.json 上传到家庭存储，配置项与导出菜单保持一致。')
               .fontSize(AppTypography.auxiliary)
               .fontColor(AppColors.secondaryText)
@@ -364,7 +364,7 @@ struct HomeStoragePage {
           .alignItems(HorizontalAlign.Start)
           .width('100%')
 
-          Column({ space: AppMetrics.space12 }) {
+          Column({ space: AppMetrics.space16 }) {
             this.SecondaryActionButton(this.isTestingHomeStorage ? '测试连接中...' : '测试连接', this.isTestingHomeStorage, () => {
               this.testHomeStorage();
             })
@@ -384,7 +384,7 @@ struct HomeStoragePage {
       }
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space32 })
     .width('100%')
     .height('100%')
     .backgroundColor(AppColors.pageBackground)

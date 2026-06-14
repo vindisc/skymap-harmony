@@ -142,43 +142,43 @@ export struct HomePage {
 
   @Builder
   StatItem(value: string, label: string) {
-    Column({ space: AppMetrics.space4 }) {
+    Column({ space: AppMetrics.space8 }) {
       Text(value)
-        .fontSize(AppTypography.body)
-        .fontWeight(FontWeight.Medium)
+        .fontSize(AppTypography.level2)
+        .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
 
       Text(label)
-        .fontSize(AppTypography.caption)
+        .fontSize(AppTypography.auxiliary)
         .fontColor(AppColors.secondaryText)
         .maxLines(1)
     }
-    .alignItems(HorizontalAlign.Start)
+    .alignItems(HorizontalAlign.Center)
     .layoutWeight(1)
   }
 
   @Builder
   GrowthStatsPanel() {
-    Column({ space: AppMetrics.space12 }) {
-      Column({ space: AppMetrics.space4 }) {
+    Column({ space: AppMetrics.space16 }) {
+      Column({ space: AppMetrics.space8 }) {
         Text('复盘概览')
-          .fontSize(AppTypography.body)
+          .fontSize(AppTypography.level2)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .width('100%')
 
         Text(this.resolveStatsHintText())
-          .fontSize(AppTypography.caption)
+          .fontSize(AppTypography.auxiliary)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.captionLineHeight)
+          .lineHeight(AppTypography.auxiliaryLineHeight)
           .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
 
-      Row({ space: AppMetrics.space8 }) {
+      Row({ space: AppMetrics.space16 }) {
         this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')
         this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')
         this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')
@@ -186,7 +186,7 @@ export struct HomePage {
       }
       .width('100%')
     }
-    .padding(AppMetrics.space12)
+    .padding(AppMetrics.space16)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -195,18 +195,18 @@ export struct HomePage {
 
   @Builder
   StartReviewPanel() {
-    Column({ space: AppMetrics.space12 }) {
-      Column({ space: AppMetrics.space4 }) {
+    Column({ space: AppMetrics.space16 }) {
+      Column({ space: AppMetrics.space8 }) {
         Text('开始新的复盘')
-          .fontSize(AppTypography.body)
+          .fontSize(AppTypography.level3)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .width('100%')
 
         Text('继续训练你的摄影判断。')
-          .fontSize(AppTypography.caption)
+          .fontSize(AppTypography.auxiliary)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.captionLineHeight)
+          .lineHeight(AppTypography.auxiliaryLineHeight)
           .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
@@ -220,7 +220,7 @@ export struct HomePage {
         }
       })
     }
-    .padding(AppMetrics.space12)
+    .padding(AppMetrics.space16)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -237,15 +237,15 @@ export struct HomePage {
 
         this.StartReviewPanel()
 
-        Column({ space: AppMetrics.space12 }) {
+        Column({ space: AppMetrics.space16 }) {
           Text('最近一次')
-            .fontSize(AppTypography.auxiliary)
+            .fontSize(AppTypography.level2)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .width('100%')
 
           if (this.projectSummary.latestItem) {
-            Column({ space: AppMetrics.space12 }) {
+            Column({ space: AppMetrics.space16 }) {
               RecentReviewCard({
                 item: this.projectSummary.latestItem,
                 onTap: () => {
@@ -255,7 +255,7 @@ export struct HomePage {
 
               Row({ space: AppMetrics.space8 }) {
                 Button('查看详情')
-                  .height(36)
+                  .height(AppMetrics.compactControlHeight)
                   .layoutWeight(1)
                   .borderRadius(AppMetrics.capsuleRadius)
                   .fontSize(AppTypography.auxiliary)
@@ -267,7 +267,7 @@ export struct HomePage {
                   })
 
                 Button('继续编辑')
-                  .height(36)
+                  .height(AppMetrics.compactControlHeight)
                   .layoutWeight(1)
                   .borderRadius(AppMetrics.capsuleRadius)
                   .fontSize(AppTypography.auxiliary)
@@ -290,9 +290,9 @@ export struct HomePage {
 
         this.GrowthStatsPanel()
 
-        Column({ space: AppMetrics.space12 }) {
+        Column({ space: AppMetrics.space16 }) {
           Text('当前状态')
-            .fontSize(AppTypography.auxiliary)
+            .fontSize(AppTypography.level2)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .width('100%')
@@ -308,14 +308,14 @@ export struct HomePage {
               .fontColor(AppColors.text)
               .width('100%')
           }
-          .padding(AppMetrics.space12)
+          .padding(AppMetrics.space16)
           .width('100%')
           .borderRadius(AppMetrics.cardRadius)
           .backgroundColor(AppColors.surface)
           .border({ width: 1, color: AppColors.border })
         }
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 20, bottom: AppMetrics.space32 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space32 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
     }

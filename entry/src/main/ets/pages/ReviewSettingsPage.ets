@@ -252,7 +252,7 @@ struct ReviewSettingsPage {
 
       TextInput({ text: text, placeholder: placeholder })
         .type(isPassword ? InputType.Password : InputType.Normal)
-        .height(48)
+        .height(AppMetrics.controlHeight)
         .borderRadius(AppMetrics.cardRadius)
         .fontSize(AppTypography.body)
         .fontColor(AppColors.text)
@@ -281,7 +281,7 @@ struct ReviewSettingsPage {
   @Builder
   SecondaryActionButton(label: string, isDisabled: boolean, onTap: () => void) {
     Button(label)
-      .height(48)
+      .height(AppMetrics.controlHeight)
       .borderRadius(AppMetrics.cardRadius)
       .fontSize(AppTypography.body)
       .fontWeight(FontWeight.Medium)
@@ -305,9 +305,9 @@ struct ReviewSettingsPage {
             this.reviewerName = value;
           }, false, 0)
 
-          Column({ space: AppMetrics.space12 }) {
+          Column({ space: AppMetrics.space16 }) {
             Text('家庭存储')
-              .fontSize(AppTypography.body)
+              .fontSize(AppTypography.level3)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.text)
               .width('100%')
@@ -349,7 +349,7 @@ struct ReviewSettingsPage {
           .alignItems(HorizontalAlign.Start)
           .width('100%')
 
-          Column({ space: AppMetrics.space12 }) {
+          Column({ space: AppMetrics.space16 }) {
             this.SecondaryActionButton(this.isTestingHomeStorage ? '测试中...' : '测试家庭存储连接', this.isTestingHomeStorage, () => {
               this.testHomeStorage();
             })
@@ -370,7 +370,7 @@ struct ReviewSettingsPage {
       }
     }
     .alignItems(HorizontalAlign.Start)
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space32 })
     .width('100%')
     .height('100%')
     .backgroundColor(AppColors.pageBackground)

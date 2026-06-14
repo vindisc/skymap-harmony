@@ -75,7 +75,7 @@ struct SyncCenterPage {
 
   @Builder
   InfoRow(label: string, value: string) {
-    Column({ space: AppMetrics.space4 }) {
+    Column({ space: AppMetrics.space8 }) {
       Text(label)
         .fontSize(AppTypography.caption)
         .fontColor(AppColors.mutedText)
@@ -102,9 +102,9 @@ struct SyncCenterPage {
 
         Column({ space: AppMetrics.space16 }) {
           Row() {
-            Column({ space: AppMetrics.space4 }) {
+            Column({ space: AppMetrics.space8 }) {
               Text('家庭存储')
-                .fontSize(AppTypography.body)
+                .fontSize(AppTypography.level3)
                 .fontWeight(FontWeight.Bold)
                 .fontColor(AppColors.text)
                 .width('100%')
@@ -138,7 +138,7 @@ struct SyncCenterPage {
         .border({ width: 1, color: AppColors.border })
 
         Button(this.isTesting ? '测试中...' : '测试连接')
-          .height(44)
+          .height(AppMetrics.controlHeight)
           .width('100%')
           .borderRadius(AppMetrics.buttonRadius)
           .fontSize(AppTypography.body)
@@ -159,7 +159,7 @@ struct SyncCenterPage {
           }
         })
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space24 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space24 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
     }

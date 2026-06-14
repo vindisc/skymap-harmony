@@ -16,9 +16,9 @@ interface RootTabItem {
 }
 
 const ROOT_TABS: Array<RootTabItem> = [
-  { key: RootTabKey.HOME, label: '首页', icon: '⌂' },
-  { key: RootTabKey.LIBRARY, label: '复盘库', icon: '☷' },
-  { key: RootTabKey.MY, label: '我的', icon: '◎' }
+  { key: RootTabKey.HOME, label: '首页', icon: '●' },
+  { key: RootTabKey.LIBRARY, label: '复盘库', icon: '■' },
+  { key: RootTabKey.MY, label: '我的', icon: '◆' }
 ];
 
 @Entry
@@ -48,23 +48,23 @@ struct AppShellPage {
 
   @Builder
   TabButton(item: RootTabItem) {
-    Column({ space: 2 }) {
+    Column() {
       Text(item.icon)
-        .fontSize(AppTypography.caption)
-        .fontWeight(this.resolveTabLabelWeight(item.key))
+        .fontSize(AppTypography.body)
+        .fontWeight(FontWeight.Bold)
         .fontColor(this.resolveTabLabelColor(item.key))
-        .lineHeight(AppTypography.captionLineHeight)
+        .lineHeight(AppTypography.bodyLineHeight)
 
       Text(item.label)
-        .fontSize(AppTypography.caption)
+        .fontSize(AppTypography.auxiliary)
         .fontWeight(this.resolveTabLabelWeight(item.key))
         .fontColor(this.resolveTabLabelColor(item.key))
-        .lineHeight(AppTypography.captionLineHeight)
+        .lineHeight(AppTypography.auxiliaryLineHeight)
     }
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .layoutWeight(1)
-    .height(46)
+    .height(AppMetrics.tabBarItemHeight)
     .padding({ left: AppMetrics.space8, right: AppMetrics.space8 })
     .borderRadius(AppMetrics.buttonRadius)
     .backgroundColor(this.resolveTabBackground(item.key))
@@ -97,7 +97,7 @@ struct AppShellPage {
           this.TabButton(item);
         }, (item: RootTabItem) => item.key)
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 6 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space8, bottom: AppMetrics.space8 })
       .width('100%')
       .backgroundColor(AppColors.pageBackground)
       .border({ width: 1, color: '#EEEAE4' })

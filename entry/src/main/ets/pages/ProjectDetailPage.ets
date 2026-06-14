@@ -139,10 +139,10 @@ export struct ProjectDetailPage {
   @Builder
   FilterChip(label: string, value: string) {
     Button(label)
-      .height(28)
-      .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
+      .height(AppMetrics.chipHeight)
+      .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
       .borderRadius(AppMetrics.capsuleRadius)
-      .fontSize(AppTypography.caption)
+      .fontSize(AppTypography.auxiliary)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
@@ -173,13 +173,13 @@ export struct ProjectDetailPage {
 
         Column({ space: AppMetrics.space8 }) {
           TextInput({ text: this.searchText, placeholder: '搜索标题、核心关系、卡点、文件名' })
-            .height(38)
+            .height(AppMetrics.chipHeight)
             .borderRadius(AppMetrics.cardRadius)
             .fontSize(AppTypography.auxiliary)
             .fontColor(AppColors.text)
             .placeholderColor('#9AA1AB')
             .backgroundColor(AppColors.surface)
-            .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
+            .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
             .border({ width: 1, color: '#ECE8E0' })
             .onChange((value: string) => {
               this.searchText = value;
@@ -194,9 +194,9 @@ export struct ProjectDetailPage {
           }
           .width('100%')
         }
-        .margin({ top: AppMetrics.space12 })
+        .margin({ top: AppMetrics.space16 })
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 20, bottom: 0 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: 0 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
 
@@ -208,14 +208,14 @@ export struct ProjectDetailPage {
           })
 
           Button('创建第一条复盘')
-            .height(36)
+            .height(AppMetrics.compactControlHeight)
             .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
             .borderRadius(AppMetrics.capsuleRadius)
             .fontSize(AppTypography.auxiliary)
             .fontWeight(FontWeight.Medium)
             .fontColor('#FFFFFF')
             .backgroundColor(AppColors.primary)
-            .margin({ top: AppMetrics.space12 })
+            .margin({ top: AppMetrics.space16 })
             .onClick(() => {
               this.openCreateFirstReview();
             })
@@ -232,14 +232,14 @@ export struct ProjectDetailPage {
           })
 
           Button('清空搜索与筛选')
-            .height(36)
+            .height(AppMetrics.compactControlHeight)
             .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
             .borderRadius(AppMetrics.capsuleRadius)
             .fontSize(AppTypography.auxiliary)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
             .backgroundColor(AppColors.surfaceMuted)
-            .margin({ top: AppMetrics.space12 })
+            .margin({ top: AppMetrics.space16 })
             .onClick(() => {
               this.clearFilters();
             })

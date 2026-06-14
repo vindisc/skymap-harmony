@@ -66,7 +66,7 @@ export struct ReviewInputForm {
 
   @Builder
   JudgementSelect() {
-    Column({ space: AppMetrics.space12 }) {
+    Column({ space: AppMetrics.space16 }) {
       this.FieldLabel('是否成立', SECONDARY_FIELD_LABEL_SIZE)
       Select([
         { value: ReviewJudgementStatus.VALID },
@@ -75,7 +75,7 @@ export struct ReviewInputForm {
       ])
         .selected(getReviewJudgementIndex(this.judgement))
         .value(normalizeReviewJudgement(this.judgement))
-        .height(48)
+        .height(AppMetrics.controlHeight)
         .width('100%')
         .borderRadius(AppMetrics.cardRadius)
         .font({ size: SECONDARY_FIELD_INPUT_SIZE, weight: FontWeight.Medium })
@@ -105,7 +105,7 @@ export struct ReviewInputForm {
     inputSize: number,
     onChange: (value: string) => void
   ) {
-    Column({ space: AppMetrics.space12 }) {
+    Column({ space: AppMetrics.space16 }) {
       this.FieldLabel(label, labelSize)
       TextArea({ text: value, placeholder: placeholder })
         .height(this.getTextAreaHeight(value, defaultLines))
@@ -132,10 +132,10 @@ export struct ReviewInputForm {
 
   build() {
     Column({ space: AppMetrics.space16 }) {
-      Column({ space: AppMetrics.space12 }) {
+      Column({ space: AppMetrics.space16 }) {
         this.FieldLabel('标题', PRIMARY_FIELD_LABEL_SIZE)
         TextInput({ text: this.title, placeholder: '这张照片是否成立' })
-          .height(48)
+          .height(AppMetrics.controlHeight)
           .borderRadius(AppMetrics.cardRadius)
           .fontSize(PRIMARY_FIELD_INPUT_SIZE)
           .fontColor(AppColors.text)
