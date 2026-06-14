@@ -59,21 +59,28 @@ export struct HomePage {
     const requestId: number = this.reloadRequestId + 1;
     this.reloadRequestId = requestId;
     const context = this.getAbilityContext();
-    const results = await Promise.all([
-      ReviewCardHistoryService.load(context),
-      ReviewSettingsService.loadReviewerName(context),
-      HomeStorageService.loadSettings(context)
-    ]);
-    if (requestId !== this.reloadRequestId) {
+
+    try {
+      const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
+      if (requestId !== this.reloadRequestId) {
+        return;
+      }
+      this.applyHomeData(items);
+    } catch (error) {
       return;
     }
 
-    const items: Array<ReviewCardHistoryItem> = results[0] as Array<ReviewCardHistoryItem>;
-    const reviewerName: string = results[1] as string;
-    const homeStorageSettings: HomeStorageSettings = results[2] as HomeStorageSettings;
+    const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
+    if (requestId !== this.reloadRequestId) {
+      return;
+    }
     this.reviewerName = reviewerName;
+
+    const homeStorageSettings: HomeStorageSettings = await HomeStorageService.loadSettings(context);
+    if (requestId !== this.reloadRequestId) {
+      return;
+    }
     this.homeStorageSettings = homeStorageSettings;
-    this.applyHomeData(items);
   }
 
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {

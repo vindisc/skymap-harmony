@@ -11,6 +11,12 @@ const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
 const MAX_HISTORY_COUNT: number = 20;
 
+interface LegacyHistoryPayload {
+  items?: Array<ReviewCardHistoryItem | ReviewCardDocument>;
+  documents?: Array<ReviewCardDocument>;
+  document?: ReviewCardDocument;
+}
+
 function createHistoryItem(document: ReviewCardDocument, exportedPath: string = ''): ReviewCardHistoryItem {
   return {
     document: cloneReviewCardDocument(document),
@@ -19,6 +25,10 @@ function createHistoryItem(document: ReviewCardDocument, exportedPath: string = 
 }
 
 function normalizeHistoryItem(rawItem: ReviewCardHistoryItem | ReviewCardDocument): ReviewCardHistoryItem | undefined {
+  if (!rawItem) {
+    return undefined;
+  }
+
   const historyItem = rawItem as ReviewCardHistoryItem;
   if (historyItem.document) {
     return createHistoryItem(historyItem.document, historyItem.exportedPath ? historyItem.exportedPath : '');
@@ -30,6 +40,60 @@ function normalizeHistoryItem(rawItem: ReviewCardHistoryItem | ReviewCardDocumen
   }
 
   return undefined;
+}
+
+function collectHistoryItems(
+  rawItems: Array<ReviewCardHistoryItem | ReviewCardDocument>,
+  normalizedItems: Array<ReviewCardHistoryItem>
+): void {
+  rawItems.forEach((item: ReviewCardHistoryItem | ReviewCardDocument): void => {
+    const normalizedItem = normalizeHistoryItem(item);
+    if (normalizedItem) {
+      normalizedItems.push(normalizedItem);
+    }
+  });
+}
+
+function sortHistoryItems(items: Array<ReviewCardHistoryItem>): Array<ReviewCardHistoryItem> {
+  return items.sort((left: ReviewCardHistoryItem, right: ReviewCardHistoryItem): number => {
+    if (right.document.updatedAt !== left.document.updatedAt) {
+      return right.document.updatedAt - left.document.updatedAt;
+    }
+    return right.document.createdAt - left.document.createdAt;
+  });
+}
+
+function normalizeParsedHistory(parsed: Object): Array<ReviewCardHistoryItem> {
+  const normalizedItems: Array<ReviewCardHistoryItem> = [];
+  if (Array.isArray(parsed)) {
+    collectHistoryItems(parsed as Array<ReviewCardHistoryItem | ReviewCardDocument>, normalizedItems);
+    return sortHistoryItems(normalizedItems);
+  }
+
+  const payload = parsed as LegacyHistoryPayload;
+  if (payload.items && Array.isArray(payload.items)) {
+    collectHistoryItems(payload.items, normalizedItems);
+    return sortHistoryItems(normalizedItems);
+  }
+
+  if (payload.documents && Array.isArray(payload.documents)) {
+    collectHistoryItems(payload.documents, normalizedItems);
+    return sortHistoryItems(normalizedItems);
+  }
+
+  if (payload.document) {
+    const normalizedItem = normalizeHistoryItem(payload.document);
+    if (normalizedItem) {
+      normalizedItems.push(normalizedItem);
+    }
+    return sortHistoryItems(normalizedItems);
+  }
+
+  const normalizedItem = normalizeHistoryItem(parsed as ReviewCardHistoryItem | ReviewCardDocument);
+  if (normalizedItem) {
+    normalizedItems.push(normalizedItem);
+  }
+  return sortHistoryItems(normalizedItems);
 }
 
 export class ReviewCardHistoryService {
@@ -45,21 +109,8 @@ export class ReviewCardHistoryService {
         return [];
       }
 
-      const parsed = JSON.parse(rawValue) as Array<ReviewCardHistoryItem | ReviewCardDocument>;
-      const normalizedItems: Array<ReviewCardHistoryItem> = [];
-      parsed.forEach((item: ReviewCardHistoryItem | ReviewCardDocument): void => {
-        const normalizedItem = normalizeHistoryItem(item);
-        if (normalizedItem) {
-          normalizedItems.push(normalizedItem);
-        }
-      });
-      normalizedItems.sort((left: ReviewCardHistoryItem, right: ReviewCardHistoryItem): number => {
-        if (right.document.updatedAt !== left.document.updatedAt) {
-          return right.document.updatedAt - left.document.updatedAt;
-        }
-        return right.document.createdAt - left.document.createdAt;
-      });
-      return normalizedItems;
+      const parsed = JSON.parse(rawValue) as Object;
+      return normalizeParsedHistory(parsed);
     } catch (error) {
       return [];
     }

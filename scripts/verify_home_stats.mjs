@@ -2,6 +2,8 @@ import fs from 'node:fs';
 
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
 const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
+const historyServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardHistoryService.ets', 'utf8');
+const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
 const settingsPageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewSettingsPage.ets', 'utf8');
 const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewProjectService.ets', 'utf8');
 
@@ -44,6 +46,24 @@ if (!homePageSource.includes("this.StatItem(`${this.projectSummary.recordCount}`
 if (!homePageSource.includes('ReviewProjectService.buildHomeSummary(items)')) {
   failed = true;
   console.error('HomePage stats must use the all-history home summary instead of the default-project summary.');
+}
+
+if (homePageSource.includes('const results = await Promise.all([')) {
+  failed = true;
+  console.error('HomePage must apply history stats before loading settings metadata.');
+}
+
+if (!myPageSource.includes('ReviewProjectService.buildHomeSummary(historyItems)')) {
+  failed = true;
+  console.error('MyPage identity stats must use the same all-history summary as HomePage.');
+}
+
+if (!historyServiceSource.includes('function normalizeParsedHistory(parsed: Object)') ||
+  !historyServiceSource.includes('payload.items && Array.isArray(payload.items)') ||
+  !historyServiceSource.includes('payload.documents && Array.isArray(payload.documents)') ||
+  !historyServiceSource.includes('payload.document')) {
+  failed = true;
+  console.error('ReviewCardHistoryService must tolerate legacy or object-shaped history payloads.');
 }
 
 if (!homePageSource.includes("@Prop @Watch('refreshHomeData') refreshToken") ||

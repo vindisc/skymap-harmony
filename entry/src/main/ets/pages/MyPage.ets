@@ -35,21 +35,21 @@ export struct MyPage {
     const requestId: number = this.loadRequestId + 1;
     this.loadRequestId = requestId;
     const context = this.getAbilityContext();
-    const results = await Promise.all([
-      ReviewSettingsService.loadReviewerName(context),
-      HomeStorageService.loadSettings(context),
-      ReviewCardHistoryService.load(context)
-    ]);
+
+    const historyItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
+    if (requestId !== this.loadRequestId) {
+      return;
+    }
+    const summary = ReviewProjectService.buildHomeSummary(historyItems);
+    this.reviewCount = summary.recordCount;
+    this.validReviewCount = summary.stats.validCount;
+
+    this.reviewerName = await ReviewSettingsService.loadReviewerName(context);
     if (requestId !== this.loadRequestId) {
       return;
     }
 
-    this.reviewerName = results[0] as string;
-    this.homeStorageSettings = results[1] as HomeStorageSettings;
-    const historyItems: Array<ReviewCardHistoryItem> = results[2] as Array<ReviewCardHistoryItem>;
-    const summary = ReviewProjectService.buildDefaultProjectSummary(historyItems);
-    this.reviewCount = summary.recordCount;
-    this.validReviewCount = summary.stats.validCount;
+    this.homeStorageSettings = await HomeStorageService.loadSettings(context);
   }
 
   private isHomeStorageConfigured(): boolean {
