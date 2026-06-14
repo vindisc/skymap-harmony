@@ -37,6 +37,12 @@ export interface HomeStorageOperationResult {
   message: string;
 }
 
+interface ParsedSmbAddress {
+  host: string;
+  shareName: string;
+  remoteDirectory: string;
+}
+
 function normalizeText(value: string | undefined): string {
   if (typeof value === 'string') {
     return value.trim();
@@ -60,15 +66,41 @@ function normalizeSmbPort(value: string | undefined): string {
   return trimmed;
 }
 
+function parseSmbAddress(rawHost: string | undefined): ParsedSmbAddress {
+  const withoutScheme: string = normalizeText(rawHost).replace(/^smb:\/\//i, '').replace(/\\/g, '/');
+  const parts: Array<string> = withoutScheme
+    .split('/')
+    .map((part: string): string => part.trim())
+    .filter((part: string): boolean => part.length > 0);
+
+  if (parts.length === 0) {
+    return {
+      host: '',
+      shareName: '',
+      remoteDirectory: ''
+    };
+  }
+
+  return {
+    host: parts[0],
+    shareName: parts.length > 1 ? parts[1] : '',
+    remoteDirectory: parts.length > 2 ? parts.slice(2).join('/') : ''
+  };
+}
+
 function normalizeSettings(settings: HomeStorageSettings | undefined): HomeStorageSettings {
   const source: HomeStorageSettings = settings ? settings : {} as HomeStorageSettings;
+  const parsedAddress: ParsedSmbAddress = parseSmbAddress(source.smbHost);
+  const sourceShareName: string = normalizeText(source.smbShareName).replace(/^\/+/g, '').replace(/\/+$/g, '');
+  const sourceRemoteDirectory: string = normalizeText(source.remoteDirectory);
+  const parsedRemoteDirectory: string = parsedAddress.remoteDirectory.length > 0 ? parsedAddress.remoteDirectory : sourceRemoteDirectory;
   return {
     username: normalizeText(source.username),
     password: normalizeText(source.password),
-    remoteDirectory: normalizeRemoteDirectory(source.remoteDirectory),
-    smbHost: normalizeText(source.smbHost).replace(/^smb:\/\//i, '').replace(/\/+$/g, ''),
+    remoteDirectory: normalizeRemoteDirectory(parsedRemoteDirectory),
+    smbHost: parsedAddress.host,
     smbPort: normalizeSmbPort(source.smbPort),
-    smbShareName: normalizeText(source.smbShareName).replace(/^\/+/g, '').replace(/\/+$/g, ''),
+    smbShareName: sourceShareName.length > 0 ? sourceShareName : parsedAddress.shareName,
     smbDomain: normalizeText(source.smbDomain)
   };
 }
@@ -93,6 +125,19 @@ function createSmbUploadOptions(settings: HomeStorageSettings, fileName: string,
     fileName: fileName,
     content: body
   };
+}
+
+async function safeGetString(
+  store: preferences.Preferences,
+  key: string,
+  fallback: string
+): Promise<string> {
+  try {
+    const value = await store.get(key, fallback);
+    return typeof value === 'string' ? value : fallback;
+  } catch (error) {
+    return fallback;
+  }
 }
 
 export class HomeStorageService {
@@ -162,7 +207,7 @@ export class HomeStorageService {
   }
 
   private static async loadSettingsSnapshot(store: preferences.Preferences): Promise<HomeStorageSettings | null> {
-    const rawSnapshot = await store.get(SETTINGS_SNAPSHOT_KEY, '');
+    const rawSnapshot = await safeGetString(store, SETTINGS_SNAPSHOT_KEY, '');
     if (typeof rawSnapshot !== 'string' || rawSnapshot.length === 0) {
       return null;
     }
@@ -188,7 +233,12 @@ export class HomeStorageService {
   }
 
   private static async loadStoredPassword(store: preferences.Preferences): Promise<string> {
-    let password = await HomeStorageSecretService.loadPassword();
+    let password = '';
+    try {
+      password = await HomeStorageSecretService.loadPassword();
+    } catch (error) {
+      password = '';
+    }
     if (password.length === 0) {
       password = await HomeStorageService.migrateLegacyPassword(store);
     }
@@ -196,13 +246,13 @@ export class HomeStorageService {
   }
 
   private static async loadLegacySettings(store: preferences.Preferences): Promise<HomeStorageSettings | null> {
-    const username = await store.get(USERNAME_KEY, '');
+    const username = await safeGetString(store, USERNAME_KEY, '');
     const password = await HomeStorageService.loadStoredPassword(store);
-    const remoteDirectory = await store.get(REMOTE_DIRECTORY_KEY, DEFAULT_REMOTE_DIRECTORY);
-    const smbHost = await store.get(SMB_HOST_KEY, '');
-    const smbPort = await store.get(SMB_PORT_KEY, DEFAULT_SMB_PORT);
-    const smbShareName = await store.get(SMB_SHARE_NAME_KEY, '');
-    const smbDomain = await store.get(SMB_DOMAIN_KEY, '');
+    const remoteDirectory = await safeGetString(store, REMOTE_DIRECTORY_KEY, DEFAULT_REMOTE_DIRECTORY);
+    const smbHost = await safeGetString(store, SMB_HOST_KEY, '');
+    const smbPort = await safeGetString(store, SMB_PORT_KEY, DEFAULT_SMB_PORT);
+    const smbShareName = await safeGetString(store, SMB_SHARE_NAME_KEY, '');
+    const smbDomain = await safeGetString(store, SMB_DOMAIN_KEY, '');
 
     return normalizeSettings({
       username: typeof username === 'string' ? username : '',
