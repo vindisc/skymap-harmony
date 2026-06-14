@@ -20,8 +20,8 @@ export class AppColors {
   static readonly secondaryText: string = '#5E6470';
   static readonly mutedText: string = '#8A8F98';
   static readonly placeholderText: string = '#6F7682';
-  static readonly primary: string = '#1B1E23';
-  static readonly primaryPressed: string = '#333840';
+  static readonly primary: string = '#4A544F';
+  static readonly primaryPressed: string = '#39423D';
   static readonly primarySoft: string = '#E6E9E5';
   static readonly onPrimary: string = '#FFFFFF';
   static readonly danger: string = '#B73A31';

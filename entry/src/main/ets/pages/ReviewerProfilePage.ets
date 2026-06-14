@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import { AppColors, AppMetrics, AppPageHeader, AppTypography, PrimaryButton } from '../components/AppDesign';
@@ -38,25 +37,8 @@ struct ReviewerProfilePage {
     }
   }
 
-  private goBack(): void {
-    router.back();
-  }
-
   build() {
     Column({ space: AppMetrics.space32 }) {
-      Button('返回')
-        .height(AppMetrics.compactControlHeight)
-        .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-        .borderRadius(AppMetrics.capsuleRadius)
-        .fontSize(AppTypography.smallButtonText)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.secondaryText)
-        .backgroundColor(AppColors.surfaceMuted)
-        .stateEffect(true)
-        .onClick(() => {
-          this.goBack();
-        })
-
       AppPageHeader({
         title: '复盘人',
         subtitle: '设置这台设备默认使用的复盘人名称。'
