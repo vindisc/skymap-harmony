@@ -24,7 +24,8 @@ import {
   AppTypography,
   EmptyState,
   PrimaryButton,
-  RecentReviewCard
+  RecentReviewCard,
+  SecondaryButton
 } from '../components/AppDesign';
 
 @Component
@@ -282,29 +283,21 @@ export struct HomePage {
               })
 
               Row({ space: AppMetrics.space8 }) {
-                Button('查看详情')
-                  .height(AppMetrics.compactControlHeight)
-                  .layoutWeight(1)
-                  .borderRadius(AppMetrics.capsuleRadius)
-                  .fontSize(AppTypography.smallButtonText)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor(AppColors.text)
-                  .backgroundColor(AppColors.surfaceMuted)
-                  .onClick(() => {
+                SecondaryButton({
+                  label: '查看详情',
+                  onTap: () => {
                     this.openLatestReview();
-                  })
-
-                Button('继续编辑')
-                  .height(AppMetrics.compactControlHeight)
+                  }
+                })
                   .layoutWeight(1)
-                  .borderRadius(AppMetrics.capsuleRadius)
-                  .fontSize(AppTypography.smallButtonText)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor(AppColors.onPrimary)
-                  .backgroundColor(AppColors.primary)
-                  .onClick(() => {
+
+                PrimaryButton({
+                  label: '继续编辑',
+                  onTap: () => {
                     this.continueLatestReview();
-                  })
+                  }
+                })
+                  .layoutWeight(1)
               }
               .width('100%')
             }

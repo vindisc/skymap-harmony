@@ -8,7 +8,9 @@ import {
   AppPageHeader,
   AppTypography,
   EmptyState,
-  ProjectReviewCard
+  PrimaryButton,
+  ProjectReviewCard,
+  SecondaryButton
 } from '../components/AppDesign';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { ReviewCardDocument, ReviewCardHistoryItem, ReviewJudgementStatus } from '../model/ReviewCardModel';
@@ -124,13 +126,14 @@ export struct ProjectDetailPage {
   @Builder
   DeleteSwipeAction(document: ReviewCardDocument) {
     Button('删除')
-      .height(64)
+      .height(AppMetrics.compactControlHeight)
       .width(72)
       .borderRadius(AppMetrics.cardRadius)
-      .fontSize(AppTypography.auxiliary)
+      .fontSize(AppTypography.smallButtonText)
       .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.onPrimary)
-      .backgroundColor(AppColors.danger)
+      .fontColor(AppColors.danger)
+      .backgroundColor(AppColors.surface)
+      .border({ width: 1, color: AppColors.danger })
       .onClick(() => {
         this.confirmDeleteHistory(document);
       })
@@ -207,18 +210,17 @@ export struct ProjectDetailPage {
             message: '可先创建第一条复盘，之后这里就是你的复盘库。'
           })
 
-          Button('创建第一条复盘')
-            .height(AppMetrics.compactControlHeight)
-            .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-            .borderRadius(AppMetrics.capsuleRadius)
-            .fontSize(AppTypography.auxiliary)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.onPrimary)
-            .backgroundColor(AppColors.primary)
-            .margin({ top: AppMetrics.space16 })
-            .onClick(() => {
-              this.openCreateFirstReview();
+          Row() {
+            PrimaryButton({
+              label: this.isPickingPhoto ? '打开相册中...' : '创建第一条复盘',
+              isDisabled: this.isPickingPhoto,
+              onTap: () => {
+                this.openCreateFirstReview();
+              }
             })
+          }
+          .width('100%')
+          .margin({ top: AppMetrics.space16 })
         }
         .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
         .width('100%')
@@ -231,18 +233,16 @@ export struct ProjectDetailPage {
             message: '试试换一个关键词，或切换成立判断筛选。'
           })
 
-          Button('清空搜索与筛选')
-            .height(AppMetrics.compactControlHeight)
-            .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-            .borderRadius(AppMetrics.capsuleRadius)
-            .fontSize(AppTypography.auxiliary)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .backgroundColor(AppColors.surfaceMuted)
-            .margin({ top: AppMetrics.space16 })
-            .onClick(() => {
-              this.clearFilters();
+          Row() {
+            SecondaryButton({
+              label: '清空搜索与筛选',
+              onTap: () => {
+                this.clearFilters();
+              }
             })
+          }
+          .width('100%')
+          .margin({ top: AppMetrics.space16 })
         }
         .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
         .width('100%')

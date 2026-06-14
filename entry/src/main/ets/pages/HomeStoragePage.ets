@@ -2,7 +2,7 @@ import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
-import { AppColors, AppMetrics, AppPageHeader, AppTypography, PrimaryButton } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppPageHeader, AppTypography, PrimaryButton, SecondaryButton } from '../components/AppDesign';
 import {
   HomeStorageOperationResult,
   HomeStorageService,
@@ -274,23 +274,6 @@ struct HomeStoragePage {
   }
 
   @Builder
-  SecondaryActionButton(label: string, isDisabled: boolean, onTap: () => void) {
-    Button(label)
-      .height(AppMetrics.compactControlHeight)
-      .borderRadius(AppMetrics.cardRadius)
-      .fontSize(AppTypography.smallButtonText)
-      .fontWeight(FontWeight.Medium)
-      .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
-      .backgroundColor(AppColors.surfaceMuted)
-      .border({ width: 1, color: AppColors.border })
-      .stateEffect(!isDisabled)
-      .enabled(!isDisabled)
-      .onClick(() => {
-        onTap();
-      })
-  }
-
-  @Builder
   StatusRow(label: string, value: string) {
     Row() {
       Text(label)
@@ -366,8 +349,12 @@ struct HomeStoragePage {
           .width('100%')
 
           Column({ space: AppMetrics.cardGap }) {
-            this.SecondaryActionButton(this.isTestingHomeStorage ? '测试连接中...' : '测试连接', this.isTestingHomeStorage, () => {
-              this.testHomeStorage();
+            SecondaryButton({
+              label: this.isTestingHomeStorage ? '测试连接中...' : '测试连接',
+              isDisabled: this.isTestingHomeStorage,
+              onTap: () => {
+                this.testHomeStorage();
+              }
             })
 
             PrimaryButton({

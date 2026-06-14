@@ -218,7 +218,7 @@ struct PreviewPage {
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.onPrimary : AppColors.text))
       .backgroundColor(emphasized ? AppColors.primary : AppColors.surfaceMuted)
-      .border({ width: 1, color: emphasized ? AppColors.primary : AppColors.border })
+      .border({ width: 1, color: emphasized ? AppColors.primaryPressed : AppColors.border })
       .opacity(isDisabled ? 0.52 : 1)
       .stateEffect(!isDisabled)
       .enabled(!isDisabled)

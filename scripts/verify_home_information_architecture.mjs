@@ -186,7 +186,7 @@ if (!syncCenterPageSource.includes("title: '同步中心'")) {
   console.error('SyncCenterPage title is missing.');
 }
 
-if (!syncCenterPageSource.includes("Button(this.isTesting ? '测试中...' : '测试连接')")) {
+if (!syncCenterPageSource.includes("label: this.isTesting ? '测试中...' : '测试连接'")) {
   failed = true;
   console.error('SyncCenterPage must provide 测试连接.');
 }

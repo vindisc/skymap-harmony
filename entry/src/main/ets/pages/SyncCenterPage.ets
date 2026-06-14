@@ -2,7 +2,7 @@ import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import { HOME_STORAGE_PAGE } from '../app/AppRouter';
-import { AppColors, AppMetrics, AppPageHeader, AppTypography, PrimaryButton } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppPageHeader, AppTypography, PrimaryButton, SecondaryButton } from '../components/AppDesign';
 import {
   HomeStorageOperationResult,
   HomeStorageService,
@@ -138,20 +138,13 @@ struct SyncCenterPage {
         .backgroundColor(AppColors.surface)
         .border({ width: 1, color: AppColors.border })
 
-        Button(this.isTesting ? '测试中...' : '测试连接')
-          .height(AppMetrics.compactControlHeight)
-          .width('100%')
-          .borderRadius(AppMetrics.buttonRadius)
-          .fontSize(AppTypography.buttonText)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .backgroundColor(AppColors.surfaceMuted)
-          .border({ width: 1, color: AppColors.border })
-          .enabled(!this.isTesting)
-          .opacity(this.isTesting ? 0.72 : 1)
-          .onClick(() => {
+        SecondaryButton({
+          label: this.isTesting ? '测试中...' : '测试连接',
+          isDisabled: this.isTesting,
+          onTap: () => {
             this.testConnection();
-          })
+          }
+        })
 
         PrimaryButton({
           label: '进入配置',

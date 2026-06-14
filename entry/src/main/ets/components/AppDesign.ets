@@ -20,9 +20,10 @@ export class AppColors {
   static readonly secondaryText: string = '#5E6470';
   static readonly mutedText: string = '#8A8F98';
   static readonly placeholderText: string = '#6F7682';
-  static readonly primary: string = '#4A544F';
-  static readonly primaryPressed: string = '#39423D';
-  static readonly primarySoft: string = '#E6E9E5';
+  static readonly primary: string = '#5A665F';
+  static readonly primaryPressed: string = '#465149';
+  static readonly primarySoft: string = '#E8ECE8';
+  static readonly primaryDisabled: string = '#C3CEC4';
   static readonly onPrimary: string = '#FFFFFF';
   static readonly danger: string = '#B73A31';
   static readonly tagBlue: string = '#EEF4F0';
@@ -150,7 +151,7 @@ export struct PrimaryButton {
       .fontSize(AppTypography.buttonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.onPrimary)
-      .backgroundColor(this.isDisabled ? '#B8C6B9' : AppColors.primary)
+      .backgroundColor(this.isDisabled ? AppColors.primaryDisabled : AppColors.primary)
       .opacity(this.isDisabled ? 0.72 : 1)
       .enabled(!this.isDisabled)
       .stateEffect(!this.isDisabled)
@@ -166,6 +167,7 @@ export struct PrimaryButton {
 @Component
 export struct SecondaryButton {
   @Prop label: string = '';
+  @Prop isDisabled: boolean = false;
   onTap: () => void = () => {};
 
   build() {
@@ -175,10 +177,43 @@ export struct SecondaryButton {
       .borderRadius(AppMetrics.capsuleRadius)
       .fontSize(AppTypography.smallButtonText)
       .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.text)
+      .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.text)
       .backgroundColor(AppColors.surfaceMuted)
-
+      .border({ width: 1, color: AppColors.border })
+      .opacity(this.isDisabled ? 0.72 : 1)
+      .enabled(!this.isDisabled)
+      .stateEffect(!this.isDisabled)
       .onClick(() => {
+        if (this.isDisabled) {
+          return;
+        }
+        this.onTap();
+      })
+  }
+}
+
+@Component
+export struct DangerButton {
+  @Prop label: string = '';
+  @Prop isDisabled: boolean = false;
+  onTap: () => void = () => {};
+
+  build() {
+    Button(this.label)
+      .height(AppMetrics.compactControlHeight)
+      .borderRadius(AppMetrics.buttonRadius)
+      .fontSize(AppTypography.smallButtonText)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.danger)
+      .backgroundColor(AppColors.surface)
+      .border({ width: 1, color: this.isDisabled ? AppColors.border : AppColors.danger })
+      .opacity(this.isDisabled ? 0.72 : 1)
+      .enabled(!this.isDisabled)
+      .stateEffect(!this.isDisabled)
+      .onClick(() => {
+        if (this.isDisabled) {
+          return;
+        }
         this.onTap();
       })
   }
