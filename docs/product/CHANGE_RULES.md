@@ -11,12 +11,15 @@
 - `FEATURE_MATRIX.md`
 - `DATA_MODEL.md`
 - `REVIEW_JSON_SEMANTICS.md`
+- `UI_INTERACTION_GUIDE.md`
 - `SYNC_SYSTEM_V1.md`
 - `WORKFLOW.md`
 - `ROADMAP.md`
 - `CHANGE_RULES.md`
 
 如果功能不影响产品定位、能力矩阵、领域模型、核心工作流或路线图，可以在 PR 中说明“不需要更新产品层”的理由；否则必须先更新对应文档。
+
+涉及页面结构、按钮层级、颜色、字体、弹层、空状态、加载状态、失败反馈或移动端输入体验的改动，必须先对照 `UI_INTERACTION_GUIDE.md`。如果实际实现偏离该指南，PR 必须说明偏离原因和后续收敛计划。
 
 ## 禁止的开发模式
 
@@ -56,6 +59,7 @@ Mac 后补
 | 是否改变路线图优先级 | 必要时更新 `ROADMAP.md`。 |
 | 两个客户端如何分工 | 明确 Mac Client 与 Harmony Client 的职责。 |
 | 如何验证 | 写清用户能看到的结果、导出位置、失败反馈和兼容边界。 |
+| 是否影响 UI 交互 | 对照 `UI_INTERACTION_GUIDE.md`，说明按钮层级、页面目标、状态反馈和移动端安全区。 |
 
 ## PR 规则
 
