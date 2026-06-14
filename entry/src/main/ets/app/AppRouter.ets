@@ -1,6 +1,8 @@
+export const APP_SHELL_PAGE: string = 'pages/AppShellPage';
 export const HOME_PAGE: string = 'pages/HomePage';
 export const EDITOR_PAGE: string = 'pages/EditorPage';
 export const PREVIEW_PAGE: string = 'pages/PreviewPage';
 export const PROJECT_DETAIL_PAGE: string = 'pages/ProjectDetailPage';
-export const REVIEW_SETTINGS_PAGE: string = 'pages/ReviewSettingsPage';
+export const HOME_STORAGE_PAGE: string = 'pages/HomeStoragePage';
+export const MY_PAGE: string = 'pages/MyPage';
 export const SYNC_CENTER_PAGE: string = 'pages/SyncCenterPage';

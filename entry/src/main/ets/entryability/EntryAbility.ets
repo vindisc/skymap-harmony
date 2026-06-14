@@ -15,6 +15,6 @@ export default class EntryAbility extends UIAbility {
     } catch (error) {
     }
 
-    windowStage.loadContent('pages/HomePage');
+    windowStage.loadContent('pages/AppShellPage');
   }
 }

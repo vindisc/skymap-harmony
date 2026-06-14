@@ -1,7 +1,7 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { REVIEW_SETTINGS_PAGE } from '../app/AppRouter';
+import { HOME_STORAGE_PAGE } from '../app/AppRouter';
 import { AppColors, AppMetrics, AppPageHeader, AppTypography, PrimaryButton } from '../components/AppDesign';
 import {
   HomeStorageOperationResult,
@@ -55,7 +55,7 @@ struct SyncCenterPage {
   }
 
   private openSettings(): void {
-    router.pushUrl({ url: REVIEW_SETTINGS_PAGE });
+    router.pushUrl({ url: HOME_STORAGE_PAGE });
   }
 
   private async testConnection(): Promise<void> {

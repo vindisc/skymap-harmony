@@ -16,6 +16,7 @@ const SMB_HOST_KEY: string = 'smb_host';
 const SMB_PORT_KEY: string = 'smb_port';
 const SMB_SHARE_NAME_KEY: string = 'smb_share_name';
 const SMB_DOMAIN_KEY: string = 'smb_domain';
+const LAST_UPLOADED_AT_KEY: string = 'last_uploaded_at';
 const DEFAULT_REMOTE_DIRECTORY: string = '摄影资料库/Reviews';
 const DEFAULT_SMB_PORT: string = '445';
 
@@ -179,6 +180,22 @@ export class HomeStorageService {
     return normalized;
   }
 
+  static async loadLastUploadedAt(context: common.UIAbilityContext): Promise<number> {
+    try {
+      const store = await HomeStorageService.getStore(context);
+      const value = await store.get(LAST_UPLOADED_AT_KEY, 0);
+      return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  private static async markLastUploadedAt(context: common.UIAbilityContext, timestamp: number): Promise<void> {
+    const store = await HomeStorageService.getStore(context);
+    await store.put(LAST_UPLOADED_AT_KEY, timestamp);
+    await store.flush();
+  }
+
   static validateSettings(settings: HomeStorageSettings): string {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
     const port: number = parsePort(normalized.smbPort);
@@ -243,6 +260,7 @@ export class HomeStorageService {
     const client: Smb2Client = new Smb2Client();
     try {
       const remotePath: string = await client.uploadText(createSmbUploadOptions(settings, fileName, body));
+      await HomeStorageService.markLastUploadedAt(context, Date.now());
       return {
         success: true,
         remotePath: remotePath,

@@ -349,12 +349,12 @@ struct PreviewPage {
             .fontColor(AppColors.text)
             .width('100%')
 
-          this.ExportSheetAction(this.isExporting ? '导出图片中...' : '导出图片', () => {
-            this.exportImage();
-          })
-
           this.ExportSheetAction('导出 review.json', () => {
             this.exportReviewJson();
+          })
+
+          this.ExportSheetAction(this.isExporting ? '导出复盘图片中...' : '导出复盘图片', () => {
+            this.exportImage();
           })
 
           this.ExportSheetAction(this.isUploadingHomeStorage ? '上传到家庭存储中...' : '上传到家庭存储', () => {

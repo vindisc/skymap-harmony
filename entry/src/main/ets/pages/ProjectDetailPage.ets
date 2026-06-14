@@ -16,14 +16,15 @@ import { ReviewCardDocument, ReviewCardHistoryItem, ReviewJudgementStatus } from
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
+import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 
-@Entry
 @Component
-struct ProjectDetailPage {
+export struct ProjectDetailPage {
   @State summary: ReviewProjectSummary = createDefaultProjectSummary();
   @State filteredItems: Array<ReviewCardHistoryItem> = [];
   @State searchText: string = '';
   @State decisionFilter: string = 'all';
+  @State isPickingPhoto: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -53,8 +54,29 @@ struct ProjectDetailPage {
     this.applyFilters();
   }
 
-  private openCreateFirstReview(): void {
-    router.back();
+  private async openCreateFirstReview(): Promise<void> {
+    if (this.isPickingPhoto) {
+      return;
+    }
+
+    this.isPickingPhoto = true;
+    const result: PickedPhotoResult = await pickSinglePhoto();
+    this.isPickingPhoto = false;
+
+    if (!result.success) {
+      if (!result.cancelled && result.message.length > 0) {
+        promptAction.showToast({ message: result.message });
+      }
+      return;
+    }
+
+    ReviewCardStore.createPhotoDraft(
+      result.imageUri,
+      result.imageWidth,
+      result.imageHeight,
+      result.imageSizeFallbackUsed
+    );
+    router.pushUrl({ url: EDITOR_PAGE });
   }
 
   private isFilterSelected(value: string): boolean {
