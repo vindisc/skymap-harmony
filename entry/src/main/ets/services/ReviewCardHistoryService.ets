@@ -1,14 +1,24 @@
 import preferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
+import fs from '@ohos.file.fs';
 import {
   cloneReviewCardDocument,
+  createDefaultReviewCardDocument,
+  DEFAULT_PROJECT_ID,
   getReviewDocumentKey,
   ReviewCardDocument,
-  ReviewCardHistoryItem
+  ReviewCardHistoryItem,
+  ReviewJudgementStatus
 } from '../model/ReviewCardModel';
+import {
+  ReviewCardExchangeDecision,
+  ReviewCardExchangeSchemaV1
+} from './ReviewCardExchangeSchema';
 
 const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
+const BACKUP_IMPORT_COMPLETED_KEY: string = 'backup_import_completed';
+const REVIEW_JSON_BACKUP_DIR_NAME: string = 'review_exchange';
 
 interface LegacyHistoryPayload {
   items?: Array<ReviewCardHistoryItem | ReviewCardDocument>;
@@ -62,6 +72,82 @@ function sortHistoryItems(items: Array<ReviewCardHistoryItem>): Array<ReviewCard
   });
 }
 
+function mergeHistoryItems(
+  primaryItems: Array<ReviewCardHistoryItem>,
+  extraItems: Array<ReviewCardHistoryItem>
+): Array<ReviewCardHistoryItem> {
+  const mergedItems: Array<ReviewCardHistoryItem> = [];
+  const seenKeys: Set<string> = new Set<string>();
+  const appendItem = (item: ReviewCardHistoryItem): void => {
+    const key: string = getReviewDocumentKey(item.document);
+    if (seenKeys.has(key)) {
+      return;
+    }
+    seenKeys.add(key);
+    mergedItems.push(createHistoryItem(item.document, item.exportedPath));
+  };
+
+  primaryItems.forEach((item: ReviewCardHistoryItem): void => {
+    appendItem(item);
+  });
+  extraItems.forEach((item: ReviewCardHistoryItem): void => {
+    appendItem(item);
+  });
+  return sortHistoryItems(mergedItems);
+}
+
+function normalizeBackupText(value: string | undefined): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function mapExchangeDecisionToJudgement(decision: string | undefined): ReviewJudgementStatus {
+  if (decision === ReviewCardExchangeDecision.WORKS) {
+    return ReviewJudgementStatus.VALID;
+  }
+  if (decision === ReviewCardExchangeDecision.NOT_WORKS) {
+    return ReviewJudgementStatus.INVALID;
+  }
+  return ReviewJudgementStatus.UNSURE;
+}
+
+function parseBackupTimestamp(fileName: string): number {
+  const match: RegExpMatchArray | null = fileName.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-/);
+  if (match === null) {
+    return Date.now();
+  }
+  return new Date(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    Number(match[4]),
+    Number(match[5]),
+    Number(match[6])
+  ).getTime();
+}
+
+function createHistoryItemFromReviewJsonBackup(
+  payload: ReviewCardExchangeSchemaV1,
+  fileName: string,
+  exportedPath: string
+): ReviewCardHistoryItem {
+  const document: ReviewCardDocument = createDefaultReviewCardDocument();
+  const timestamp: number = parseBackupTimestamp(fileName);
+  document.projectId = DEFAULT_PROJECT_ID;
+  document.imageUri = normalizeBackupText(payload.fileName);
+  document.content.title = normalizeBackupText(payload.titleText);
+  document.content.visualFocus = normalizeBackupText(payload.firstLookText);
+  document.content.focusReason = normalizeBackupText(payload.attentionReasonText);
+  document.content.visualPath = normalizeBackupText(payload.eyePathText);
+  document.content.visibleFacts = normalizeBackupText(payload.visualFactText);
+  document.content.coreRelation = normalizeBackupText(payload.strongestRelationText);
+  document.content.judgement = mapExchangeDecisionToJudgement(payload.decision);
+  document.content.extendedUnderstanding = normalizeBackupText(payload.extensionReasonText);
+  document.content.currentBlocker = normalizeBackupText(payload.blockerText);
+  document.createdAt = timestamp;
+  document.updatedAt = timestamp;
+  return createHistoryItem(document, exportedPath);
+}
+
 function normalizeParsedHistory(parsed: Object): Array<ReviewCardHistoryItem> {
   const normalizedItems: Array<ReviewCardHistoryItem> = [];
   if (Array.isArray(parsed)) {
@@ -95,11 +181,65 @@ function normalizeParsedHistory(parsed: Object): Array<ReviewCardHistoryItem> {
   return sortHistoryItems(normalizedItems);
 }
 
+function parseStoredHistory(rawValue: preferences.ValueType): Array<ReviewCardHistoryItem> {
+  if (typeof rawValue !== 'string') {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue) as Object;
+    return normalizeParsedHistory(parsed);
+  } catch (error) {
+    return [];
+  }
+}
+
 export class ReviewCardHistoryService {
   private static cachedItems: Array<ReviewCardHistoryItem> = [];
 
   private static async getStore(context: common.UIAbilityContext): Promise<preferences.Preferences> {
     return preferences.getPreferences(context, { name: PREFERENCES_NAME });
+  }
+
+  private static loadReviewJsonBackupItems(context: common.UIAbilityContext): Array<ReviewCardHistoryItem> {
+    const directory: string = `${context.filesDir}/${REVIEW_JSON_BACKUP_DIR_NAME}`;
+    let fileNames: Array<string> = [];
+    try {
+      fileNames = fs.listFileSync(directory);
+    } catch (error) {
+      return [];
+    }
+
+    const backupItems: Array<ReviewCardHistoryItem> = [];
+    fileNames.forEach((fileName: string): void => {
+      if (!fileName.endsWith('.review.json')) {
+        return;
+      }
+
+      const filePath: string = `${directory}/${fileName}`;
+      try {
+        const rawText: string = fs.readTextSync(filePath);
+        const payload = JSON.parse(rawText) as ReviewCardExchangeSchemaV1;
+        backupItems.push(createHistoryItemFromReviewJsonBackup(payload, fileName, filePath));
+      } catch (error) {
+      }
+    });
+    return sortHistoryItems(backupItems);
+  }
+
+  private static async loadBackupItemsOnce(
+    context: common.UIAbilityContext,
+    store: preferences.Preferences
+  ): Promise<Array<ReviewCardHistoryItem>> {
+    const importedValue = await store.get(BACKUP_IMPORT_COMPLETED_KEY, false);
+    if (importedValue === true) {
+      return [];
+    }
+
+    const backupItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.loadReviewJsonBackupItems(context);
+    await store.put(BACKUP_IMPORT_COMPLETED_KEY, true);
+    await store.flush();
+    return backupItems;
   }
 
   private static rememberItems(items: Array<ReviewCardHistoryItem>): Array<ReviewCardHistoryItem> {
@@ -117,12 +257,13 @@ export class ReviewCardHistoryService {
     try {
       const store = await ReviewCardHistoryService.getStore(context);
       const rawValue = await store.get(HISTORY_KEY, '[]');
-      if (typeof rawValue !== 'string') {
-        return ReviewCardHistoryService.rememberItems([]);
+      const historyItems: Array<ReviewCardHistoryItem> = parseStoredHistory(rawValue);
+      const backupItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.loadBackupItemsOnce(context, store);
+      const mergedItems: Array<ReviewCardHistoryItem> = mergeHistoryItems(historyItems, backupItems);
+      if (backupItems.length > 0) {
+        await ReviewCardHistoryService.persist(context, mergedItems);
       }
-
-      const parsed = JSON.parse(rawValue) as Object;
-      return ReviewCardHistoryService.rememberItems(normalizeParsedHistory(parsed));
+      return ReviewCardHistoryService.rememberItems(mergedItems);
     } catch (error) {
       return ReviewCardHistoryService.rememberItems(ReviewCardHistoryService.cachedItems);
     }

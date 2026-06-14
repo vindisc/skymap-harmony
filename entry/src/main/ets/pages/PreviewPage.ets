@@ -141,10 +141,18 @@ struct PreviewPage {
   }
 
   private async exportReviewJson(): Promise<void> {
+    const context = this.getAbilityContext();
     const result: ReviewJsonExportResult = await ReviewJsonExportService.exportReviewJson(
-      this.getAbilityContext(),
+      context,
       this.document
     );
+    if (result.success) {
+      try {
+        await ReviewCardHistoryService.markExported(context, this.document, result.path);
+        this.saveStateLabel = PreviewSaveState.EXPORTED;
+      } catch (error) {
+      }
+    }
     this.lastReviewJsonExportMessage = result.success
       ? `review.json 已保存到系统文件：${result.fileName}。现在可直接发送给 Mac 导入。`
       : result.message;
@@ -158,12 +166,20 @@ struct PreviewPage {
 
     this.isUploadingHomeStorage = true;
     try {
-      const reviewerName: string = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+      const context = this.getAbilityContext();
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
       const result: HomeStorageOperationResult = await HomeStorageService.uploadReviewJson(
-        this.getAbilityContext(),
+        context,
         this.document,
         reviewerName
       );
+      if (result.success) {
+        try {
+          await ReviewCardHistoryService.markExported(context, this.document, result.remotePath);
+          this.saveStateLabel = PreviewSaveState.EXPORTED;
+        } catch (error) {
+        }
+      }
       promptAction.showToast({ message: result.message });
     } finally {
       this.isUploadingHomeStorage = false;

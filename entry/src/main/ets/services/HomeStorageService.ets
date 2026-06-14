@@ -93,10 +93,11 @@ function normalizeSettings(settings: HomeStorageSettings | undefined): HomeStora
   const parsedAddress: ParsedSmbAddress = parseSmbAddress(source.smbHost);
   const sourceShareName: string = normalizeText(source.smbShareName).replace(/^\/+/g, '').replace(/\/+$/g, '');
   const sourceRemoteDirectory: string = normalizeText(source.remoteDirectory);
+  const remoteDirectory: string = sourceRemoteDirectory.length > 0 ? sourceRemoteDirectory : parsedAddress.remoteDirectory;
   return {
     username: normalizeText(source.username),
     password: normalizeText(source.password),
-    remoteDirectory: normalizeRemoteDirectory(sourceRemoteDirectory),
+    remoteDirectory: normalizeRemoteDirectory(remoteDirectory),
     smbHost: parsedAddress.host,
     smbPort: normalizeSmbPort(source.smbPort),
     smbShareName: sourceShareName.length > 0 ? sourceShareName : parsedAddress.shareName,
@@ -215,12 +216,11 @@ export class HomeStorageService {
 
     try {
       await HomeStorageSecretService.savePassword(legacyPassword);
-      return legacyPassword;
-    } catch (error) {
-      return '';
-    } finally {
       await HomeStorageService.clearLegacyPassword(store);
       await store.flush();
+      return legacyPassword;
+    } catch (error) {
+      return legacyPassword;
     }
   }
 
@@ -334,15 +334,27 @@ export class HomeStorageService {
     settings: HomeStorageSettings
   ): Promise<HomeStorageSettings> {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
-    await HomeStorageSecretService.savePassword(normalized.password);
     const store = await HomeStorageService.getStore(context);
     await store.put(USERNAME_KEY, normalized.username);
-    await HomeStorageService.clearLegacyPassword(store);
     await store.put(REMOTE_DIRECTORY_KEY, normalized.remoteDirectory);
     await store.put(SMB_HOST_KEY, normalized.smbHost);
     await store.put(SMB_PORT_KEY, normalized.smbPort);
     await store.put(SMB_SHARE_NAME_KEY, normalized.smbShareName);
     await store.put(SMB_DOMAIN_KEY, normalized.smbDomain);
+
+    let passwordSavedSecurely: boolean = false;
+    try {
+      await HomeStorageSecretService.savePassword(normalized.password);
+      passwordSavedSecurely = true;
+    } catch (error) {
+      passwordSavedSecurely = false;
+    }
+    if (passwordSavedSecurely || normalized.password.length === 0) {
+      await HomeStorageService.clearLegacyPassword(store);
+    } else {
+      await store.put(LEGACY_PASSWORD_KEY, normalized.password);
+    }
+
     await store.put(SETTINGS_SNAPSHOT_KEY, HomeStorageService.createSettingsSnapshot(normalized));
     await store.flush();
     return HomeStorageService.rememberSettings(normalized);

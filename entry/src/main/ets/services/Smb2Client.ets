@@ -666,16 +666,23 @@ function statusMessage(status: number): string {
 }
 
 function normalizeRemoteFilePath(remoteDirectory: string, fileName: string): string {
-  const directory: string = remoteDirectory
-    .replace(/\\/g, '/')
-    .split('/')
-    .map((part: string) => part.trim())
-    .filter((part: string) => part.length > 0)
-    .join('\\');
+  const directory: string = normalizeRemoteDirectoryPath(remoteDirectory);
   if (directory.length === 0) {
     return fileName;
   }
   return `${directory}\\${fileName}`;
+}
+
+function normalizeRemoteDirectoryParts(remoteDirectory: string): Array<string> {
+  return remoteDirectory
+    .replace(/\\/g, '/')
+    .split('/')
+    .map((part: string) => part.trim())
+    .filter((part: string) => part.length > 0);
+}
+
+function normalizeRemoteDirectoryPath(remoteDirectory: string): string {
+  return normalizeRemoteDirectoryParts(remoteDirectory).join('\\');
 }
 
 class Smb2Transport {
@@ -785,21 +792,28 @@ export class Smb2Client {
 
   async testConnection(options: Smb2UploadOptions): Promise<void> {
     await this.open(options);
-    await this.treeDisconnect();
-    await this.logoff();
+    try {
+      await this.ensureRemoteDirectory(options.remoteDirectory);
+    } finally {
+      await this.safeDisconnect();
+    }
   }
 
   async uploadText(options: Smb2UploadOptions): Promise<string> {
     await this.open(options);
-    const remotePath: string = normalizeRemoteFilePath(options.remoteDirectory, options.fileName);
-    const fileId: Array<number> = await this.createFile(remotePath);
     try {
-      await this.writeFile(fileId, utf8Bytes(options.content));
+      await this.ensureRemoteDirectory(options.remoteDirectory);
+      const remotePath: string = normalizeRemoteFilePath(options.remoteDirectory, options.fileName);
+      const fileId: Array<number> = await this.createFile(remotePath);
+      try {
+        await this.writeFile(fileId, utf8Bytes(options.content));
+      } finally {
+        await this.closeFile(fileId);
+      }
+      return `\\\\${options.host}\\${options.shareName}\\${remotePath}`;
     } finally {
-      await this.closeFile(fileId);
+      await this.safeDisconnect();
     }
-    await this.safeDisconnect();
-    return `\\\\${options.host}\\${options.shareName}\\${remotePath}`;
   }
 
   async close(): Promise<void> {
@@ -967,6 +981,41 @@ export class Smb2Client {
     this.ensureStatus(response);
     if (response.length < 144) {
       throw new Error('SMB 创建文件响应异常');
+    }
+    return response.slice(128, 144);
+  }
+
+  private async ensureRemoteDirectory(remoteDirectory: string): Promise<void> {
+    const parts: Array<string> = normalizeRemoteDirectoryParts(remoteDirectory);
+    let currentPath: string = '';
+    for (let index = 0; index < parts.length; index += 1) {
+      currentPath = currentPath.length > 0 ? `${currentPath}\\${parts[index]}` : parts[index];
+      const fileId: Array<number> = await this.createDirectory(currentPath);
+      await this.closeFile(fileId);
+    }
+  }
+
+  private async createDirectory(remotePath: string): Promise<Array<number>> {
+    const name: Array<number> = utf16LeBytes(remotePath);
+    const body: Array<number> = bytes(56 + name.length);
+    writeUInt16LE(body, 0, 57);
+    body[3] = 0;
+    writeUInt32LE(body, 4, 2);
+    writeUInt32LE(body, 24, 0x0012019F);
+    writeUInt32LE(body, 28, 0x00000010);
+    writeUInt32LE(body, 32, 0x00000007);
+    writeUInt32LE(body, 36, 0x00000003);
+    writeUInt32LE(body, 40, 0x00000021);
+    writeUInt16LE(body, 44, 64 + 56);
+    writeUInt16LE(body, 46, name.length);
+    for (let index = 0; index < name.length; index += 1) {
+      body[56 + index] = name[index];
+    }
+
+    const response: Array<number> = await this.send(SMB2_CREATE, body, this.treeId);
+    this.ensureStatus(response);
+    if (response.length < 144) {
+      throw new Error('SMB 创建目录响应异常');
     }
     return response.slice(128, 144);
   }

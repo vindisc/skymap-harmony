@@ -3,6 +3,7 @@ import fs from 'node:fs';
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
 const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
 const historyServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardHistoryService.ets', 'utf8');
+const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
 const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
 const settingsPageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewSettingsPage.ets', 'utf8');
 const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewProjectService.ets', 'utf8');
@@ -96,6 +97,25 @@ if (homePageSource.includes("Text('当前状态')") ||
 if (historyServiceSource.includes('MAX_HISTORY_COUNT')) {
   failed = true;
   console.error('ReviewCardHistoryService must not truncate older review history.');
+}
+
+if (!historyServiceSource.includes("const REVIEW_JSON_BACKUP_DIR_NAME: string = 'review_exchange';") ||
+  !historyServiceSource.includes('loadBackupItemsOnce(context, store)') ||
+  !historyServiceSource.includes('mergeHistoryItems(historyItems, backupItems)')) {
+  failed = true;
+  console.error('ReviewCardHistoryService must import local review.json backups into history once.');
+}
+
+if (!historyServiceSource.includes('function parseStoredHistory(rawValue: preferences.ValueType): Array<ReviewCardHistoryItem>') ||
+  !historyServiceSource.includes('const historyItems: Array<ReviewCardHistoryItem> = parseStoredHistory(rawValue);')) {
+  failed = true;
+  console.error('ReviewCardHistoryService must keep importing backups even when stored history is malformed.');
+}
+
+if (!previewPageSource.includes('ReviewCardHistoryService.markExported(context, this.document, result.path)') ||
+  !previewPageSource.includes('ReviewCardHistoryService.markExported(context, this.document, result.remotePath)')) {
+  failed = true;
+  console.error('PreviewPage must write successful review.json exports and home-storage uploads into history stats.');
 }
 
 if (!settingsPageSource.includes("Text('设置')")) {

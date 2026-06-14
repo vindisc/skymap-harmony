@@ -8,6 +8,7 @@ let failed = false;
 const requiredPreviewStrings = [
   "this.ExportSheetAction('导出 review.json'",
   'private async exportReviewJson(): Promise<void>',
+  'ReviewCardHistoryService.markExported(context, this.document, result.path)',
   "review.json 已保存到系统文件：${result.fileName}。现在可直接发送给 Mac 导入。",
   'Text(this.lastReviewJsonExportMessage)'
 ];

@@ -15,6 +15,7 @@ const requiredPreviewTokens = [
   "this.ExportSheetAction(this.isUploadingHomeStorage ? '上传到家庭存储中...' : '上传到家庭存储'",
   'private async uploadReviewJsonToHomeStorage(): Promise<void>',
   'HomeStorageService.uploadReviewJson(',
+  'ReviewCardHistoryService.markExported(context, this.document, result.remotePath)',
   "this.ExportSheetAction('导出 review.json'"
 ];
 
@@ -63,6 +64,8 @@ const requiredHomeStorageTokens = [
   "message: '家庭存储连接成功'",
   "message: 'review.json 已上传到家庭存储'",
   "message: 'review.json 已上传到家庭存储（已自动保存到共享根目录）'",
+  'let passwordSavedSecurely: boolean = false;',
+  'await store.put(LEGACY_PASSWORD_KEY, normalized.password);',
   "isMissingRemoteDirectoryError(primaryResult.message)"
 ];
 
@@ -90,6 +93,9 @@ const requiredSmbTokens = [
   "return 'SMB 认证失败，请检查用户名和密码';",
   "return 'SMB 共享目录不存在，请检查共享目录';",
   "return 'SMB 目标路径不存在，请先在家庭存储中创建目录';",
+  'await this.ensureRemoteDirectory(options.remoteDirectory);',
+  'private async createDirectory(remotePath: string): Promise<Array<number>>',
+  'writeUInt32LE(body, 40, 0x00000021);',
   'async uploadText(options: Smb2UploadOptions): Promise<string>'
 ];
 
