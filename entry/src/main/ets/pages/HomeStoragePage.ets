@@ -216,7 +216,7 @@ struct HomeStoragePage {
   }
 
   private resolveConnectionStatusText(): string {
-    return HomeStorageService.validateSettings(this.currentHomeStorageSettings()).length === 0 ? 'SMB 已连接' : 'SMB 未连接';
+    return HomeStorageService.validateSettings(this.currentHomeStorageSettings()).length === 0 ? '已配置' : '未配置';
   }
 
   private resolveLastUploadedText(): string {

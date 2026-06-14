@@ -35,6 +35,29 @@ export function getReviewProjectExcerpt(document: ReviewCardDocument): string {
   return '还没有提炼核心关系';
 }
 
+export interface ReviewDashboardStats {
+  totalCount: number;
+  validCount: number;
+  unsureCount: number;
+  streakDays: number;
+}
+
+function normalizeReviewDayKey(timestamp: number): string {
+  const date: Date = new Date(timestamp);
+  const year: number = date.getFullYear();
+  const month: string = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day: string = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseReviewDayKey(dayKey: string): number {
+  const parts: Array<string> = dayKey.split('-');
+  if (parts.length !== 3) {
+    return 0;
+  }
+  return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
+}
+
 export class ReviewProjectService {
   static resolvePhotoFileName(document: ReviewCardDocument): string {
     const imageUri: string = typeof document.imageUri === 'string' ? document.imageUri.trim() : '';
@@ -127,5 +150,41 @@ export class ReviewProjectService {
     }
 
     return summary;
+  }
+
+  static buildDashboardStats(items: Array<ReviewCardHistoryItem>): ReviewDashboardStats {
+    const summary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
+    const uniqueDaySet: Set<string> = new Set<string>();
+    summary.items.forEach((item: ReviewCardHistoryItem): void => {
+      uniqueDaySet.add(normalizeReviewDayKey(item.document.updatedAt));
+    });
+
+    const sortedDays: Array<number> = Array.from(uniqueDaySet)
+      .map((dayKey: string): number => parseReviewDayKey(dayKey))
+      .filter((value: number): boolean => value > 0)
+      .sort((left: number, right: number): number => right - left);
+
+    let streakDays: number = 0;
+    let previousDayTime: number = 0;
+    sortedDays.forEach((dayTime: number, index: number): void => {
+      if (index === 0) {
+        streakDays = 1;
+        previousDayTime = dayTime;
+        return;
+      }
+
+      const dayDiff: number = Math.round((previousDayTime - dayTime) / 86400000);
+      if (dayDiff === 1) {
+        streakDays += 1;
+        previousDayTime = dayTime;
+      }
+    });
+
+    return {
+      totalCount: summary.recordCount,
+      validCount: summary.stats.validCount,
+      unsureCount: summary.stats.unsureCount,
+      streakDays: streakDays
+    };
   }
 }

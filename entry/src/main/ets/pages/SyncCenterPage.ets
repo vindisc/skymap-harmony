@@ -34,7 +34,7 @@ struct SyncCenterPage {
   }
 
   private resolveStatusText(): string {
-    return this.isConfigured() ? '已连接' : '未连接';
+    return this.isConfigured() ? '已配置' : '未配置';
   }
 
   private resolveHomeStorageAddress(): string {
@@ -117,7 +117,7 @@ struct SyncCenterPage {
             .alignItems(HorizontalAlign.Start)
             .layoutWeight(1)
 
-            Text(this.isConfigured() ? 'SMB 已连接' : '未配置家庭存储')
+            Text(this.isConfigured() ? '已配置家庭存储' : '未配置家庭存储')
               .fontSize(AppTypography.caption)
               .fontColor(AppColors.mutedText)
           }

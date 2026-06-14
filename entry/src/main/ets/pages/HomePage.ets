@@ -14,6 +14,7 @@ import {
   createDefaultProjectSummary
 } from '../model/ProjectModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
+import { ReviewDashboardStats } from '../services/ReviewProjectService';
 import { HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
@@ -32,6 +33,12 @@ export struct HomePage {
   private reloadRequestId: number = 0;
   @State isPickingPhoto: boolean = false;
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
+  @State dashboardStats: ReviewDashboardStats = {
+    totalCount: 0,
+    validCount: 0,
+    unsureCount: 0,
+    streakDays: 0
+  };
   @State reviewerName: string = '';
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
 
@@ -70,6 +77,7 @@ export struct HomePage {
 
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
     this.projectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
+    this.dashboardStats = ReviewProjectService.buildDashboardStats(items);
   }
 
   private openLatestReview(): void {
@@ -78,6 +86,14 @@ export struct HomePage {
     }
     ReviewCardStore.setCurrentDocument(this.projectSummary.latestItem.document);
     router.pushUrl({ url: PREVIEW_PAGE });
+  }
+
+  private continueLatestReview(): void {
+    if (!this.projectSummary.latestItem) {
+      return;
+    }
+    ReviewCardStore.setCurrentDocument(this.projectSummary.latestItem.document);
+    router.pushUrl({ url: EDITOR_PAGE });
   }
 
   private async startPhotoDraft(): Promise<void> {
@@ -118,28 +134,69 @@ export struct HomePage {
   }
 
   private resolveSyncStatusText(): string {
-    return this.isHomeStorageConfigured() ? 'SMB 已连接' : '未配置家庭存储';
+    return this.isHomeStorageConfigured() ? '已配置' : '未配置';
   }
 
   private resolveSettingsSummary(): string {
     return this.reviewerName.length > 0 ? this.reviewerName : '未设置';
   }
 
+  private resolveStreakText(): string {
+    return this.dashboardStats.streakDays > 0 ? `${this.dashboardStats.streakDays}天` : '0天';
+  }
+
+  @Builder
+  StatItem(value: string, label: string) {
+    Column({ space: AppMetrics.space4 }) {
+      Text(value)
+        .fontSize(AppTypography.level2)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+
+      Text(label)
+        .fontSize(AppTypography.caption)
+        .fontColor(AppColors.secondaryText)
+    }
+    .alignItems(HorizontalAlign.Start)
+    .layoutWeight(1)
+  }
+
+  @Builder
+  GrowthStatsPanel() {
+    Column({ space: AppMetrics.space16 }) {
+      Text('成长统计')
+        .fontSize(AppTypography.auxiliary)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.text)
+        .width('100%')
+
+      Row({ space: AppMetrics.space12 }) {
+        this.StatItem(`${this.dashboardStats.totalCount}`, '总复盘')
+        this.StatItem(`${this.dashboardStats.validCount}`, '成立')
+      }
+      .width('100%')
+
+      Row({ space: AppMetrics.space12 }) {
+        this.StatItem(`${this.dashboardStats.unsureCount}`, '待判断')
+        this.StatItem(this.resolveStreakText(), '连续复盘')
+      }
+      .width('100%')
+    }
+    .padding(AppMetrics.space16)
+    .width('100%')
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+  }
+
   @Builder
   StartReviewPanel() {
-    Column({ space: AppMetrics.space16 }) {
-      Column({ space: AppMetrics.space8 }) {
-        Text('摄影复盘卡')
-          .fontSize(AppTypography.level2)
+    Column({ space: AppMetrics.space12 }) {
+      Column({ space: AppMetrics.space4 }) {
+        Text('摄影复盘')
+          .fontSize(AppTypography.body)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
-          .lineHeight(AppTypography.level2LineHeight)
-          .width('100%')
-
-        Text('通过持续复盘提升摄影判断力')
-          .fontSize(AppTypography.body)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.bodyLineHeight)
           .width('100%')
       }
 
@@ -163,8 +220,10 @@ export struct HomePage {
       Column({ space: AppMetrics.space24 }) {
         AppPageHeader({
           title: '首页',
-          subtitle: '开始新复盘，或继续查看最近一次记录。'
+          subtitle: '先看成长反馈，再从最近一次继续，或直接开始新复盘。'
         })
+
+        this.GrowthStatsPanel()
 
         this.StartReviewPanel()
 
@@ -176,12 +235,41 @@ export struct HomePage {
             .width('100%')
 
           if (this.projectSummary.latestItem) {
-            RecentReviewCard({
-              item: this.projectSummary.latestItem,
-              onTap: () => {
-                this.openLatestReview();
+            Column({ space: AppMetrics.space12 }) {
+              RecentReviewCard({
+                item: this.projectSummary.latestItem,
+                onTap: () => {
+                  this.openLatestReview();
+                }
+              })
+
+              Row({ space: AppMetrics.space8 }) {
+                Button('查看详情')
+                  .height(36)
+                  .layoutWeight(1)
+                  .borderRadius(AppMetrics.capsuleRadius)
+                  .fontSize(AppTypography.auxiliary)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor(AppColors.text)
+                  .backgroundColor(AppColors.surfaceMuted)
+                  .onClick(() => {
+                    this.openLatestReview();
+                  })
+
+                Button('继续编辑')
+                  .height(36)
+                  .layoutWeight(1)
+                  .borderRadius(AppMetrics.capsuleRadius)
+                  .fontSize(AppTypography.auxiliary)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor('#FFFFFF')
+                  .backgroundColor(AppColors.primary)
+                  .onClick(() => {
+                    this.continueLatestReview();
+                  })
               }
-            })
+              .width('100%')
+            }
           } else {
             EmptyState({
               title: '还没有复盘记录',
@@ -208,7 +296,7 @@ export struct HomePage {
               .fontColor(AppColors.text)
               .width('100%')
 
-            Text(`同步：${this.resolveSyncStatusText()}`)
+            Text(`家庭存储：${this.resolveSyncStatusText()}`)
               .fontSize(AppTypography.auxiliary)
               .fontColor(AppColors.text)
               .width('100%')
