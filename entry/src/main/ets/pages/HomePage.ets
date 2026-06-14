@@ -16,8 +16,6 @@ import {
 import { ReviewCardDocument } from '../model/ReviewCardModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewDashboardStats } from '../services/ReviewProjectService';
-import { HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
-import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
   AppColors,
   AppMetrics,
@@ -38,8 +36,6 @@ export struct HomePage {
   @State dashboardStats: ReviewDashboardStats = {
     streakDays: 0
   };
-  @State reviewerName: string = '';
-  @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State historyLoadFailed: boolean = false;
 
   aboutToAppear(): void {
@@ -97,18 +93,6 @@ export struct HomePage {
       }
       return;
     }
-
-    const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
-    if (requestId !== this.reloadRequestId) {
-      return;
-    }
-    this.reviewerName = reviewerName;
-
-    const homeStorageSettings: HomeStorageSettings = await HomeStorageService.loadSettings(context);
-    if (requestId !== this.reloadRequestId) {
-      return;
-    }
-    this.homeStorageSettings = homeStorageSettings;
   }
 
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
@@ -155,18 +139,6 @@ export struct HomePage {
       result.imageSizeFallbackUsed
     );
     router.pushUrl({ url: EDITOR_PAGE });
-  }
-
-  private isHomeStorageConfigured(): boolean {
-    return HomeStorageService.validateSettings(this.homeStorageSettings).length === 0;
-  }
-
-  private resolveSyncStatusText(): string {
-    return this.isHomeStorageConfigured() ? '已配置' : '未配置';
-  }
-
-  private resolveSettingsSummary(): string {
-    return this.reviewerName.length > 0 ? this.reviewerName : '未设置';
   }
 
   private resolveStreakText(): string {
@@ -329,32 +301,6 @@ export struct HomePage {
               message: '开始第一条复盘后，这里会展示你最近一次的内容。'
             })
           }
-        }
-
-        Column({ space: AppMetrics.cardGap }) {
-          Text('当前状态')
-            .fontSize(AppTypography.sectionTitle)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.sectionTitleLineHeight)
-            .width('100%')
-
-          Column({ space: AppMetrics.space8 }) {
-            Text(`家庭存储：${this.resolveSyncStatusText()}`)
-              .fontSize(AppTypography.auxiliary)
-              .fontColor(AppColors.text)
-              .width('100%')
-
-            Text(`复盘人：${this.resolveSettingsSummary()}`)
-              .fontSize(AppTypography.auxiliary)
-              .fontColor(AppColors.text)
-              .width('100%')
-          }
-          .padding(AppMetrics.space16)
-          .width('100%')
-          .borderRadius(AppMetrics.cardRadius)
-          .backgroundColor(AppColors.surface)
-          .border({ width: 1, color: AppColors.border })
         }
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding })

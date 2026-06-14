@@ -9,7 +9,6 @@ import {
 
 const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
-const MAX_HISTORY_COUNT: number = 20;
 
 interface LegacyHistoryPayload {
   items?: Array<ReviewCardHistoryItem | ReviewCardDocument>;
@@ -136,7 +135,7 @@ export class ReviewCardHistoryService {
     nextItems.push(createHistoryItem(document));
 
     items.forEach((item: ReviewCardHistoryItem) => {
-      if (getReviewDocumentKey(item.document) !== key && nextItems.length < MAX_HISTORY_COUNT) {
+      if (getReviewDocumentKey(item.document) !== key) {
         nextItems.push(createHistoryItem(item.document, item.exportedPath));
       }
     });
@@ -175,8 +174,8 @@ export class ReviewCardHistoryService {
       nextItems.unshift(createHistoryItem(document, exportedPath));
     }
 
-    await ReviewCardHistoryService.persist(context, nextItems.slice(0, MAX_HISTORY_COUNT));
-    return ReviewCardHistoryService.rememberItems(nextItems.slice(0, MAX_HISTORY_COUNT));
+    await ReviewCardHistoryService.persist(context, nextItems);
+    return ReviewCardHistoryService.rememberItems(nextItems);
   }
 
   static async deleteDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {

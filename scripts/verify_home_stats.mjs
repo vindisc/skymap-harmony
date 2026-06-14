@@ -13,8 +13,7 @@ const requiredHomeSections = [
   "title: '摄影复盘'",
   "Text('开始新的复盘')",
   "Text('最近一次')",
-  "Text('复盘概览')",
-  "Text('当前状态')"
+  "Text('复盘概览')"
 ];
 
 for (const marker of requiredHomeSections) {
@@ -29,11 +28,6 @@ if (!homePageSource.includes("label: this.isPickingPhoto ? '打开相册中...' 
     failed = true;
     console.error('HomePage must expose 开始复盘 quick action state.');
   }
-}
-
-if (!homePageSource.includes("return this.isHomeStorageConfigured() ? '已配置' : '未配置';")) {
-  failed = true;
-  console.error('HomePage must expose configured/unconfigured home storage state without realtime connection wording.');
 }
 
 if (!homePageSource.includes("this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')") ||
@@ -92,19 +86,16 @@ if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('
   console.error('HomePage must render 开始新的复盘 before 复盘概览.');
 }
 
-if (!homePageSource.includes("Text('当前状态')")) {
+if (homePageSource.includes("Text('当前状态')") ||
+  homePageSource.includes('家庭存储：') ||
+  homePageSource.includes('复盘人：')) {
   failed = true;
-  console.error('HomePage must keep a compact status summary below the quick actions.');
+  console.error('HomePage must not render the old configuration status card.');
 }
 
-if (homePageSource.includes('复盘记录：') || homePageSource.includes('最近更新：')) {
+if (historyServiceSource.includes('MAX_HISTORY_COUNT')) {
   failed = true;
-  console.error('HomePage status summary must not repeat review count or latest update.');
-}
-
-if (!homePageSource.includes('ReviewSettingsService.loadReviewerName(context)')) {
-  failed = true;
-  console.error('HomePage must load reviewer settings to render the 设置 summary.');
+  console.error('ReviewCardHistoryService must not truncate older review history.');
 }
 
 if (!settingsPageSource.includes("Text('设置')")) {

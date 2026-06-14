@@ -13,8 +13,7 @@ const requiredHomeTokens = [
   "title: '摄影复盘'",
   "Text('开始新的复盘')",
   "Text('最近一次')",
-  "Text('复盘概览')",
-  "Text('当前状态')"
+  "Text('复盘概览')"
 ];
 
 for (const token of requiredHomeTokens) {

@@ -29,6 +29,7 @@ const requiredSettingsTokens = [
   "Text('家庭存储')",
   "SettingsInput('SMB 地址或 IP'",
   "SettingsInput('共享目录'",
+  "SettingsInput('目标路径'",
   "SettingsInput('用户名'",
   "SettingsInput('密码或凭据'",
   '测试家庭存储连接'
@@ -41,19 +42,12 @@ for (const token of requiredSettingsTokens) {
   }
 }
 
-if (settingsPageSource.includes("SettingsInput('目标路径'")) {
+if (!homeStoragePageSource.includes('this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;') ||
+  !settingsPageSource.includes('this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;') ||
+  !homeStoragePageSource.includes('remoteDirectory: this.homeStorageRemoteDirectory') ||
+  !settingsPageSource.includes('remoteDirectory: this.homeStorageRemoteDirectory')) {
   failed = true;
-  console.error('ReviewSettingsPage must not expose the optional SMB target path in the main form.');
-}
-
-if (homeStoragePageSource.includes("SettingsInput('目标路径'")) {
-  failed = true;
-  console.error('HomeStoragePage must not expose the optional SMB target path in the main form.');
-}
-
-if (!homeStoragePageSource.includes("remoteDirectory: ''") || !settingsPageSource.includes("remoteDirectory: ''")) {
-  failed = true;
-  console.error('SMB settings pages must save uploads to the share root by default.');
+  console.error('SMB settings pages must load, save, and render the optional target path.');
 }
 
 if (!syncCenterPageSource.includes("this.InfoRow('保存位置'") || !syncCenterPageSource.includes("'共享根目录'")) {

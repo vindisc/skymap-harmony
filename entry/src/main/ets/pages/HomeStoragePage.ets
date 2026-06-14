@@ -29,6 +29,7 @@ struct HomeStoragePage {
   @State homeStorageHost: string = '';
   @State homeStoragePort: string = '';
   @State homeStorageShareName: string = '';
+  @State homeStorageRemoteDirectory: string = '';
   @State homeStorageUsername: string = '';
   @State homeStoragePassword: string = '';
   @State homeStorageDomain: string = '';
@@ -119,6 +120,7 @@ struct HomeStoragePage {
     this.homeStorageHost = homeStorageSettings.smbHost;
     this.homeStoragePort = homeStorageSettings.smbPort;
     this.homeStorageShareName = homeStorageSettings.smbShareName;
+    this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;
     this.homeStorageUsername = homeStorageSettings.username;
     this.homeStoragePassword = homeStorageSettings.password;
     this.homeStorageDomain = homeStorageSettings.smbDomain;
@@ -129,7 +131,7 @@ struct HomeStoragePage {
     return {
       username: this.homeStorageUsername,
       password: this.homeStoragePassword,
-      remoteDirectory: '',
+      remoteDirectory: this.homeStorageRemoteDirectory,
       smbHost: this.homeStorageHost,
       smbPort: this.homeStoragePort,
       smbShareName: this.homeStorageShareName,
@@ -151,6 +153,7 @@ struct HomeStoragePage {
       this.homeStorageHost = homeStorageSettings.smbHost;
       this.homeStoragePort = homeStorageSettings.smbPort;
       this.homeStorageShareName = homeStorageSettings.smbShareName;
+      this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;
       this.homeStorageUsername = homeStorageSettings.username;
       this.homeStoragePassword = homeStorageSettings.password;
       this.homeStorageDomain = homeStorageSettings.smbDomain;
@@ -326,17 +329,21 @@ struct HomeStoragePage {
               this.homeStorageShareName = value;
             }, false, 2)
 
+            this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '留空则保存到共享根目录，例如 Reviews/2026', (value: string) => {
+              this.homeStorageRemoteDirectory = value;
+            }, false, 3)
+
             this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
               this.homeStorageUsername = value;
-            }, false, 3)
+            }, false, 4)
 
             this.SettingsInput('密码', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
               this.homeStoragePassword = value;
-            }, true, 4)
+            }, true, 5)
 
             this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
               this.homeStorageDomain = value;
-            }, false, 5)
+            }, false, 6)
           }
           .alignItems(HorizontalAlign.Start)
           .width('100%')
