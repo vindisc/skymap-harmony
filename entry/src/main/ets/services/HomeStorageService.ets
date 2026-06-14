@@ -11,6 +11,7 @@ import { Smb2Client, Smb2UploadOptions } from './Smb2Client';
 const PREFERENCES_NAME: string = 'home_storage_settings';
 const USERNAME_KEY: string = 'username';
 const LEGACY_PASSWORD_KEY: string = 'password';
+const SETTINGS_SNAPSHOT_KEY: string = 'settings_snapshot';
 const REMOTE_DIRECTORY_KEY: string = 'remote_directory';
 const SMB_HOST_KEY: string = 'smb_host';
 const SMB_PORT_KEY: string = 'smb_port';
@@ -95,6 +96,17 @@ function createSmbUploadOptions(settings: HomeStorageSettings, fileName: string,
 }
 
 export class HomeStorageService {
+  private static cachedSettings: HomeStorageSettings = {
+    username: '',
+    password: '',
+    remoteDirectory: DEFAULT_REMOTE_DIRECTORY,
+    smbHost: '',
+    smbPort: DEFAULT_SMB_PORT,
+    smbShareName: '',
+    smbDomain: ''
+  };
+  private static hasCachedSettings: boolean = false;
+
   private static async getStore(context: common.UIAbilityContext): Promise<preferences.Preferences> {
     return preferences.getPreferences(context, { name: PREFERENCES_NAME });
   }
@@ -135,30 +147,91 @@ export class HomeStorageService {
     };
   }
 
+  private static rememberSettings(settings: HomeStorageSettings): HomeStorageSettings {
+    const normalized: HomeStorageSettings = normalizeSettings(settings);
+    HomeStorageService.cachedSettings = normalized;
+    HomeStorageService.hasCachedSettings = true;
+    return normalized;
+  }
+
+  private static currentCachedSettings(): HomeStorageSettings {
+    if (HomeStorageService.hasCachedSettings) {
+      return normalizeSettings(HomeStorageService.cachedSettings);
+    }
+    return HomeStorageService.defaultSettings();
+  }
+
+  private static async loadSettingsSnapshot(store: preferences.Preferences): Promise<HomeStorageSettings | null> {
+    const rawSnapshot = await store.get(SETTINGS_SNAPSHOT_KEY, '');
+    if (typeof rawSnapshot !== 'string' || rawSnapshot.length === 0) {
+      return null;
+    }
+
+    try {
+      const parsedSnapshot = JSON.parse(rawSnapshot) as HomeStorageSettings;
+      return normalizeSettings(parsedSnapshot);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  private static createSettingsSnapshot(settings: HomeStorageSettings): string {
+    return JSON.stringify({
+      username: settings.username,
+      password: '',
+      remoteDirectory: settings.remoteDirectory,
+      smbHost: settings.smbHost,
+      smbPort: settings.smbPort,
+      smbShareName: settings.smbShareName,
+      smbDomain: settings.smbDomain
+    });
+  }
+
+  private static async loadStoredPassword(store: preferences.Preferences): Promise<string> {
+    let password = await HomeStorageSecretService.loadPassword();
+    if (password.length === 0) {
+      password = await HomeStorageService.migrateLegacyPassword(store);
+    }
+    return password;
+  }
+
+  private static async loadLegacySettings(store: preferences.Preferences): Promise<HomeStorageSettings | null> {
+    const username = await store.get(USERNAME_KEY, '');
+    const password = await HomeStorageService.loadStoredPassword(store);
+    const remoteDirectory = await store.get(REMOTE_DIRECTORY_KEY, DEFAULT_REMOTE_DIRECTORY);
+    const smbHost = await store.get(SMB_HOST_KEY, '');
+    const smbPort = await store.get(SMB_PORT_KEY, DEFAULT_SMB_PORT);
+    const smbShareName = await store.get(SMB_SHARE_NAME_KEY, '');
+    const smbDomain = await store.get(SMB_DOMAIN_KEY, '');
+
+    return normalizeSettings({
+      username: typeof username === 'string' ? username : '',
+      password: password,
+      remoteDirectory: typeof remoteDirectory === 'string' ? remoteDirectory : DEFAULT_REMOTE_DIRECTORY,
+      smbHost: typeof smbHost === 'string' ? smbHost : '',
+      smbPort: typeof smbPort === 'string' ? smbPort : DEFAULT_SMB_PORT,
+      smbShareName: typeof smbShareName === 'string' ? smbShareName : '',
+      smbDomain: typeof smbDomain === 'string' ? smbDomain : ''
+    });
+  }
+
   static async loadSettings(context: common.UIAbilityContext): Promise<HomeStorageSettings> {
     try {
       const store = await HomeStorageService.getStore(context);
-      const username = await store.get(USERNAME_KEY, '');
-      let password = await HomeStorageSecretService.loadPassword();
-      if (password.length === 0) {
-        password = await HomeStorageService.migrateLegacyPassword(store);
+      const snapshotSettings = await HomeStorageService.loadSettingsSnapshot(store);
+      if (snapshotSettings !== null) {
+        snapshotSettings.password = await HomeStorageService.loadStoredPassword(store);
+        return HomeStorageService.rememberSettings(snapshotSettings);
       }
-      const remoteDirectory = await store.get(REMOTE_DIRECTORY_KEY, DEFAULT_REMOTE_DIRECTORY);
-      const smbHost = await store.get(SMB_HOST_KEY, '');
-      const smbPort = await store.get(SMB_PORT_KEY, DEFAULT_SMB_PORT);
-      const smbShareName = await store.get(SMB_SHARE_NAME_KEY, '');
-      const smbDomain = await store.get(SMB_DOMAIN_KEY, '');
-      return normalizeSettings({
-        username: typeof username === 'string' ? username : '',
-        password: password,
-        remoteDirectory: typeof remoteDirectory === 'string' ? remoteDirectory : DEFAULT_REMOTE_DIRECTORY,
-        smbHost: typeof smbHost === 'string' ? smbHost : '',
-        smbPort: typeof smbPort === 'string' ? smbPort : DEFAULT_SMB_PORT,
-        smbShareName: typeof smbShareName === 'string' ? smbShareName : '',
-        smbDomain: typeof smbDomain === 'string' ? smbDomain : ''
-      });
+
+      const legacySettings = await HomeStorageService.loadLegacySettings(store);
+      if (legacySettings !== null) {
+        return HomeStorageService.rememberSettings(legacySettings);
+      }
+
+      return HomeStorageService.currentCachedSettings();
     } catch (error) {
-      return HomeStorageService.defaultSettings();
+      return HomeStorageService.currentCachedSettings();
     }
   }
 
@@ -176,8 +249,9 @@ export class HomeStorageService {
     await store.put(SMB_PORT_KEY, normalized.smbPort);
     await store.put(SMB_SHARE_NAME_KEY, normalized.smbShareName);
     await store.put(SMB_DOMAIN_KEY, normalized.smbDomain);
+    await store.put(SETTINGS_SNAPSHOT_KEY, HomeStorageService.createSettingsSnapshot(normalized));
     await store.flush();
-    return normalized;
+    return HomeStorageService.rememberSettings(normalized);
   }
 
   static async loadLastUploadedAt(context: common.UIAbilityContext): Promise<number> {

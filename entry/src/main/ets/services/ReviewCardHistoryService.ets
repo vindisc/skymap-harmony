@@ -97,8 +97,21 @@ function normalizeParsedHistory(parsed: Object): Array<ReviewCardHistoryItem> {
 }
 
 export class ReviewCardHistoryService {
+  private static cachedItems: Array<ReviewCardHistoryItem> = [];
+
   private static async getStore(context: common.UIAbilityContext): Promise<preferences.Preferences> {
     return preferences.getPreferences(context, { name: PREFERENCES_NAME });
+  }
+
+  private static rememberItems(items: Array<ReviewCardHistoryItem>): Array<ReviewCardHistoryItem> {
+    ReviewCardHistoryService.cachedItems = sortHistoryItems(
+      items.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
+        return createHistoryItem(item.document, item.exportedPath);
+      })
+    );
+    return ReviewCardHistoryService.cachedItems.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
+      return createHistoryItem(item.document, item.exportedPath);
+    });
   }
 
   static async load(context: common.UIAbilityContext): Promise<Array<ReviewCardHistoryItem>> {
@@ -106,13 +119,13 @@ export class ReviewCardHistoryService {
       const store = await ReviewCardHistoryService.getStore(context);
       const rawValue = await store.get(HISTORY_KEY, '[]');
       if (typeof rawValue !== 'string') {
-        return [];
+        return ReviewCardHistoryService.rememberItems([]);
       }
 
       const parsed = JSON.parse(rawValue) as Object;
-      return normalizeParsedHistory(parsed);
+      return ReviewCardHistoryService.rememberItems(normalizeParsedHistory(parsed));
     } catch (error) {
-      return [];
+      return ReviewCardHistoryService.rememberItems(ReviewCardHistoryService.cachedItems);
     }
   }
 
@@ -129,7 +142,7 @@ export class ReviewCardHistoryService {
     });
 
     await ReviewCardHistoryService.persist(context, nextItems);
-    return nextItems;
+    return ReviewCardHistoryService.rememberItems(nextItems);
   }
 
   static async updateDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
@@ -145,7 +158,7 @@ export class ReviewCardHistoryService {
     if (nextItems.some((item: ReviewCardHistoryItem): boolean => getReviewDocumentKey(item.document) === key)) {
       await ReviewCardHistoryService.persist(context, nextItems);
     }
-    return nextItems;
+    return ReviewCardHistoryService.rememberItems(nextItems);
   }
 
   static async markExported(context: common.UIAbilityContext, document: ReviewCardDocument, exportedPath: string): Promise<Array<ReviewCardHistoryItem>> {
@@ -163,7 +176,7 @@ export class ReviewCardHistoryService {
     }
 
     await ReviewCardHistoryService.persist(context, nextItems.slice(0, MAX_HISTORY_COUNT));
-    return nextItems;
+    return ReviewCardHistoryService.rememberItems(nextItems.slice(0, MAX_HISTORY_COUNT));
   }
 
   static async deleteDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
@@ -174,12 +187,13 @@ export class ReviewCardHistoryService {
     });
 
     await ReviewCardHistoryService.persist(context, nextItems);
-    return nextItems;
+    return ReviewCardHistoryService.rememberItems(nextItems);
   }
 
   private static async persist(context: common.UIAbilityContext, items: Array<ReviewCardHistoryItem>): Promise<void> {
     const store = await ReviewCardHistoryService.getStore(context);
-    await store.put(HISTORY_KEY, JSON.stringify(items));
+    const persistedItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(items);
+    await store.put(HISTORY_KEY, JSON.stringify(persistedItems));
     await store.flush();
   }
 }

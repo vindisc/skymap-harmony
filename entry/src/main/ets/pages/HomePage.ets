@@ -13,6 +13,7 @@ import {
   ReviewProjectSummary,
   createDefaultProjectSummary
 } from '../model/ProjectModel';
+import { ReviewCardDocument } from '../model/ReviewCardModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewDashboardStats } from '../services/ReviewProjectService';
 import { HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
@@ -57,10 +58,31 @@ export struct HomePage {
     return getContext(this) as common.UIAbilityContext;
   }
 
+  private hasMeaningfulCurrentDocument(document: ReviewCardDocument): boolean {
+    return document.imageUri.length > 0 ||
+      document.content.visualFocus.length > 0 ||
+      document.content.focusReason.length > 0 ||
+      document.content.visualPath.length > 0 ||
+      document.content.visibleFacts.length > 0 ||
+      document.content.coreRelation.length > 0 ||
+      document.content.extendedUnderstanding.length > 0 ||
+      document.content.currentBlocker.length > 0;
+  }
+
   private async reloadHistory(): Promise<void> {
     const requestId: number = this.reloadRequestId + 1;
     this.reloadRequestId = requestId;
     const context = this.getAbilityContext();
+
+    const currentDocument = ReviewCardStore.getCurrentDocument();
+    if (this.hasMeaningfulCurrentDocument(currentDocument)) {
+      this.applyHomeData([
+        {
+          document: currentDocument,
+          exportedPath: ''
+        }
+      ]);
+    }
 
     try {
       const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
