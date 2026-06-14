@@ -73,16 +73,16 @@ export struct MyPage {
 
   @Builder
   StatusRow(label: string, value: string) {
-    Row() {
+    Row({ space: AppMetrics.space12 }) {
       Text(label)
         .fontSize(AppTypography.auxiliary)
         .fontColor(AppColors.secondaryText)
-
-      Blank()
+        .width(72)
 
       Text(value)
         .fontSize(AppTypography.auxiliary)
         .fontColor(AppColors.text)
+        .layoutWeight(1)
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
     }
@@ -128,7 +128,7 @@ export struct MyPage {
       Column({ space: AppMetrics.space16 }) {
         AppPageHeader({
           title: '我的',
-          subtitle: '管理复盘人、家庭存储和版本信息。'
+          subtitle: '管理复盘人、家庭存储和版本信息'
         })
 
         Column({ space: AppMetrics.space8 }) {
@@ -164,7 +164,7 @@ export struct MyPage {
           .border({ width: 1, color: '#ECE8E0' })
         }
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space24 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 20, bottom: AppMetrics.space24 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
     }

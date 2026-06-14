@@ -26,7 +26,6 @@ import {
   PrimaryButton,
   RecentReviewCard
 } from '../components/AppDesign';
-import { formatReviewTime } from '../utils/ImageLayoutUtils';
 
 @Component
 export struct HomePage {
@@ -34,9 +33,6 @@ export struct HomePage {
   @State isPickingPhoto: boolean = false;
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
   @State dashboardStats: ReviewDashboardStats = {
-    totalCount: 0,
-    validCount: 0,
-    unsureCount: 0,
     streakDays: 0
   };
   @State reviewerName: string = '';
@@ -125,14 +121,6 @@ export struct HomePage {
     return HomeStorageService.validateSettings(this.homeStorageSettings).length === 0;
   }
 
-  private resolveLastUpdatedText(): string {
-    if (this.projectSummary.recordCount === 0 || this.projectSummary.latestUpdatedAt <= 0) {
-      return '还没有复盘记录';
-    }
-
-    return formatReviewTime(this.projectSummary.latestUpdatedAt);
-  }
-
   private resolveSyncStatusText(): string {
     return this.isHomeStorageConfigured() ? '已配置' : '未配置';
   }
@@ -142,24 +130,30 @@ export struct HomePage {
   }
 
   private resolveStreakText(): string {
-    return this.dashboardStats.streakDays > 0 ? `${this.dashboardStats.streakDays}天` : '0天';
+    if (this.projectSummary.recordCount === 0 || this.dashboardStats.streakDays <= 0) {
+      return '暂无';
+    }
+    return `${this.dashboardStats.streakDays}天`;
   }
 
   private resolveStatsHintText(): string {
-    return this.dashboardStats.totalCount > 0 ? '每一次判断都会留下可回看的线索。' : '还没有记录，第一条复盘会从这里开始。';
+    return this.projectSummary.recordCount > 0 ? '每一次判断都会留下可回看的线索。' : '还没有记录，第一条复盘会从这里开始。';
   }
 
   @Builder
   StatItem(value: string, label: string) {
     Column({ space: AppMetrics.space4 }) {
       Text(value)
-        .fontSize(AppTypography.level2)
-        .fontWeight(FontWeight.Bold)
+        .fontSize(AppTypography.body)
+        .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.text)
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
 
       Text(label)
         .fontSize(AppTypography.caption)
         .fontColor(AppColors.secondaryText)
+        .maxLines(1)
     }
     .alignItems(HorizontalAlign.Start)
     .layoutWeight(1)
@@ -184,14 +178,10 @@ export struct HomePage {
       .alignItems(HorizontalAlign.Start)
       .width('100%')
 
-      Row({ space: AppMetrics.space12 }) {
-        this.StatItem(`${this.dashboardStats.totalCount}`, '总复盘')
-        this.StatItem(`${this.dashboardStats.validCount}`, '成立')
-      }
-      .width('100%')
-
-      Row({ space: AppMetrics.space12 }) {
-        this.StatItem(`${this.dashboardStats.unsureCount}`, '待判断')
+      Row({ space: AppMetrics.space8 }) {
+        this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')
+        this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')
+        this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')
         this.StatItem(this.resolveStreakText(), '连续复盘')
       }
       .width('100%')
@@ -244,8 +234,6 @@ export struct HomePage {
           title: '摄影复盘',
           subtitle: '看见积累，继续下一次复盘。'
         })
-
-        this.GrowthStatsPanel()
 
         this.StartReviewPanel()
 
@@ -300,6 +288,8 @@ export struct HomePage {
           }
         }
 
+        this.GrowthStatsPanel()
+
         Column({ space: AppMetrics.space12 }) {
           Text('当前状态')
             .fontSize(AppTypography.auxiliary)
@@ -307,17 +297,7 @@ export struct HomePage {
             .fontColor(AppColors.text)
             .width('100%')
 
-          Column({ space: AppMetrics.space12 }) {
-            Text(`复盘记录：${this.projectSummary.recordCount} 条`)
-              .fontSize(AppTypography.auxiliary)
-              .fontColor(AppColors.text)
-              .width('100%')
-
-            Text(`最近更新：${this.resolveLastUpdatedText()}`)
-              .fontSize(AppTypography.auxiliary)
-              .fontColor(AppColors.text)
-              .width('100%')
-
+          Column({ space: AppMetrics.space8 }) {
             Text(`家庭存储：${this.resolveSyncStatusText()}`)
               .fontSize(AppTypography.auxiliary)
               .fontColor(AppColors.text)
@@ -335,7 +315,7 @@ export struct HomePage {
           .border({ width: 1, color: AppColors.border })
         }
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 20, bottom: AppMetrics.space32 })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
     }

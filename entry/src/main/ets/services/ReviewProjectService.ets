@@ -36,9 +36,6 @@ export function getReviewProjectExcerpt(document: ReviewCardDocument): string {
 }
 
 export interface ReviewDashboardStats {
-  totalCount: number;
-  validCount: number;
-  unsureCount: number;
   streakDays: number;
 }
 
@@ -156,7 +153,7 @@ export class ReviewProjectService {
     const summary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
     const uniqueDaySet: Set<string> = new Set<string>();
     summary.items.forEach((item: ReviewCardHistoryItem): void => {
-      uniqueDaySet.add(normalizeReviewDayKey(item.document.updatedAt));
+      uniqueDaySet.add(normalizeReviewDayKey(item.document.createdAt));
     });
 
     const sortedDays: Array<number> = Array.from(uniqueDaySet)
@@ -181,9 +178,6 @@ export class ReviewProjectService {
     });
 
     return {
-      totalCount: summary.recordCount,
-      validCount: summary.stats.validCount,
-      unsureCount: summary.stats.unsureCount,
       streakDays: streakDays
     };
   }

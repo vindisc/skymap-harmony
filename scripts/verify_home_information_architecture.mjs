@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
+const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
+const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
+const libraryPageSource = fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8');
 const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
 const syncCenterPageSource = fs.readFileSync('entry/src/main/ets/pages/SyncCenterPage.ets', 'utf8');
 const appRouterSource = fs.readFileSync('entry/src/main/ets/app/AppRouter.ets', 'utf8');
@@ -10,9 +13,9 @@ let failed = false;
 
 const requiredHomeSections = [
   "title: '摄影复盘'",
-  "Text('复盘概览')",
   "Text('开始新的复盘')",
   "Text('最近一次')",
+  "Text('复盘概览')",
   "Text('当前状态')"
 ];
 
@@ -21,6 +24,55 @@ for (const marker of requiredHomeSections) {
     failed = true;
     console.error(`HomePage missing fixed section: ${marker}`);
   }
+}
+
+if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('this.GrowthStatsPanel()')) {
+  failed = true;
+  console.error('HomePage must render start action before stats overview.');
+}
+
+const forbiddenTabText = [
+  "label: '首'",
+  "label: '库'",
+  "label: '我'",
+  "symbol: '首'",
+  "symbol: '库'",
+  "symbol: '我'"
+];
+
+for (const marker of forbiddenTabText) {
+  if (appShellSource.includes(marker)) {
+    failed = true;
+    console.error(`AppShellPage must not render debug-style tab text: ${marker}`);
+  }
+}
+
+const requiredTabIcons = [
+  "label: '首页', icon:",
+  "label: '复盘库', icon:",
+  "label: '我的', icon:",
+  'Text(item.icon)'
+];
+
+for (const marker of requiredTabIcons) {
+  if (!appShellSource.includes(marker)) {
+    failed = true;
+    console.error(`AppShellPage missing tab icon marker: ${marker}`);
+  }
+}
+
+if (!myPageSource.includes("top: 20") || !libraryPageSource.includes("top: 20") || !homePageSource.includes("top: 20")) {
+  failed = true;
+  console.error('Home, library, and my pages must use the same compact top padding.');
+}
+
+if (!myPageSource.includes("title: '我的'") ||
+  !myPageSource.includes("subtitle: '管理复盘人、家庭存储和版本信息'") ||
+  !myPageSource.includes("this.SectionTitle('个人信息')") ||
+  !myPageSource.includes("this.SectionTitle('家庭存储')") ||
+  !myPageSource.includes("this.SectionTitle('关于')")) {
+  failed = true;
+  console.error('MyPage must keep the personal-center structure.');
 }
 
 if (!previewPageSource.includes("this.ActionButton('编辑', false, this.isActionBusy(), () => {")) {

@@ -8,9 +8,9 @@ let failed = false;
 
 const requiredHomeSections = [
   "title: '摄影复盘'",
-  "Text('复盘概览')",
   "Text('开始新的复盘')",
   "Text('最近一次')",
+  "Text('复盘概览')",
   "Text('当前状态')"
 ];
 
@@ -33,9 +33,38 @@ if (!homePageSource.includes("return this.isHomeStorageConfigured() ? '已配置
   console.error('HomePage must expose configured/unconfigured home storage state without realtime connection wording.');
 }
 
+if (!homePageSource.includes("this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')") ||
+  !homePageSource.includes("this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')") ||
+  !homePageSource.includes("this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')")) {
+  failed = true;
+  console.error('HomePage stats must read from projectSummary, not a detached zero-prone dashboard state.');
+}
+
+if (homePageSource.includes('this.dashboardStats.totalCount') ||
+  homePageSource.includes('this.dashboardStats.validCount') ||
+  homePageSource.includes('this.dashboardStats.unsureCount')) {
+  failed = true;
+  console.error('HomePage must not render review counts from dashboardStats.');
+}
+
+if (homePageSource.includes("0天")) {
+  failed = true;
+  console.error('HomePage must not show 0天 for unreliable streak data.');
+}
+
+if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('this.GrowthStatsPanel()')) {
+  failed = true;
+  console.error('HomePage must render 开始新的复盘 before 复盘概览.');
+}
+
 if (!homePageSource.includes("Text('当前状态')")) {
   failed = true;
   console.error('HomePage must keep a compact status summary below the quick actions.');
+}
+
+if (homePageSource.includes('复盘记录：') || homePageSource.includes('最近更新：')) {
+  failed = true;
+  console.error('HomePage status summary must not repeat review count or latest update.');
 }
 
 if (!homePageSource.includes('ReviewSettingsService.loadReviewerName(context)')) {

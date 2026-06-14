@@ -11,8 +11,9 @@ let failed = false;
 
 const requiredHomeTokens = [
   "title: '摄影复盘'",
-  "Text('复盘概览')",
   "Text('开始新的复盘')",
+  "Text('最近一次')",
+  "Text('复盘概览')",
   "Text('当前状态')"
 ];
 
@@ -21,6 +22,11 @@ for (const token of requiredHomeTokens) {
     failed = true;
     console.error(`HomePage missing token: ${token}`);
   }
+}
+
+if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('this.GrowthStatsPanel()')) {
+  failed = true;
+  console.error('HomePage must place start action before review overview.');
 }
 
 const requiredDetailTokens = [
