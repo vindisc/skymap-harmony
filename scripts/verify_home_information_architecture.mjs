@@ -66,6 +66,11 @@ if (!myPageSource.includes("top: 20") || !libraryPageSource.includes("top: 20") 
   console.error('Home, library, and my pages must use the same compact top padding.');
 }
 
+if (myPageSource.includes('Scroll()')) {
+  failed = true;
+  console.error('MyPage must use a top-aligned Column layout, not a short-content Scroll container.');
+}
+
 if (!myPageSource.includes("title: '我的'") ||
   !myPageSource.includes("subtitle: '管理复盘人、家庭存储和版本信息'") ||
   !myPageSource.includes("this.SectionTitle('个人信息')") ||
