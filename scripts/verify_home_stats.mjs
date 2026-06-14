@@ -7,9 +7,10 @@ const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/Review
 let failed = false;
 
 const requiredHomeSections = [
-  "this.HomeEntryCard(\n          '复盘库'",
-  "this.HomeEntryCard(\n          '同步中心'",
-  "this.HomeEntryCard(\n          '设置'"
+  "this.QuickEntryItem(\n            '拍'",
+  "this.QuickEntryItem(\n            '库'",
+  "this.QuickEntryItem(\n            '传'",
+  "this.QuickEntryItem(\n            '设'"
 ];
 
 for (const marker of requiredHomeSections) {
@@ -25,16 +26,20 @@ if (homePageSource.includes("Text('最近一次')")) {
 }
 
 if (!homePageSource.includes("label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘'")) {
-  failed = true;
-  console.error('HomePage must keep the 开始复盘 primary CTA.');
-}
-
-if (!homePageSource.includes("this.resolveSyncStatusText() ?")) {
+  if (!homePageSource.includes("this.isPickingPhoto ? '打开相册中' : '立即开始'")) {
+    failed = true;
+    console.error('HomePage must expose 开始复盘 quick action state.');
+  }
 }
 
 if (!homePageSource.includes("return this.isHomeStorageConfigured() ? 'SMB 已连接' : '未配置家庭存储';")) {
   failed = true;
   console.error('HomePage must expose sync status text for the sync center entry.');
+}
+
+if (!homePageSource.includes("Text('当前状态')")) {
+  failed = true;
+  console.error('HomePage must keep a compact status summary below the quick actions.');
 }
 
 if (!homePageSource.includes('ReviewSettingsService.loadReviewerName(context)')) {

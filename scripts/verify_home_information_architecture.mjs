@@ -13,9 +13,18 @@ if (homePageSource.includes("Text('最近一次')")) {
   console.error('HomePage still renders 独立最近一次模块.');
 }
 
-if (!homePageSource.includes("this.HomeEntryCard(\n          '同步中心'")) {
-  failed = true;
-  console.error('HomePage missing 同步中心 entry.');
+const requiredQuickEntries = [
+  "this.QuickEntryItem(\n            '拍'",
+  "this.QuickEntryItem(\n            '库'",
+  "this.QuickEntryItem(\n            '传'",
+  "this.QuickEntryItem(\n            '设'"
+];
+
+for (const marker of requiredQuickEntries) {
+  if (!homePageSource.includes(marker)) {
+    failed = true;
+    console.error(`HomePage missing quick entry: ${marker}`);
+  }
 }
 
 if (!previewPageSource.includes("this.ActionButton('编辑', false, this.isActionBusy(), () => {")) {

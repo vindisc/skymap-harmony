@@ -21,8 +21,7 @@ import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
   AppColors,
   AppMetrics,
-  AppTypography,
-  PrimaryButton
+  AppTypography
 } from '../components/AppDesign';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
 
@@ -130,13 +129,25 @@ struct HomePage {
     return this.isHomeStorageConfigured() ? 'SMB 已连接' : '未配置家庭存储';
   }
 
+  private resolveLibraryStatusText(): string {
+    return this.projectSummary.recordCount > 0 ? `${this.projectSummary.recordCount} 条复盘` : '暂无记录';
+  }
+
+  private resolveSettingsStatusText(): string {
+    return this.reviewerName.length > 0 ? '已设置' : '未设置';
+  }
+
+  private resolveSyncShortStatusText(): string {
+    return this.isHomeStorageConfigured() ? '已连接' : '未配置';
+  }
+
   private resolveSettingsSummary(): string {
     return this.reviewerName.length > 0 ? `复盘人：${this.reviewerName}` : '复盘人未设置';
   }
 
   @Builder
   StartReviewPanel() {
-    Column({ space: AppMetrics.space16 }) {
+    Column({ space: AppMetrics.space8 }) {
       Column({ space: AppMetrics.space8 }) {
         Text('摄影复盘卡')
           .fontSize(AppTypography.level1)
@@ -153,50 +164,49 @@ struct HomePage {
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
-
-      PrimaryButton({
-        label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘',
-        onTap: () => {
-          this.startPhotoDraft();
-        }
-      })
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
   }
 
   @Builder
-  HomeEntryCard(title: string, summary: string, detail: string, onTap: () => void) {
-    Row({ space: AppMetrics.space16 }) {
-      Column({ space: AppMetrics.space4 }) {
-        Text(title)
+  QuickEntryItem(symbol: string, title: string, status: string, emphasized: boolean, onTap: () => void) {
+    Column({ space: AppMetrics.space8 }) {
+      Column() {
+        Text(symbol)
           .fontSize(AppTypography.body)
           .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.text)
-          .width('100%')
+          .fontColor(emphasized ? '#FFFFFF' : AppColors.text)
+      }
+      .justifyContent(FlexAlign.Center)
+      .alignItems(HorizontalAlign.Center)
+      .width(42)
+      .height(42)
+      .borderRadius(21)
+      .backgroundColor(emphasized ? AppColors.primary : AppColors.surfaceMuted)
 
-        Text(summary)
+      Column({ space: AppMetrics.space4 }) {
+        Text(title)
           .fontSize(AppTypography.auxiliary)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.auxiliaryLineHeight)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .textAlign(TextAlign.Center)
+          .maxLines(1)
           .width('100%')
 
-        Text(detail)
+        Text(status)
           .fontSize(AppTypography.caption)
           .fontColor(AppColors.mutedText)
+          .textAlign(TextAlign.Center)
+          .maxLines(1)
           .width('100%')
       }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-
-      Text('>')
-        .fontSize(AppTypography.body)
-        .fontColor(AppColors.mutedText)
+      .width('100%')
     }
-    .alignItems(VerticalAlign.Center)
-    .padding(AppMetrics.space16)
-    .width('100%')
-    .constraintSize({ minHeight: 92 })
+    .alignItems(HorizontalAlign.Center)
+    .justifyContent(FlexAlign.Center)
+    .layoutWeight(1)
+    .height(112)
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
@@ -210,32 +220,73 @@ struct HomePage {
       Column({ space: AppMetrics.space16 }) {
         this.StartReviewPanel()
 
-        this.HomeEntryCard(
-          '复盘库',
-          this.projectSummary.recordCount > 0 ? `总复盘数 ${this.projectSummary.recordCount}` : '还没有复盘记录',
-          `最近更新时间 ${this.resolveLastUpdatedText()}`,
-          () => {
-            this.openProject();
-          }
-        )
+        Row({ space: AppMetrics.space8 }) {
+          this.QuickEntryItem(
+            '拍',
+            '开始复盘',
+            this.isPickingPhoto ? '打开相册中' : '立即开始',
+            true,
+            () => {
+              this.startPhotoDraft();
+            }
+          )
 
-        this.HomeEntryCard(
-          '同步中心',
-          this.resolveSyncStatusText(),
-          `${this.homeStorageSettings.smbShareName.length > 0 ? this.homeStorageSettings.smbShareName : '家庭存储'} · ${this.homeStorageSettings.remoteDirectory.length > 0 ? this.homeStorageSettings.remoteDirectory : '等待配置'}`,
-          () => {
-            this.openSyncCenter();
-          }
-        )
+          this.QuickEntryItem(
+            '库',
+            '复盘库',
+            this.resolveLibraryStatusText(),
+            false,
+            () => {
+              this.openProject();
+            }
+          )
 
-        this.HomeEntryCard(
-          '设置',
-          this.resolveSettingsSummary(),
-          '复盘人设置与家庭存储配置',
-          () => {
-            this.openReviewSettings();
-          }
-        )
+          this.QuickEntryItem(
+            '传',
+            '同步中心',
+            this.resolveSyncShortStatusText(),
+            false,
+            () => {
+              this.openSyncCenter();
+            }
+          )
+
+          this.QuickEntryItem(
+            '设',
+            '设置',
+            this.resolveSettingsStatusText(),
+            false,
+            () => {
+              this.openReviewSettings();
+            }
+          )
+        }
+        .width('100%')
+
+        Column({ space: AppMetrics.space8 }) {
+          Text('当前状态')
+            .fontSize(AppTypography.auxiliary)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .width('100%')
+
+          Text(`复盘库：${this.resolveLibraryStatusText()} · 最近更新 ${this.resolveLastUpdatedText()}`)
+            .fontSize(AppTypography.caption)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.captionLineHeight)
+            .width('100%')
+
+          Text(`同步中心：${this.resolveSyncStatusText()} · 设置：${this.resolveSettingsSummary()}`)
+            .fontSize(AppTypography.caption)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.captionLineHeight)
+            .width('100%')
+        }
+        .padding(AppMetrics.space16)
+        .width('100%')
+        .borderRadius(AppMetrics.cardRadius)
+        .backgroundColor(AppColors.surface)
+        .border({ width: 1, color: AppColors.border })
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space24 })
       .width('100%')
