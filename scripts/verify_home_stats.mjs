@@ -40,6 +40,11 @@ if (!homePageSource.includes("this.StatItem(`${this.projectSummary.recordCount}`
   console.error('HomePage stats must read from projectSummary, not a detached zero-prone dashboard state.');
 }
 
+if (!homePageSource.includes('ReviewProjectService.buildHomeSummary(items)')) {
+  failed = true;
+  console.error('HomePage stats must use the all-history home summary instead of the default-project summary.');
+}
+
 if (homePageSource.includes('this.dashboardStats.totalCount') ||
   homePageSource.includes('this.dashboardStats.validCount') ||
   homePageSource.includes('this.dashboardStats.unsureCount')) {
@@ -136,6 +141,19 @@ function buildGlobalStats(items) {
   return stats;
 }
 
+function buildHomeSummary(items) {
+  return {
+    recordCount: items.length,
+    stats: buildGlobalStats(items),
+    latestItem: [...items].sort((left, right) => {
+      if (right.document.updatedAt !== left.document.updatedAt) {
+        return right.document.updatedAt - left.document.updatedAt;
+      }
+      return right.document.createdAt - left.document.createdAt;
+    })[0]
+  };
+}
+
 const twelveReviewItems = [
   '成立',
   '成立',
@@ -169,8 +187,36 @@ if (stats.totalCount !== 12 || stats.validCount !== 4 || stats.unsureCount !== 5
   console.error(`Unexpected status split: ${JSON.stringify(stats)}`);
 }
 
+const mixedProjectItems = [
+  ['default', '成立', 100],
+  ['imported-project', '不成立', 300],
+  ['legacy-project', '待判断', 200]
+].map(([projectId, judgement, updatedAt], index) => {
+  return {
+    document: {
+      projectId,
+      content: {
+        judgement
+      },
+      createdAt: index + 1,
+      updatedAt
+    },
+    exportedPath: ''
+  };
+});
+
+const homeSummary = buildHomeSummary(mixedProjectItems);
+if (homeSummary.recordCount !== 3 ||
+  homeSummary.stats.validCount !== 1 ||
+  homeSummary.stats.unsureCount !== 1 ||
+  homeSummary.stats.invalidCount !== 1 ||
+  homeSummary.latestItem.document.projectId !== 'imported-project') {
+  failed = true;
+  console.error(`Home summary must include non-default projects: ${JSON.stringify(homeSummary)}`);
+}
+
 if (failed) {
   process.exit(1);
 }
 
-console.log(`home stats: sections=5, total=${stats.totalCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}`);
+console.log(`home stats: sections=5, total=${stats.totalCount}, mixedTotal=${homeSummary.recordCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}`);

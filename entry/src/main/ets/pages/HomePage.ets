@@ -72,7 +72,7 @@ export struct HomePage {
   }
 
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
-    this.projectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
+    this.projectSummary = ReviewProjectService.buildHomeSummary(items);
     this.dashboardStats = ReviewProjectService.buildDashboardStats(items);
   }
 

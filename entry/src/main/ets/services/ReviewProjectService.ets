@@ -55,6 +55,36 @@ function parseReviewDayKey(dayKey: string): number {
   return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
 }
 
+function sortHistoryItems(items: Array<ReviewCardHistoryItem>): Array<ReviewCardHistoryItem> {
+  return [...items].sort((left: ReviewCardHistoryItem, right: ReviewCardHistoryItem): number => {
+    if (right.document.updatedAt !== left.document.updatedAt) {
+      return right.document.updatedAt - left.document.updatedAt;
+    }
+    return right.document.createdAt - left.document.createdAt;
+  });
+}
+
+function buildSummaryFromItems(items: Array<ReviewCardHistoryItem>): ReviewProjectSummary {
+  const summary = createDefaultProjectSummary();
+  const sortedItems: Array<ReviewCardHistoryItem> = sortHistoryItems(items);
+
+  summary.items = sortedItems;
+  summary.recordCount = sortedItems.length;
+  summary.stats = ReviewProjectService.buildGlobalStats(sortedItems);
+  summary.project.reviewIds = sortedItems.map((item: ReviewCardHistoryItem): string => {
+    return getReviewDocumentKey(item.document);
+  });
+
+  if (sortedItems.length > 0) {
+    summary.latestItem = sortedItems[0];
+    summary.latestUpdatedAt = sortedItems[0].document.updatedAt;
+    summary.project.updatedAt = sortedItems[0].document.updatedAt;
+    summary.project.createdAt = sortedItems[sortedItems.length - 1].document.createdAt;
+  }
+
+  return summary;
+}
+
 export class ReviewProjectService {
   static resolvePhotoFileName(document: ReviewCardDocument): string {
     const imageUri: string = typeof document.imageUri === 'string' ? document.imageUri.trim() : '';
@@ -127,30 +157,19 @@ export class ReviewProjectService {
   }
 
   static buildDefaultProjectSummary(items: Array<ReviewCardHistoryItem>): ReviewProjectSummary {
-    const summary = createDefaultProjectSummary();
     const projectItems = items.filter((item: ReviewCardHistoryItem): boolean => {
       return ensureProjectId(item.document) === DEFAULT_PROJECT_ID;
     });
 
-    summary.items = projectItems;
-    summary.recordCount = projectItems.length;
-    summary.stats = ReviewProjectService.buildGlobalStats(projectItems);
-    summary.project.reviewIds = projectItems.map((item: ReviewCardHistoryItem): string => {
-      return getReviewDocumentKey(item.document);
-    });
+    return buildSummaryFromItems(projectItems);
+  }
 
-    if (projectItems.length > 0) {
-      summary.latestItem = projectItems[0];
-      summary.latestUpdatedAt = projectItems[0].document.updatedAt;
-      summary.project.updatedAt = projectItems[0].document.updatedAt;
-      summary.project.createdAt = projectItems[projectItems.length - 1].document.createdAt;
-    }
-
-    return summary;
+  static buildHomeSummary(items: Array<ReviewCardHistoryItem>): ReviewProjectSummary {
+    return buildSummaryFromItems(items);
   }
 
   static buildDashboardStats(items: Array<ReviewCardHistoryItem>): ReviewDashboardStats {
-    const summary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
+    const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items);
     const uniqueDaySet: Set<string> = new Set<string>();
     summary.items.forEach((item: ReviewCardHistoryItem): void => {
       uniqueDaySet.add(normalizeReviewDayKey(item.document.createdAt));
