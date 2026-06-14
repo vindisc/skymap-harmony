@@ -1,56 +1,107 @@
 import fs from 'node:fs';
 
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
+const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
 const settingsPageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewSettingsPage.ets', 'utf8');
-
-const requiredPrimitiveStates = [
-  '@State totalReviewCount: number',
-  '@State validReviewCount: number',
-  '@State unsureReviewCount: number',
-  '@State invalidReviewCount: number'
-];
+const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewProjectService.ets', 'utf8');
 
 let failed = false;
-for (const stateDecl of requiredPrimitiveStates) {
-  if (!homePageSource.includes(stateDecl)) {
-    failed = true;
-    console.error(`HomePage missing primitive state: ${stateDecl}`);
-  }
-}
 
-if (homePageSource.includes('@State overviewStats')) {
-  failed = true;
-  console.error('HomePage must not render overview numbers from object @State overviewStats.');
-}
-
-if (homePageSource.includes('@Builder\n  OverviewStat(label: string, value: number)') ||
-  homePageSource.includes('@Builder\r\n  OverviewStat(label: string, value: number)')) {
-  failed = true;
-  console.error('HomePage overview must not pass changing stat values through @Builder parameters.');
-}
-
-if (!homePageSource.includes('this.totalReviewCount = nextOverviewStats.totalCount')) {
-  failed = true;
-  console.error('HomePage must assign totalReviewCount directly from loaded stats.');
-}
-
-const requiredOverviewBindings = [
-  "HomeOverviewStatCard({ label: '总复盘', value: this.totalReviewCount })",
-  "HomeOverviewStatCard({ label: '成立', value: this.validReviewCount })",
-  "HomeOverviewStatCard({ label: '待判断', value: this.unsureReviewCount })",
-  "HomeOverviewStatCard({ label: '不成立', value: this.invalidReviewCount })"
+const requiredHomeSections = [
+  "title: '摄影复盘'",
+  "Text('开始新的复盘')",
+  "Text('最近一次')",
+  "Text('复盘概览')",
+  "Text('当前状态')"
 ];
 
-for (const binding of requiredOverviewBindings) {
-  if (!homePageSource.includes(binding)) {
+for (const marker of requiredHomeSections) {
+  if (!homePageSource.includes(marker)) {
     failed = true;
-    console.error(`HomePage missing overview stat component binding: ${binding}`);
+    console.error(`HomePage missing section marker: ${marker}`);
   }
+}
+
+if (!homePageSource.includes("label: this.isPickingPhoto ? '打开相册中...' : '开始复盘'")) {
+  if (!homePageSource.includes("label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘'")) {
+    failed = true;
+    console.error('HomePage must expose 开始复盘 quick action state.');
+  }
+}
+
+if (!homePageSource.includes("return this.isHomeStorageConfigured() ? '已配置' : '未配置';")) {
+  failed = true;
+  console.error('HomePage must expose configured/unconfigured home storage state without realtime connection wording.');
+}
+
+if (!homePageSource.includes("this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')") ||
+  !homePageSource.includes("this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')") ||
+  !homePageSource.includes("this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')")) {
+  failed = true;
+  console.error('HomePage stats must read from projectSummary, not a detached zero-prone dashboard state.');
+}
+
+if (!homePageSource.includes('ReviewProjectService.buildHomeSummary(items)')) {
+  failed = true;
+  console.error('HomePage stats must use the all-history home summary instead of the default-project summary.');
+}
+
+if (!homePageSource.includes("@Prop @Watch('refreshHomeData') refreshToken") ||
+  !homePageSource.includes('refreshHomeData(): void') ||
+  !appShellSource.includes('onPageShow(): void') ||
+  !appShellSource.includes('this.refreshHomeIfNeeded();') ||
+  !appShellSource.includes('HomePage({ refreshToken: this.homeRefreshToken })')) {
+  failed = true;
+  console.error('HomePage must reload when AppShell becomes visible again after editor/preview routes.');
+}
+
+if (homePageSource.includes('this.dashboardStats.totalCount') ||
+  homePageSource.includes('this.dashboardStats.validCount') ||
+  homePageSource.includes('this.dashboardStats.unsureCount')) {
+  failed = true;
+  console.error('HomePage must not render review counts from dashboardStats.');
+}
+
+if (homePageSource.includes("0天")) {
+  failed = true;
+  console.error('HomePage must not show 0天 for unreliable streak data.');
+}
+
+if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('this.GrowthStatsPanel()')) {
+  failed = true;
+  console.error('HomePage must render 开始新的复盘 before 复盘概览.');
+}
+
+if (!homePageSource.includes("Text('当前状态')")) {
+  failed = true;
+  console.error('HomePage must keep a compact status summary below the quick actions.');
+}
+
+if (homePageSource.includes('复盘记录：') || homePageSource.includes('最近更新：')) {
+  failed = true;
+  console.error('HomePage status summary must not repeat review count or latest update.');
+}
+
+if (!homePageSource.includes('ReviewSettingsService.loadReviewerName(context)')) {
+  failed = true;
+  console.error('HomePage must load reviewer settings to render the 设置 summary.');
+}
+
+if (!settingsPageSource.includes("Text('设置')")) {
+  failed = true;
+  console.error('ReviewSettingsPage title must be 设置.');
 }
 
 if (settingsPageSource.includes("Button('返回')") || settingsPageSource.includes('router.back()')) {
   failed = true;
   console.error('ReviewSettingsPage must not render or handle an explicit back button.');
+}
+
+if (!projectServiceSource.includes('stats.validCount += 1') ||
+  !projectServiceSource.includes('stats.invalidCount += 1') ||
+  !projectServiceSource.includes('stats.unsureCount += 1')) {
+  failed = true;
+  console.error('ReviewProjectService global stats logic must keep all three judgement buckets.');
 }
 
 function normalizeReviewJudgement(value) {
@@ -100,6 +151,19 @@ function buildGlobalStats(items) {
   return stats;
 }
 
+function buildHomeSummary(items) {
+  return {
+    recordCount: items.length,
+    stats: buildGlobalStats(items),
+    latestItem: [...items].sort((left, right) => {
+      if (right.document.updatedAt !== left.document.updatedAt) {
+        return right.document.updatedAt - left.document.updatedAt;
+      }
+      return right.document.createdAt - left.document.createdAt;
+    })[0]
+  };
+}
+
 const twelveReviewItems = [
   '成立',
   '成立',
@@ -128,22 +192,41 @@ const twelveReviewItems = [
 });
 
 const stats = buildGlobalStats(twelveReviewItems);
-const statusSum = stats.validCount + stats.unsureCount + stats.invalidCount;
-if (stats.totalCount !== 12) {
-  failed = true;
-  console.error(`Expected totalCount=12, got ${stats.totalCount}`);
-}
-if (statusSum !== stats.totalCount) {
-  failed = true;
-  console.error(`Expected status sum=${stats.totalCount}, got ${statusSum}`);
-}
-if (stats.validCount !== 4 || stats.unsureCount !== 5 || stats.invalidCount !== 3) {
+if (stats.totalCount !== 12 || stats.validCount !== 4 || stats.unsureCount !== 5 || stats.invalidCount !== 3) {
   failed = true;
   console.error(`Unexpected status split: ${JSON.stringify(stats)}`);
+}
+
+const mixedProjectItems = [
+  ['default', '成立', 100],
+  ['imported-project', '不成立', 300],
+  ['legacy-project', '待判断', 200]
+].map(([projectId, judgement, updatedAt], index) => {
+  return {
+    document: {
+      projectId,
+      content: {
+        judgement
+      },
+      createdAt: index + 1,
+      updatedAt
+    },
+    exportedPath: ''
+  };
+});
+
+const homeSummary = buildHomeSummary(mixedProjectItems);
+if (homeSummary.recordCount !== 3 ||
+  homeSummary.stats.validCount !== 1 ||
+  homeSummary.stats.unsureCount !== 1 ||
+  homeSummary.stats.invalidCount !== 1 ||
+  homeSummary.latestItem.document.projectId !== 'imported-project') {
+  failed = true;
+  console.error(`Home summary must include non-default projects: ${JSON.stringify(homeSummary)}`);
 }
 
 if (failed) {
   process.exit(1);
 }
 
-console.log(`home stats: total=${stats.totalCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}`);
+console.log(`home stats: sections=5, total=${stats.totalCount}, mixedTotal=${homeSummary.recordCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}`);

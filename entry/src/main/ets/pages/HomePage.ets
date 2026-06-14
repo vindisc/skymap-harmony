@@ -1,67 +1,53 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { EDITOR_PAGE, PREVIEW_PAGE, PROJECT_DETAIL_PAGE, REVIEW_SETTINGS_PAGE } from '../app/AppRouter';
+import {
+  EDITOR_PAGE,
+  PREVIEW_PAGE
+} from '../app/AppRouter';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
-import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
+import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import {
   ReviewProjectSummary,
   createDefaultProjectSummary
 } from '../model/ProjectModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
+import { ReviewDashboardStats } from '../services/ReviewProjectService';
+import { HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
+import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
   AppColors,
   AppMetrics,
+  AppPageHeader,
   AppTypography,
+  EmptyState,
   PrimaryButton,
-  ProjectHomeCard,
   RecentReviewCard
 } from '../components/AppDesign';
 
 @Component
-struct HomeOverviewStatCard {
-  @Prop label: string = '';
-  @Prop value: number = 0;
-
-  build() {
-    Column({ space: AppMetrics.space4 }) {
-      Text(`${this.value}`)
-        .fontSize(AppTypography.auxiliary)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .maxLines(1)
-
-      Text(this.label)
-        .fontSize(AppTypography.caption)
-        .fontColor(AppColors.secondaryText)
-        .maxLines(1)
-    }
-    .justifyContent(FlexAlign.Center)
-    .layoutWeight(1)
-    .height(52)
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceMuted)
-  }
-}
-
-@Entry
-@Component
-struct HomePage {
+export struct HomePage {
   private reloadRequestId: number = 0;
+  @Prop @Watch('refreshHomeData') refreshToken: number = 0;
   @State isPickingPhoto: boolean = false;
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
-  @State totalReviewCount: number = 0;
-  @State validReviewCount: number = 0;
-  @State unsureReviewCount: number = 0;
-  @State invalidReviewCount: number = 0;
+  @State dashboardStats: ReviewDashboardStats = {
+    streakDays: 0
+  };
+  @State reviewerName: string = '';
+  @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
 
   aboutToAppear(): void {
     this.reloadHistory();
   }
 
   onPageShow(): void {
+    this.reloadHistory();
+  }
+
+  refreshHomeData(): void {
     this.reloadHistory();
   }
 
@@ -72,40 +58,43 @@ struct HomePage {
   private async reloadHistory(): Promise<void> {
     const requestId: number = this.reloadRequestId + 1;
     this.reloadRequestId = requestId;
-    const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(this.getAbilityContext());
+    const context = this.getAbilityContext();
+    const results = await Promise.all([
+      ReviewCardHistoryService.load(context),
+      ReviewSettingsService.loadReviewerName(context),
+      HomeStorageService.loadSettings(context)
+    ]);
     if (requestId !== this.reloadRequestId) {
       return;
     }
 
+    const items: Array<ReviewCardHistoryItem> = results[0] as Array<ReviewCardHistoryItem>;
+    const reviewerName: string = results[1] as string;
+    const homeStorageSettings: HomeStorageSettings = results[2] as HomeStorageSettings;
+    this.reviewerName = reviewerName;
+    this.homeStorageSettings = homeStorageSettings;
     this.applyHomeData(items);
   }
 
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
-    const nextProjectSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
-    const nextOverviewStats = ReviewProjectService.buildGlobalStats(items);
-    this.totalReviewCount = nextOverviewStats.totalCount;
-    this.validReviewCount = nextOverviewStats.validCount;
-    this.unsureReviewCount = nextOverviewStats.unsureCount;
-    this.invalidReviewCount = nextOverviewStats.invalidCount;
-    this.projectSummary = nextProjectSummary;
+    this.projectSummary = ReviewProjectService.buildHomeSummary(items);
+    this.dashboardStats = ReviewProjectService.buildDashboardStats(items);
   }
 
-  private openHistory(document: ReviewCardDocument): void {
-    ReviewCardStore.setCurrentDocument(document);
+  private openLatestReview(): void {
+    if (!this.projectSummary.latestItem) {
+      return;
+    }
+    ReviewCardStore.setCurrentDocument(this.projectSummary.latestItem.document);
     router.pushUrl({ url: PREVIEW_PAGE });
   }
 
-  private openProject(): void {
-    router.pushUrl({
-      url: PROJECT_DETAIL_PAGE,
-      params: {
-        projectId: 'default'
-      }
-    });
-  }
-
-  private openReviewSettings(): void {
-    router.pushUrl({ url: REVIEW_SETTINGS_PAGE });
+  private continueLatestReview(): void {
+    if (!this.projectSummary.latestItem) {
+      return;
+    }
+    ReviewCardStore.setCurrentDocument(this.projectSummary.latestItem.document);
+    router.pushUrl({ url: EDITOR_PAGE });
   }
 
   private async startPhotoDraft(): Promise<void> {
@@ -133,169 +122,203 @@ struct HomePage {
     router.pushUrl({ url: EDITOR_PAGE });
   }
 
+  private isHomeStorageConfigured(): boolean {
+    return HomeStorageService.validateSettings(this.homeStorageSettings).length === 0;
+  }
+
+  private resolveSyncStatusText(): string {
+    return this.isHomeStorageConfigured() ? '已配置' : '未配置';
+  }
+
+  private resolveSettingsSummary(): string {
+    return this.reviewerName.length > 0 ? this.reviewerName : '未设置';
+  }
+
+  private resolveStreakText(): string {
+    if (this.projectSummary.recordCount === 0 || this.dashboardStats.streakDays <= 0) {
+      return '—';
+    }
+    return `${this.dashboardStats.streakDays}天`;
+  }
+
+  private resolveStatsHintText(): string {
+    return this.projectSummary.recordCount > 0 ? '每一次判断都会留下可回看的线索。' : '还没有记录，第一条复盘会从这里开始。';
+  }
+
+  @Builder
+  StatItem(value: string, label: string) {
+    Column({ space: AppMetrics.space8 }) {
+      Text(value)
+        .fontSize(AppTypography.statNumber)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.statNumberLineHeight)
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+      Text(label)
+        .fontSize(AppTypography.statLabel)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.statLabelLineHeight)
+        .maxLines(1)
+    }
+    .alignItems(HorizontalAlign.Center)
+    .layoutWeight(1)
+  }
+
+  @Builder
+  GrowthStatsPanel() {
+    Column({ space: AppMetrics.cardGap }) {
+      Text('复盘概览')
+        .fontSize(AppTypography.sectionTitle)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.sectionTitleLineHeight)
+        .width('100%')
+
+      Row({ space: AppMetrics.space8 }) {
+        this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')
+        this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')
+        this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')
+        this.StatItem(this.resolveStreakText(), '连续')
+      }
+      .width('100%')
+    }
+    .padding(AppMetrics.cardPadding)
+    .width('100%')
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+  }
+
   @Builder
   StartReviewPanel() {
-    Column({ space: AppMetrics.space16 }) {
-      Row() {
-        Column() {
-          Text('摄影复盘卡')
-            .fontSize(AppTypography.level1)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.level1LineHeight)
-            .width('100%')
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
+    Column({ space: AppMetrics.cardGap }) {
+      Column({ space: AppMetrics.space8 }) {
+        Text('开始新的复盘')
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .width('100%')
 
-        Button('复盘设置')
-          .height(32)
-          .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
-          .borderRadius(AppMetrics.capsuleRadius)
-          .fontSize(AppTypography.caption)
+        Text('继续训练你的摄影判断。')
+          .fontSize(AppTypography.body)
           .fontColor(AppColors.secondaryText)
-          .backgroundColor(AppColors.surfaceMuted)
-          .onClick(() => {
-            this.openReviewSettings();
-          })
+          .lineHeight(AppTypography.bodyLineHeight)
+          .width('100%')
       }
-      .alignItems(VerticalAlign.Top)
+      .alignItems(HorizontalAlign.Start)
       .width('100%')
 
       PrimaryButton({
-        label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘',
+        label: this.isPickingPhoto ? '打开相册中...' : '开始复盘',
+        isDisabled: this.isPickingPhoto,
         onTap: () => {
           this.startPhotoDraft();
         }
       })
     }
-    .alignItems(HorizontalAlign.Start)
+    .padding(AppMetrics.space16)
     .width('100%')
-  }
-
-  @Builder
-  ReviewOverviewPanel() {
-    Column() {
-      Text('复盘概览')
-        .fontSize(AppTypography.level2)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.level2LineHeight)
-        .width('100%')
-
-      Row({ space: AppMetrics.space8 }) {
-        HomeOverviewStatCard({ label: '总复盘', value: this.totalReviewCount })
-        HomeOverviewStatCard({ label: '成立', value: this.validReviewCount })
-        HomeOverviewStatCard({ label: '待判断', value: this.unsureReviewCount })
-        HomeOverviewStatCard({ label: '不成立', value: this.invalidReviewCount })
-      }
-      .width('100%')
-      .margin({ top: AppMetrics.space12 })
-    }
-    .alignItems(HorizontalAlign.Start)
-    .width('100%')
-    .margin({ top: AppMetrics.space24 })
-  }
-
-  @Builder
-  LatestReviewPanel() {
-    Column() {
-      Text('最近一次')
-        .fontSize(AppTypography.level2)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.level2LineHeight)
-        .width('100%')
-
-      if (this.projectSummary.latestItem) {
-        RecentReviewCard({
-          item: this.projectSummary.latestItem,
-          onTap: () => {
-            if (this.projectSummary.latestItem) {
-              this.openHistory(this.projectSummary.latestItem.document);
-            }
-          }
-        })
-          .margin({ top: AppMetrics.space12 })
-      } else {
-        Row({ space: AppMetrics.space12 }) {
-          Column() {
-            Text('照片')
-              .fontSize(AppTypography.caption)
-              .fontColor(AppColors.mutedText)
-          }
-          .justifyContent(FlexAlign.Center)
-          .width(72)
-          .height(72)
-          .borderRadius(AppMetrics.cardRadius)
-          .backgroundColor(AppColors.surfaceMuted)
-
-          Column({ space: AppMetrics.space4 }) {
-            Text('还没有复盘记录')
-              .fontSize(AppTypography.body)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(AppColors.text)
-              .width('100%')
-            Text('开始第一次复盘后会出现在这里')
-              .fontSize(AppTypography.auxiliary)
-              .fontColor(AppColors.secondaryText)
-              .lineHeight(AppTypography.auxiliaryLineHeight)
-              .width('100%')
-            Text('等待开始')
-              .fontSize(AppTypography.caption)
-              .fontColor(AppColors.mutedText)
-              .width('100%')
-          }
-          .alignItems(HorizontalAlign.Start)
-          .layoutWeight(1)
-        }
-        .alignItems(VerticalAlign.Center)
-        .padding(AppMetrics.space12)
-        .width('100%')
-        .constraintSize({ minHeight: 96 })
-        .borderRadius(AppMetrics.cardRadius)
-        .backgroundColor(AppColors.surface)
-        .border({ width: 1, color: AppColors.border })
-        .margin({ top: AppMetrics.space12 })
-      }
-    }
-    .alignItems(HorizontalAlign.Start)
-    .width('100%')
-    .margin({ top: AppMetrics.space24 })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
   }
 
   build() {
     Scroll() {
-      Column() {
+      Column({ space: AppMetrics.sectionGap }) {
+        AppPageHeader({
+          title: '摄影复盘',
+          subtitle: '看见积累，继续下一次复盘。'
+        })
+
         this.StartReviewPanel()
 
-        this.ReviewOverviewPanel()
+        Column({ space: AppMetrics.cardGap }) {
+          Text('最近一次')
+            .fontSize(AppTypography.sectionTitle)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.sectionTitleLineHeight)
+            .width('100%')
 
-        this.LatestReviewPanel()
+          if (this.projectSummary.latestItem) {
+            Column({ space: AppMetrics.cardGap }) {
+              RecentReviewCard({
+                item: this.projectSummary.latestItem,
+                onTap: () => {
+                  this.openLatestReview();
+                }
+              })
 
-        Column() {
-          Row() {
-            Text('我的项目')
-              .fontSize(AppTypography.level2)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .lineHeight(AppTypography.level2LineHeight)
-          }
-          .width('100%')
+              Row({ space: AppMetrics.space8 }) {
+                Button('查看详情')
+                  .height(AppMetrics.compactControlHeight)
+                  .layoutWeight(1)
+                  .borderRadius(AppMetrics.capsuleRadius)
+                  .fontSize(AppTypography.smallButtonText)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor(AppColors.text)
+                  .backgroundColor(AppColors.surfaceMuted)
+                  .onClick(() => {
+                    this.openLatestReview();
+                  })
 
-          ProjectHomeCard({
-            summary: this.projectSummary,
-            onTap: () => {
-              this.openProject();
+                Button('继续编辑')
+                  .height(AppMetrics.compactControlHeight)
+                  .layoutWeight(1)
+                  .borderRadius(AppMetrics.capsuleRadius)
+                  .fontSize(AppTypography.smallButtonText)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor('#FFFFFF')
+                  .backgroundColor(AppColors.primary)
+                  .onClick(() => {
+                    this.continueLatestReview();
+                  })
+              }
+              .width('100%')
             }
-          })
-            .margin({ top: AppMetrics.space12 })
+          } else {
+            EmptyState({
+              title: '还没有复盘记录',
+              message: '开始第一条复盘后，这里会展示你最近一次的内容。'
+            })
+          }
         }
-        .width('100%')
-        .margin({ top: AppMetrics.space24 })
+
+        this.GrowthStatsPanel()
+
+        Column({ space: AppMetrics.cardGap }) {
+          Text('当前状态')
+            .fontSize(AppTypography.sectionTitle)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.sectionTitleLineHeight)
+            .width('100%')
+
+          Column({ space: AppMetrics.space8 }) {
+            Text(`家庭存储：${this.resolveSyncStatusText()}`)
+              .fontSize(AppTypography.auxiliary)
+              .fontColor(AppColors.text)
+              .width('100%')
+
+            Text(`复盘人：${this.resolveSettingsSummary()}`)
+              .fontSize(AppTypography.auxiliary)
+              .fontColor(AppColors.text)
+              .width('100%')
+          }
+          .padding(AppMetrics.space16)
+          .width('100%')
+          .borderRadius(AppMetrics.cardRadius)
+          .backgroundColor(AppColors.surface)
+          .border({ width: 1, color: AppColors.border })
+        }
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space24 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding })
       .width('100%')
+      .alignItems(HorizontalAlign.Start)
     }
     .width('100%')
     .height('100%')

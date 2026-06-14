@@ -24,7 +24,7 @@ const EDITOR_FIELD_SAFE_TOP_GAP: number = 12;
 const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 26;
 const EDITOR_KEYBOARD_SCROLL_DELAY: number = 220;
 const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 80;
-const EDITOR_PHOTO_TITLE_HEIGHT: number = AppTypography.level2LineHeight;
+const EDITOR_PHOTO_TITLE_HEIGHT: number = AppTypography.pageTitleLineHeight;
 const EDITOR_PHOTO_TITLE_GAP: number = 8;
 const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 8;
 const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 16;
@@ -32,11 +32,11 @@ const EDITOR_PHOTO_MIN_HEIGHT: number = 188;
 const EDITOR_PHOTO_MAX_HEIGHT: number = 300;
 const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.32;
 const EDITOR_TITLE_FIELD_HEIGHT: number = 78;
-const EDITOR_FIELD_LABEL_HEIGHT: number = 18;
+const EDITOR_FIELD_LABEL_HEIGHT: number = AppTypography.inputLabelLineHeight;
 const EDITOR_FIELD_LABEL_GAP: number = 10;
 const EDITOR_FIELD_GAP: number = 18;
-const EDITOR_TEXTAREA_LINE_HEIGHT: number = 28;
-const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
+const EDITOR_TEXTAREA_LINE_HEIGHT: number = AppTypography.inputTextLineHeight;
+const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 24;
 const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 10;
 
 interface EditorPhotoFrameSize {
@@ -435,10 +435,10 @@ struct EditorPage {
   PhotoHeader() {
     Column({ space: EDITOR_PHOTO_TITLE_GAP }) {
       Text('写复盘')
-        .fontSize(AppTypography.level2)
+        .fontSize(AppTypography.pageTitle)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
-        .lineHeight(AppTypography.level2LineHeight)
+        .lineHeight(AppTypography.pageTitleLineHeight)
         .width('100%')
 
       PhotoWritingHero({

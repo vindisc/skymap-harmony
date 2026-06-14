@@ -50,6 +50,25 @@ DEVECO_SDK_HOME=/Applications/DevEco-Studio.app/Contents/sdk \
 --mode module -p module=entry -p product=default assembleHap --no-daemon
 ```
 
+如果 DevEco Studio 或终端里出现：
+
+```text
+Invalid value of 'DEVECO_SDK_HOME' in the system environment path.
+```
+
+优先使用仓库脚本，它会自动：
+
+- 固定 `DEVECO_SDK_HOME=/Applications/DevEco-Studio.app/Contents/sdk`
+- 固定 `JAVA_HOME=/Applications/DevEco-Studio.app/Contents/jbr/Contents/Home`
+- 停掉旧的 hvigor daemon
+- 使用 `--no-daemon` 重新构建
+
+```bash
+bash scripts/build_hap.sh
+```
+
+如果脚本继续通过到 `CompileArkTS` / `PackageHap`，但失败在 `SignHap`，那通常是本机 keystore 或 JDK 签名环境问题，不属于当前代码编译失败。
+
 ## 与 Mac 端 skymap 的关系
 
 Mac 端 skymap 只作为产品参考。本项目不会直接迁移 Swift 代码，第一阶段只迁移：

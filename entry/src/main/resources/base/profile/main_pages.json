@@ -1,9 +1,11 @@
 {
   "src": [
-    "pages/HomePage",
+    "pages/AppShellPage",
     "pages/EditorPage",
     "pages/PreviewPage",
-    "pages/ProjectDetailPage",
-    "pages/ReviewSettingsPage"
+    "pages/HomeStoragePage",
+    "pages/ReviewerProfilePage",
+    "pages/ReviewSettingsPage",
+    "pages/SyncCenterPage"
   ]
 }

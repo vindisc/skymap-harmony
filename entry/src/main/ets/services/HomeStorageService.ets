@@ -1,0 +1,278 @@
+import common from '@ohos.app.ability.common';
+import preferences from '@ohos.data.preferences';
+import { ReviewCardDocument } from '../model/ReviewCardModel';
+import {
+  resolveReviewCardExchangeReviewJsonFileName,
+  stringifyReviewCardExchangeSchemaV1
+} from './ReviewCardExchangeSchema';
+import { HomeStorageSecretService } from './HomeStorageSecretService';
+import { Smb2Client, Smb2UploadOptions } from './Smb2Client';
+
+const PREFERENCES_NAME: string = 'home_storage_settings';
+const USERNAME_KEY: string = 'username';
+const LEGACY_PASSWORD_KEY: string = 'password';
+const REMOTE_DIRECTORY_KEY: string = 'remote_directory';
+const SMB_HOST_KEY: string = 'smb_host';
+const SMB_PORT_KEY: string = 'smb_port';
+const SMB_SHARE_NAME_KEY: string = 'smb_share_name';
+const SMB_DOMAIN_KEY: string = 'smb_domain';
+const LAST_UPLOADED_AT_KEY: string = 'last_uploaded_at';
+const DEFAULT_REMOTE_DIRECTORY: string = '摄影资料库/Reviews';
+const DEFAULT_SMB_PORT: string = '445';
+
+export interface HomeStorageSettings {
+  username: string;
+  password: string;
+  remoteDirectory: string;
+  smbHost: string;
+  smbPort: string;
+  smbShareName: string;
+  smbDomain: string;
+}
+
+export interface HomeStorageOperationResult {
+  success: boolean;
+  remotePath: string;
+  message: string;
+}
+
+function normalizeText(value: string | undefined): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return '';
+}
+
+function normalizeRemoteDirectory(value: string | undefined): string {
+  const trimmed: string = normalizeText(value);
+  if (trimmed.length === 0) {
+    return DEFAULT_REMOTE_DIRECTORY;
+  }
+  return trimmed.replace(/^\/+/g, '').replace(/\/+$/g, '');
+}
+
+function normalizeSmbPort(value: string | undefined): string {
+  const trimmed: string = normalizeText(value);
+  if (trimmed.length === 0) {
+    return DEFAULT_SMB_PORT;
+  }
+  return trimmed;
+}
+
+function normalizeSettings(settings: HomeStorageSettings | undefined): HomeStorageSettings {
+  const source: HomeStorageSettings = settings ? settings : {} as HomeStorageSettings;
+  return {
+    username: normalizeText(source.username),
+    password: normalizeText(source.password),
+    remoteDirectory: normalizeRemoteDirectory(source.remoteDirectory),
+    smbHost: normalizeText(source.smbHost).replace(/^smb:\/\//i, '').replace(/\/+$/g, ''),
+    smbPort: normalizeSmbPort(source.smbPort),
+    smbShareName: normalizeText(source.smbShareName).replace(/^\/+/g, '').replace(/\/+$/g, ''),
+    smbDomain: normalizeText(source.smbDomain)
+  };
+}
+
+function parsePort(value: string): number {
+  const port: number = Number.parseInt(value, 10);
+  if (Number.isNaN(port)) {
+    return 0;
+  }
+  return port;
+}
+
+function createSmbUploadOptions(settings: HomeStorageSettings, fileName: string, body: string): Smb2UploadOptions {
+  return {
+    host: settings.smbHost,
+    port: parsePort(settings.smbPort),
+    shareName: settings.smbShareName,
+    remoteDirectory: settings.remoteDirectory,
+    username: settings.username,
+    password: settings.password,
+    domain: settings.smbDomain,
+    fileName: fileName,
+    content: body
+  };
+}
+
+export class HomeStorageService {
+  private static async getStore(context: common.UIAbilityContext): Promise<preferences.Preferences> {
+    return preferences.getPreferences(context, { name: PREFERENCES_NAME });
+  }
+
+  private static async clearLegacyPassword(store: preferences.Preferences): Promise<void> {
+    try {
+      await store.delete(LEGACY_PASSWORD_KEY);
+    } catch (error) {
+    }
+  }
+
+  private static async migrateLegacyPassword(store: preferences.Preferences): Promise<string> {
+    const legacyPassword = await store.get(LEGACY_PASSWORD_KEY, '');
+    if (typeof legacyPassword !== 'string' || legacyPassword.length === 0) {
+      return '';
+    }
+
+    try {
+      await HomeStorageSecretService.savePassword(legacyPassword);
+      return legacyPassword;
+    } catch (error) {
+      return '';
+    } finally {
+      await HomeStorageService.clearLegacyPassword(store);
+      await store.flush();
+    }
+  }
+
+  static defaultSettings(): HomeStorageSettings {
+    return {
+      username: '',
+      password: '',
+      remoteDirectory: DEFAULT_REMOTE_DIRECTORY,
+      smbHost: '',
+      smbPort: DEFAULT_SMB_PORT,
+      smbShareName: '',
+      smbDomain: ''
+    };
+  }
+
+  static async loadSettings(context: common.UIAbilityContext): Promise<HomeStorageSettings> {
+    try {
+      const store = await HomeStorageService.getStore(context);
+      const username = await store.get(USERNAME_KEY, '');
+      let password = await HomeStorageSecretService.loadPassword();
+      if (password.length === 0) {
+        password = await HomeStorageService.migrateLegacyPassword(store);
+      }
+      const remoteDirectory = await store.get(REMOTE_DIRECTORY_KEY, DEFAULT_REMOTE_DIRECTORY);
+      const smbHost = await store.get(SMB_HOST_KEY, '');
+      const smbPort = await store.get(SMB_PORT_KEY, DEFAULT_SMB_PORT);
+      const smbShareName = await store.get(SMB_SHARE_NAME_KEY, '');
+      const smbDomain = await store.get(SMB_DOMAIN_KEY, '');
+      return normalizeSettings({
+        username: typeof username === 'string' ? username : '',
+        password: password,
+        remoteDirectory: typeof remoteDirectory === 'string' ? remoteDirectory : DEFAULT_REMOTE_DIRECTORY,
+        smbHost: typeof smbHost === 'string' ? smbHost : '',
+        smbPort: typeof smbPort === 'string' ? smbPort : DEFAULT_SMB_PORT,
+        smbShareName: typeof smbShareName === 'string' ? smbShareName : '',
+        smbDomain: typeof smbDomain === 'string' ? smbDomain : ''
+      });
+    } catch (error) {
+      return HomeStorageService.defaultSettings();
+    }
+  }
+
+  static async saveSettings(
+    context: common.UIAbilityContext,
+    settings: HomeStorageSettings
+  ): Promise<HomeStorageSettings> {
+    const normalized: HomeStorageSettings = normalizeSettings(settings);
+    await HomeStorageSecretService.savePassword(normalized.password);
+    const store = await HomeStorageService.getStore(context);
+    await store.put(USERNAME_KEY, normalized.username);
+    await HomeStorageService.clearLegacyPassword(store);
+    await store.put(REMOTE_DIRECTORY_KEY, normalized.remoteDirectory);
+    await store.put(SMB_HOST_KEY, normalized.smbHost);
+    await store.put(SMB_PORT_KEY, normalized.smbPort);
+    await store.put(SMB_SHARE_NAME_KEY, normalized.smbShareName);
+    await store.put(SMB_DOMAIN_KEY, normalized.smbDomain);
+    await store.flush();
+    return normalized;
+  }
+
+  static async loadLastUploadedAt(context: common.UIAbilityContext): Promise<number> {
+    try {
+      const store = await HomeStorageService.getStore(context);
+      const value = await store.get(LAST_UPLOADED_AT_KEY, 0);
+      return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  private static async markLastUploadedAt(context: common.UIAbilityContext, timestamp: number): Promise<void> {
+    const store = await HomeStorageService.getStore(context);
+    await store.put(LAST_UPLOADED_AT_KEY, timestamp);
+    await store.flush();
+  }
+
+  static validateSettings(settings: HomeStorageSettings): string {
+    const normalized: HomeStorageSettings = normalizeSettings(settings);
+    const port: number = parsePort(normalized.smbPort);
+    if (normalized.smbHost.length === 0) {
+      return '请先填写 SMB 地址或 IP';
+    }
+    if (port <= 0 || port > 65535) {
+      return 'SMB 端口需要在 1-65535 之间';
+    }
+    if (normalized.smbShareName.length === 0) {
+      return '请先填写共享目录';
+    }
+    return '';
+  }
+
+  static async testConnection(settings: HomeStorageSettings): Promise<HomeStorageOperationResult> {
+    const normalized: HomeStorageSettings = normalizeSettings(settings);
+    const validationMessage: string = HomeStorageService.validateSettings(normalized);
+    if (validationMessage.length > 0) {
+      return {
+        success: false,
+        remotePath: '',
+        message: validationMessage
+      };
+    }
+
+    const client: Smb2Client = new Smb2Client();
+    try {
+      await client.testConnection(createSmbUploadOptions(normalized, 'connection-test.review.json', '{}'));
+      return {
+        success: true,
+        remotePath: `\\\\${normalized.smbHost}\\${normalized.smbShareName}`,
+        message: '家庭存储连接成功'
+      };
+    } catch (error) {
+      await client.close();
+      return {
+        success: false,
+        remotePath: `\\\\${normalized.smbHost}\\${normalized.smbShareName}`,
+        message: error instanceof Error ? error.message : '家庭存储连接失败，请检查地址、账号和共享目录'
+      };
+    }
+  }
+
+  static async uploadReviewJson(
+    context: common.UIAbilityContext,
+    document: ReviewCardDocument,
+    reviewerText: string = ''
+  ): Promise<HomeStorageOperationResult> {
+    const settings: HomeStorageSettings = await HomeStorageService.loadSettings(context);
+    const validationMessage: string = HomeStorageService.validateSettings(settings);
+    if (validationMessage.length > 0) {
+      return {
+        success: false,
+        remotePath: '',
+        message: validationMessage
+      };
+    }
+
+    const fileName: string = resolveReviewCardExchangeReviewJsonFileName(document);
+    const body: string = stringifyReviewCardExchangeSchemaV1(document, reviewerText);
+    const client: Smb2Client = new Smb2Client();
+    try {
+      const remotePath: string = await client.uploadText(createSmbUploadOptions(settings, fileName, body));
+      await HomeStorageService.markLastUploadedAt(context, Date.now());
+      return {
+        success: true,
+        remotePath: remotePath,
+        message: 'review.json 已上传到家庭存储'
+      };
+    } catch (error) {
+      await client.close();
+      return {
+        success: false,
+        remotePath: `\\\\${settings.smbHost}\\${settings.smbShareName}\\${settings.remoteDirectory}\\${fileName}`,
+        message: error instanceof Error ? error.message : '上传家庭存储失败，请检查网络、账号和目录'
+      };
+    }
+  }
+}

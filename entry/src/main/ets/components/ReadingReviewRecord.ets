@@ -32,8 +32,8 @@ export struct ReadingReviewRecord {
       .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.secondaryText)
-      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: AppMetrics.space4, bottom: AppMetrics.space4 })
-      .borderRadius(AppMetrics.space4)
+      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: AppMetrics.space8, bottom: AppMetrics.space8 })
+      .borderRadius(AppMetrics.cardRadius)
       .backgroundColor(AppColors.surfaceMuted)
   }
 
@@ -46,7 +46,7 @@ export struct ReadingReviewRecord {
           .color(AppColors.border)
           .opacity(0.18)
           .width('100%')
-          .margin({ bottom: AppMetrics.space12 })
+          .margin({ bottom: AppMetrics.space16 })
       }
 
       Text(label)
@@ -93,7 +93,7 @@ export struct ReadingReviewRecord {
           .wordBreak(WordBreak.BREAK_WORD)
           .margin({ top: AppMetrics.space24 })
 
-        Row({ space: AppMetrics.space12 }) {
+        Row({ space: AppMetrics.space16 }) {
           Text(formatReviewTime(this.document.updatedAt))
             .fontSize(AppTypography.auxiliary)
             .fontColor(AppColors.secondaryText)
@@ -104,7 +104,7 @@ export struct ReadingReviewRecord {
         }
         .alignItems(VerticalAlign.Center)
         .width('100%')
-        .margin({ top: AppMetrics.space12 })
+        .margin({ top: AppMetrics.space16 })
 
         Column() {
           if (this.hasValue(this.document.content.visualFocus)) {

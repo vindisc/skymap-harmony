@@ -69,6 +69,29 @@ export function resolveReviewCardExchangeFileName(document: ReviewCardDocument):
   }
 }
 
+function removeLastFileExtension(fileName: string): string {
+  const dotIndex: number = fileName.lastIndexOf('.');
+  if (dotIndex > 0) {
+    return fileName.slice(0, dotIndex);
+  }
+  return fileName;
+}
+
+function sanitizeReviewJsonBaseName(fileName: string): string {
+  const baseName: string = removeLastFileExtension(fileName).trim();
+  return baseName.replace(/[\\/:*?"<>|\r\n\t]+/g, '-').trim();
+}
+
+export function resolveReviewCardExchangeReviewJsonFileName(document: ReviewCardDocument): string {
+  const sourceFileName: string = sanitizeReviewJsonBaseName(resolveReviewCardExchangeFileName(document));
+  if (sourceFileName.length > 0) {
+    return `${sourceFileName}.review.json`;
+  }
+
+  const timestamp: number = document.updatedAt > 0 ? document.updatedAt : Date.now();
+  return `review-${timestamp}.json`;
+}
+
 export function createReviewCardExchangeSchemaV1(
   document: ReviewCardDocument,
   reviewerText: string = ''

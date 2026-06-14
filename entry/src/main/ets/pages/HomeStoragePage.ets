@@ -2,13 +2,13 @@ import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
-import { AppColors, AppMetrics, AppTypography, PrimaryButton } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppPageHeader, AppTypography, PrimaryButton } from '../components/AppDesign';
 import {
   HomeStorageOperationResult,
   HomeStorageService,
   HomeStorageSettings
 } from '../services/HomeStorageService';
-import { ReviewSettingsService } from '../services/ReviewSettingsService';
+import { formatReviewTime } from '../utils/ImageLayoutUtils';
 
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
@@ -18,7 +18,7 @@ const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
 
 @Entry
 @Component
-struct ReviewSettingsPage {
+struct HomeStoragePage {
   private settingsScroller: Scroller = new Scroller();
   private hostWindow: window.Window | null = null;
   private keyboardHeightChangeCallback: ((height: number) => void) | null = null;
@@ -26,7 +26,6 @@ struct ReviewSettingsPage {
   private scrollRequestId: number = 0;
   private isPageAlive: boolean = false;
   private loadRequestId: number = 0;
-  @State reviewerName: string = '';
   @State homeStorageHost: string = '';
   @State homeStoragePort: string = '';
   @State homeStorageShareName: string = '';
@@ -38,6 +37,7 @@ struct ReviewSettingsPage {
   @State isTestingHomeStorage: boolean = false;
   @State keyboardHeight: number = 0;
   @State focusedInputIndex: number = -1;
+  @State lastUploadedAt: number = 0;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -107,12 +107,16 @@ struct ReviewSettingsPage {
   private async loadSettings(): Promise<void> {
     const requestId = this.loadRequestId + 1;
     this.loadRequestId = requestId;
-    const reviewerName = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
-    const homeStorageSettings = await HomeStorageService.loadSettings(this.getAbilityContext());
+    const context = this.getAbilityContext();
+    const results = await Promise.all([
+      HomeStorageService.loadSettings(context),
+      HomeStorageService.loadLastUploadedAt(context)
+    ]);
     if (requestId !== this.loadRequestId) {
       return;
     }
-    this.reviewerName = reviewerName;
+
+    const homeStorageSettings = results[0] as HomeStorageSettings;
     this.homeStorageHost = homeStorageSettings.smbHost;
     this.homeStoragePort = homeStorageSettings.smbPort;
     this.homeStorageShareName = homeStorageSettings.smbShareName;
@@ -120,6 +124,7 @@ struct ReviewSettingsPage {
     this.homeStorageUsername = homeStorageSettings.username;
     this.homeStoragePassword = homeStorageSettings.password;
     this.homeStorageDomain = homeStorageSettings.smbDomain;
+    this.lastUploadedAt = results[1] as number;
   }
 
   private currentHomeStorageSettings(): HomeStorageSettings {
@@ -141,7 +146,6 @@ struct ReviewSettingsPage {
 
     this.isSaving = true;
     try {
-      this.reviewerName = await ReviewSettingsService.saveReviewerName(this.getAbilityContext(), this.reviewerName);
       const homeStorageSettings = await HomeStorageService.saveSettings(
         this.getAbilityContext(),
         this.currentHomeStorageSettings()
@@ -153,7 +157,7 @@ struct ReviewSettingsPage {
       this.homeStorageUsername = homeStorageSettings.username;
       this.homeStoragePassword = homeStorageSettings.password;
       this.homeStorageDomain = homeStorageSettings.smbDomain;
-      promptAction.showToast({ message: '已保存设置' });
+      promptAction.showToast({ message: '已保存家庭存储设置' });
     } catch (error) {
       promptAction.showToast({ message: '保存失败，请稍后重试' });
     } finally {
@@ -211,22 +215,12 @@ struct ReviewSettingsPage {
     }, SETTINGS_INPUT_SCROLL_DELAY);
   }
 
-  @Builder
-  Header() {
-    Row() {
-      Blank()
+  private resolveConnectionStatusText(): string {
+    return HomeStorageService.validateSettings(this.currentHomeStorageSettings()).length === 0 ? '已配置' : '未配置';
+  }
 
-      Text('设置')
-        .fontSize(AppTypography.pageTitle)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.pageTitleLineHeight)
-
-      Blank()
-    }
-    .alignItems(VerticalAlign.Center)
-    .width('100%')
-    .height(AppTypography.pageTitleLineHeight)
+  private resolveLastUploadedText(): string {
+    return this.lastUploadedAt > 0 ? formatReviewTime(this.lastUploadedAt) : '暂无上传记录';
   }
 
   @Builder
@@ -296,25 +290,45 @@ struct ReviewSettingsPage {
       })
   }
 
+  @Builder
+  StatusRow(label: string, value: string) {
+    Row() {
+      Text(label)
+        .fontSize(AppTypography.auxiliary)
+        .fontColor(AppColors.secondaryText)
+
+      Blank()
+
+      Text(value)
+        .fontSize(AppTypography.auxiliary)
+        .fontColor(AppColors.text)
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+    }
+    .width('100%')
+  }
+
   build() {
     Column() {
-      this.Header()
+      AppPageHeader({
+        title: '家庭存储',
+        subtitle: '管理 SMB 设置、测试连接，并查看最近上传状态。'
+      })
 
       Scroll(this.settingsScroller) {
         Column({ space: AppMetrics.sectionGap }) {
-          this.SettingsInput('复盘人', this.reviewerName, '可留空', (value: string) => {
-            this.reviewerName = value;
-          }, false, 0)
+          Column({ space: AppMetrics.cardGap }) {
+            this.StatusRow('连接状态', this.resolveConnectionStatusText())
+            this.StatusRow('最近上传时间', this.resolveLastUploadedText())
+          }
+          .padding(AppMetrics.cardPadding)
+          .width('100%')
+          .borderRadius(AppMetrics.cardRadius)
+          .backgroundColor(AppColors.surface)
+          .border({ width: 1, color: AppColors.border })
 
           Column({ space: AppMetrics.cardGap }) {
-            Text('家庭存储')
-              .fontSize(AppTypography.sectionTitle)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .lineHeight(AppTypography.sectionTitleLineHeight)
-              .width('100%')
-
-            Text('用于把当前复盘导出的 review.json 直接上传到家庭存储，不替代系统文件导出。')
+            Text('用于把复盘里的 review.json 上传到家庭存储，配置项与导出菜单保持一致。')
               .fontSize(AppTypography.auxiliary)
               .fontColor(AppColors.secondaryText)
               .lineHeight(AppTypography.auxiliaryLineHeight)
@@ -322,37 +336,37 @@ struct ReviewSettingsPage {
 
             this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
               this.homeStorageHost = value;
-            }, false, 1)
+            }, false, 0)
 
             this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
               this.homeStoragePort = value;
-            }, false, 2)
+            }, false, 1)
 
             this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
               this.homeStorageShareName = value;
-            }, false, 3)
+            }, false, 2)
 
             this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '摄影资料库/Reviews', (value: string) => {
               this.homeStorageRemoteDirectory = value;
-            }, false, 4)
+            }, false, 3)
 
             this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
               this.homeStorageUsername = value;
-            }, false, 5)
+            }, false, 4)
 
-            this.SettingsInput('密码或凭据', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
+            this.SettingsInput('密码', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
               this.homeStoragePassword = value;
-            }, true, 6)
+            }, true, 5)
 
             this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
               this.homeStorageDomain = value;
-            }, false, 7)
+            }, false, 6)
           }
           .alignItems(HorizontalAlign.Start)
           .width('100%')
 
           Column({ space: AppMetrics.cardGap }) {
-            this.SecondaryActionButton(this.isTestingHomeStorage ? '测试中...' : '测试家庭存储连接', this.isTestingHomeStorage, () => {
+            this.SecondaryActionButton(this.isTestingHomeStorage ? '测试连接中...' : '测试连接', this.isTestingHomeStorage, () => {
               this.testHomeStorage();
             })
 
@@ -367,7 +381,6 @@ struct ReviewSettingsPage {
           .width('100%')
         }
         .alignItems(HorizontalAlign.Start)
-        .width('100%')
         .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
       }
     }
