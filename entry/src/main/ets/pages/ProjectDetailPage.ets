@@ -83,11 +83,11 @@ export struct ProjectDetailPage {
   }
 
   private resolveFilterChipTextColor(value: string): string {
-    return this.isFilterSelected(value) ? '#FFFFFF' : AppColors.secondaryText;
+    return this.isFilterSelected(value) ? AppColors.text : AppColors.secondaryText;
   }
 
   private resolveFilterChipBackgroundColor(value: string): string {
-    return this.isFilterSelected(value) ? AppColors.primary : '#00000000';
+    return this.isFilterSelected(value) ? AppColors.surfaceMuted : '#00000000';
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -146,7 +146,7 @@ export struct ProjectDetailPage {
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
-      .border({ width: this.isFilterSelected(value) ? 0 : 1, color: AppColors.border })
+      .border({ width: 1, color: this.isFilterSelected(value) ? '#C8C0B3' : AppColors.border })
       .onClick(() => {
         this.decisionFilter = value;
         this.applyFilters();
@@ -175,7 +175,7 @@ export struct ProjectDetailPage {
           TextInput({ text: this.searchText, placeholder: '搜索标题、核心关系、卡点、文件名' })
             .height(AppMetrics.searchHeight)
             .borderRadius(AppMetrics.cardRadius)
-            .fontSize(AppTypography.listSubtitle)
+            .fontSize(AppTypography.inputPlaceholder)
             .fontColor(AppColors.text)
             .placeholderColor('#9AA1AB')
             .backgroundColor(AppColors.surface)

@@ -36,7 +36,7 @@ struct AppShellPage {
   }
 
   private resolveTabLabelColor(key: RootTabKey): string {
-    return this.isCurrentTab(key) ? AppColors.text : AppColors.secondaryText;
+    return this.isCurrentTab(key) ? AppColors.text : AppColors.mutedText;
   }
 
   private resolveTabLabelWeight(key: RootTabKey): number {
@@ -96,7 +96,7 @@ struct AppShellPage {
           this.TabButton(item);
         }, (item: RootTabItem) => item.key)
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space8, bottom: AppMetrics.space8 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 6, bottom: 6 })
       .width('100%')
       .height(AppMetrics.tabBarHeight)
       .backgroundColor(AppColors.pageBackground)

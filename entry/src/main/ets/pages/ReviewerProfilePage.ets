@@ -46,16 +46,16 @@ struct ReviewerProfilePage {
 
       Column({ space: AppMetrics.cardGap }) {
         Text('复盘人')
-          .fontSize(AppTypography.cardTitle)
+          .fontSize(AppTypography.inputLabel)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
-          .lineHeight(AppTypography.cardTitleLineHeight)
+          .lineHeight(AppTypography.inputLabelLineHeight)
           .width('100%')
 
         TextInput({ text: this.reviewerName, placeholder: '可留空' })
           .height(AppMetrics.controlHeight)
           .borderRadius(AppMetrics.cardRadius)
-          .fontSize(AppTypography.body)
+          .fontSize(AppTypography.inputText)
           .fontColor(AppColors.text)
           .placeholderColor('#9AA1AB')
           .backgroundColor(AppColors.surfaceMuted)

@@ -4,6 +4,7 @@ import path from 'node:path';
 const root = process.cwd();
 const appDesignSource = fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8');
 const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
+const designTokensSource = fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8');
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
 const projectDetailSource = fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8');
 const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
@@ -22,24 +23,45 @@ function assertIncludes(source, marker, message) {
 }
 
 const requiredTokens = [
-  'static readonly pageTitle: number = 34;',
-  'static readonly pageSubtitle: number = 18;',
-  'static readonly sectionTitle: number = 20;',
-  'static readonly cardTitle: number = 18;',
-  'static readonly body: number = 16;',
-  'static readonly caption: number = 14;',
-  'static readonly meta: number = 13;',
-  'static readonly buttonText: number = 17;',
-  'static readonly tabLabel: number = 12;',
-  'static readonly pageTopPadding: number = 40;',
-  'static readonly searchHeight: number = 44;',
-  'static readonly chipHeight: number = 36;',
-  'static readonly tabBarHeight: number = 64;',
-  'static readonly listThumbnailSize: number = 72;'
+  'static readonly pageTitle: number = TypographyTokens.PageTitle;',
+  'static readonly pageSubtitle: number = TypographyTokens.PageSubtitle;',
+  'static readonly sectionTitle: number = TypographyTokens.SectionTitle;',
+  'static readonly cardTitle: number = TypographyTokens.CardTitle;',
+  'static readonly body: number = TypographyTokens.CardBody;',
+  'static readonly caption: number = TypographyTokens.SectionSubtitle;',
+  'static readonly meta: number = TypographyTokens.CardMeta;',
+  'static readonly buttonText: number = TypographyTokens.ButtonText;',
+  'static readonly tabLabel: number = TypographyTokens.TabLabel;',
+  'static readonly pageTopPadding: number = 28;',
+  'static readonly searchHeight: number = LayoutTokens.SearchHeight;',
+  'static readonly chipHeight: number = LayoutTokens.ChipHeight;',
+  'static readonly tabBarHeight: number = LayoutTokens.TabBarHeight;',
+  'static readonly listThumbnailSize: number = LayoutTokens.ListThumbnailSize;'
 ];
 
 for (const marker of requiredTokens) {
   assertIncludes(appDesignSource, marker, `Compact token missing: ${marker}`);
+}
+
+const requiredDesignTokens = [
+  'static readonly PageTitle: number = 30;',
+  'static readonly PageSubtitle: number = 16;',
+  'static readonly SectionTitle: number = 20;',
+  'static readonly CardTitle: number = 18;',
+  'static readonly CardBody: number = 15;',
+  'static readonly ListTitle: number = 17;',
+  'static readonly ListBody: number = 14;',
+  'static readonly CardMeta: number = 13;',
+  'static readonly ButtonText: number = 16;',
+  'static readonly TabLabel: number = 12;',
+  'static readonly SearchHeight: number = 42;',
+  'static readonly ChipHeight: number = 32;',
+  'static readonly TabBarHeight: number = 60;',
+  'static readonly ListThumbnailSize: number = 72;'
+];
+
+for (const marker of requiredDesignTokens) {
+  assertIncludes(designTokensSource, marker, `DesignTokens missing: ${marker}`);
 }
 
 const forbiddenOversizedTokens = [
@@ -82,7 +104,7 @@ for (const filePath of sourceFiles) {
   let match = fontSizeRegex.exec(source);
   while (match !== null) {
     const size = Number(match[1]);
-    if (size > 36) {
+    if (size >= 36) {
       failed = true;
       console.error(`Oversized literal font size ${size} in ${path.relative(root, filePath)}`);
     }
@@ -108,7 +130,7 @@ assertIncludes(appShellSource, "$r('app.media.tab_home_active')", 'TabBar must u
 assertIncludes(appShellSource, "$r('app.media.tab_library_active')", 'TabBar must use the library line icon resource.');
 assertIncludes(appShellSource, "$r('app.media.tab_user_active')", 'TabBar must use the user line icon resource.');
 assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use 12fp Compact token.');
-assertIncludes(appShellSource, '.height(AppMetrics.tabBarHeight)', 'TabBar must use 64vp Compact token.');
+assertIncludes(appShellSource, '.height(AppMetrics.tabBarHeight)', 'TabBar must use 60vp Compact token.');
 
 const iconFiles = [
   'tab_home.svg',
@@ -133,11 +155,11 @@ if (homePageSource.includes('0天')) {
   console.error('Home page must not render 0天.');
 }
 
-assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use 44vp Compact token.');
-assertIncludes(projectDetailSource, '.height(AppMetrics.chipHeight)', 'Library chips must use 36vp Compact token.');
+assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use 42vp Compact token.');
+assertIncludes(projectDetailSource, '.height(AppMetrics.chipHeight)', 'Library chips must use 32vp Compact token.');
 assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use 72vp thumbnail token.');
-assertIncludes(appDesignSource, '.fontSize(AppTypography.cardTitle)', 'Card/list titles must use 18fp Compact token.');
-assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use 15fp Compact token.');
+assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use 17fp Compact token.');
+assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use 14fp Compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'Status tags must use 13fp Compact token.');
 
 const topAlignedPages = [

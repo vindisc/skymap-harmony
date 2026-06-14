@@ -124,13 +124,14 @@ export struct MyPage {
       .layoutWeight(1)
 
       Text('>')
-        .fontSize(AppTypography.auxiliary)
+        .fontSize(AppTypography.meta)
         .fontColor(AppColors.mutedText)
+        .opacity(0.56)
     }
     .alignItems(VerticalAlign.Center)
     .padding(AppMetrics.cardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 72, maxHeight: 84 })
+    .constraintSize({ minHeight: 68, maxHeight: 76 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: '#ECE8E0' })
@@ -151,9 +152,9 @@ export struct MyPage {
           .width('100%')
 
         Text('摄影复盘 Beta 用户')
-          .fontSize(AppTypography.caption)
+          .fontSize(AppTypography.body)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.captionLineHeight)
+          .lineHeight(AppTypography.bodyLineHeight)
           .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
@@ -198,20 +199,8 @@ export struct MyPage {
           )
         }
 
-        Column({ space: AppMetrics.cardGap }) {
-          this.SectionTitle('关于')
-
-          Column({ space: AppMetrics.space8 }) {
-            this.StatusRow('版本号', APP_VERSION_TEXT)
-            this.StatusRow('Build', APP_BUILD_TEXT)
-            this.StatusRow('产品说明', 'Skymap Harmony 摄影复盘 Beta')
-          }
-          .padding(AppMetrics.cardPadding)
-          .width('100%')
-          .borderRadius(AppMetrics.cardRadius)
-          .backgroundColor(AppColors.surface)
-          .border({ width: 1, color: '#ECE8E0' })
-        }
+        this.LinkRow('关于', `${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`, () => {
+        })
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')

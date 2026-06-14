@@ -152,9 +152,9 @@ export struct HomePage {
         .textOverflow({ overflow: TextOverflow.Ellipsis })
 
       Text(label)
-        .fontSize(AppTypography.meta)
+        .fontSize(AppTypography.statLabel)
         .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.metaLineHeight)
+        .lineHeight(AppTypography.statLabelLineHeight)
         .maxLines(1)
     }
     .alignItems(HorizontalAlign.Center)
@@ -171,7 +171,7 @@ export struct HomePage {
         .lineHeight(AppTypography.sectionTitleLineHeight)
         .width('100%')
 
-      Row({ space: AppMetrics.space16 }) {
+      Row({ space: AppMetrics.space8 }) {
         this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')
         this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')
         this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')
@@ -253,7 +253,7 @@ export struct HomePage {
                   .height(AppMetrics.compactControlHeight)
                   .layoutWeight(1)
                   .borderRadius(AppMetrics.capsuleRadius)
-                  .fontSize(AppTypography.buttonText)
+                  .fontSize(AppTypography.smallButtonText)
                   .fontWeight(FontWeight.Medium)
                   .fontColor(AppColors.text)
                   .backgroundColor(AppColors.surfaceMuted)
@@ -265,7 +265,7 @@ export struct HomePage {
                   .height(AppMetrics.compactControlHeight)
                   .layoutWeight(1)
                   .borderRadius(AppMetrics.capsuleRadius)
-                  .fontSize(AppTypography.buttonText)
+                  .fontSize(AppTypography.smallButtonText)
                   .fontWeight(FontWeight.Medium)
                   .fontColor('#FFFFFF')
                   .backgroundColor(AppColors.primary)

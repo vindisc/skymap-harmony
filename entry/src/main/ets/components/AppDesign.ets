@@ -7,6 +7,7 @@ import {
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { getReviewProjectExcerpt } from '../services/ReviewProjectService';
 import { formatReviewTime, getImageRatioLabel, getImageSizeText, hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
+import { LayoutTokens, LineHeightTokens, TypographyTokens } from '../theme/DesignTokens';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
@@ -30,10 +31,10 @@ export class AppMetrics {
   static readonly space16: number = 16;
   static readonly space24: number = 24;
   static readonly space32: number = 32;
-  static readonly pagePadding: number = 24;
-  static readonly pageTopPadding: number = 40;
-  static readonly pageBottomPadding: number = 24;
-  static readonly sectionGap: number = 24;
+  static readonly pagePadding: number = 20;
+  static readonly pageTopPadding: number = 28;
+  static readonly pageBottomPadding: number = 20;
+  static readonly sectionGap: number = 18;
   static readonly cardGap: number = 12;
   static readonly cardPadding: number = 16;
   static readonly listCardPadding: number = 12;
@@ -41,49 +42,63 @@ export class AppMetrics {
   static readonly buttonRadius: number = 8;
   static readonly capsuleRadius: number = 16;
   static readonly panelRadius: number = 8;
-  static readonly controlHeight: number = 48;
-  static readonly searchHeight: number = 44;
-  static readonly compactControlHeight: number = 40;
-  static readonly chipHeight: number = 36;
-  static readonly tabBarHeight: number = 64;
-  static readonly tabBarItemHeight: number = 56;
-  static readonly tabIconSize: number = 20;
-  static readonly listThumbnailSize: number = 72;
+  static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
+  static readonly searchHeight: number = LayoutTokens.SearchHeight;
+  static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
+  static readonly chipHeight: number = LayoutTokens.ChipHeight;
+  static readonly tabBarHeight: number = LayoutTokens.TabBarHeight;
+  static readonly tabBarItemHeight: number = LayoutTokens.TabBarItemHeight;
+  static readonly tabIconSize: number = TypographyTokens.TabIcon;
+  static readonly listThumbnailSize: number = LayoutTokens.ListThumbnailSize;
+  static readonly listCardMinHeight: number = LayoutTokens.ListCardMinHeight;
+  static readonly listCardMaxHeight: number = LayoutTokens.ListCardMaxHeight;
 }
 
 export class AppTypography {
-  static readonly pageTitle: number = 34;
-  static readonly pageTitleLineHeight: number = 42;
-  static readonly pageSubtitle: number = 18;
-  static readonly pageSubtitleLineHeight: number = 26;
-  static readonly sectionTitle: number = 20;
-  static readonly sectionTitleLineHeight: number = 28;
-  static readonly cardTitle: number = 18;
-  static readonly cardTitleLineHeight: number = 24;
-  static readonly body: number = 16;
-  static readonly bodyLineHeight: number = 24;
-  static readonly listSubtitle: number = 15;
-  static readonly listSubtitleLineHeight: number = 22;
-  static readonly caption: number = 14;
-  static readonly captionLineHeight: number = 20;
-  static readonly meta: number = 13;
-  static readonly metaLineHeight: number = 18;
-  static readonly buttonText: number = 17;
-  static readonly buttonTextLineHeight: number = 24;
-  static readonly tabLabel: number = 12;
-  static readonly tabLabelLineHeight: number = 16;
-  static readonly profileName: number = 26;
-  static readonly profileNameLineHeight: number = 32;
-  static readonly statNumber: number = 24;
-  static readonly statNumberLineHeight: number = 30;
-  static readonly level1: number = 34;
-  static readonly level1LineHeight: number = 42;
-  static readonly level2: number = 20;
-  static readonly level2LineHeight: number = 28;
-  static readonly level3: number = 18;
-  static readonly level3LineHeight: number = 24;
-  static readonly auxiliary: number = 14;
-  static readonly auxiliaryLineHeight: number = 20;
+  static readonly pageTitle: number = TypographyTokens.PageTitle;
+  static readonly pageTitleLineHeight: number = LineHeightTokens.PageTitle;
+  static readonly pageSubtitle: number = TypographyTokens.PageSubtitle;
+  static readonly pageSubtitleLineHeight: number = LineHeightTokens.PageSubtitle;
+  static readonly sectionTitle: number = TypographyTokens.SectionTitle;
+  static readonly sectionTitleLineHeight: number = LineHeightTokens.SectionTitle;
+  static readonly sectionSubtitle: number = TypographyTokens.SectionSubtitle;
+  static readonly sectionSubtitleLineHeight: number = LineHeightTokens.SectionSubtitle;
+  static readonly cardTitle: number = TypographyTokens.CardTitle;
+  static readonly cardTitleLineHeight: number = LineHeightTokens.CardTitle;
+  static readonly body: number = TypographyTokens.CardBody;
+  static readonly bodyLineHeight: number = LineHeightTokens.CardBody;
+  static readonly listTitle: number = TypographyTokens.ListTitle;
+  static readonly listTitleLineHeight: number = LineHeightTokens.ListTitle;
+  static readonly listSubtitle: number = TypographyTokens.ListBody;
+  static readonly listSubtitleLineHeight: number = LineHeightTokens.ListBody;
+  static readonly caption: number = TypographyTokens.SectionSubtitle;
+  static readonly captionLineHeight: number = LineHeightTokens.SectionSubtitle;
+  static readonly meta: number = TypographyTokens.CardMeta;
+  static readonly metaLineHeight: number = LineHeightTokens.CardMeta;
+  static readonly buttonText: number = TypographyTokens.ButtonText;
+  static readonly buttonTextLineHeight: number = LineHeightTokens.ButtonText;
+  static readonly smallButtonText: number = TypographyTokens.SmallButtonText;
+  static readonly inputLabel: number = TypographyTokens.InputLabel;
+  static readonly inputLabelLineHeight: number = LineHeightTokens.InputLabel;
+  static readonly inputText: number = TypographyTokens.InputText;
+  static readonly inputTextLineHeight: number = LineHeightTokens.InputText;
+  static readonly inputPlaceholder: number = TypographyTokens.InputPlaceholder;
+  static readonly tabLabel: number = TypographyTokens.TabLabel;
+  static readonly tabLabelLineHeight: number = LineHeightTokens.TabLabel;
+  static readonly profileName: number = 24;
+  static readonly profileNameLineHeight: number = 30;
+  static readonly statNumber: number = TypographyTokens.StatNumber;
+  static readonly statNumberLineHeight: number = LineHeightTokens.StatNumber;
+  static readonly statLabel: number = TypographyTokens.StatLabel;
+  static readonly statLabelLineHeight: number = LineHeightTokens.StatLabel;
+  static readonly level1: number = TypographyTokens.PageTitle;
+  static readonly level1LineHeight: number = LineHeightTokens.PageTitle;
+  static readonly level2: number = TypographyTokens.SectionTitle;
+  static readonly level2LineHeight: number = LineHeightTokens.SectionTitle;
+  static readonly level3: number = TypographyTokens.CardTitle;
+  static readonly level3LineHeight: number = LineHeightTokens.CardTitle;
+  static readonly auxiliary: number = TypographyTokens.ListBody;
+  static readonly auxiliaryLineHeight: number = LineHeightTokens.ListBody;
 }
 
 @Component
@@ -95,7 +110,7 @@ export struct AppPageHeader {
     Column() {
       Text(this.title)
         .fontSize(AppTypography.pageTitle)
-        .fontWeight(FontWeight.Bold)
+        .fontWeight(700)
         .fontColor(AppColors.text)
         .lineHeight(AppTypography.pageTitleLineHeight)
         .width('100%')
@@ -150,7 +165,7 @@ export struct SecondaryButton {
       .height(AppMetrics.compactControlHeight)
       .width('100%')
       .borderRadius(AppMetrics.capsuleRadius)
-      .fontSize(AppTypography.caption)
+      .fontSize(AppTypography.smallButtonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
       .backgroundColor(AppColors.surfaceMuted)
@@ -516,12 +531,12 @@ export struct RecentReviewCard {
       })
         .width(AppMetrics.listThumbnailSize)
 
-      Column({ space: AppMetrics.space8 }) {
+      Column({ space: 5 }) {
         Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-          .fontSize(AppTypography.cardTitle)
+          .fontSize(AppTypography.listTitle)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
-          .lineHeight(AppTypography.cardTitleLineHeight)
+          .lineHeight(AppTypography.listTitleLineHeight)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
@@ -534,21 +549,26 @@ export struct RecentReviewCard {
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-        Text(formatReviewTime(this.item.document.updatedAt))
-          .fontSize(AppTypography.caption)
-          .fontColor(AppColors.mutedText)
-          .lineHeight(AppTypography.captionLineHeight)
-          .width('100%')
+        Row({ space: AppMetrics.space8 }) {
+          Text(formatReviewTime(this.item.document.updatedAt))
+            .fontSize(AppTypography.meta)
+            .fontColor(AppColors.mutedText)
+            .lineHeight(AppTypography.metaLineHeight)
+            .layoutWeight(1)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          ReviewJudgementBadge({ value: this.item.document.content.judgement })
+        }
+        .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
-
-      ReviewJudgementBadge({ value: this.item.document.content.judgement })
     }
     .alignItems(VerticalAlign.Center)
     .padding(AppMetrics.listCardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 96, maxHeight: 108 })
+    .constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
@@ -580,12 +600,12 @@ export struct ProjectReviewCard {
       })
         .width(AppMetrics.listThumbnailSize)
 
-      Column({ space: AppMetrics.space8 }) {
+      Column({ space: 5 }) {
         Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-          .fontSize(AppTypography.cardTitle)
+          .fontSize(AppTypography.listTitle)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
-          .lineHeight(AppTypography.cardTitleLineHeight)
+          .lineHeight(AppTypography.listTitleLineHeight)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
@@ -598,21 +618,26 @@ export struct ProjectReviewCard {
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-        Text(formatReviewTime(this.item.document.updatedAt))
-          .fontSize(AppTypography.caption)
-          .fontColor(AppColors.mutedText)
-          .lineHeight(AppTypography.captionLineHeight)
-          .width('100%')
+        Row({ space: AppMetrics.space8 }) {
+          Text(formatReviewTime(this.item.document.updatedAt))
+            .fontSize(AppTypography.meta)
+            .fontColor(AppColors.mutedText)
+            .lineHeight(AppTypography.metaLineHeight)
+            .layoutWeight(1)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          ReviewJudgementBadge({ value: this.item.document.content.judgement })
+        }
+        .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
-
-      ReviewJudgementBadge({ value: this.item.document.content.judgement })
     }
     .alignItems(VerticalAlign.Center)
     .padding(AppMetrics.listCardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 96, maxHeight: 108 })
+    .constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })

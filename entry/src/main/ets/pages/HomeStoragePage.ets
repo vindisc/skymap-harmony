@@ -226,10 +226,10 @@ struct HomeStoragePage {
   @Builder
   FieldLabel(label: string) {
     Text(label)
-      .fontSize(AppTypography.cardTitle)
+      .fontSize(AppTypography.inputLabel)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
-      .lineHeight(AppTypography.cardTitleLineHeight)
+      .lineHeight(AppTypography.inputLabelLineHeight)
       .width('100%')
   }
 
@@ -249,7 +249,7 @@ struct HomeStoragePage {
         .type(isPassword ? InputType.Password : InputType.Normal)
         .height(AppMetrics.controlHeight)
         .borderRadius(AppMetrics.cardRadius)
-        .fontSize(AppTypography.body)
+        .fontSize(AppTypography.inputText)
         .fontColor(AppColors.text)
         .placeholderColor('#9AA1AB')
         .backgroundColor(AppColors.surfaceMuted)
@@ -278,7 +278,7 @@ struct HomeStoragePage {
     Button(label)
       .height(AppMetrics.compactControlHeight)
       .borderRadius(AppMetrics.cardRadius)
-      .fontSize(AppTypography.buttonText)
+      .fontSize(AppTypography.smallButtonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
       .backgroundColor(AppColors.surfaceMuted)

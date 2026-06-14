@@ -15,11 +15,11 @@ const mainPagesSource = fs.readFileSync('entry/src/main/resources/base/profile/m
 let failed = false;
 
 const requiredTypographyTokens = [
-  'static readonly pageTitle: number = 34;',
-  'static readonly pageSubtitle: number = 18;',
-  'static readonly sectionTitle: number = 20;',
-  'static readonly cardTitle: number = 18;',
-  'static readonly body: number = 16;'
+  'static readonly pageTitle: number = TypographyTokens.PageTitle;',
+  'static readonly pageSubtitle: number = TypographyTokens.PageSubtitle;',
+  'static readonly sectionTitle: number = TypographyTokens.SectionTitle;',
+  'static readonly cardTitle: number = TypographyTokens.CardTitle;',
+  'static readonly body: number = TypographyTokens.CardBody;'
 ];
 
 for (const marker of requiredTypographyTokens) {
@@ -114,7 +114,7 @@ if (!myPageSource.includes("title: '我的'") ||
   !myPageSource.includes('this.IdentityCard()') ||
   !myPageSource.includes("this.LinkRow('复盘人'") ||
   !myPageSource.includes("'家庭存储',") ||
-  !myPageSource.includes("this.SectionTitle('关于')")) {
+  !myPageSource.includes("this.LinkRow('关于'")) {
   failed = true;
   console.error('MyPage must keep the personal-center structure.');
 }

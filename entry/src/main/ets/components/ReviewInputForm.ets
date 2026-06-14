@@ -5,13 +5,13 @@ import {
   ReviewJudgementStatus
 } from '../model/ReviewCardModel';
 
-const REVIEW_TEXTAREA_LINE_HEIGHT: number = 28;
-const REVIEW_TEXTAREA_VERTICAL_PADDING: number = 28;
+const REVIEW_TEXTAREA_LINE_HEIGHT: number = AppTypography.inputTextLineHeight;
+const REVIEW_TEXTAREA_VERTICAL_PADDING: number = 24;
 const REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE: number = 10;
-const PRIMARY_FIELD_LABEL_SIZE: number = AppTypography.body;
-const PRIMARY_FIELD_INPUT_SIZE: number = AppTypography.body;
-const SECONDARY_FIELD_LABEL_SIZE: number = AppTypography.auxiliary;
-const SECONDARY_FIELD_INPUT_SIZE: number = AppTypography.body;
+const PRIMARY_FIELD_LABEL_SIZE: number = AppTypography.inputLabel;
+const PRIMARY_FIELD_INPUT_SIZE: number = AppTypography.inputText;
+const SECONDARY_FIELD_LABEL_SIZE: number = AppTypography.inputLabel;
+const SECONDARY_FIELD_INPUT_SIZE: number = AppTypography.inputText;
 
 function estimateVisualLineCount(value: string, defaultLines: number): number {
   if (value.length === 0) {
@@ -54,6 +54,7 @@ export struct ReviewInputForm {
         .fontSize(labelSize)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.text)
+        .lineHeight(AppTypography.inputLabelLineHeight)
         .width('100%')
     }
     .alignItems(HorizontalAlign.Start)

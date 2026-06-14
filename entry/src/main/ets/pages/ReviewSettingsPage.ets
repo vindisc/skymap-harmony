@@ -232,10 +232,10 @@ struct ReviewSettingsPage {
   @Builder
   FieldLabel(label: string) {
     Text(label)
-      .fontSize(AppTypography.cardTitle)
+      .fontSize(AppTypography.inputLabel)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.text)
-      .lineHeight(AppTypography.cardTitleLineHeight)
+      .lineHeight(AppTypography.inputLabelLineHeight)
       .width('100%')
   }
 
@@ -255,7 +255,7 @@ struct ReviewSettingsPage {
         .type(isPassword ? InputType.Password : InputType.Normal)
         .height(AppMetrics.controlHeight)
         .borderRadius(AppMetrics.cardRadius)
-        .fontSize(AppTypography.body)
+        .fontSize(AppTypography.inputText)
         .fontColor(AppColors.text)
         .placeholderColor('#9AA1AB')
         .backgroundColor(AppColors.surfaceMuted)
@@ -284,7 +284,7 @@ struct ReviewSettingsPage {
     Button(label)
       .height(AppMetrics.compactControlHeight)
       .borderRadius(AppMetrics.cardRadius)
-      .fontSize(AppTypography.buttonText)
+      .fontSize(AppTypography.smallButtonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
       .backgroundColor(AppColors.surfaceMuted)
@@ -308,9 +308,10 @@ struct ReviewSettingsPage {
 
           Column({ space: AppMetrics.cardGap }) {
             Text('家庭存储')
-              .fontSize(AppTypography.cardTitle)
+              .fontSize(AppTypography.sectionTitle)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.text)
+              .lineHeight(AppTypography.sectionTitleLineHeight)
               .width('100%')
 
             Text('用于把当前复盘导出的 review.json 直接上传到家庭存储，不替代系统文件导出。')
