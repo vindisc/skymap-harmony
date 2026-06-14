@@ -39,6 +39,7 @@ struct PreviewPage {
   @State isExporting: boolean = false;
   @State isUploadingHomeStorage: boolean = false;
   @State isExportSnapshotMode: boolean = false;
+  @State isExportMenuVisible: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
   @State lastReviewJsonExportMessage: string = '';
 
@@ -196,6 +197,17 @@ struct PreviewPage {
     return this.isExporting || this.isUploadingHomeStorage;
   }
 
+  private openExportMenu(): void {
+    if (this.isActionBusy()) {
+      return;
+    }
+    this.isExportMenuVisible = true;
+  }
+
+  private closeExportMenu(): void {
+    this.isExportMenuVisible = false;
+  }
+
   @Builder
   ActionButton(label: string, emphasized: boolean, isDisabled: boolean, onTap: () => void) {
     Button(label)
@@ -231,6 +243,23 @@ struct PreviewPage {
   }
 
   @Builder
+  ExportSheetAction(label: string, onTap: () => void) {
+    Button(label)
+      .height(52)
+      .width('100%')
+      .borderRadius(AppMetrics.cardRadius)
+      .fontSize(AppTypography.body)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(AppColors.text)
+      .backgroundColor(AppColors.surface)
+      .border({ width: 1, color: AppColors.border })
+      .onClick(() => {
+        this.closeExportMenu();
+        onTap();
+      })
+  }
+
+  @Builder
   ReadingPage() {
     Column() {
       Row() {
@@ -251,21 +280,8 @@ struct PreviewPage {
           this.ActionButton('编辑', false, this.isActionBusy(), () => {
             router.replaceUrl({ url: EDITOR_PAGE });
           })
-          this.ActionButton('导出 review.json', false, this.isActionBusy(), () => {
-            this.exportReviewJson();
-          })
           this.ActionButton(this.isExporting ? '导出中' : '导出', true, this.isActionBusy(), () => {
-            this.exportImage();
-          })
-        }
-        .height(32)
-
-        Row({ space: AppMetrics.space8 }) {
-          this.ActionButton('复制复盘数据', false, this.isActionBusy(), () => {
-            this.copyReviewData();
-          })
-          this.ActionButton(this.isUploadingHomeStorage ? '上传中' : '上传到家庭存储', false, this.isActionBusy(), () => {
-            this.uploadReviewJsonToHomeStorage();
+            this.openExportMenu();
           })
         }
         .height(32)
@@ -314,6 +330,57 @@ struct PreviewPage {
     .zIndex(-1)
   }
 
+  @Builder
+  ExportMenuSheet() {
+    Stack({ alignContent: Alignment.Bottom }) {
+      Column()
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#66000000')
+        .onClick(() => {
+          this.closeExportMenu();
+        })
+
+      Column({ space: AppMetrics.space8 }) {
+        Column({ space: AppMetrics.space8 }) {
+          Text('导出复盘')
+            .fontSize(AppTypography.body)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .width('100%')
+
+          this.ExportSheetAction(this.isExporting ? '导出图片中...' : '导出图片', () => {
+            this.exportImage();
+          })
+
+          this.ExportSheetAction('导出 review.json', () => {
+            this.exportReviewJson();
+          })
+
+          this.ExportSheetAction(this.isUploadingHomeStorage ? '上传到家庭存储中...' : '上传到家庭存储', () => {
+            this.uploadReviewJsonToHomeStorage();
+          })
+
+          this.ExportSheetAction('复制复盘数据', () => {
+            this.copyReviewData();
+          })
+        }
+        .padding(AppMetrics.space16)
+        .width('100%')
+        .borderRadius(AppMetrics.cardRadius)
+        .backgroundColor(AppColors.pageBackground)
+
+        this.ExportSheetAction('取消', () => {
+        })
+      }
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space24 })
+      .width('100%')
+    }
+    .width('100%')
+    .height('100%')
+    .zIndex(10)
+  }
+
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
       if (this.isExportSnapshotMode) {
@@ -321,6 +388,10 @@ struct PreviewPage {
       }
 
       this.ReadingPage()
+
+      if (this.isExportMenuVisible) {
+        this.ExportMenuSheet()
+      }
     }
     .width('100%')
     .height('100%')

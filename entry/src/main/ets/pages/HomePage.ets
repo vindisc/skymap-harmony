@@ -1,50 +1,30 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { EDITOR_PAGE, PREVIEW_PAGE, PROJECT_DETAIL_PAGE, REVIEW_SETTINGS_PAGE } from '../app/AppRouter';
+import {
+  EDITOR_PAGE,
+  PROJECT_DETAIL_PAGE,
+  REVIEW_SETTINGS_PAGE,
+  SYNC_CENTER_PAGE
+} from '../app/AppRouter';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
-import { ReviewCardDocument, ReviewCardHistoryItem } from '../model/ReviewCardModel';
+import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import {
   ReviewProjectSummary,
   createDefaultProjectSummary
 } from '../model/ProjectModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
+import { HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
+import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
   AppColors,
   AppMetrics,
   AppTypography,
-  PrimaryButton,
-  ProjectHomeCard,
-  RecentReviewCard
+  PrimaryButton
 } from '../components/AppDesign';
-
-@Component
-struct HomeOverviewStatCard {
-  @Prop label: string = '';
-  @Prop value: number = 0;
-
-  build() {
-    Column({ space: AppMetrics.space4 }) {
-      Text(`${this.value}`)
-        .fontSize(AppTypography.auxiliary)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .maxLines(1)
-
-      Text(this.label)
-        .fontSize(AppTypography.caption)
-        .fontColor(AppColors.secondaryText)
-        .maxLines(1)
-    }
-    .justifyContent(FlexAlign.Center)
-    .layoutWeight(1)
-    .height(52)
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceMuted)
-  }
-}
+import { formatReviewTime } from '../utils/ImageLayoutUtils';
 
 @Entry
 @Component
@@ -52,10 +32,8 @@ struct HomePage {
   private reloadRequestId: number = 0;
   @State isPickingPhoto: boolean = false;
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
-  @State totalReviewCount: number = 0;
-  @State validReviewCount: number = 0;
-  @State unsureReviewCount: number = 0;
-  @State invalidReviewCount: number = 0;
+  @State reviewerName: string = '';
+  @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
 
   aboutToAppear(): void {
     this.reloadHistory();
@@ -72,27 +50,26 @@ struct HomePage {
   private async reloadHistory(): Promise<void> {
     const requestId: number = this.reloadRequestId + 1;
     this.reloadRequestId = requestId;
-    const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(this.getAbilityContext());
+    const context = this.getAbilityContext();
+    const results = await Promise.all([
+      ReviewCardHistoryService.load(context),
+      ReviewSettingsService.loadReviewerName(context),
+      HomeStorageService.loadSettings(context)
+    ]);
     if (requestId !== this.reloadRequestId) {
       return;
     }
 
+    const items: Array<ReviewCardHistoryItem> = results[0] as Array<ReviewCardHistoryItem>;
+    const reviewerName: string = results[1] as string;
+    const homeStorageSettings: HomeStorageSettings = results[2] as HomeStorageSettings;
+    this.reviewerName = reviewerName;
+    this.homeStorageSettings = homeStorageSettings;
     this.applyHomeData(items);
   }
 
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
-    const nextProjectSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
-    const nextOverviewStats = ReviewProjectService.buildGlobalStats(items);
-    this.totalReviewCount = nextOverviewStats.totalCount;
-    this.validReviewCount = nextOverviewStats.validCount;
-    this.unsureReviewCount = nextOverviewStats.unsureCount;
-    this.invalidReviewCount = nextOverviewStats.invalidCount;
-    this.projectSummary = nextProjectSummary;
-  }
-
-  private openHistory(document: ReviewCardDocument): void {
-    ReviewCardStore.setCurrentDocument(document);
-    router.pushUrl({ url: PREVIEW_PAGE });
+    this.projectSummary = ReviewProjectService.buildDefaultProjectSummary(items);
   }
 
   private openProject(): void {
@@ -106,6 +83,10 @@ struct HomePage {
 
   private openReviewSettings(): void {
     router.pushUrl({ url: REVIEW_SETTINGS_PAGE });
+  }
+
+  private openSyncCenter(): void {
+    router.pushUrl({ url: SYNC_CENTER_PAGE });
   }
 
   private async startPhotoDraft(): Promise<void> {
@@ -133,33 +114,44 @@ struct HomePage {
     router.pushUrl({ url: EDITOR_PAGE });
   }
 
+  private isHomeStorageConfigured(): boolean {
+    return HomeStorageService.validateSettings(this.homeStorageSettings).length === 0;
+  }
+
+  private resolveLastUpdatedText(): string {
+    if (this.projectSummary.recordCount === 0 || this.projectSummary.latestUpdatedAt <= 0) {
+      return '还没有复盘记录';
+    }
+
+    return formatReviewTime(this.projectSummary.latestUpdatedAt);
+  }
+
+  private resolveSyncStatusText(): string {
+    return this.isHomeStorageConfigured() ? 'SMB 已连接' : '未配置家庭存储';
+  }
+
+  private resolveSettingsSummary(): string {
+    return this.reviewerName.length > 0 ? `复盘人：${this.reviewerName}` : '复盘人未设置';
+  }
+
   @Builder
   StartReviewPanel() {
     Column({ space: AppMetrics.space16 }) {
-      Row() {
-        Column() {
-          Text('摄影复盘卡')
-            .fontSize(AppTypography.level1)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.level1LineHeight)
-            .width('100%')
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
+      Column({ space: AppMetrics.space8 }) {
+        Text('摄影复盘卡')
+          .fontSize(AppTypography.level1)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.level1LineHeight)
+          .width('100%')
 
-        Button('复盘设置')
-          .height(32)
-          .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
-          .borderRadius(AppMetrics.capsuleRadius)
-          .fontSize(AppTypography.caption)
+        Text('开始新的复盘，或从复盘库、同步中心和设置继续后续动作。')
+          .fontSize(AppTypography.body)
           .fontColor(AppColors.secondaryText)
-          .backgroundColor(AppColors.surfaceMuted)
-          .onClick(() => {
-            this.openReviewSettings();
-          })
+          .lineHeight(AppTypography.bodyLineHeight)
+          .width('100%')
       }
-      .alignItems(VerticalAlign.Top)
+      .alignItems(HorizontalAlign.Start)
       .width('100%')
 
       PrimaryButton({
@@ -174,125 +166,76 @@ struct HomePage {
   }
 
   @Builder
-  ReviewOverviewPanel() {
-    Column() {
-      Text('复盘概览')
-        .fontSize(AppTypography.level2)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.level2LineHeight)
-        .width('100%')
+  HomeEntryCard(title: string, summary: string, detail: string, onTap: () => void) {
+    Row({ space: AppMetrics.space16 }) {
+      Column({ space: AppMetrics.space4 }) {
+        Text(title)
+          .fontSize(AppTypography.body)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .width('100%')
 
-      Row({ space: AppMetrics.space8 }) {
-        HomeOverviewStatCard({ label: '总复盘', value: this.totalReviewCount })
-        HomeOverviewStatCard({ label: '成立', value: this.validReviewCount })
-        HomeOverviewStatCard({ label: '待判断', value: this.unsureReviewCount })
-        HomeOverviewStatCard({ label: '不成立', value: this.invalidReviewCount })
+        Text(summary)
+          .fontSize(AppTypography.auxiliary)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.auxiliaryLineHeight)
+          .width('100%')
+
+        Text(detail)
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.mutedText)
+          .width('100%')
       }
-      .width('100%')
-      .margin({ top: AppMetrics.space12 })
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      Text('>')
+        .fontSize(AppTypography.body)
+        .fontColor(AppColors.mutedText)
     }
-    .alignItems(HorizontalAlign.Start)
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.space16)
     .width('100%')
-    .margin({ top: AppMetrics.space24 })
-  }
-
-  @Builder
-  LatestReviewPanel() {
-    Column() {
-      Text('最近一次')
-        .fontSize(AppTypography.level2)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.level2LineHeight)
-        .width('100%')
-
-      if (this.projectSummary.latestItem) {
-        RecentReviewCard({
-          item: this.projectSummary.latestItem,
-          onTap: () => {
-            if (this.projectSummary.latestItem) {
-              this.openHistory(this.projectSummary.latestItem.document);
-            }
-          }
-        })
-          .margin({ top: AppMetrics.space12 })
-      } else {
-        Row({ space: AppMetrics.space12 }) {
-          Column() {
-            Text('照片')
-              .fontSize(AppTypography.caption)
-              .fontColor(AppColors.mutedText)
-          }
-          .justifyContent(FlexAlign.Center)
-          .width(72)
-          .height(72)
-          .borderRadius(AppMetrics.cardRadius)
-          .backgroundColor(AppColors.surfaceMuted)
-
-          Column({ space: AppMetrics.space4 }) {
-            Text('还没有复盘记录')
-              .fontSize(AppTypography.body)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(AppColors.text)
-              .width('100%')
-            Text('开始第一次复盘后会出现在这里')
-              .fontSize(AppTypography.auxiliary)
-              .fontColor(AppColors.secondaryText)
-              .lineHeight(AppTypography.auxiliaryLineHeight)
-              .width('100%')
-            Text('等待开始')
-              .fontSize(AppTypography.caption)
-              .fontColor(AppColors.mutedText)
-              .width('100%')
-          }
-          .alignItems(HorizontalAlign.Start)
-          .layoutWeight(1)
-        }
-        .alignItems(VerticalAlign.Center)
-        .padding(AppMetrics.space12)
-        .width('100%')
-        .constraintSize({ minHeight: 96 })
-        .borderRadius(AppMetrics.cardRadius)
-        .backgroundColor(AppColors.surface)
-        .border({ width: 1, color: AppColors.border })
-        .margin({ top: AppMetrics.space12 })
-      }
-    }
-    .alignItems(HorizontalAlign.Start)
-    .width('100%')
-    .margin({ top: AppMetrics.space24 })
+    .constraintSize({ minHeight: 92 })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+    .onClick(() => {
+      onTap();
+    })
   }
 
   build() {
     Scroll() {
-      Column() {
+      Column({ space: AppMetrics.space16 }) {
         this.StartReviewPanel()
 
-        this.ReviewOverviewPanel()
-
-        this.LatestReviewPanel()
-
-        Column() {
-          Row() {
-            Text('复盘库')
-              .fontSize(AppTypography.level2)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .lineHeight(AppTypography.level2LineHeight)
+        this.HomeEntryCard(
+          '复盘库',
+          this.projectSummary.recordCount > 0 ? `总复盘数 ${this.projectSummary.recordCount}` : '还没有复盘记录',
+          `最近更新时间 ${this.resolveLastUpdatedText()}`,
+          () => {
+            this.openProject();
           }
-          .width('100%')
+        )
 
-          ProjectHomeCard({
-            summary: this.projectSummary,
-            onTap: () => {
-              this.openProject();
-            }
-          })
-            .margin({ top: AppMetrics.space12 })
-        }
-        .width('100%')
-        .margin({ top: AppMetrics.space24 })
+        this.HomeEntryCard(
+          '同步中心',
+          this.resolveSyncStatusText(),
+          `${this.homeStorageSettings.smbShareName.length > 0 ? this.homeStorageSettings.smbShareName : '家庭存储'} · ${this.homeStorageSettings.remoteDirectory.length > 0 ? this.homeStorageSettings.remoteDirectory : '等待配置'}`,
+          () => {
+            this.openSyncCenter();
+          }
+        )
+
+        this.HomeEntryCard(
+          '设置',
+          this.resolveSettingsSummary(),
+          '复盘人设置与家庭存储配置',
+          () => {
+            this.openReviewSettings();
+          }
+        )
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space24 })
       .width('100%')

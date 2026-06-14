@@ -4,6 +4,7 @@
     "pages/EditorPage",
     "pages/PreviewPage",
     "pages/ProjectDetailPage",
-    "pages/ReviewSettingsPage"
+    "pages/ReviewSettingsPage",
+    "pages/SyncCenterPage"
   ]
 }

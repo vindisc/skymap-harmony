@@ -2,55 +2,61 @@ import fs from 'node:fs';
 
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
 const settingsPageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewSettingsPage.ets', 'utf8');
-
-const requiredPrimitiveStates = [
-  '@State totalReviewCount: number',
-  '@State validReviewCount: number',
-  '@State unsureReviewCount: number',
-  '@State invalidReviewCount: number'
-];
+const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewProjectService.ets', 'utf8');
 
 let failed = false;
-for (const stateDecl of requiredPrimitiveStates) {
-  if (!homePageSource.includes(stateDecl)) {
-    failed = true;
-    console.error(`HomePage missing primitive state: ${stateDecl}`);
-  }
-}
 
-if (homePageSource.includes('@State overviewStats')) {
-  failed = true;
-  console.error('HomePage must not render overview numbers from object @State overviewStats.');
-}
-
-if (homePageSource.includes('@Builder\n  OverviewStat(label: string, value: number)') ||
-  homePageSource.includes('@Builder\r\n  OverviewStat(label: string, value: number)')) {
-  failed = true;
-  console.error('HomePage overview must not pass changing stat values through @Builder parameters.');
-}
-
-if (!homePageSource.includes('this.totalReviewCount = nextOverviewStats.totalCount')) {
-  failed = true;
-  console.error('HomePage must assign totalReviewCount directly from loaded stats.');
-}
-
-const requiredOverviewBindings = [
-  "HomeOverviewStatCard({ label: '总复盘', value: this.totalReviewCount })",
-  "HomeOverviewStatCard({ label: '成立', value: this.validReviewCount })",
-  "HomeOverviewStatCard({ label: '待判断', value: this.unsureReviewCount })",
-  "HomeOverviewStatCard({ label: '不成立', value: this.invalidReviewCount })"
+const requiredHomeSections = [
+  "this.HomeEntryCard(\n          '复盘库'",
+  "this.HomeEntryCard(\n          '同步中心'",
+  "this.HomeEntryCard(\n          '设置'"
 ];
 
-for (const binding of requiredOverviewBindings) {
-  if (!homePageSource.includes(binding)) {
+for (const marker of requiredHomeSections) {
+  if (!homePageSource.includes(marker)) {
     failed = true;
-    console.error(`HomePage missing overview stat component binding: ${binding}`);
+    console.error(`HomePage missing section marker: ${marker}`);
   }
+}
+
+if (homePageSource.includes("Text('最近一次')")) {
+  failed = true;
+  console.error('HomePage must not render an independent 最近一次 module.');
+}
+
+if (!homePageSource.includes("label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘'")) {
+  failed = true;
+  console.error('HomePage must keep the 开始复盘 primary CTA.');
+}
+
+if (!homePageSource.includes("this.resolveSyncStatusText() ?")) {
+}
+
+if (!homePageSource.includes("return this.isHomeStorageConfigured() ? 'SMB 已连接' : '未配置家庭存储';")) {
+  failed = true;
+  console.error('HomePage must expose sync status text for the sync center entry.');
+}
+
+if (!homePageSource.includes('ReviewSettingsService.loadReviewerName(context)')) {
+  failed = true;
+  console.error('HomePage must load reviewer settings to render the 设置 summary.');
+}
+
+if (!settingsPageSource.includes("Text('设置')")) {
+  failed = true;
+  console.error('ReviewSettingsPage title must be 设置.');
 }
 
 if (settingsPageSource.includes("Button('返回')") || settingsPageSource.includes('router.back()')) {
   failed = true;
   console.error('ReviewSettingsPage must not render or handle an explicit back button.');
+}
+
+if (!projectServiceSource.includes('stats.validCount += 1') ||
+  !projectServiceSource.includes('stats.invalidCount += 1') ||
+  !projectServiceSource.includes('stats.unsureCount += 1')) {
+  failed = true;
+  console.error('ReviewProjectService global stats logic must keep all three judgement buckets.');
 }
 
 function normalizeReviewJudgement(value) {
@@ -128,16 +134,7 @@ const twelveReviewItems = [
 });
 
 const stats = buildGlobalStats(twelveReviewItems);
-const statusSum = stats.validCount + stats.unsureCount + stats.invalidCount;
-if (stats.totalCount !== 12) {
-  failed = true;
-  console.error(`Expected totalCount=12, got ${stats.totalCount}`);
-}
-if (statusSum !== stats.totalCount) {
-  failed = true;
-  console.error(`Expected status sum=${stats.totalCount}, got ${statusSum}`);
-}
-if (stats.validCount !== 4 || stats.unsureCount !== 5 || stats.invalidCount !== 3) {
+if (stats.totalCount !== 12 || stats.validCount !== 4 || stats.unsureCount !== 5 || stats.invalidCount !== 3) {
   failed = true;
   console.error(`Unexpected status split: ${JSON.stringify(stats)}`);
 }
@@ -146,4 +143,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log(`home stats: total=${stats.totalCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}`);
+console.log(`home architecture: sections=4, total=${stats.totalCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}`);

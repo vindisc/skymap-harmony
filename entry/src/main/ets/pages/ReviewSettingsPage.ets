@@ -153,7 +153,7 @@ struct ReviewSettingsPage {
       this.homeStorageUsername = homeStorageSettings.username;
       this.homeStoragePassword = homeStorageSettings.password;
       this.homeStorageDomain = homeStorageSettings.smbDomain;
-      promptAction.showToast({ message: '已保存复盘设置' });
+      promptAction.showToast({ message: '已保存设置' });
     } catch (error) {
       promptAction.showToast({ message: '保存失败，请稍后重试' });
     } finally {
@@ -216,7 +216,7 @@ struct ReviewSettingsPage {
     Row() {
       Blank()
 
-      Text('复盘设置')
+      Text('设置')
         .fontSize(AppTypography.level2)
         .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)

@@ -1,14 +1,15 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { PREVIEW_PAGE } from '../app/AppRouter';
+import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
 import {
   AppColors,
   AppMetrics,
   AppPageHeader,
   AppTypography,
   EmptyState,
-  ProjectReviewCard
+  ProjectReviewCard,
+  RecentReviewCard
 } from '../components/AppDesign';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { ReviewCardDocument, ReviewCardHistoryItem, ReviewJudgementStatus } from '../model/ReviewCardModel';
@@ -71,6 +72,11 @@ struct ProjectDetailPage {
   private openHistory(document: ReviewCardDocument): void {
     ReviewCardStore.setCurrentDocument(document);
     router.pushUrl({ url: PREVIEW_PAGE });
+  }
+
+  private continueEditing(document: ReviewCardDocument): void {
+    ReviewCardStore.setCurrentDocument(document);
+    router.pushUrl({ url: EDITOR_PAGE });
   }
 
   private confirmDeleteHistory(document: ReviewCardDocument): void {
@@ -148,6 +154,56 @@ struct ProjectDetailPage {
           .margin({ top: AppMetrics.space12 })
 
         Column({ space: AppMetrics.space12 }) {
+          if (this.summary.latestItem) {
+            Column({ space: AppMetrics.space12 }) {
+              Text('最近复盘')
+                .fontSize(AppTypography.body)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.text)
+                .width('100%')
+
+              RecentReviewCard({
+                item: this.summary.latestItem,
+                onTap: () => {
+                  if (this.summary.latestItem) {
+                    this.openHistory(this.summary.latestItem.document);
+                  }
+                }
+              })
+
+              Row({ space: AppMetrics.space8 }) {
+                Button('继续查看')
+                  .height(36)
+                  .layoutWeight(1)
+                  .borderRadius(AppMetrics.capsuleRadius)
+                  .fontSize(AppTypography.auxiliary)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor(AppColors.text)
+                  .backgroundColor(AppColors.surfaceMuted)
+                  .onClick(() => {
+                    if (this.summary.latestItem) {
+                      this.openHistory(this.summary.latestItem.document);
+                    }
+                  })
+
+                Button('继续编辑')
+                  .height(36)
+                  .layoutWeight(1)
+                  .borderRadius(AppMetrics.capsuleRadius)
+                  .fontSize(AppTypography.auxiliary)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor('#FFFFFF')
+                  .backgroundColor(AppColors.primary)
+                  .onClick(() => {
+                    if (this.summary.latestItem) {
+                      this.continueEditing(this.summary.latestItem.document);
+                    }
+                  })
+              }
+              .width('100%')
+            }
+          }
+
           TextInput({ text: this.searchText, placeholder: '搜索标题、核心关系、卡点、文件名' })
             .height(44)
             .borderRadius(AppMetrics.cardRadius)
