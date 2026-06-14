@@ -91,14 +91,14 @@ Skymap 应采用“温和、克制、内容优先”的移动工具风格。
 
 ### 3.1 主色
 
-主色应为柔和深灰绿，不使用接近纯黑的按钮色。
+主色应为低饱和雾蓝 / 蓝灰，不使用接近纯黑的按钮色。雾蓝比灰绿更偏现代工具气质，也更适合摄影复盘中的“冷静判断”和“内容优先”。
 
 当前 Harmony 端主色参考：
 
-- `primary`: `#5A665F`
-- `primaryPressed`: `#465149`
-- `primarySoft`: `#E8ECE8`
-- `primaryDisabled`: `#C3CEC4`
+- `primary`: `#426A7E`
+- `primaryPressed`: `#315266`
+- `primarySoft`: `#E8F1F5`
+- `primaryDisabled`: `#B9CDD7`
 
 使用规则：
 

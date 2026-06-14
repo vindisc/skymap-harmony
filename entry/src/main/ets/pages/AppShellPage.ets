@@ -58,7 +58,7 @@ struct AppShellPage {
   }
 
   private resolveTabBackground(key: RootTabKey): string {
-    return this.isCurrentTab(key) ? AppColors.primarySoft : '#00000000';
+    return this.isCurrentTab(key) ? AppColors.primarySoft : AppColors.transparent;
   }
 
   @Builder

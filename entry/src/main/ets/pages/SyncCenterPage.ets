@@ -112,7 +112,7 @@ struct SyncCenterPage {
 
               Text(this.resolveStatusText())
                 .fontSize(AppTypography.auxiliary)
-                .fontColor(this.isConfigured() ? '#496A52' : AppColors.secondaryText)
+                .fontColor(this.isConfigured() ? AppColors.tagBlueText : AppColors.secondaryText)
                 .width('100%')
             }
             .alignItems(HorizontalAlign.Start)

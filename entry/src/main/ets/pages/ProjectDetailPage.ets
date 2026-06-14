@@ -89,7 +89,7 @@ export struct ProjectDetailPage {
   }
 
   private resolveFilterChipBackgroundColor(value: string): string {
-    return this.isFilterSelected(value) ? AppColors.surfaceMuted : '#00000000';
+    return this.isFilterSelected(value) ? AppColors.primarySoft : AppColors.transparent;
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -149,7 +149,7 @@ export struct ProjectDetailPage {
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
-      .border({ width: 1, color: this.isFilterSelected(value) ? AppColors.borderStrong : AppColors.border })
+      .border({ width: 1, color: this.isFilterSelected(value) ? AppColors.primary : AppColors.border })
       .onClick(() => {
         this.decisionFilter = value;
         this.applyFilters();

@@ -336,7 +336,7 @@ struct PreviewPage {
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor('#66000000')
+        .backgroundColor(AppColors.scrim)
         .onClick(() => {
           this.closeExportMenu();
         })
