@@ -18,7 +18,7 @@ const SMB_PORT_KEY: string = 'smb_port';
 const SMB_SHARE_NAME_KEY: string = 'smb_share_name';
 const SMB_DOMAIN_KEY: string = 'smb_domain';
 const LAST_UPLOADED_AT_KEY: string = 'last_uploaded_at';
-const DEFAULT_REMOTE_DIRECTORY: string = '摄影资料库/Reviews';
+const DEFAULT_REMOTE_DIRECTORY: string = '';
 const DEFAULT_SMB_PORT: string = '445';
 
 export interface HomeStorageSettings {
@@ -53,7 +53,7 @@ function normalizeText(value: string | undefined): string {
 function normalizeRemoteDirectory(value: string | undefined): string {
   const trimmed: string = normalizeText(value);
   if (trimmed.length === 0) {
-    return DEFAULT_REMOTE_DIRECTORY;
+    return '';
   }
   return trimmed.replace(/^\/+/g, '').replace(/\/+$/g, '');
 }
@@ -93,11 +93,10 @@ function normalizeSettings(settings: HomeStorageSettings | undefined): HomeStora
   const parsedAddress: ParsedSmbAddress = parseSmbAddress(source.smbHost);
   const sourceShareName: string = normalizeText(source.smbShareName).replace(/^\/+/g, '').replace(/\/+$/g, '');
   const sourceRemoteDirectory: string = normalizeText(source.remoteDirectory);
-  const parsedRemoteDirectory: string = parsedAddress.remoteDirectory.length > 0 ? parsedAddress.remoteDirectory : sourceRemoteDirectory;
   return {
     username: normalizeText(source.username),
     password: normalizeText(source.password),
-    remoteDirectory: normalizeRemoteDirectory(parsedRemoteDirectory),
+    remoteDirectory: normalizeRemoteDirectory(sourceRemoteDirectory),
     smbHost: parsedAddress.host,
     smbPort: normalizeSmbPort(source.smbPort),
     smbShareName: sourceShareName.length > 0 ? sourceShareName : parsedAddress.shareName,
@@ -125,6 +124,51 @@ function createSmbUploadOptions(settings: HomeStorageSettings, fileName: string,
     fileName: fileName,
     content: body
   };
+}
+
+function resolveRemotePathText(settings: HomeStorageSettings, remoteDirectory: string, fileName: string): string {
+  const directory: string = normalizeRemoteDirectory(remoteDirectory).replace(/\//g, '\\');
+  const basePath: string = `\\\\${settings.smbHost}\\${settings.smbShareName}`;
+  return directory.length > 0 ? `${basePath}\\${directory}\\${fileName}` : `${basePath}\\${fileName}`;
+}
+
+function isMissingRemoteDirectoryError(message: string): boolean {
+  return message.indexOf('SMB 目标路径不存在') >= 0;
+}
+
+async function uploadReviewJsonBySmb(
+  settings: HomeStorageSettings,
+  fileName: string,
+  body: string,
+  remoteDirectory: string = settings.remoteDirectory
+): Promise<HomeStorageOperationResult> {
+  const client: Smb2Client = new Smb2Client();
+  try {
+    const nextSettings: HomeStorageSettings = {
+      username: settings.username,
+      password: settings.password,
+      remoteDirectory: remoteDirectory,
+      smbHost: settings.smbHost,
+      smbPort: settings.smbPort,
+      smbShareName: settings.smbShareName,
+      smbDomain: settings.smbDomain
+    };
+    const remotePath: string = await client.uploadText(createSmbUploadOptions(nextSettings, fileName, body));
+    return {
+      success: true,
+      remotePath: remotePath,
+      message: 'review.json 已上传到家庭存储'
+    };
+  } catch (error) {
+    const message: string = error instanceof Error ? error.message : '上传家庭存储失败，请检查网络、账号和目录';
+    return {
+      success: false,
+      remotePath: resolveRemotePathText(settings, remoteDirectory, fileName),
+      message: message
+    };
+  } finally {
+    await client.close();
+  }
 }
 
 async function safeGetString(
@@ -184,7 +228,7 @@ export class HomeStorageService {
     return {
       username: '',
       password: '',
-      remoteDirectory: DEFAULT_REMOTE_DIRECTORY,
+      remoteDirectory: '',
       smbHost: '',
       smbPort: DEFAULT_SMB_PORT,
       smbShareName: '',
@@ -381,22 +425,24 @@ export class HomeStorageService {
 
     const fileName: string = resolveReviewCardExchangeReviewJsonFileName(document);
     const body: string = stringifyReviewCardExchangeSchemaV1(document, reviewerText);
-    const client: Smb2Client = new Smb2Client();
-    try {
-      const remotePath: string = await client.uploadText(createSmbUploadOptions(settings, fileName, body));
+    const primaryResult: HomeStorageOperationResult = await uploadReviewJsonBySmb(settings, fileName, body);
+    if (primaryResult.success) {
       await HomeStorageService.markLastUploadedAt(context, Date.now());
-      return {
-        success: true,
-        remotePath: remotePath,
-        message: 'review.json 已上传到家庭存储'
-      };
-    } catch (error) {
-      await client.close();
-      return {
-        success: false,
-        remotePath: `\\\\${settings.smbHost}\\${settings.smbShareName}\\${settings.remoteDirectory}\\${fileName}`,
-        message: error instanceof Error ? error.message : '上传家庭存储失败，请检查网络、账号和目录'
-      };
+      return primaryResult;
     }
+
+    if (settings.remoteDirectory.length > 0 && isMissingRemoteDirectoryError(primaryResult.message)) {
+      const fallbackResult: HomeStorageOperationResult = await uploadReviewJsonBySmb(settings, fileName, body, '');
+      if (fallbackResult.success) {
+        await HomeStorageService.markLastUploadedAt(context, Date.now());
+        return {
+          success: true,
+          remotePath: fallbackResult.remotePath,
+          message: 'review.json 已上传到家庭存储（已自动保存到共享根目录）'
+        };
+      }
+    }
+
+    return primaryResult;
   }
 }

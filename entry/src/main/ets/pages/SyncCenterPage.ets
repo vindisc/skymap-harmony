@@ -51,7 +51,7 @@ struct SyncCenterPage {
   }
 
   private resolveRemoteDirectory(): string {
-    return this.homeStorageSettings.remoteDirectory.length > 0 ? this.homeStorageSettings.remoteDirectory : '未配置';
+    return this.homeStorageSettings.remoteDirectory.length > 0 ? this.homeStorageSettings.remoteDirectory : '共享根目录';
   }
 
   private openSettings(): void {
@@ -126,7 +126,7 @@ struct SyncCenterPage {
 
           this.InfoRow('SMB 地址', this.resolveHomeStorageAddress())
           this.InfoRow('共享目录', this.resolveShareName())
-          this.InfoRow('目标路径', this.resolveRemoteDirectory())
+          this.InfoRow('保存位置', this.resolveRemoteDirectory())
 
           if (this.lastCheckedAt > 0) {
             this.InfoRow('最近测试', formatReviewTime(this.lastCheckedAt))
