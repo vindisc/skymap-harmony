@@ -39,11 +39,18 @@ if (!homePageSource.includes("this.StatItem(`${this.reviewCount}`, '总复盘')"
 }
 
 if (!homePageSource.includes('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)') ||
+  !homePageSource.includes('this.latestItem = summary.latestItem') ||
   !homePageSource.includes('this.reviewCount = summary.recordCount') ||
   !homePageSource.includes('this.validReviewCount = summary.stats.validCount') ||
   !homePageSource.includes('this.unsureReviewCount = summary.stats.unsureCount')) {
   failed = true;
-  console.error('HomePage scalar stats must be copied from the same all-history home summary as MyPage.');
+  console.error('HomePage visible state must be copied from the same all-history home summary as MyPage.');
+}
+
+if (homePageSource.includes('ReviewCardStore.getCurrentDocument()') ||
+  homePageSource.includes('hasMeaningfulCurrentDocument')) {
+  failed = true;
+  console.error('HomePage must not mix the in-memory current draft into persisted history stats.');
 }
 
 if (homePageSource.includes('const results = await Promise.all([')) {

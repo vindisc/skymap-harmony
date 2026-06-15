@@ -9,11 +9,7 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import {
-  ReviewProjectSummary,
-  createDefaultProjectSummary
-} from '../model/ProjectModel';
-import { ReviewCardDocument } from '../model/ReviewCardModel';
+import { ReviewProjectSummary } from '../model/ProjectModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewDashboardStats } from '../services/ReviewProjectService';
 import {
@@ -32,7 +28,7 @@ export struct HomePage {
   private reloadRequestId: number = 0;
   @Prop @Watch('refreshHomeData') refreshToken: number = 0;
   @State isPickingPhoto: boolean = false;
-  @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
+  @State latestItem: ReviewCardHistoryItem | undefined = undefined;
   @State reviewCount: number = 0;
   @State validReviewCount: number = 0;
   @State unsureReviewCount: number = 0;
@@ -55,31 +51,10 @@ export struct HomePage {
     return getContext(this) as common.UIAbilityContext;
   }
 
-  private hasMeaningfulCurrentDocument(document: ReviewCardDocument): boolean {
-    return document.imageUri.length > 0 ||
-      document.content.visualFocus.length > 0 ||
-      document.content.focusReason.length > 0 ||
-      document.content.visualPath.length > 0 ||
-      document.content.visibleFacts.length > 0 ||
-      document.content.coreRelation.length > 0 ||
-      document.content.extendedUnderstanding.length > 0 ||
-      document.content.currentBlocker.length > 0;
-  }
-
   private async reloadHistory(): Promise<void> {
     const requestId: number = this.reloadRequestId + 1;
     this.reloadRequestId = requestId;
     const context = this.getAbilityContext();
-
-    const currentDocument = ReviewCardStore.getCurrentDocument();
-    if (this.hasMeaningfulCurrentDocument(currentDocument)) {
-      this.applyHomeData([
-        {
-          document: currentDocument,
-          exportedPath: ''
-        }
-      ]);
-    }
 
     try {
       const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
@@ -99,7 +74,7 @@ export struct HomePage {
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
     const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items);
     const dashboardStats: ReviewDashboardStats = ReviewProjectService.buildDashboardStats(items);
-    this.projectSummary = summary;
+    this.latestItem = summary.latestItem;
     this.reviewCount = summary.recordCount;
     this.validReviewCount = summary.stats.validCount;
     this.unsureReviewCount = summary.stats.unsureCount;
@@ -107,18 +82,18 @@ export struct HomePage {
   }
 
   private openLatestReview(): void {
-    if (!this.projectSummary.latestItem) {
+    if (!this.latestItem) {
       return;
     }
-    ReviewCardStore.setCurrentDocument(this.projectSummary.latestItem.document);
+    ReviewCardStore.setCurrentDocument(this.latestItem.document);
     router.pushUrl({ url: PREVIEW_PAGE });
   }
 
   private continueLatestReview(): void {
-    if (!this.projectSummary.latestItem) {
+    if (!this.latestItem) {
       return;
     }
-    ReviewCardStore.setCurrentDocument(this.projectSummary.latestItem.document);
+    ReviewCardStore.setCurrentDocument(this.latestItem.document);
     router.pushUrl({ url: EDITOR_PAGE });
   }
 
@@ -273,10 +248,10 @@ export struct HomePage {
             .lineHeight(AppTypography.sectionTitleLineHeight)
             .width('100%')
 
-          if (this.projectSummary.latestItem) {
+          if (this.latestItem) {
             Column({ space: AppMetrics.cardGap }) {
               RecentReviewCard({
-                item: this.projectSummary.latestItem,
+                item: this.latestItem,
                 onTap: () => {
                   this.openLatestReview();
                 }
