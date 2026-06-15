@@ -31,11 +31,16 @@ if (!homePageSource.includes("label: this.isPickingPhoto ? '打开相册中...' 
   }
 }
 
-if (!homePageSource.includes("this.StatItem(`${this.reviewCount}`, '总复盘')") ||
-  !homePageSource.includes("this.StatItem(`${this.validReviewCount}`, '成立')") ||
-  !homePageSource.includes("this.StatItem(`${this.unsureReviewCount}`, '待判断')")) {
+if (!homePageSource.includes('Text(`${this.reviewCount}`)') ||
+  !homePageSource.includes('Text(`${this.validReviewCount}`)') ||
+  !homePageSource.includes('Text(`${this.unsureReviewCount}`)')) {
   failed = true;
-  console.error('HomePage visible stats must read from scalar @State values, matching MyPage refresh behavior.');
+  console.error('HomePage visible stats must bind directly to scalar @State values, matching MyPage refresh behavior.');
+}
+
+if (homePageSource.includes('StatItem(') || homePageSource.includes('@Builder\n  StatItem')) {
+  failed = true;
+  console.error('HomePage must not pass dynamic stats through a parameterized builder because ArkUI can keep stale values.');
 }
 
 if (!homePageSource.includes('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)') ||

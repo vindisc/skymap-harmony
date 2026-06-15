@@ -158,27 +158,6 @@ export struct HomePage {
   }
 
   @Builder
-  StatItem(value: string, label: string, emphasized: boolean = false) {
-    Column({ space: AppMetrics.space8 }) {
-      Text(value)
-        .fontSize((emphasized || label === '总复盘') ? AppTypography.statNumber + 4 : AppTypography.statNumber)
-        .fontWeight(FontWeight.Bold)
-        .fontColor((emphasized || label === '总复盘') ? AppColors.primary : AppColors.text)
-        .lineHeight((emphasized || label === '总复盘') ? AppTypography.statNumberLineHeight + 4 : AppTypography.statNumberLineHeight)
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-      Text(label)
-        .fontSize(AppTypography.statLabel)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.statLabelLineHeight)
-        .maxLines(1)
-    }
-    .alignItems(HorizontalAlign.Center)
-    .layoutWeight(1)
-  }
-
-  @Builder
   GrowthStatsPanel() {
     Column({ space: AppMetrics.cardGap }) {
       Row() {
@@ -200,10 +179,77 @@ export struct HomePage {
       .width('100%')
 
       Row({ space: AppMetrics.space8 }) {
-        this.StatItem(`${this.reviewCount}`, '总复盘')
-        this.StatItem(`${this.validReviewCount}`, '成立')
-        this.StatItem(`${this.unsureReviewCount}`, '待判断')
-        this.StatItem(this.resolveStreakText(), '连续')
+        Column({ space: AppMetrics.space8 }) {
+          Text(`${this.reviewCount}`)
+            .fontSize(AppTypography.statNumber + 4)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.primary)
+            .lineHeight(AppTypography.statNumberLineHeight + 4)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text('总复盘')
+            .fontSize(AppTypography.statLabel)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.statLabelLineHeight)
+            .maxLines(1)
+        }
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
+
+        Column({ space: AppMetrics.space8 }) {
+          Text(`${this.validReviewCount}`)
+            .fontSize(AppTypography.statNumber)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.statNumberLineHeight)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text('成立')
+            .fontSize(AppTypography.statLabel)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.statLabelLineHeight)
+            .maxLines(1)
+        }
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
+
+        Column({ space: AppMetrics.space8 }) {
+          Text(`${this.unsureReviewCount}`)
+            .fontSize(AppTypography.statNumber)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.statNumberLineHeight)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text('待判断')
+            .fontSize(AppTypography.statLabel)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.statLabelLineHeight)
+            .maxLines(1)
+        }
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
+
+        Column({ space: AppMetrics.space8 }) {
+          Text(this.resolveStreakText())
+            .fontSize(AppTypography.statNumber)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.statNumberLineHeight)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text('连续')
+            .fontSize(AppTypography.statLabel)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.statLabelLineHeight)
+            .maxLines(1)
+        }
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
       }
       .width('100%')
     }
