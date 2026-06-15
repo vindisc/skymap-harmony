@@ -7,3 +7,5 @@ export const HOME_STORAGE_PAGE: string = 'pages/HomeStoragePage';
 export const MY_PAGE: string = 'pages/MyPage';
 export const REVIEWER_PROFILE_PAGE: string = 'pages/ReviewerProfilePage';
 export const SYNC_CENTER_PAGE: string = 'pages/SyncCenterPage';
+
+
