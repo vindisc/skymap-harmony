@@ -33,9 +33,10 @@ export struct HomePage {
   @Prop @Watch('refreshHomeData') refreshToken: number = 0;
   @State isPickingPhoto: boolean = false;
   @State projectSummary: ReviewProjectSummary = createDefaultProjectSummary();
-  @State dashboardStats: ReviewDashboardStats = {
-    streakDays: 0
-  };
+  @State reviewCount: number = 0;
+  @State validReviewCount: number = 0;
+  @State unsureReviewCount: number = 0;
+  @State streakDays: number = 0;
   @State historyLoadFailed: boolean = false;
 
   aboutToAppear(): void {
@@ -96,8 +97,13 @@ export struct HomePage {
   }
 
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
-    this.projectSummary = ReviewProjectService.buildHomeSummary(items);
-    this.dashboardStats = ReviewProjectService.buildDashboardStats(items);
+    const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items);
+    const dashboardStats: ReviewDashboardStats = ReviewProjectService.buildDashboardStats(items);
+    this.projectSummary = summary;
+    this.reviewCount = summary.recordCount;
+    this.validReviewCount = summary.stats.validCount;
+    this.unsureReviewCount = summary.stats.unsureCount;
+    this.streakDays = dashboardStats.streakDays;
   }
 
   private openLatestReview(): void {
@@ -142,17 +148,17 @@ export struct HomePage {
   }
 
   private resolveStreakText(): string {
-    if (this.projectSummary.recordCount === 0 || this.dashboardStats.streakDays <= 0) {
+    if (this.reviewCount === 0 || this.streakDays <= 0) {
       return '—';
     }
-    return `${this.dashboardStats.streakDays}天`;
+    return `${this.streakDays}天`;
   }
 
   private resolveStatsHintText(): string {
     if (this.historyLoadFailed) {
       return '历史记录暂时读取失败，请重新进入首页或重启应用再试。';
     }
-    return this.projectSummary.recordCount > 0 ? '每一次判断都会留下可回看的线索。' : '还没有记录，第一条复盘会从这里开始。';
+    return this.reviewCount > 0 ? '每一次判断都会留下可回看的线索。' : '还没有记录，第一条复盘会从这里开始。';
   }
 
   @Builder
@@ -198,9 +204,9 @@ export struct HomePage {
       .width('100%')
 
       Row({ space: AppMetrics.space8 }) {
-        this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')
-        this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')
-        this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')
+        this.StatItem(`${this.reviewCount}`, '总复盘')
+        this.StatItem(`${this.validReviewCount}`, '成立')
+        this.StatItem(`${this.unsureReviewCount}`, '待判断')
         this.StatItem(this.resolveStreakText(), '连续')
       }
       .width('100%')

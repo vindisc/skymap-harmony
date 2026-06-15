@@ -31,16 +31,19 @@ if (!homePageSource.includes("label: this.isPickingPhoto ? '打开相册中...' 
   }
 }
 
-if (!homePageSource.includes("this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')") ||
-  !homePageSource.includes("this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')") ||
-  !homePageSource.includes("this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')")) {
+if (!homePageSource.includes("this.StatItem(`${this.reviewCount}`, '总复盘')") ||
+  !homePageSource.includes("this.StatItem(`${this.validReviewCount}`, '成立')") ||
+  !homePageSource.includes("this.StatItem(`${this.unsureReviewCount}`, '待判断')")) {
   failed = true;
-  console.error('HomePage stats must read from projectSummary, not a detached zero-prone dashboard state.');
+  console.error('HomePage visible stats must read from scalar @State values, matching MyPage refresh behavior.');
 }
 
-if (!homePageSource.includes('ReviewProjectService.buildHomeSummary(items)')) {
+if (!homePageSource.includes('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)') ||
+  !homePageSource.includes('this.reviewCount = summary.recordCount') ||
+  !homePageSource.includes('this.validReviewCount = summary.stats.validCount') ||
+  !homePageSource.includes('this.unsureReviewCount = summary.stats.unsureCount')) {
   failed = true;
-  console.error('HomePage stats must use the all-history home summary instead of the default-project summary.');
+  console.error('HomePage scalar stats must be copied from the same all-history home summary as MyPage.');
 }
 
 if (homePageSource.includes('const results = await Promise.all([')) {
@@ -72,9 +75,17 @@ if (!homePageSource.includes("@Prop @Watch('refreshHomeData') refreshToken") ||
 
 if (homePageSource.includes('this.dashboardStats.totalCount') ||
   homePageSource.includes('this.dashboardStats.validCount') ||
-  homePageSource.includes('this.dashboardStats.unsureCount')) {
+  homePageSource.includes('this.dashboardStats.unsureCount') ||
+  homePageSource.includes('@State dashboardStats')) {
   failed = true;
-  console.error('HomePage must not render review counts from dashboardStats.');
+  console.error('HomePage must not keep visible review counts in nested dashboardStats state.');
+}
+
+if (homePageSource.includes("this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')") ||
+  homePageSource.includes("this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')") ||
+  homePageSource.includes("this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')")) {
+  failed = true;
+  console.error('HomePage overview must not bind visible stats to nested projectSummary fields.');
 }
 
 if (homePageSource.includes("0天")) {

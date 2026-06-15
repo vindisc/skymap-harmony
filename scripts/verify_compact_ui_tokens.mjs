@@ -150,7 +150,9 @@ for (const fileName of iconFiles) {
   }
 }
 
-assertIncludes(homePageSource, "this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')", 'Home stats must render true projectSummary.recordCount.');
+assertIncludes(homePageSource, "this.StatItem(`${this.reviewCount}`, '总复盘')", 'Home stats must render scalar reviewCount state.');
+assertIncludes(homePageSource, "this.StatItem(`${this.validReviewCount}`, '成立')", 'Home valid stats must render scalar validReviewCount state.');
+assertIncludes(homePageSource, "this.StatItem(`${this.unsureReviewCount}`, '待判断')", 'Home unsure stats must render scalar unsureReviewCount state.');
 assertIncludes(homePageSource, "return '—';", 'Home streak fallback must be —, not 0天.');
 if (homePageSource.includes('0天')) {
   failed = true;

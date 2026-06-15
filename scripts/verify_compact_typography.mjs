@@ -183,9 +183,9 @@ if (designTokensSource.includes('static readonly ButtonText: number = 17;')) {
   fail('ButtonText must not exceed 16fp.');
 }
 
-assertIncludes(homePageSource, "this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')", 'Home total stats must use real projectSummary.recordCount.');
-assertIncludes(homePageSource, "this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')", 'Home valid stats must use projectSummary.stats.validCount.');
-assertIncludes(homePageSource, "this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')", 'Home unsure stats must use projectSummary.stats.unsureCount.');
+assertIncludes(homePageSource, "this.StatItem(`${this.reviewCount}`, '总复盘')", 'Home total stats must use scalar reviewCount state.');
+assertIncludes(homePageSource, "this.StatItem(`${this.validReviewCount}`, '成立')", 'Home valid stats must use scalar validReviewCount state.');
+assertIncludes(homePageSource, "this.StatItem(`${this.unsureReviewCount}`, '待判断')", 'Home unsure stats must use scalar unsureReviewCount state.');
 assertIncludes(homePageSource, "return '—';", 'Home streak fallback must be —.');
 
 if (homePageSource.includes("this.StatItem('0'") ||
