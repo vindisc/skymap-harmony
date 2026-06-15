@@ -17,6 +17,7 @@ const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
 const SETTINGS_ACTION_BAR_HEIGHT: number = 92;
 const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 12;
 const SETTINGS_ACTION_BUTTON_GAP: number = 12;
+const SETTINGS_SUMMARY_LABEL_WIDTH: number = 72;
 
 @Entry
 @Component
@@ -143,7 +144,7 @@ struct HomeStoragePage {
   }
 
   private async saveSettings(): Promise<void> {
-    if (this.isSaving) {
+    if (this.isSaving || !this.isSettingsLoaded) {
       return;
     }
 
@@ -178,7 +179,7 @@ struct HomeStoragePage {
   }
 
   private async testHomeStorage(): Promise<void> {
-    if (this.isTestingHomeStorage) {
+    if (this.isTestingHomeStorage || !this.isSettingsLoaded) {
       return;
     }
 
@@ -228,6 +229,50 @@ struct HomeStoragePage {
     }, SETTINGS_INPUT_SCROLL_DELAY);
   }
 
+  private hasRequiredHomeStorageSettings(): boolean {
+    return this.homeStorageHost.trim().length > 0 && this.homeStorageShareName.trim().length > 0;
+  }
+
+  private resolveStatusTitle(): string {
+    if (!this.isSettingsLoaded) {
+      return '正在读取';
+    }
+    return this.hasRequiredHomeStorageSettings() ? '可以测试连接' : '还需要填写';
+  }
+
+  private resolveStatusDescription(): string {
+    if (!this.isSettingsLoaded) {
+      return '正在读取本机保存的家庭存储配置。';
+    }
+    if (this.hasRequiredHomeStorageSettings()) {
+      return '保存后可在阅读页把 review.json 上传到家庭存储。';
+    }
+    return '至少填写 SMB 地址或 IP、共享目录，端口默认使用 445。';
+  }
+
+  private resolveDestinationText(): string {
+    if (!this.isSettingsLoaded) {
+      return '读取中';
+    }
+    if (!this.hasRequiredHomeStorageSettings()) {
+      return '填写地址和共享目录后显示';
+    }
+    const remoteDirectory: string = this.homeStorageRemoteDirectory.trim();
+    const basePath: string = `\\\\${this.homeStorageHost.trim()}\\${this.homeStorageShareName.trim()}`;
+    return remoteDirectory.length > 0 ? `${basePath}\\${remoteDirectory.replace(/\//g, '\\')}` : `${basePath}\\共享根目录`;
+  }
+
+  private resolveAccountText(): string {
+    if (!this.isSettingsLoaded) {
+      return '读取中';
+    }
+    return this.homeStorageUsername.trim().length > 0 ? this.homeStorageUsername.trim() : '匿名或访客访问';
+  }
+
+  private isActionDisabled(): boolean {
+    return !this.isSettingsLoaded || this.isSaving || this.isTestingHomeStorage;
+  }
+
   @Builder
   FieldLabel(label: string) {
     Text(label)
@@ -236,6 +281,35 @@ struct HomeStoragePage {
       .fontColor(AppColors.text)
       .lineHeight(AppTypography.inputLabelLineHeight)
       .width('100%')
+  }
+
+  @Builder
+  FieldHint(text: string) {
+    Text(text)
+      .fontSize(AppTypography.meta)
+      .fontColor(AppColors.mutedText)
+      .lineHeight(AppTypography.metaLineHeight)
+      .width('100%')
+  }
+
+  @Builder
+  SectionTitle(title: string, subtitle: string) {
+    Column({ space: AppMetrics.space8 }) {
+      Text(title)
+        .fontSize(AppTypography.sectionTitle)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.sectionTitleLineHeight)
+        .width('100%')
+
+      Text(subtitle)
+        .fontSize(AppTypography.auxiliary)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.auxiliaryLineHeight)
+        .width('100%')
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
   }
 
   @Builder
@@ -258,7 +332,8 @@ struct HomeStoragePage {
     placeholder: string,
     onChange: (value: string) => void,
     isPassword: boolean = false,
-    inputIndex: number = -1
+    inputIndex: number = -1,
+    hint: string = ''
   ) {
     Column({ space: AppMetrics.space8 }) {
       this.FieldLabel(label)
@@ -287,6 +362,127 @@ struct HomeStoragePage {
             this.focusedInputIndex = -1;
           }
         })
+
+      if (hint.length > 0) {
+        this.FieldHint(hint)
+      }
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+  }
+
+  @Builder
+  SummaryRow(label: string, value: string) {
+    Row({ space: AppMetrics.space16 }) {
+      Text(label)
+        .fontSize(AppTypography.caption)
+        .fontColor(AppColors.mutedText)
+        .lineHeight(AppTypography.captionLineHeight)
+        .width(SETTINGS_SUMMARY_LABEL_WIDTH)
+
+      Text(value)
+        .fontSize(AppTypography.body)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.bodyLineHeight)
+        .layoutWeight(1)
+        .maxLines(2)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+    }
+    .alignItems(VerticalAlign.Top)
+    .width('100%')
+  }
+
+  @Builder
+  StatusSummary() {
+    Column({ space: AppMetrics.cardGap }) {
+      Row({ space: AppMetrics.space16 }) {
+        Column({ space: AppMetrics.space8 }) {
+          Text('配置状态')
+            .fontSize(AppTypography.cardTitle)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.cardTitleLineHeight)
+            .width('100%')
+
+          Text(this.resolveStatusDescription())
+            .fontSize(AppTypography.auxiliary)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.auxiliaryLineHeight)
+            .width('100%')
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+
+        Text(this.resolveStatusTitle())
+          .fontSize(AppTypography.meta)
+          .fontColor(this.hasRequiredHomeStorageSettings() ? AppColors.tagBlueText : AppColors.secondaryText)
+          .lineHeight(AppTypography.metaLineHeight)
+          .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
+          .borderRadius(AppMetrics.cardRadius)
+          .backgroundColor(this.hasRequiredHomeStorageSettings() ? AppColors.tagBlue : AppColors.surfaceMuted)
+      }
+      .alignItems(VerticalAlign.Top)
+      .width('100%')
+
+      this.SummaryRow('写入位置', this.resolveDestinationText())
+      this.SummaryRow('登录账号', this.resolveAccountText())
+    }
+    .alignItems(HorizontalAlign.Start)
+    .padding(AppMetrics.cardPadding)
+    .width('100%')
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+  }
+
+  @Builder
+  ConfigurationForm() {
+    Column({ space: AppMetrics.sectionGap }) {
+      Column({ space: AppMetrics.cardGap }) {
+        this.SectionTitle('连接目标', '填写家庭存储在局域网中的 SMB 地址。也可以把 smb://地址/共享目录/路径 粘贴到地址栏，保存时会自动拆分。')
+
+        this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '例如 192.168.3.10', (value: string) => {
+          this.homeStorageHost = value;
+        }, false, 0, '必填。支持填写 smb://192.168.3.10/Photos/Reviews。')
+
+        this.SettingsInput('SMB 端口', this.homeStoragePort, '默认 445', (value: string) => {
+          this.homeStoragePort = value;
+        }, false, 1, '大多数家庭 NAS 使用 445，除非你手动改过端口。')
+
+        this.SettingsInput('共享目录', this.homeStorageShareName, '例如 Photos', (value: string) => {
+          this.homeStorageShareName = value;
+        }, false, 2, '必填。填写 SMB 共享名，不需要加斜杠。')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
+
+      Column({ space: AppMetrics.cardGap }) {
+        this.SectionTitle('保存位置', '指定 review.json 上传后的目录。留空时会直接保存到共享目录根部。')
+
+        this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '例如 Reviews/2026', (value: string) => {
+          this.homeStorageRemoteDirectory = value;
+        }, false, 3, '可选。路径不存在时请先在家庭存储中创建。')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
+
+      Column({ space: AppMetrics.cardGap }) {
+        this.SectionTitle('登录凭据', '根据家庭存储权限填写账号信息。密码会通过系统安全存储保存，失败时才回退到本地设置。')
+
+        this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
+          this.homeStorageUsername = value;
+        }, false, 4, '可选。访客共享或匿名访问可以留空。')
+
+        this.SettingsInput('密码或凭据', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
+          this.homeStoragePassword = value;
+        }, true, 5, '可选。保存后再次进入会回填已保存凭据。')
+
+        this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
+          this.homeStorageDomain = value;
+        }, false, 6, '可选。普通家庭网络通常不需要填写。')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
@@ -298,7 +494,7 @@ struct HomeStoragePage {
       Row({ space: SETTINGS_ACTION_BUTTON_GAP }) {
         SecondaryButton({
           label: this.isTestingHomeStorage ? '测试中...' : '测试连接',
-          isDisabled: this.isTestingHomeStorage,
+          isDisabled: this.isActionDisabled(),
           onTap: () => {
             this.testHomeStorage();
           }
@@ -308,7 +504,7 @@ struct HomeStoragePage {
 
         PrimaryButton({
           label: this.isSaving ? '保存中...' : '保存',
-          isDisabled: this.isSaving,
+          isDisabled: this.isActionDisabled(),
           onTap: () => {
             this.saveSettings();
           }
@@ -318,7 +514,6 @@ struct HomeStoragePage {
       .alignItems(VerticalAlign.Center)
       .width('100%')
     }
-    .justifyContent(FlexAlign.Center)
     .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space16, bottom: AppMetrics.space16 })
     .width('100%')
     .height(SETTINGS_ACTION_BAR_HEIGHT)
@@ -331,52 +526,18 @@ struct HomeStoragePage {
       Column() {
         AppPageHeader({
           title: '家庭存储',
-          subtitle: '管理 SMB 设置，并通过测试连接确认路径可写。'
+          subtitle: '配置 SMB 家庭存储，让 review.json 可以从阅读页直接上传。'
         })
 
         Scroll(this.settingsScroller) {
           Column({ space: AppMetrics.sectionGap }) {
-            Column({ space: AppMetrics.cardGap }) {
-              Text('用于把 review.json 上传到家庭存储，配置项与导出菜单保持一致。')
-                .fontSize(AppTypography.auxiliary)
-                .fontColor(AppColors.secondaryText)
-                .lineHeight(AppTypography.auxiliaryLineHeight)
-                .width('100%')
+            this.StatusSummary()
 
-              if (this.isSettingsLoaded) {
-                this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
-                  this.homeStorageHost = value;
-                }, false, 0)
-
-                this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
-                  this.homeStoragePort = value;
-                }, false, 1)
-
-                this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
-                  this.homeStorageShareName = value;
-                }, false, 2)
-
-                this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '留空则保存到共享根目录，例如 Reviews/2026', (value: string) => {
-                  this.homeStorageRemoteDirectory = value;
-                }, false, 3)
-
-                this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
-                  this.homeStorageUsername = value;
-                }, false, 4)
-
-                this.SettingsInput('密码', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
-                  this.homeStoragePassword = value;
-                }, true, 5)
-
-                this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
-                  this.homeStorageDomain = value;
-                }, false, 6)
-              } else {
-                this.LoadingSettings()
-              }
+            if (this.isSettingsLoaded) {
+              this.ConfigurationForm()
+            } else {
+              this.LoadingSettings()
             }
-            .alignItems(HorizontalAlign.Start)
-            .width('100%')
           }
           .alignItems(HorizontalAlign.Start)
           .padding({ top: AppMetrics.space24, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
