@@ -34,6 +34,7 @@ struct ReviewSettingsPage {
   @State homeStorageUsername: string = '';
   @State homeStoragePassword: string = '';
   @State homeStorageDomain: string = '';
+  @State isSettingsLoaded: boolean = false;
   @State isSaving: boolean = false;
   @State isTestingHomeStorage: boolean = false;
   @State keyboardHeight: number = 0;
@@ -111,6 +112,7 @@ struct ReviewSettingsPage {
   private async loadSettings(): Promise<void> {
     const requestId = this.loadRequestId + 1;
     this.loadRequestId = requestId;
+    this.isSettingsLoaded = false;
     const reviewerName = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
     const homeStorageSettings = await HomeStorageService.loadSettings(this.getAbilityContext());
     if (requestId !== this.loadRequestId) {
@@ -124,6 +126,7 @@ struct ReviewSettingsPage {
     this.homeStorageUsername = homeStorageSettings.username;
     this.homeStoragePassword = homeStorageSettings.password;
     this.homeStorageDomain = homeStorageSettings.smbDomain;
+    this.isSettingsLoaded = true;
   }
 
   private currentHomeStorageSettings(): HomeStorageSettings {
@@ -244,6 +247,19 @@ struct ReviewSettingsPage {
   }
 
   @Builder
+  LoadingSettings() {
+    Column({ space: AppMetrics.space8 }) {
+      Text('正在读取家庭存储设置')
+        .fontSize(AppTypography.body)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.bodyLineHeight)
+        .width('100%')
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+  }
+
+  @Builder
   SettingsInput(
     label: string,
     text: string,
@@ -289,9 +305,13 @@ struct ReviewSettingsPage {
 
       Scroll(this.settingsScroller) {
         Column({ space: AppMetrics.sectionGap }) {
-          this.SettingsInput('复盘人', this.reviewerName, '可留空', (value: string) => {
-            this.reviewerName = value;
-          }, false, 0)
+          if (this.isSettingsLoaded) {
+            this.SettingsInput('复盘人', this.reviewerName, '可留空', (value: string) => {
+              this.reviewerName = value;
+            }, false, 0)
+          } else {
+            this.LoadingSettings()
+          }
 
           Column({ space: AppMetrics.cardGap }) {
             Text('家庭存储')
@@ -307,33 +327,37 @@ struct ReviewSettingsPage {
               .lineHeight(AppTypography.auxiliaryLineHeight)
               .width('100%')
 
-            this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
-              this.homeStorageHost = value;
-            }, false, 1)
+            if (this.isSettingsLoaded) {
+              this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
+                this.homeStorageHost = value;
+              }, false, 1)
 
-            this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
-              this.homeStoragePort = value;
-            }, false, 2)
+              this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
+                this.homeStoragePort = value;
+              }, false, 2)
 
-            this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
-              this.homeStorageShareName = value;
-            }, false, 3)
+              this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
+                this.homeStorageShareName = value;
+              }, false, 3)
 
-            this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '留空则保存到共享根目录，例如 Reviews/2026', (value: string) => {
-              this.homeStorageRemoteDirectory = value;
-            }, false, 4)
+              this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '留空则保存到共享根目录，例如 Reviews/2026', (value: string) => {
+                this.homeStorageRemoteDirectory = value;
+              }, false, 4)
 
-            this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
-              this.homeStorageUsername = value;
-            }, false, 5)
+              this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
+                this.homeStorageUsername = value;
+              }, false, 5)
 
-            this.SettingsInput('密码或凭据', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
-              this.homeStoragePassword = value;
-            }, true, 6)
+              this.SettingsInput('密码或凭据', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
+                this.homeStoragePassword = value;
+              }, true, 6)
 
-            this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
-              this.homeStorageDomain = value;
-            }, false, 7)
+              this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
+                this.homeStorageDomain = value;
+              }, false, 7)
+            } else {
+              this.LoadingSettings()
+            }
           }
           .alignItems(HorizontalAlign.Start)
           .width('100%')

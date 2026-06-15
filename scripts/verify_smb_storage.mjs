@@ -61,6 +61,28 @@ if (!homeStoragePageSource.includes('onPageShow(): void {') ||
   console.error('SMB settings and status pages must reload persisted values whenever the page is shown again.');
 }
 
+if (!homeStoragePageSource.includes('.onChange((value: string) => {') ||
+  !homeStoragePageSource.includes('onChange(value);') ||
+  !settingsPageSource.includes('.onChange((value: string) => {') ||
+  !settingsPageSource.includes('onChange(value);')) {
+  failed = true;
+  console.error('SMB settings inputs must forward TextInput changes back into component state.');
+}
+
+if (!homeStoragePageSource.includes('@State isSettingsLoaded: boolean = false;') ||
+  !homeStoragePageSource.includes('this.isSettingsLoaded = false;') ||
+  !homeStoragePageSource.includes('this.isSettingsLoaded = true;') ||
+  !homeStoragePageSource.includes('if (this.isSettingsLoaded) {') ||
+  !homeStoragePageSource.includes("Text('正在读取家庭存储设置'") ||
+  !settingsPageSource.includes('@State isSettingsLoaded: boolean = false;') ||
+  !settingsPageSource.includes('this.isSettingsLoaded = false;') ||
+  !settingsPageSource.includes('this.isSettingsLoaded = true;') ||
+  !settingsPageSource.includes('if (this.isSettingsLoaded) {') ||
+  !settingsPageSource.includes("Text('正在读取家庭存储设置'")) {
+  failed = true;
+  console.error('SMB settings inputs must mount only after persisted values are loaded, so TextInput can display saved values.');
+}
+
 if (!syncCenterPageSource.includes("this.InfoRow('保存位置'") || !syncCenterPageSource.includes("'共享根目录'")) {
   failed = true;
   console.error('SyncCenterPage must show the simplified share-root upload location.');

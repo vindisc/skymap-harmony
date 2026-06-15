@@ -360,6 +360,10 @@ export class HomeStorageService {
     return HomeStorageService.rememberSettings(normalized);
   }
 
+  static async verifySavedSettings(context: common.UIAbilityContext): Promise<HomeStorageSettings> {
+    return HomeStorageService.loadSettings(context);
+  }
+
   static async loadLastUploadedAt(context: common.UIAbilityContext): Promise<number> {
     try {
       const store = await HomeStorageService.getStore(context);
