@@ -15,6 +15,9 @@ const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
 const SETTINGS_FORM_BOTTOM_PADDING: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
+const SETTINGS_ACTION_BAR_HEIGHT: number = 92;
+const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 12;
+const SETTINGS_ACTION_BUTTON_GAP: number = 12;
 
 @Entry
 @Component
@@ -187,11 +190,12 @@ struct ReviewSettingsPage {
   }
 
   private getSettingsBottomPadding(): number {
+    const actionBarPadding: number = SETTINGS_ACTION_BAR_HEIGHT + SETTINGS_ACTION_BAR_BOTTOM_GAP;
     if (this.isKeyboardActive()) {
-      return this.keyboardHeight + SETTINGS_KEYBOARD_BOTTOM_PADDING;
+      return this.keyboardHeight + SETTINGS_KEYBOARD_BOTTOM_PADDING + actionBarPadding;
     }
 
-    return SETTINGS_FORM_BOTTOM_PADDING;
+    return SETTINGS_FORM_BOTTOM_PADDING + actionBarPadding;
   }
 
   private focusInput(index: number): void {
@@ -274,12 +278,13 @@ struct ReviewSettingsPage {
       TextInput({ text: text, placeholder: placeholder })
         .type(isPassword ? InputType.Password : InputType.Normal)
         .height(AppMetrics.controlHeight)
+        .maxLines(1)
         .borderRadius(AppMetrics.cardRadius)
         .fontSize(AppTypography.inputText)
         .fontColor(AppColors.text)
         .placeholderColor(AppColors.placeholderText)
         .backgroundColor(AppColors.surfaceMuted)
-        .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+        .padding({ left: AppMetrics.space16, right: isPassword ? AppMetrics.space32 : AppMetrics.space16 })
         .border({ width: 1, color: AppColors.border })
         .onChange((value: string) => {
           onChange(value);
@@ -299,95 +304,116 @@ struct ReviewSettingsPage {
     .width('100%')
   }
 
-  build() {
+  @Builder
+  ActionBar() {
     Column() {
-      this.Header()
-
-      Scroll(this.settingsScroller) {
-        Column({ space: AppMetrics.sectionGap }) {
-          if (this.isSettingsLoaded) {
-            this.SettingsInput('复盘人', this.reviewerName, '可留空', (value: string) => {
-              this.reviewerName = value;
-            }, false, 0)
-          } else {
-            this.LoadingSettings()
+      Row({ space: SETTINGS_ACTION_BUTTON_GAP }) {
+        SecondaryButton({
+          label: this.isTestingHomeStorage ? '测试中...' : '测试连接',
+          isDisabled: this.isTestingHomeStorage,
+          onTap: () => {
+            this.testHomeStorage();
           }
+        })
+          .height(AppMetrics.controlHeight)
+          .layoutWeight(1)
 
-          Column({ space: AppMetrics.cardGap }) {
-            Text('家庭存储')
-              .fontSize(AppTypography.sectionTitle)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .lineHeight(AppTypography.sectionTitleLineHeight)
-              .width('100%')
+        PrimaryButton({
+          label: this.isSaving ? '保存中...' : '保存',
+          isDisabled: this.isSaving,
+          onTap: () => {
+            this.saveSettings();
+          }
+        })
+          .layoutWeight(1)
+      }
+      .alignItems(VerticalAlign.Center)
+      .width('100%')
+    }
+    .justifyContent(FlexAlign.Center)
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space16, bottom: AppMetrics.space16 })
+    .width('100%')
+    .height(SETTINGS_ACTION_BAR_HEIGHT)
+    .backgroundColor(AppColors.pageBackground)
+    .shadow({ radius: 18, color: '#14000000', offsetX: 0, offsetY: -4 })
+  }
 
-            Text('用于把当前复盘导出的 review.json 直接上传到家庭存储，不替代系统文件导出。')
-              .fontSize(AppTypography.auxiliary)
-              .fontColor(AppColors.secondaryText)
-              .lineHeight(AppTypography.auxiliaryLineHeight)
-              .width('100%')
+  build() {
+    Stack({ alignContent: Alignment.Bottom }) {
+      Column() {
+        this.Header()
 
+        Scroll(this.settingsScroller) {
+          Column({ space: AppMetrics.sectionGap }) {
             if (this.isSettingsLoaded) {
-              this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
-                this.homeStorageHost = value;
-              }, false, 1)
-
-              this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
-                this.homeStoragePort = value;
-              }, false, 2)
-
-              this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
-                this.homeStorageShareName = value;
-              }, false, 3)
-
-              this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '留空则保存到共享根目录，例如 Reviews/2026', (value: string) => {
-                this.homeStorageRemoteDirectory = value;
-              }, false, 4)
-
-              this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
-                this.homeStorageUsername = value;
-              }, false, 5)
-
-              this.SettingsInput('密码或凭据', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
-                this.homeStoragePassword = value;
-              }, true, 6)
-
-              this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
-                this.homeStorageDomain = value;
-              }, false, 7)
+              this.SettingsInput('复盘人', this.reviewerName, '可留空', (value: string) => {
+                this.reviewerName = value;
+              }, false, 0)
             } else {
               this.LoadingSettings()
             }
+
+            Column({ space: AppMetrics.cardGap }) {
+              Text('家庭存储')
+                .fontSize(AppTypography.sectionTitle)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.text)
+                .lineHeight(AppTypography.sectionTitleLineHeight)
+                .width('100%')
+
+              Text('用于把当前复盘导出的 review.json 直接上传到家庭存储，不替代系统文件导出。')
+                .fontSize(AppTypography.auxiliary)
+                .fontColor(AppColors.secondaryText)
+                .lineHeight(AppTypography.auxiliaryLineHeight)
+                .width('100%')
+
+              if (this.isSettingsLoaded) {
+                this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
+                  this.homeStorageHost = value;
+                }, false, 1)
+
+                this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
+                  this.homeStoragePort = value;
+                }, false, 2)
+
+                this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
+                  this.homeStorageShareName = value;
+                }, false, 3)
+
+                this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '留空则保存到共享根目录，例如 Reviews/2026', (value: string) => {
+                  this.homeStorageRemoteDirectory = value;
+                }, false, 4)
+
+                this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
+                  this.homeStorageUsername = value;
+                }, false, 5)
+
+                this.SettingsInput('密码或凭据', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
+                  this.homeStoragePassword = value;
+                }, true, 6)
+
+                this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
+                  this.homeStorageDomain = value;
+                }, false, 7)
+              } else {
+                this.LoadingSettings()
+              }
+            }
+            .alignItems(HorizontalAlign.Start)
+            .width('100%')
           }
           .alignItems(HorizontalAlign.Start)
           .width('100%')
-
-          Column({ space: AppMetrics.cardGap }) {
-            SecondaryButton({
-              label: this.isTestingHomeStorage ? '测试中...' : '测试家庭存储连接',
-              isDisabled: this.isTestingHomeStorage,
-              onTap: () => {
-                this.testHomeStorage();
-              }
-            })
-
-            PrimaryButton({
-              label: this.isSaving ? '保存中...' : '保存',
-              isDisabled: this.isSaving,
-              onTap: () => {
-                this.saveSettings();
-              }
-            })
-          }
-          .width('100%')
+          .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
         }
-        .alignItems(HorizontalAlign.Start)
-        .width('100%')
-        .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
       }
+      .alignItems(HorizontalAlign.Start)
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: 0 })
+      .width('100%')
+      .height('100%')
+
+      this.ActionBar()
     }
-    .alignItems(HorizontalAlign.Start)
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space32 })
     .width('100%')
     .height('100%')
     .backgroundColor(AppColors.pageBackground)

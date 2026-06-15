@@ -14,6 +14,9 @@ const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
 const SETTINGS_FORM_BOTTOM_PADDING: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
+const SETTINGS_ACTION_BAR_HEIGHT: number = 92;
+const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 12;
+const SETTINGS_ACTION_BUTTON_GAP: number = 12;
 
 @Entry
 @Component
@@ -193,11 +196,12 @@ struct HomeStoragePage {
   }
 
   private getSettingsBottomPadding(): number {
+    const actionBarPadding: number = SETTINGS_ACTION_BAR_HEIGHT + SETTINGS_ACTION_BAR_BOTTOM_GAP;
     if (this.isKeyboardActive()) {
-      return this.keyboardHeight + SETTINGS_KEYBOARD_BOTTOM_PADDING;
+      return this.keyboardHeight + SETTINGS_KEYBOARD_BOTTOM_PADDING + actionBarPadding;
     }
 
-    return SETTINGS_FORM_BOTTOM_PADDING;
+    return SETTINGS_FORM_BOTTOM_PADDING + actionBarPadding;
   }
 
   private focusInput(index: number): void {
@@ -262,12 +266,13 @@ struct HomeStoragePage {
       TextInput({ text: text, placeholder: placeholder })
         .type(isPassword ? InputType.Password : InputType.Normal)
         .height(AppMetrics.controlHeight)
+        .maxLines(1)
         .borderRadius(AppMetrics.cardRadius)
         .fontSize(AppTypography.inputText)
         .fontColor(AppColors.text)
         .placeholderColor(AppColors.placeholderText)
         .backgroundColor(AppColors.surfaceMuted)
-        .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+        .padding({ left: AppMetrics.space16, right: isPassword ? AppMetrics.space32 : AppMetrics.space16 })
         .border({ width: 1, color: AppColors.border })
         .onChange((value: string) => {
           onChange(value);
@@ -287,82 +292,103 @@ struct HomeStoragePage {
     .width('100%')
   }
 
-  build() {
+  @Builder
+  ActionBar() {
     Column() {
-      AppPageHeader({
-        title: '家庭存储',
-        subtitle: '管理 SMB 设置，并通过测试连接确认路径可写。'
-      })
+      Row({ space: SETTINGS_ACTION_BUTTON_GAP }) {
+        SecondaryButton({
+          label: this.isTestingHomeStorage ? '测试中...' : '测试连接',
+          isDisabled: this.isTestingHomeStorage,
+          onTap: () => {
+            this.testHomeStorage();
+          }
+        })
+          .height(AppMetrics.controlHeight)
+          .layoutWeight(1)
 
-      Scroll(this.settingsScroller) {
-        Column({ space: AppMetrics.sectionGap }) {
-          Column({ space: AppMetrics.cardGap }) {
-            Text('用于把复盘里的 review.json 上传到家庭存储，配置项与导出菜单保持一致。')
-              .fontSize(AppTypography.auxiliary)
-              .fontColor(AppColors.secondaryText)
-              .lineHeight(AppTypography.auxiliaryLineHeight)
-              .width('100%')
+        PrimaryButton({
+          label: this.isSaving ? '保存中...' : '保存',
+          isDisabled: this.isSaving,
+          onTap: () => {
+            this.saveSettings();
+          }
+        })
+          .layoutWeight(1)
+      }
+      .alignItems(VerticalAlign.Center)
+      .width('100%')
+    }
+    .justifyContent(FlexAlign.Center)
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space16, bottom: AppMetrics.space16 })
+    .width('100%')
+    .height(SETTINGS_ACTION_BAR_HEIGHT)
+    .backgroundColor(AppColors.pageBackground)
+    .shadow({ radius: 18, color: '#14000000', offsetX: 0, offsetY: -4 })
+  }
 
-            if (this.isSettingsLoaded) {
-              this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
-                this.homeStorageHost = value;
-              }, false, 0)
+  build() {
+    Stack({ alignContent: Alignment.Bottom }) {
+      Column() {
+        AppPageHeader({
+          title: '家庭存储',
+          subtitle: '管理 SMB 设置，并通过测试连接确认路径可写。'
+        })
 
-              this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
-                this.homeStoragePort = value;
-              }, false, 1)
+        Scroll(this.settingsScroller) {
+          Column({ space: AppMetrics.sectionGap }) {
+            Column({ space: AppMetrics.cardGap }) {
+              Text('用于把 review.json 上传到家庭存储，配置项与导出菜单保持一致。')
+                .fontSize(AppTypography.auxiliary)
+                .fontColor(AppColors.secondaryText)
+                .lineHeight(AppTypography.auxiliaryLineHeight)
+                .width('100%')
 
-              this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
-                this.homeStorageShareName = value;
-              }, false, 2)
+              if (this.isSettingsLoaded) {
+                this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
+                  this.homeStorageHost = value;
+                }, false, 0)
 
-              this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '留空则保存到共享根目录，例如 Reviews/2026', (value: string) => {
-                this.homeStorageRemoteDirectory = value;
-              }, false, 3)
+                this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
+                  this.homeStoragePort = value;
+                }, false, 1)
 
-              this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
-                this.homeStorageUsername = value;
-              }, false, 4)
+                this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
+                  this.homeStorageShareName = value;
+                }, false, 2)
 
-              this.SettingsInput('密码', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
-                this.homeStoragePassword = value;
-              }, true, 5)
+                this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '留空则保存到共享根目录，例如 Reviews/2026', (value: string) => {
+                  this.homeStorageRemoteDirectory = value;
+                }, false, 3)
 
-              this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
-                this.homeStorageDomain = value;
-              }, false, 6)
-            } else {
-              this.LoadingSettings()
+                this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
+                  this.homeStorageUsername = value;
+                }, false, 4)
+
+                this.SettingsInput('密码', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
+                  this.homeStoragePassword = value;
+                }, true, 5)
+
+                this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
+                  this.homeStorageDomain = value;
+                }, false, 6)
+              } else {
+                this.LoadingSettings()
+              }
             }
+            .alignItems(HorizontalAlign.Start)
+            .width('100%')
           }
           .alignItems(HorizontalAlign.Start)
-          .width('100%')
-
-          Column({ space: AppMetrics.cardGap }) {
-            SecondaryButton({
-              label: this.isTestingHomeStorage ? '测试连接中...' : '测试连接',
-              isDisabled: this.isTestingHomeStorage,
-              onTap: () => {
-                this.testHomeStorage();
-              }
-            })
-
-            PrimaryButton({
-              label: this.isSaving ? '保存中...' : '保存',
-              isDisabled: this.isSaving,
-              onTap: () => {
-                this.saveSettings();
-              }
-            })
-          }
-          .width('100%')
+          .padding({ top: AppMetrics.space24, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
         }
-        .alignItems(HorizontalAlign.Start)
-        .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
       }
+      .alignItems(HorizontalAlign.Start)
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: 0 })
+      .width('100%')
+      .height('100%')
+
+      this.ActionBar()
     }
-    .alignItems(HorizontalAlign.Start)
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space32 })
     .width('100%')
     .height('100%')
     .backgroundColor(AppColors.pageBackground)

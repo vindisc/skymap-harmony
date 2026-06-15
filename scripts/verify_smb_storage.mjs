@@ -33,7 +33,7 @@ const requiredSettingsTokens = [
   "SettingsInput('目标路径'",
   "SettingsInput('用户名'",
   "SettingsInput('密码或凭据'",
-  '测试家庭存储连接'
+  '测试连接'
 ];
 
 for (const token of requiredSettingsTokens) {
