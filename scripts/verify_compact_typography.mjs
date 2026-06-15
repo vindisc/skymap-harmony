@@ -26,23 +26,23 @@ function assertIncludes(source, marker, message) {
 }
 
 const requiredTypographyTokens = [
-  ['PageTitle', 30],
-  ['PageSubtitle', 16],
-  ['SectionTitle', 20],
+  ['PageTitle', 26],
+  ['PageSubtitle', 15],
+  ['SectionTitle', 18],
   ['SectionSubtitle', 14],
-  ['CardTitle', 18],
-  ['CardBody', 15],
+  ['CardTitle', 17],
+  ['CardBody', 16],
   ['CardMeta', 13],
-  ['ListTitle', 17],
-  ['ListBody', 14],
+  ['ListTitle', 16],
+  ['ListBody', 15],
   ['ListMeta', 13],
-  ['StatNumber', 24],
+  ['StatNumber', 28],
   ['StatLabel', 13],
   ['ButtonText', 16],
   ['SmallButtonText', 15],
-  ['InputText', 15],
-  ['InputPlaceholder', 15],
-  ['InputLabel', 16],
+  ['InputText', 16],
+  ['InputPlaceholder', 16],
+  ['InputLabel', 15],
   ['TabIcon', 22],
   ['TabLabel', 12]
 ];
@@ -56,11 +56,11 @@ for (const [name, value] of requiredTypographyTokens) {
 }
 
 const requiredLayoutTokens = [
-  ['TabBarHeight', 60],
-  ['SearchHeight', 42],
-  ['ChipHeight', 32],
-  ['PrimaryButtonHeight', 44],
-  ['SecondaryButtonHeight', 40],
+  ['TabBarHeight', 68],
+  ['SearchHeight', 44],
+  ['ChipHeight', 44],
+  ['PrimaryButtonHeight', 48],
+  ['SecondaryButtonHeight', 44],
   ['ListThumbnailSize', 72],
   ['ListCardMinHeight', 92],
   ['ListCardMaxHeight', 104]
@@ -85,17 +85,17 @@ const maxByToken = new Map([
   ['SectionTitle', 20],
   ['SectionSubtitle', 14],
   ['CardTitle', 18],
-  ['CardBody', 15],
+  ['CardBody', 16],
   ['CardMeta', 13],
   ['ListTitle', 17],
-  ['ListBody', 14],
+  ['ListBody', 15],
   ['ListMeta', 13],
-  ['StatNumber', 24],
+  ['StatNumber', 28],
   ['StatLabel', 13],
   ['ButtonText', 16],
   ['SmallButtonText', 15],
-  ['InputText', 15],
-  ['InputPlaceholder', 15],
+  ['InputText', 16],
+  ['InputPlaceholder', 16],
   ['InputLabel', 16],
   ['TabLabel', 12]
 ]);
@@ -183,15 +183,15 @@ if (designTokensSource.includes('static readonly ButtonText: number = 17;')) {
   fail('ButtonText must not exceed 16fp.');
 }
 
-assertIncludes(homePageSource, "this.StatItem(`${this.reviewCount}`, '总复盘')", 'Home total stats must use scalar reviewCount state.');
-assertIncludes(homePageSource, "this.StatItem(`${this.validReviewCount}`, '成立')", 'Home valid stats must use scalar validReviewCount state.');
-assertIncludes(homePageSource, "this.StatItem(`${this.unsureReviewCount}`, '待判断')", 'Home unsure stats must use scalar unsureReviewCount state.');
+assertIncludes(homePageSource, 'Text(`${this.reviewCount}`)', 'Home total stats must render scalar reviewCount state directly.');
+assertIncludes(homePageSource, 'Text(`${this.validReviewCount}`)', 'Home valid stats must render scalar validReviewCount state directly.');
+assertIncludes(homePageSource, 'Text(`${this.unsureReviewCount}`)', 'Home unsure stats must render scalar unsureReviewCount state directly.');
 assertIncludes(homePageSource, "return '—';", 'Home streak fallback must be —.');
 
-if (homePageSource.includes("this.StatItem('0'") ||
-  homePageSource.includes('this.StatItem("0"') ||
+if (homePageSource.includes('StatItem(') ||
+  homePageSource.includes("@Builder\n  StatItem") ||
   homePageSource.includes('0天')) {
-  fail('Home stats must not hard-code 0 or 0天.');
+  fail('Home stats must not use parameterized StatItem builders or render 0天.');
 }
 
 const primaryPageFiles = [
