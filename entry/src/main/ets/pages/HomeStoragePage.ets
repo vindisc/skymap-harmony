@@ -14,8 +14,8 @@ const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
 const SETTINGS_FORM_BOTTOM_PADDING: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
-const SETTINGS_ACTION_BAR_HEIGHT: number = 92;
-const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 12;
+const SETTINGS_ACTION_BAR_HEIGHT: number = 80;
+const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 8;
 const SETTINGS_ACTION_BUTTON_GAP: number = 12;
 
 @Entry
@@ -234,21 +234,9 @@ struct HomeStoragePage {
 
   private resolveStatusTitle(): string {
     if (!this.isSettingsLoaded) {
-      return '正在读取';
-    }
-    return this.hasRequiredHomeStorageSettings() ? '可以测试连接' : '还需要填写';
-  }
-
-  private resolveDestinationText(): string {
-    if (!this.isSettingsLoaded) {
       return '读取中';
     }
-    if (!this.hasRequiredHomeStorageSettings()) {
-      return '未配置';
-    }
-    const remoteDirectory: string = this.homeStorageRemoteDirectory.trim();
-    const basePath: string = `\\\\${this.homeStorageHost.trim()}\\${this.homeStorageShareName.trim()}`;
-    return remoteDirectory.length > 0 ? `${basePath}\\${remoteDirectory.replace(/\//g, '\\')}` : `${basePath}`;
+    return this.hasRequiredHomeStorageSettings() ? '已配置' : '未配置';
   }
 
   private isActionDisabled(): boolean {
@@ -257,35 +245,23 @@ struct HomeStoragePage {
 
   @Builder
   Header() {
-    Column({ space: AppMetrics.space8 }) {
-      Row({ space: AppMetrics.space16 }) {
-        Text('家庭存储')
-          .fontSize(AppTypography.pageTitle)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.text)
-          .lineHeight(AppTypography.pageTitleLineHeight)
-          .layoutWeight(1)
+    Row({ space: AppMetrics.space16 }) {
+      Text('家庭存储')
+        .fontSize(AppTypography.pageTitle)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.pageTitleLineHeight)
+        .layoutWeight(1)
 
-        Text(this.resolveStatusTitle())
-          .fontSize(AppTypography.meta)
-          .fontColor(this.hasRequiredHomeStorageSettings() ? AppColors.tagBlueText : AppColors.secondaryText)
-          .lineHeight(AppTypography.metaLineHeight)
-          .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
-          .borderRadius(AppMetrics.cardRadius)
-          .backgroundColor(this.hasRequiredHomeStorageSettings() ? AppColors.tagBlue : AppColors.surfaceMuted)
-      }
-      .alignItems(VerticalAlign.Center)
-      .width('100%')
-
-      Text(this.resolveDestinationText())
-        .fontSize(AppTypography.auxiliary)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.auxiliaryLineHeight)
-        .width('100%')
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
+      Text(this.resolveStatusTitle())
+        .fontSize(AppTypography.meta)
+        .fontColor(this.hasRequiredHomeStorageSettings() ? AppColors.tagBlueText : AppColors.secondaryText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
+        .borderRadius(AppMetrics.cardRadius)
+        .backgroundColor(this.hasRequiredHomeStorageSettings() ? AppColors.tagBlue : AppColors.surfaceMuted)
     }
-    .alignItems(HorizontalAlign.Start)
+    .alignItems(VerticalAlign.Center)
     .width('100%')
   }
 
@@ -414,11 +390,10 @@ struct HomeStoragePage {
       .alignItems(VerticalAlign.Center)
       .width('100%')
     }
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space16, bottom: AppMetrics.space16 })
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.cardGap, bottom: AppMetrics.cardGap })
     .width('100%')
     .height(SETTINGS_ACTION_BAR_HEIGHT)
     .backgroundColor(AppColors.pageBackground)
-    .shadow({ radius: 18, color: '#14000000', offsetX: 0, offsetY: -4 })
   }
 
   build() {
@@ -435,8 +410,9 @@ struct HomeStoragePage {
             }
           }
           .alignItems(HorizontalAlign.Start)
-          .padding({ top: AppMetrics.space16, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
+          .padding({ top: AppMetrics.space24, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
         }
+        .scrollBar(BarState.Off)
       }
       .alignItems(HorizontalAlign.Start)
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: 0 })
