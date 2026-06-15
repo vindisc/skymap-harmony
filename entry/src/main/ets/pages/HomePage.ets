@@ -11,6 +11,7 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewProjectSummary } from '../model/ProjectModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
+import { formatReviewTime } from '../utils/ImageLayoutUtils';
 import {
   AppColors,
   AppMetrics,
@@ -33,6 +34,12 @@ export struct HomePage {
   @State unsureReviewCount: number = 0;
   @State streakDays: number = 0;
   @State historyLoadFailed: boolean = false;
+  @State debugLoadedItemCount: number = -1;
+  @State debugSummaryCount: number = -1;
+  @State debugLatestTitle: string = '未加载';
+  @State debugLatestUpdatedAt: string = '未加载';
+  @State debugLastError: string = '';
+  @State debugReloadStamp: string = '未加载';
 
   aboutToAppear(): void {
     this.reloadHistory();
@@ -60,11 +67,16 @@ export struct HomePage {
       if (requestId !== this.reloadRequestId) {
         return;
       }
+      this.debugLoadedItemCount = items.length;
+      this.debugLastError = '';
+      this.debugReloadStamp = formatReviewTime(Date.now());
       this.historyLoadFailed = false;
       this.applyHomeData(items);
     } catch (error) {
       if (requestId === this.reloadRequestId) {
         this.historyLoadFailed = true;
+        this.debugLastError = `${error}`;
+        this.debugReloadStamp = formatReviewTime(Date.now());
       }
       return;
     }
@@ -77,6 +89,9 @@ export struct HomePage {
     this.validReviewCount = summary.stats.validCount;
     this.unsureReviewCount = summary.stats.unsureCount;
     this.streakDays = this.resolveStreakDays(items);
+    this.debugSummaryCount = summary.recordCount;
+    this.debugLatestTitle = summary.latestItem ? summary.latestItem.document.content.title : '无最近记录';
+    this.debugLatestUpdatedAt = summary.latestItem ? formatReviewTime(summary.latestItem.document.updatedAt) : '无最近记录';
   }
 
   private resolveStreakDays(items: Array<ReviewCardHistoryItem>): number {
@@ -200,6 +215,44 @@ export struct HomePage {
   }
 
   @Builder
+  DebugStatsPanel() {
+    Column({ space: AppMetrics.space8 }) {
+      Text('诊断信息')
+        .fontSize(AppTypography.caption)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.tagAmberText)
+        .width('100%')
+
+      Text(`load=${this.debugLoadedItemCount} · summary=${this.debugSummaryCount} · UI=${this.reviewCount}/${this.validReviewCount}/${this.unsureReviewCount} · 连续=${this.resolveStreakText()}`)
+        .fontSize(AppTypography.meta)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .width('100%')
+
+      Text(`最近：${this.debugLatestTitle} · ${this.debugLatestUpdatedAt}`)
+        .fontSize(AppTypography.meta)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .width('100%')
+        .maxLines(2)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+      Text(this.debugLastError.length > 0 ? `错误：${this.debugLastError}` : `刷新：${this.debugReloadStamp}`)
+        .fontSize(AppTypography.meta)
+        .fontColor(this.debugLastError.length > 0 ? AppColors.danger : AppColors.secondaryText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .width('100%')
+        .maxLines(2)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+    }
+    .padding(AppMetrics.cardPadding)
+    .width('100%')
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.tagAmber)
+    .border({ width: 1, color: AppColors.tagAmberText })
+  }
+
+  @Builder
   StartReviewPanel() {
     Column({ space: AppMetrics.cardGap }) {
       Column({ space: AppMetrics.space8 }) {
@@ -245,6 +298,8 @@ export struct HomePage {
         this.StartReviewPanel()
 
         this.GrowthStatsPanel()
+
+        this.DebugStatsPanel()
 
         Column({ space: AppMetrics.cardGap }) {
           Text('最近一次')

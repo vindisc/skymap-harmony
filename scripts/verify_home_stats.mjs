@@ -55,6 +55,15 @@ if (!homePageSource.includes('private resolveStreakDays(items: Array<ReviewCardH
   console.error('HomePage streak calculation must be isolated so it cannot reset visible review counts to 0.');
 }
 
+if (!homePageSource.includes("Text('诊断信息')") ||
+  !homePageSource.includes('load=${this.debugLoadedItemCount}') ||
+  !homePageSource.includes('summary=${this.debugSummaryCount}') ||
+  !homePageSource.includes('错误：') ||
+  !homePageSource.includes('刷新：')) {
+  failed = true;
+  console.error('HomePage must expose a temporary diagnostic panel while the counter mismatch is being traced.');
+}
+
 const summaryIndex = homePageSource.indexOf('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)');
 const countIndex = homePageSource.indexOf('this.reviewCount = summary.recordCount');
 const streakIndex = homePageSource.indexOf('this.streakDays = this.resolveStreakDays(items)');
