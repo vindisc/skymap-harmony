@@ -42,9 +42,25 @@ if (!homePageSource.includes('const summary: ReviewProjectSummary = ReviewProjec
   !homePageSource.includes('this.latestItem = summary.latestItem') ||
   !homePageSource.includes('this.reviewCount = summary.recordCount') ||
   !homePageSource.includes('this.validReviewCount = summary.stats.validCount') ||
-  !homePageSource.includes('this.unsureReviewCount = summary.stats.unsureCount')) {
+  !homePageSource.includes('this.unsureReviewCount = summary.stats.unsureCount') ||
+  !homePageSource.includes('this.streakDays = this.resolveStreakDays(items)')) {
   failed = true;
   console.error('HomePage visible state must be copied from the same all-history home summary as MyPage.');
+}
+
+if (!homePageSource.includes('private resolveStreakDays(items: Array<ReviewCardHistoryItem>): number') ||
+  !homePageSource.includes('return ReviewProjectService.buildDashboardStats(items).streakDays;') ||
+  !homePageSource.includes('return 0;')) {
+  failed = true;
+  console.error('HomePage streak calculation must be isolated so it cannot reset visible review counts to 0.');
+}
+
+const summaryIndex = homePageSource.indexOf('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)');
+const countIndex = homePageSource.indexOf('this.reviewCount = summary.recordCount');
+const streakIndex = homePageSource.indexOf('this.streakDays = this.resolveStreakDays(items)');
+if (summaryIndex < 0 || countIndex < 0 || streakIndex < 0 || !(summaryIndex < countIndex && countIndex < streakIndex)) {
+  failed = true;
+  console.error('HomePage must assign review counts before calculating streak data.');
 }
 
 if (homePageSource.includes('ReviewCardStore.getCurrentDocument()') ||

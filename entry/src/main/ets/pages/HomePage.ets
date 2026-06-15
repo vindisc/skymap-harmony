@@ -11,7 +11,6 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewProjectSummary } from '../model/ProjectModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
-import { ReviewDashboardStats } from '../services/ReviewProjectService';
 import {
   AppColors,
   AppMetrics,
@@ -73,12 +72,19 @@ export struct HomePage {
 
   private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
     const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items);
-    const dashboardStats: ReviewDashboardStats = ReviewProjectService.buildDashboardStats(items);
     this.latestItem = summary.latestItem;
     this.reviewCount = summary.recordCount;
     this.validReviewCount = summary.stats.validCount;
     this.unsureReviewCount = summary.stats.unsureCount;
-    this.streakDays = dashboardStats.streakDays;
+    this.streakDays = this.resolveStreakDays(items);
+  }
+
+  private resolveStreakDays(items: Array<ReviewCardHistoryItem>): number {
+    try {
+      return ReviewProjectService.buildDashboardStats(items).streakDays;
+    } catch (error) {
+      return 0;
+    }
   }
 
   private openLatestReview(): void {
