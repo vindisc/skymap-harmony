@@ -25,6 +25,10 @@ struct SyncCenterPage {
     this.loadSettings();
   }
 
+  onPageShow(): void {
+    this.loadSettings();
+  }
+
   private async loadSettings(): Promise<void> {
     this.homeStorageSettings = await HomeStorageService.loadSettings(this.getAbilityContext());
   }

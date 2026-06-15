@@ -50,6 +50,10 @@ struct ReviewSettingsPage {
     this.loadSettings();
   }
 
+  onPageShow(): void {
+    this.loadSettings();
+  }
+
   aboutToDisappear(): void {
     this.isPageAlive = false;
     this.unregisterKeyboardHeightObserver();

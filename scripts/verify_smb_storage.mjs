@@ -51,6 +51,16 @@ if (!homeStoragePageSource.includes('this.homeStorageRemoteDirectory = homeStora
   console.error('SMB settings pages must load, save, and render the optional target path.');
 }
 
+if (!homeStoragePageSource.includes('onPageShow(): void {') ||
+  !homeStoragePageSource.includes('this.loadSettings();') ||
+  !settingsPageSource.includes('onPageShow(): void {') ||
+  !settingsPageSource.includes('this.loadSettings();') ||
+  !syncCenterPageSource.includes('onPageShow(): void {') ||
+  !syncCenterPageSource.includes('this.loadSettings();')) {
+  failed = true;
+  console.error('SMB settings and status pages must reload persisted values whenever the page is shown again.');
+}
+
 if (!syncCenterPageSource.includes("this.InfoRow('保存位置'") || !syncCenterPageSource.includes("'共享根目录'")) {
   failed = true;
   console.error('SyncCenterPage must show the simplified share-root upload location.');
@@ -66,6 +76,8 @@ const requiredHomeStorageTokens = [
   "message: 'review.json 已上传到家庭存储（已自动保存到共享根目录）'",
   'let passwordSavedSecurely: boolean = false;',
   'await store.put(LEGACY_PASSWORD_KEY, normalized.password);',
+  'private static async loadSettingsSnapshot(store: preferences.Preferences): Promise<HomeStorageSettings | null> {',
+  'await store.put(SETTINGS_SNAPSHOT_KEY, HomeStorageService.createSettingsSnapshot(normalized));',
   "isMissingRemoteDirectoryError(primaryResult.message)"
 ];
 
