@@ -4,6 +4,7 @@ const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.
 const settingsPageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewSettingsPage.ets', 'utf8');
 const homeStoragePageSource = fs.readFileSync('entry/src/main/ets/pages/HomeStoragePage.ets', 'utf8');
 const syncCenterPageSource = fs.readFileSync('entry/src/main/ets/pages/SyncCenterPage.ets', 'utf8');
+const settingsFormSource = fs.readFileSync('entry/src/main/ets/components/SettingsForm.ets', 'utf8');
 const homeStorageSource = fs.readFileSync('entry/src/main/ets/services/HomeStorageService.ets', 'utf8');
 const secretServiceSource = fs.readFileSync('entry/src/main/ets/services/HomeStorageSecretService.ets', 'utf8');
 const smbClientSource = fs.readFileSync('entry/src/main/ets/services/Smb2Client.ets', 'utf8');
@@ -28,6 +29,36 @@ for (const token of requiredPreviewTokens) {
 
 const requiredSettingsTokens = [
   "Text('家庭存储')",
+  "router.pushUrl({ url: HOME_STORAGE_PAGE });",
+  "Text('配置 SMB 地址、共享目录和登录凭据')"
+];
+
+for (const token of requiredSettingsTokens) {
+  if (!settingsPageSource.includes(token)) {
+    failed = true;
+    console.error(`ReviewSettingsPage missing home-storage link token: ${token}`);
+  }
+}
+
+const forbiddenSettingsTokens = [
+  "SettingsInput('SMB 地址或 IP'",
+  "SettingsInput('共享目录'",
+  "SettingsInput('目标路径'",
+  "SettingsInput('用户名'",
+  "SettingsInput('密码或凭据'",
+  'HomeStorageService.saveSettings',
+  'testHomeStorage',
+  'homeStorageRemoteDirectory'
+];
+
+for (const token of forbiddenSettingsTokens) {
+  if (settingsPageSource.includes(token)) {
+    failed = true;
+    console.error(`ReviewSettingsPage must not own SMB form state anymore: ${token}`);
+  }
+}
+
+const requiredHomeStoragePageTokens = [
   "SettingsInput('SMB 地址或 IP'",
   "SettingsInput('共享目录'",
   "SettingsInput('目标路径'",
@@ -36,19 +67,17 @@ const requiredSettingsTokens = [
   '测试连接'
 ];
 
-for (const token of requiredSettingsTokens) {
-  if (!settingsPageSource.includes(token)) {
+for (const token of requiredHomeStoragePageTokens) {
+  if (!homeStoragePageSource.includes(token)) {
     failed = true;
-    console.error(`ReviewSettingsPage missing SMB token: ${token}`);
+    console.error(`HomeStoragePage missing SMB form token: ${token}`);
   }
 }
 
 if (!homeStoragePageSource.includes('this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;') ||
-  !settingsPageSource.includes('this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;') ||
-  !homeStoragePageSource.includes('remoteDirectory: this.homeStorageRemoteDirectory') ||
-  !settingsPageSource.includes('remoteDirectory: this.homeStorageRemoteDirectory')) {
+  !homeStoragePageSource.includes('remoteDirectory: this.homeStorageRemoteDirectory')) {
   failed = true;
-  console.error('SMB settings pages must load, save, and render the optional target path.');
+  console.error('HomeStoragePage must load, save, and render the optional target path.');
 }
 
 if (!homeStoragePageSource.includes('onPageShow(): void {') ||
@@ -61,12 +90,12 @@ if (!homeStoragePageSource.includes('onPageShow(): void {') ||
   console.error('SMB settings and status pages must reload persisted values whenever the page is shown again.');
 }
 
-if (!homeStoragePageSource.includes('.onChange((value: string) => {') ||
-  !homeStoragePageSource.includes('onChange(value);') ||
-  !settingsPageSource.includes('.onChange((value: string) => {') ||
-  !settingsPageSource.includes('onChange(value);')) {
+if (!settingsFormSource.includes('.onChange((value: string) => {') ||
+  !settingsFormSource.includes('this.onChange(value);') ||
+  !homeStoragePageSource.includes('SettingsTextInput({') ||
+  !settingsPageSource.includes('SettingsTextInput({')) {
   failed = true;
-  console.error('SMB settings inputs must forward TextInput changes back into component state.');
+  console.error('Settings inputs must forward TextInput changes back into component state.');
 }
 
 if (!homeStoragePageSource.includes('@State isSettingsLoaded: boolean = false;') ||
@@ -78,9 +107,9 @@ if (!homeStoragePageSource.includes('@State isSettingsLoaded: boolean = false;')
   !settingsPageSource.includes('this.isSettingsLoaded = false;') ||
   !settingsPageSource.includes('this.isSettingsLoaded = true;') ||
   !settingsPageSource.includes('if (this.isSettingsLoaded) {') ||
-  !settingsPageSource.includes("Text('正在读取家庭存储设置'")) {
+  !settingsPageSource.includes("Text('正在读取设置'")) {
   failed = true;
-  console.error('SMB settings inputs must mount only after persisted values are loaded, so TextInput can display saved values.');
+  console.error('Settings inputs must mount only after persisted values are loaded, so TextInput can display saved values.');
 }
 
 if (!syncCenterPageSource.includes("this.InfoRow('保存位置'") || !syncCenterPageSource.includes("'共享根目录'")) {

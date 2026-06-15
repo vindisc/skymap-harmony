@@ -2,7 +2,8 @@ import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
-import { AppColors, AppMetrics, AppTypography, PrimaryButton, SecondaryButton } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
+import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
 import {
   HomeStorageOperationResult,
   HomeStorageService,
@@ -16,7 +17,6 @@ const SETTINGS_FORM_BOTTOM_PADDING: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
 const SETTINGS_ACTION_BAR_HEIGHT: number = 80;
 const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 8;
-const SETTINGS_ACTION_BUTTON_GAP: number = 12;
 
 @Entry
 @Component
@@ -266,16 +266,6 @@ struct HomeStoragePage {
   }
 
   @Builder
-  FieldLabel(label: string) {
-    Text(label)
-      .fontSize(AppTypography.inputLabel)
-      .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.text)
-      .lineHeight(AppTypography.inputLabelLineHeight)
-      .width('100%')
-  }
-
-  @Builder
   LoadingSettings() {
     Column({ space: AppMetrics.space8 }) {
       Text('正在读取家庭存储设置')
@@ -297,36 +287,23 @@ struct HomeStoragePage {
     isPassword: boolean = false,
     inputIndex: number = -1
   ) {
-    Column({ space: AppMetrics.space8 }) {
-      this.FieldLabel(label)
-
-      TextInput({ text: text, placeholder: placeholder })
-        .type(isPassword ? InputType.Password : InputType.Normal)
-        .height(AppMetrics.controlHeight)
-        .maxLines(1)
-        .borderRadius(AppMetrics.cardRadius)
-        .fontSize(AppTypography.inputText)
-        .fontColor(AppColors.text)
-        .placeholderColor(AppColors.placeholderText)
-        .backgroundColor(AppColors.surfaceMuted)
-        .padding({ left: AppMetrics.space16, right: isPassword ? AppMetrics.space32 : AppMetrics.space16 })
-        .border({ width: 1, color: AppColors.border })
-        .onChange((value: string) => {
-          onChange(value);
-        })
-        .onFocus(() => {
-          if (inputIndex >= 0) {
-            this.focusInput(inputIndex);
-          }
-        })
-        .onBlur(() => {
-          if (this.focusedInputIndex === inputIndex) {
-            this.focusedInputIndex = -1;
-          }
-        })
-    }
-    .alignItems(HorizontalAlign.Start)
-    .width('100%')
+    SettingsTextInput({
+      label: label,
+      text: text,
+      placeholder: placeholder,
+      isPassword: isPassword,
+      onChange: onChange,
+      onFocusInput: () => {
+        if (inputIndex >= 0) {
+          this.focusInput(inputIndex);
+        }
+      },
+      onBlurInput: () => {
+        if (this.focusedInputIndex === inputIndex) {
+          this.focusedInputIndex = -1;
+        }
+      }
+    })
   }
 
   @Builder
@@ -366,34 +343,19 @@ struct HomeStoragePage {
 
   @Builder
   ActionBar() {
-    Column() {
-      Row({ space: SETTINGS_ACTION_BUTTON_GAP }) {
-        SecondaryButton({
-          label: this.isTestingHomeStorage ? '测试中...' : '测试连接',
-          isDisabled: this.isActionDisabled(),
-          onTap: () => {
-            this.testHomeStorage();
-          }
-        })
-          .height(AppMetrics.controlHeight)
-          .layoutWeight(1)
-
-        PrimaryButton({
-          label: this.isSaving ? '保存中...' : '保存',
-          isDisabled: this.isActionDisabled(),
-          onTap: () => {
-            this.saveSettings();
-          }
-        })
-          .layoutWeight(1)
+    SettingsActionBar({
+      primaryLabel: this.isSaving ? '保存中...' : '保存',
+      secondaryLabel: this.isTestingHomeStorage ? '测试中...' : '测试连接',
+      isPrimaryDisabled: this.isActionDisabled(),
+      isSecondaryDisabled: this.isActionDisabled(),
+      onPrimaryTap: () => {
+        this.saveSettings();
+      },
+      onSecondaryTap: () => {
+        this.testHomeStorage();
       }
-      .alignItems(VerticalAlign.Center)
-      .width('100%')
-    }
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.cardGap, bottom: AppMetrics.cardGap })
-    .width('100%')
+    })
     .height(SETTINGS_ACTION_BAR_HEIGHT)
-    .backgroundColor(AppColors.pageBackground)
   }
 
   build() {

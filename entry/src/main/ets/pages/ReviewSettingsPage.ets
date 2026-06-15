@@ -1,13 +1,11 @@
+import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
-import { AppColors, AppMetrics, AppTypography, PrimaryButton, SecondaryButton } from '../components/AppDesign';
-import {
-  HomeStorageOperationResult,
-  HomeStorageService,
-  HomeStorageSettings
-} from '../services/HomeStorageService';
+import { HOME_STORAGE_PAGE } from '../app/AppRouter';
+import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
+import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
@@ -15,9 +13,8 @@ const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
 const SETTINGS_FORM_BOTTOM_PADDING: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
-const SETTINGS_ACTION_BAR_HEIGHT: number = 92;
-const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 12;
-const SETTINGS_ACTION_BUTTON_GAP: number = 12;
+const SETTINGS_ACTION_BAR_HEIGHT: number = 80;
+const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 8;
 
 @Entry
 @Component
@@ -30,16 +27,8 @@ struct ReviewSettingsPage {
   private isPageAlive: boolean = false;
   private loadRequestId: number = 0;
   @State reviewerName: string = '';
-  @State homeStorageHost: string = '';
-  @State homeStoragePort: string = '';
-  @State homeStorageShareName: string = '';
-  @State homeStorageRemoteDirectory: string = '';
-  @State homeStorageUsername: string = '';
-  @State homeStoragePassword: string = '';
-  @State homeStorageDomain: string = '';
   @State isSettingsLoaded: boolean = false;
   @State isSaving: boolean = false;
-  @State isTestingHomeStorage: boolean = false;
   @State keyboardHeight: number = 0;
   @State focusedInputIndex: number = -1;
 
@@ -117,53 +106,22 @@ struct ReviewSettingsPage {
     this.loadRequestId = requestId;
     this.isSettingsLoaded = false;
     const reviewerName = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
-    const homeStorageSettings = await HomeStorageService.loadSettings(this.getAbilityContext());
     if (requestId !== this.loadRequestId) {
       return;
     }
     this.reviewerName = reviewerName;
-    this.homeStorageHost = homeStorageSettings.smbHost;
-    this.homeStoragePort = homeStorageSettings.smbPort;
-    this.homeStorageShareName = homeStorageSettings.smbShareName;
-    this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;
-    this.homeStorageUsername = homeStorageSettings.username;
-    this.homeStoragePassword = homeStorageSettings.password;
-    this.homeStorageDomain = homeStorageSettings.smbDomain;
     this.isSettingsLoaded = true;
   }
 
-  private currentHomeStorageSettings(): HomeStorageSettings {
-    return {
-      username: this.homeStorageUsername,
-      password: this.homeStoragePassword,
-      remoteDirectory: this.homeStorageRemoteDirectory,
-      smbHost: this.homeStorageHost,
-      smbPort: this.homeStoragePort,
-      smbShareName: this.homeStorageShareName,
-      smbDomain: this.homeStorageDomain
-    };
-  }
-
   private async saveSettings(): Promise<void> {
-    if (this.isSaving) {
+    if (this.isSaving || !this.isSettingsLoaded) {
       return;
     }
 
     this.isSaving = true;
     try {
       this.reviewerName = await ReviewSettingsService.saveReviewerName(this.getAbilityContext(), this.reviewerName);
-      const homeStorageSettings = await HomeStorageService.saveSettings(
-        this.getAbilityContext(),
-        this.currentHomeStorageSettings()
-      );
-      this.homeStorageHost = homeStorageSettings.smbHost;
-      this.homeStoragePort = homeStorageSettings.smbPort;
-      this.homeStorageShareName = homeStorageSettings.smbShareName;
-      this.homeStorageRemoteDirectory = homeStorageSettings.remoteDirectory;
-      this.homeStorageUsername = homeStorageSettings.username;
-      this.homeStoragePassword = homeStorageSettings.password;
-      this.homeStorageDomain = homeStorageSettings.smbDomain;
-      promptAction.showToast({ message: '已保存设置' });
+      promptAction.showToast({ message: '已保存复盘人' });
     } catch (error) {
       promptAction.showToast({ message: '保存失败，请稍后重试' });
     } finally {
@@ -171,18 +129,8 @@ struct ReviewSettingsPage {
     }
   }
 
-  private async testHomeStorage(): Promise<void> {
-    if (this.isTestingHomeStorage) {
-      return;
-    }
-
-    this.isTestingHomeStorage = true;
-    try {
-      const result: HomeStorageOperationResult = await HomeStorageService.testConnection(this.currentHomeStorageSettings());
-      promptAction.showToast({ message: result.message });
-    } finally {
-      this.isTestingHomeStorage = false;
-    }
+  private openHomeStorageSettings(): void {
+    router.pushUrl({ url: HOME_STORAGE_PAGE });
   }
 
   private isKeyboardActive(): boolean {
@@ -241,19 +189,9 @@ struct ReviewSettingsPage {
   }
 
   @Builder
-  FieldLabel(label: string) {
-    Text(label)
-      .fontSize(AppTypography.inputLabel)
-      .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.text)
-      .lineHeight(AppTypography.inputLabelLineHeight)
-      .width('100%')
-  }
-
-  @Builder
   LoadingSettings() {
     Column({ space: AppMetrics.space8 }) {
-      Text('正在读取家庭存储设置')
+      Text('正在读取设置')
         .fontSize(AppTypography.body)
         .fontColor(AppColors.secondaryText)
         .lineHeight(AppTypography.bodyLineHeight)
@@ -272,70 +210,72 @@ struct ReviewSettingsPage {
     isPassword: boolean = false,
     inputIndex: number = -1
   ) {
-    Column({ space: AppMetrics.space8 }) {
-      this.FieldLabel(label)
-
-      TextInput({ text: text, placeholder: placeholder })
-        .type(isPassword ? InputType.Password : InputType.Normal)
-        .height(AppMetrics.controlHeight)
-        .maxLines(1)
-        .borderRadius(AppMetrics.cardRadius)
-        .fontSize(AppTypography.inputText)
-        .fontColor(AppColors.text)
-        .placeholderColor(AppColors.placeholderText)
-        .backgroundColor(AppColors.surfaceMuted)
-        .padding({ left: AppMetrics.space16, right: isPassword ? AppMetrics.space32 : AppMetrics.space16 })
-        .border({ width: 1, color: AppColors.border })
-        .onChange((value: string) => {
-          onChange(value);
-        })
-        .onFocus(() => {
-          if (inputIndex >= 0) {
-            this.focusInput(inputIndex);
-          }
-        })
-        .onBlur(() => {
-          if (this.focusedInputIndex === inputIndex) {
-            this.focusedInputIndex = -1;
-          }
-        })
-    }
-    .alignItems(HorizontalAlign.Start)
-    .width('100%')
+    SettingsTextInput({
+      label: label,
+      text: text,
+      placeholder: placeholder,
+      isPassword: isPassword,
+      onChange: onChange,
+      onFocusInput: () => {
+        if (inputIndex >= 0) {
+          this.focusInput(inputIndex);
+        }
+      },
+      onBlurInput: () => {
+        if (this.focusedInputIndex === inputIndex) {
+          this.focusedInputIndex = -1;
+        }
+      }
+    })
   }
 
   @Builder
   ActionBar() {
-    Column() {
-      Row({ space: SETTINGS_ACTION_BUTTON_GAP }) {
-        SecondaryButton({
-          label: this.isTestingHomeStorage ? '测试中...' : '测试连接',
-          isDisabled: this.isTestingHomeStorage,
-          onTap: () => {
-            this.testHomeStorage();
-          }
-        })
-          .height(AppMetrics.controlHeight)
-          .layoutWeight(1)
-
-        PrimaryButton({
-          label: this.isSaving ? '保存中...' : '保存',
-          isDisabled: this.isSaving,
-          onTap: () => {
-            this.saveSettings();
-          }
-        })
-          .layoutWeight(1)
+    SettingsActionBar({
+      primaryLabel: this.isSaving ? '保存中...' : '保存',
+      isPrimaryDisabled: this.isSaving || !this.isSettingsLoaded,
+      onPrimaryTap: () => {
+        this.saveSettings();
       }
-      .alignItems(VerticalAlign.Center)
-      .width('100%')
-    }
-    .justifyContent(FlexAlign.Center)
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space16, bottom: AppMetrics.space16 })
-    .width('100%')
+    })
     .height(SETTINGS_ACTION_BAR_HEIGHT)
-    .backgroundColor(AppColors.pageBackground)
-    .shadow({ radius: 18, color: '#14000000', offsetX: 0, offsetY: -4 })
+  }
+
+  @Builder
+  HomeStorageLink() {
+    Row({ space: AppMetrics.cardGap }) {
+      Column({ space: AppMetrics.space8 }) {
+        Text('家庭存储')
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .width('100%')
+
+        Text('配置 SMB 地址、共享目录和登录凭据')
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      Text('›')
+        .fontSize(AppTypography.cardTitle)
+        .fontColor(AppColors.mutedText)
+        .opacity(0.56)
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.cardPadding)
+    .width('100%')
+    .constraintSize({ minHeight: 68, maxHeight: 76 })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+    .onClick(() => {
+      this.openHomeStorageSettings();
+    })
   }
 
   build() {
@@ -353,54 +293,7 @@ struct ReviewSettingsPage {
               this.LoadingSettings()
             }
 
-            Column({ space: AppMetrics.cardGap }) {
-              Text('家庭存储')
-                .fontSize(AppTypography.sectionTitle)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(AppColors.text)
-                .lineHeight(AppTypography.sectionTitleLineHeight)
-                .width('100%')
-
-              Text('用于把当前复盘导出的 review.json 直接上传到家庭存储，不替代系统文件导出。')
-                .fontSize(AppTypography.auxiliary)
-                .fontColor(AppColors.secondaryText)
-                .lineHeight(AppTypography.auxiliaryLineHeight)
-                .width('100%')
-
-              if (this.isSettingsLoaded) {
-                this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
-                  this.homeStorageHost = value;
-                }, false, 1)
-
-                this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
-                  this.homeStoragePort = value;
-                }, false, 2)
-
-                this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
-                  this.homeStorageShareName = value;
-                }, false, 3)
-
-                this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '留空则保存到共享根目录，例如 Reviews/2026', (value: string) => {
-                  this.homeStorageRemoteDirectory = value;
-                }, false, 4)
-
-                this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
-                  this.homeStorageUsername = value;
-                }, false, 5)
-
-                this.SettingsInput('密码或凭据', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
-                  this.homeStoragePassword = value;
-                }, true, 6)
-
-                this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
-                  this.homeStorageDomain = value;
-                }, false, 7)
-              } else {
-                this.LoadingSettings()
-              }
-            }
-            .alignItems(HorizontalAlign.Start)
-            .width('100%')
+            this.HomeStorageLink()
           }
           .alignItems(HorizontalAlign.Start)
           .width('100%')

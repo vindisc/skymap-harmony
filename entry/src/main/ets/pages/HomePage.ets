@@ -9,8 +9,13 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { ReviewProjectSummary } from '../model/ProjectModel';
-import { ReviewProjectService } from '../services/ReviewProjectService';
+import {
+  applyHomeDashboardReloadFailure,
+  applyHomeDashboardReloadSuccess,
+  beginHomeDashboardReload,
+  createHomeDashboardReloadState,
+  HomeDashboardReloadState
+} from '../services/HomeDashboardPresenter';
 import {
   AppColors,
   AppMetrics,
@@ -24,7 +29,7 @@ import {
 
 @Component
 export struct HomePage {
-  private reloadRequestId: number = 0;
+  private dashboardReloadState: HomeDashboardReloadState = createHomeDashboardReloadState();
   @Prop @Watch('refreshHomeData') refreshToken: number = 0;
   @State isPickingPhoto: boolean = false;
   @State latestItem: ReviewCardHistoryItem | undefined = undefined;
@@ -51,40 +56,29 @@ export struct HomePage {
   }
 
   private async reloadHistory(): Promise<void> {
-    const requestId: number = this.reloadRequestId + 1;
-    this.reloadRequestId = requestId;
+    const requestId: number = beginHomeDashboardReload(this.dashboardReloadState);
     const context = this.getAbilityContext();
 
     try {
       const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      if (requestId !== this.reloadRequestId) {
-        return;
+      if (applyHomeDashboardReloadSuccess(this.dashboardReloadState, requestId, items)) {
+        this.syncDashboardStateFromPresenter();
       }
-      this.historyLoadFailed = false;
-      this.applyHomeData(items);
     } catch (error) {
-      if (requestId === this.reloadRequestId) {
-        this.historyLoadFailed = true;
+      if (applyHomeDashboardReloadFailure(this.dashboardReloadState, requestId)) {
+        this.syncDashboardStateFromPresenter();
       }
       return;
     }
   }
 
-  private applyHomeData(items: Array<ReviewCardHistoryItem>): void {
-    const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items);
-    this.latestItem = summary.latestItem;
-    this.reviewCount = summary.recordCount;
-    this.validReviewCount = summary.stats.validCount;
-    this.unsureReviewCount = summary.stats.unsureCount;
-    this.streakDays = this.resolveStreakDays(items);
-  }
-
-  private resolveStreakDays(items: Array<ReviewCardHistoryItem>): number {
-    try {
-      return ReviewProjectService.buildDashboardStats(items).streakDays;
-    } catch (error) {
-      return 0;
-    }
+  private syncDashboardStateFromPresenter(): void {
+    this.latestItem = this.dashboardReloadState.latestItem;
+    this.reviewCount = this.dashboardReloadState.reviewCount;
+    this.validReviewCount = this.dashboardReloadState.validReviewCount;
+    this.unsureReviewCount = this.dashboardReloadState.unsureReviewCount;
+    this.streakDays = this.dashboardReloadState.streakDays;
+    this.historyLoadFailed = this.dashboardReloadState.historyLoadFailed;
   }
 
   private openLatestReview(): void {

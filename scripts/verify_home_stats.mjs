@@ -7,6 +7,7 @@ const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.
 const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
 const settingsPageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewSettingsPage.ets', 'utf8');
 const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewProjectService.ets', 'utf8');
+const homeDashboardPresenterSource = fs.readFileSync('entry/src/main/ets/services/HomeDashboardPresenter.ets', 'utf8');
 
 let failed = false;
 
@@ -44,26 +45,38 @@ if (homePageSource.includes('StatItem(') || homePageSource.includes('@Builder\n 
   assert(false, 'HomePage must not pass dynamic stats through a parameterized builder because ArkUI can keep stale values.');
 }
 
-if (!homePageSource.includes('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)') ||
-  !homePageSource.includes('this.latestItem = summary.latestItem') ||
-  !homePageSource.includes('this.reviewCount = summary.recordCount') ||
-  !homePageSource.includes('this.validReviewCount = summary.stats.validCount') ||
-  !homePageSource.includes('this.unsureReviewCount = summary.stats.unsureCount') ||
-  !homePageSource.includes('this.streakDays = this.resolveStreakDays(items)')) {
-  assert(false, 'HomePage visible state must be copied from the same all-history home summary as MyPage.');
+if (homePageSource.includes("import { ReviewProjectService } from '../services/ReviewProjectService';") ||
+  homePageSource.includes('ReviewProjectService.buildHomeSummary(items)') ||
+  homePageSource.includes('private resolveStreakDays(items: Array<ReviewCardHistoryItem>): number')) {
+  assert(false, 'HomePage must not own dashboard calculation logic; keep it in HomeDashboardPresenter.');
 }
 
-if (!homePageSource.includes('private resolveStreakDays(items: Array<ReviewCardHistoryItem>): number') ||
-  !homePageSource.includes('return ReviewProjectService.buildDashboardStats(items).streakDays;') ||
-  !homePageSource.includes('return 0;')) {
-  assert(false, 'HomePage streak calculation must be isolated so it cannot reset visible review counts to 0.');
+if (!homePageSource.includes('beginHomeDashboardReload(this.dashboardReloadState)') ||
+  !homePageSource.includes('applyHomeDashboardReloadSuccess(this.dashboardReloadState, requestId, items)') ||
+  !homePageSource.includes('applyHomeDashboardReloadFailure(this.dashboardReloadState, requestId)') ||
+  !homePageSource.includes('this.syncDashboardStateFromPresenter()')) {
+  assert(false, 'HomePage reload flow must delegate stale request gating and data projection to HomeDashboardPresenter.');
 }
 
-const summaryIndex = homePageSource.indexOf('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)');
-const countIndex = homePageSource.indexOf('this.reviewCount = summary.recordCount');
-const streakIndex = homePageSource.indexOf('this.streakDays = this.resolveStreakDays(items)');
+if (!homeDashboardPresenterSource.includes('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)') ||
+  !homeDashboardPresenterSource.includes('reviewCount: summary.recordCount') ||
+  !homeDashboardPresenterSource.includes('validReviewCount: stats.validCount') ||
+  !homeDashboardPresenterSource.includes('unsureReviewCount: stats.unsureCount') ||
+  !homeDashboardPresenterSource.includes('streakDays: resolveHomeDashboardStreakDays(items)')) {
+  assert(false, 'HomeDashboardPresenter must copy visible state from the same all-history home summary as MyPage.');
+}
+
+if (!homeDashboardPresenterSource.includes('return ReviewProjectService.buildDashboardStats(items).streakDays;') ||
+  !homeDashboardPresenterSource.includes('return 0;') ||
+  !homeDashboardPresenterSource.includes('state.historyLoadFailed = true;')) {
+  assert(false, 'HomeDashboardPresenter must isolate streak calculation and failure handling so visible counts are not reset.');
+}
+
+const summaryIndex = homeDashboardPresenterSource.indexOf('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)');
+const countIndex = homeDashboardPresenterSource.indexOf('reviewCount: summary.recordCount');
+const streakIndex = homeDashboardPresenterSource.indexOf('streakDays: resolveHomeDashboardStreakDays(items)');
 if (summaryIndex < 0 || countIndex < 0 || streakIndex < 0 || !(summaryIndex < countIndex && countIndex < streakIndex)) {
-  assert(false, 'HomePage must assign review counts before calculating streak data.');
+  assert(false, 'HomeDashboardPresenter must derive counts before calculating streak data.');
 }
 
 if (homePageSource.includes('ReviewCardStore.getCurrentDocument()') ||
@@ -234,7 +247,7 @@ function createReviewItem(projectId, judgement, createdAt, updatedAt = createdAt
   };
 }
 
-function createHomeStatsState() {
+function createHomeDashboardReloadState() {
   return {
     reloadRequestId: 0,
     latestItem: undefined,
@@ -246,7 +259,7 @@ function createHomeStatsState() {
   };
 }
 
-function applyHomeDataToState(state, items) {
+function applyHomeDashboardDataToState(state, items) {
   const summary = buildHomeSummary(items);
   state.latestItem = summary.latestItem;
   state.reviewCount = summary.recordCount;
@@ -255,18 +268,21 @@ function applyHomeDataToState(state, items) {
   state.streakDays = 0;
 }
 
-function completeReload(state, requestId, items) {
+function applyHomeDashboardReloadSuccess(state, requestId, items) {
   if (requestId !== state.reloadRequestId) {
-    return;
+    return false;
   }
   state.historyLoadFailed = false;
-  applyHomeDataToState(state, items);
+  applyHomeDashboardDataToState(state, items);
+  return true;
 }
 
-function failReload(state, requestId) {
-  if (requestId === state.reloadRequestId) {
-    state.historyLoadFailed = true;
+function applyHomeDashboardReloadFailure(state, requestId) {
+  if (requestId !== state.reloadRequestId) {
+    return false;
   }
+  state.historyLoadFailed = true;
+  return true;
 }
 
 const twelveReviewItems = [
@@ -328,16 +344,16 @@ if (homeSummary.recordCount !== 3 ||
   assert(false, `Home summary must include non-default projects: ${JSON.stringify(homeSummary)}`);
 }
 
-const staleReloadState = createHomeStatsState();
+const staleReloadState = createHomeDashboardReloadState();
 const slowRequestId = 1;
 staleReloadState.reloadRequestId = slowRequestId;
 const fastRequestId = 2;
 staleReloadState.reloadRequestId = fastRequestId;
-completeReload(staleReloadState, fastRequestId, [
+applyHomeDashboardReloadSuccess(staleReloadState, fastRequestId, [
   createReviewItem('default', '成立', 1, 10),
   createReviewItem('default', '待判断', 2, 20)
 ]);
-completeReload(staleReloadState, slowRequestId, [
+applyHomeDashboardReloadSuccess(staleReloadState, slowRequestId, [
   createReviewItem('default', '不成立', 1, 30)
 ]);
 assert(
@@ -348,15 +364,15 @@ assert(
   `Stale home reload must not overwrite newer visible stats: ${JSON.stringify(staleReloadState)}`
 );
 
-const failedReloadState = createHomeStatsState();
+const failedReloadState = createHomeDashboardReloadState();
 failedReloadState.reloadRequestId = 1;
-completeReload(failedReloadState, 1, [
+applyHomeDashboardReloadSuccess(failedReloadState, 1, [
   createReviewItem('default', '成立', 1, 10),
   createReviewItem('default', '不成立', 2, 20),
   createReviewItem('default', '待判断', 3, 30)
 ]);
 failedReloadState.reloadRequestId = 2;
-failReload(failedReloadState, 2);
+applyHomeDashboardReloadFailure(failedReloadState, 2);
 assert(
   failedReloadState.historyLoadFailed === true &&
     failedReloadState.reviewCount === 3 &&

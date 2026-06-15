@@ -50,6 +50,7 @@
 - [ ] 历史读取失败时保留上一轮可见统计，不把首页复盘概览清零。
 - [ ] 连续天数计算失败时只显示 `—`，不影响总复盘、成立、待判断统计。
 - [ ] `node scripts/verify_home_stats.mjs` 覆盖跨项目统计、状态归一化、迟到请求和读取失败保留旧值。
+- [ ] `node scripts/verify_review_project_service_tests.mjs` 覆盖复盘服务统计、筛选、汇总和连续天数纯逻辑。
 
 ## 导出图规则
 
