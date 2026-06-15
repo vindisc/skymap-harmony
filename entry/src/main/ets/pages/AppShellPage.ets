@@ -44,9 +44,7 @@ struct AppShellPage {
 
   private selectTab(key: RootTabKey): void {
     this.currentTab = key;
-    if (key === RootTabKey.HOME) {
-      this.homeRefreshToken += 1;
-    }
+    this.homeRefreshToken += 1;
   }
 
   private resolveTabLabelColor(key: RootTabKey): string {

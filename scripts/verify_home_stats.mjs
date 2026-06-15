@@ -73,6 +73,12 @@ if (!homePageSource.includes("@Prop @Watch('refreshHomeData') refreshToken") ||
   console.error('HomePage must reload when AppShell becomes visible again after editor/preview routes.');
 }
 
+if (!appShellSource.includes('private selectTab(key: RootTabKey): void') ||
+  !appShellSource.includes('this.currentTab = key;\n    this.homeRefreshToken += 1;')) {
+  failed = true;
+  console.error('AppShell must refresh HomePage after any tab switch so stats recover after MyPage reads history.');
+}
+
 if (homePageSource.includes('this.dashboardStats.totalCount') ||
   homePageSource.includes('this.dashboardStats.validCount') ||
   homePageSource.includes('this.dashboardStats.unsureCount') ||
