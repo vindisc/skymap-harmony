@@ -10,6 +10,13 @@ const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/Review
 
 let failed = false;
 
+function assert(condition, message) {
+  if (!condition) {
+    failed = true;
+    console.error(message);
+  }
+}
+
 const requiredHomeSections = [
   "title: '摄影复盘'",
   "Text('开始新的复盘')",
@@ -18,29 +25,23 @@ const requiredHomeSections = [
 ];
 
 for (const marker of requiredHomeSections) {
-  if (!homePageSource.includes(marker)) {
-    failed = true;
-    console.error(`HomePage missing section marker: ${marker}`);
-  }
+  assert(homePageSource.includes(marker), `HomePage missing section marker: ${marker}`);
 }
 
 if (!homePageSource.includes("label: this.isPickingPhoto ? '打开相册中...' : '开始复盘'")) {
   if (!homePageSource.includes("label: this.isPickingPhoto ? '正在打开相册...' : '开始复盘'")) {
-    failed = true;
-    console.error('HomePage must expose 开始复盘 quick action state.');
+    assert(false, 'HomePage must expose 开始复盘 quick action state.');
   }
 }
 
 if (!homePageSource.includes('Text(`${this.reviewCount}`)') ||
   !homePageSource.includes('Text(`${this.validReviewCount}`)') ||
   !homePageSource.includes('Text(`${this.unsureReviewCount}`)')) {
-  failed = true;
-  console.error('HomePage visible stats must bind directly to scalar @State values, matching MyPage refresh behavior.');
+  assert(false, 'HomePage visible stats must bind directly to scalar @State values, matching MyPage refresh behavior.');
 }
 
 if (homePageSource.includes('StatItem(') || homePageSource.includes('@Builder\n  StatItem')) {
-  failed = true;
-  console.error('HomePage must not pass dynamic stats through a parameterized builder because ArkUI can keep stale values.');
+  assert(false, 'HomePage must not pass dynamic stats through a parameterized builder because ArkUI can keep stale values.');
 }
 
 if (!homePageSource.includes('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)') ||
@@ -49,47 +50,40 @@ if (!homePageSource.includes('const summary: ReviewProjectSummary = ReviewProjec
   !homePageSource.includes('this.validReviewCount = summary.stats.validCount') ||
   !homePageSource.includes('this.unsureReviewCount = summary.stats.unsureCount') ||
   !homePageSource.includes('this.streakDays = this.resolveStreakDays(items)')) {
-  failed = true;
-  console.error('HomePage visible state must be copied from the same all-history home summary as MyPage.');
+  assert(false, 'HomePage visible state must be copied from the same all-history home summary as MyPage.');
 }
 
 if (!homePageSource.includes('private resolveStreakDays(items: Array<ReviewCardHistoryItem>): number') ||
   !homePageSource.includes('return ReviewProjectService.buildDashboardStats(items).streakDays;') ||
   !homePageSource.includes('return 0;')) {
-  failed = true;
-  console.error('HomePage streak calculation must be isolated so it cannot reset visible review counts to 0.');
+  assert(false, 'HomePage streak calculation must be isolated so it cannot reset visible review counts to 0.');
 }
 
 const summaryIndex = homePageSource.indexOf('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)');
 const countIndex = homePageSource.indexOf('this.reviewCount = summary.recordCount');
 const streakIndex = homePageSource.indexOf('this.streakDays = this.resolveStreakDays(items)');
 if (summaryIndex < 0 || countIndex < 0 || streakIndex < 0 || !(summaryIndex < countIndex && countIndex < streakIndex)) {
-  failed = true;
-  console.error('HomePage must assign review counts before calculating streak data.');
+  assert(false, 'HomePage must assign review counts before calculating streak data.');
 }
 
 if (homePageSource.includes('ReviewCardStore.getCurrentDocument()') ||
   homePageSource.includes('hasMeaningfulCurrentDocument')) {
-  failed = true;
-  console.error('HomePage must not mix the in-memory current draft into persisted history stats.');
+  assert(false, 'HomePage must not mix the in-memory current draft into persisted history stats.');
 }
 
 if (homePageSource.includes('const results = await Promise.all([')) {
-  failed = true;
-  console.error('HomePage must apply history stats before loading settings metadata.');
+  assert(false, 'HomePage must apply history stats before loading settings metadata.');
 }
 
 if (!myPageSource.includes('ReviewProjectService.buildHomeSummary(historyItems)')) {
-  failed = true;
-  console.error('MyPage identity stats must use the same all-history summary as HomePage.');
+  assert(false, 'MyPage identity stats must use the same all-history summary as HomePage.');
 }
 
 if (!historyServiceSource.includes('function normalizeParsedHistory(parsed: Object)') ||
   !historyServiceSource.includes('payload.items && Array.isArray(payload.items)') ||
   !historyServiceSource.includes('payload.documents && Array.isArray(payload.documents)') ||
   !historyServiceSource.includes('payload.document')) {
-  failed = true;
-  console.error('ReviewCardHistoryService must tolerate legacy or object-shaped history payloads.');
+  assert(false, 'ReviewCardHistoryService must tolerate legacy or object-shaped history payloads.');
 }
 
 if (!homePageSource.includes("@Prop @Watch('refreshHomeData') refreshToken") ||
@@ -97,87 +91,73 @@ if (!homePageSource.includes("@Prop @Watch('refreshHomeData') refreshToken") ||
   !appShellSource.includes('onPageShow(): void') ||
   !appShellSource.includes('this.refreshHomeIfNeeded();') ||
   !appShellSource.includes('HomePage({ refreshToken: this.homeRefreshToken })')) {
-  failed = true;
-  console.error('HomePage must reload when AppShell becomes visible again after editor/preview routes.');
+  assert(false, 'HomePage must reload when AppShell becomes visible again after editor/preview routes.');
 }
 
 if (!appShellSource.includes('private selectTab(key: RootTabKey): void') ||
   !appShellSource.includes('this.currentTab = key;\n    this.homeRefreshToken += 1;')) {
-  failed = true;
-  console.error('AppShell must refresh HomePage after any tab switch so stats recover after MyPage reads history.');
+  assert(false, 'AppShell must refresh HomePage after any tab switch so stats recover after MyPage reads history.');
 }
 
 if (homePageSource.includes('this.dashboardStats.totalCount') ||
   homePageSource.includes('this.dashboardStats.validCount') ||
   homePageSource.includes('this.dashboardStats.unsureCount') ||
   homePageSource.includes('@State dashboardStats')) {
-  failed = true;
-  console.error('HomePage must not keep visible review counts in nested dashboardStats state.');
+  assert(false, 'HomePage must not keep visible review counts in nested dashboardStats state.');
 }
 
 if (homePageSource.includes("this.StatItem(`${this.projectSummary.recordCount}`, '总复盘')") ||
   homePageSource.includes("this.StatItem(`${this.projectSummary.stats.validCount}`, '成立')") ||
   homePageSource.includes("this.StatItem(`${this.projectSummary.stats.unsureCount}`, '待判断')")) {
-  failed = true;
-  console.error('HomePage overview must not bind visible stats to nested projectSummary fields.');
+  assert(false, 'HomePage overview must not bind visible stats to nested projectSummary fields.');
 }
 
 if (homePageSource.includes("0天")) {
-  failed = true;
-  console.error('HomePage must not show 0天 for unreliable streak data.');
+  assert(false, 'HomePage must not show 0天 for unreliable streak data.');
 }
 
 if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('this.GrowthStatsPanel()')) {
-  failed = true;
-  console.error('HomePage must render 开始新的复盘 before 复盘概览.');
+  assert(false, 'HomePage must render 开始新的复盘 before 复盘概览.');
 }
 
 if (homePageSource.includes("Text('当前状态')") ||
   homePageSource.includes('家庭存储：') ||
   homePageSource.includes('复盘人：')) {
-  failed = true;
-  console.error('HomePage must not render the old configuration status card.');
+  assert(false, 'HomePage must not render the old configuration status card.');
 }
 
 if (historyServiceSource.includes('MAX_HISTORY_COUNT')) {
-  failed = true;
-  console.error('ReviewCardHistoryService must not truncate older review history.');
+  assert(false, 'ReviewCardHistoryService must not truncate older review history.');
 }
 
 if (!historyServiceSource.includes("const REVIEW_JSON_BACKUP_DIR_NAME: string = 'review_exchange';") ||
   !historyServiceSource.includes('loadBackupItemsOnce(context, store)') ||
   !historyServiceSource.includes('mergeHistoryItems(historyItems, backupItems)')) {
-  failed = true;
-  console.error('ReviewCardHistoryService must import local review.json backups into history once.');
+  assert(false, 'ReviewCardHistoryService must import local review.json backups into history once.');
 }
 
 if (!historyServiceSource.includes('function parseStoredHistory(rawValue: preferences.ValueType): Array<ReviewCardHistoryItem>') ||
   !historyServiceSource.includes('const historyItems: Array<ReviewCardHistoryItem> = parseStoredHistory(rawValue);')) {
-  failed = true;
-  console.error('ReviewCardHistoryService must keep importing backups even when stored history is malformed.');
+  assert(false, 'ReviewCardHistoryService must keep importing backups even when stored history is malformed.');
 }
 
 if (!previewPageSource.includes('ReviewCardHistoryService.markExported(context, this.document, result.path)') ||
   !previewPageSource.includes('ReviewCardHistoryService.markExported(context, this.document, result.remotePath)')) {
-  failed = true;
-  console.error('PreviewPage must write successful review.json exports and home-storage uploads into history stats.');
+  assert(false, 'PreviewPage must write successful review.json exports and home-storage uploads into history stats.');
 }
 
 if (!settingsPageSource.includes("Text('设置')")) {
-  failed = true;
-  console.error('ReviewSettingsPage title must be 设置.');
+  assert(false, 'ReviewSettingsPage title must be 设置.');
 }
 
 if (settingsPageSource.includes("Button('返回')") || settingsPageSource.includes('router.back()')) {
-  failed = true;
-  console.error('ReviewSettingsPage must not render or handle an explicit back button.');
+  assert(false, 'ReviewSettingsPage must not render or handle an explicit back button.');
 }
 
 if (!projectServiceSource.includes('stats.validCount += 1') ||
   !projectServiceSource.includes('stats.invalidCount += 1') ||
   !projectServiceSource.includes('stats.unsureCount += 1')) {
-  failed = true;
-  console.error('ReviewProjectService global stats logic must keep all three judgement buckets.');
+  assert(false, 'ReviewProjectService global stats logic must keep all three judgement buckets.');
 }
 
 function normalizeReviewJudgement(value) {
@@ -240,6 +220,55 @@ function buildHomeSummary(items) {
   };
 }
 
+function createReviewItem(projectId, judgement, createdAt, updatedAt = createdAt) {
+  return {
+    document: {
+      projectId,
+      content: {
+        judgement
+      },
+      createdAt,
+      updatedAt
+    },
+    exportedPath: ''
+  };
+}
+
+function createHomeStatsState() {
+  return {
+    reloadRequestId: 0,
+    latestItem: undefined,
+    reviewCount: 0,
+    validReviewCount: 0,
+    unsureReviewCount: 0,
+    streakDays: 0,
+    historyLoadFailed: false
+  };
+}
+
+function applyHomeDataToState(state, items) {
+  const summary = buildHomeSummary(items);
+  state.latestItem = summary.latestItem;
+  state.reviewCount = summary.recordCount;
+  state.validReviewCount = summary.stats.validCount;
+  state.unsureReviewCount = summary.stats.unsureCount;
+  state.streakDays = 0;
+}
+
+function completeReload(state, requestId, items) {
+  if (requestId !== state.reloadRequestId) {
+    return;
+  }
+  state.historyLoadFailed = false;
+  applyHomeDataToState(state, items);
+}
+
+function failReload(state, requestId) {
+  if (requestId === state.reloadRequestId) {
+    state.historyLoadFailed = true;
+  }
+}
+
 const twelveReviewItems = [
   '成立',
   '成立',
@@ -269,8 +298,7 @@ const twelveReviewItems = [
 
 const stats = buildGlobalStats(twelveReviewItems);
 if (stats.totalCount !== 12 || stats.validCount !== 4 || stats.unsureCount !== 5 || stats.invalidCount !== 3) {
-  failed = true;
-  console.error(`Unexpected status split: ${JSON.stringify(stats)}`);
+  assert(false, `Unexpected status split: ${JSON.stringify(stats)}`);
 }
 
 const mixedProjectItems = [
@@ -297,12 +325,52 @@ if (homeSummary.recordCount !== 3 ||
   homeSummary.stats.unsureCount !== 1 ||
   homeSummary.stats.invalidCount !== 1 ||
   homeSummary.latestItem.document.projectId !== 'imported-project') {
-  failed = true;
-  console.error(`Home summary must include non-default projects: ${JSON.stringify(homeSummary)}`);
+  assert(false, `Home summary must include non-default projects: ${JSON.stringify(homeSummary)}`);
+}
+
+const staleReloadState = createHomeStatsState();
+const slowRequestId = 1;
+staleReloadState.reloadRequestId = slowRequestId;
+const fastRequestId = 2;
+staleReloadState.reloadRequestId = fastRequestId;
+completeReload(staleReloadState, fastRequestId, [
+  createReviewItem('default', '成立', 1, 10),
+  createReviewItem('default', '待判断', 2, 20)
+]);
+completeReload(staleReloadState, slowRequestId, [
+  createReviewItem('default', '不成立', 1, 30)
+]);
+assert(
+  staleReloadState.reviewCount === 2 &&
+    staleReloadState.validReviewCount === 1 &&
+    staleReloadState.unsureReviewCount === 1 &&
+    staleReloadState.latestItem.document.updatedAt === 20,
+  `Stale home reload must not overwrite newer visible stats: ${JSON.stringify(staleReloadState)}`
+);
+
+const failedReloadState = createHomeStatsState();
+failedReloadState.reloadRequestId = 1;
+completeReload(failedReloadState, 1, [
+  createReviewItem('default', '成立', 1, 10),
+  createReviewItem('default', '不成立', 2, 20),
+  createReviewItem('default', '待判断', 3, 30)
+]);
+failedReloadState.reloadRequestId = 2;
+failReload(failedReloadState, 2);
+assert(
+  failedReloadState.historyLoadFailed === true &&
+    failedReloadState.reviewCount === 3 &&
+    failedReloadState.validReviewCount === 1 &&
+    failedReloadState.unsureReviewCount === 1,
+  `Failed home reload must keep the last visible stats instead of blanking the dashboard: ${JSON.stringify(failedReloadState)}`
+);
+
+if (homePageSource.includes('catch (error) {\n      if (requestId === this.reloadRequestId) {\n        this.historyLoadFailed = true;\n        this.reviewCount = 0')) {
+  assert(false, 'HomePage load failure must not reset visible review counts to 0.');
 }
 
 if (failed) {
   process.exit(1);
 }
 
-console.log(`home stats: sections=5, total=${stats.totalCount}, mixedTotal=${homeSummary.recordCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}`);
+console.log(`home stats: sections=5, total=${stats.totalCount}, mixedTotal=${homeSummary.recordCount}, valid=${stats.validCount}, unsure=${stats.unsureCount}, invalid=${stats.invalidCount}, staleReloadKept=${staleReloadState.reviewCount}, failureKept=${failedReloadState.reviewCount}`);
