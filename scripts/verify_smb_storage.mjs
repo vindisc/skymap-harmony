@@ -92,10 +92,21 @@ if (!homeStoragePageSource.includes('onPageShow(): void {') ||
 
 if (!settingsFormSource.includes('.onChange((value: string) => {') ||
   !settingsFormSource.includes('this.onChange(value);') ||
+  !settingsFormSource.includes('@Prop showsPasswordToggle: boolean = false;') ||
+  !settingsFormSource.includes('this.isPasswordVisible ?') ||
   !homeStoragePageSource.includes('SettingsTextInput({') ||
   !settingsPageSource.includes('SettingsTextInput({')) {
   failed = true;
   console.error('Settings inputs must forward TextInput changes back into component state.');
+}
+
+if (!homeStoragePageSource.includes('InputType.Number') ||
+  !homeStoragePageSource.includes('this.sanitizePort(value)') ||
+  !homeStoragePageSource.includes('showsPasswordToggle: showsPasswordToggle') ||
+  !homeStoragePageSource.includes('this.setActionFeedback(result.message, result.success ?') ||
+  !homeStoragePageSource.includes('this.clearActionFeedback();')) {
+  failed = true;
+  console.error('HomeStoragePage must provide numeric port input, password visibility, inline operation feedback, and stale-feedback clearing.');
 }
 
 if (!homeStoragePageSource.includes('@State isSettingsLoaded: boolean = false;') ||

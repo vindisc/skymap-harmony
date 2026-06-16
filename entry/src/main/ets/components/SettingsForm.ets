@@ -6,9 +6,19 @@ export struct SettingsTextInput {
   @Prop text: string = '';
   @Prop placeholder: string = '';
   @Prop isPassword: boolean = false;
+  @Prop showsPasswordToggle: boolean = false;
+  @Prop inputType: InputType = InputType.Normal;
+  @State isPasswordVisible: boolean = false;
   onChange: (value: string) => void = () => {};
   onFocusInput: () => void = () => {};
   onBlurInput: () => void = () => {};
+
+  private resolveInputType(): InputType {
+    if (this.isPassword && !this.isPasswordVisible) {
+      return InputType.Password;
+    }
+    return this.inputType;
+  }
 
   build() {
     Column({ space: AppMetrics.space8 }) {
@@ -19,26 +29,47 @@ export struct SettingsTextInput {
         .lineHeight(AppTypography.inputLabelLineHeight)
         .width('100%')
 
-      TextInput({ text: this.text, placeholder: this.placeholder })
-        .type(this.isPassword ? InputType.Password : InputType.Normal)
-        .height(AppMetrics.controlHeight)
-        .maxLines(1)
-        .borderRadius(AppMetrics.cardRadius)
-        .fontSize(AppTypography.inputText)
-        .fontColor(AppColors.text)
-        .placeholderColor(AppColors.placeholderText)
-        .backgroundColor(AppColors.surfaceMuted)
-        .padding({ left: AppMetrics.space16, right: this.isPassword ? AppMetrics.space32 : AppMetrics.space16 })
-        .border({ width: 1, color: AppColors.border })
-        .onChange((value: string) => {
-          this.onChange(value);
-        })
-        .onFocus(() => {
-          this.onFocusInput();
-        })
-        .onBlur(() => {
-          this.onBlurInput();
-        })
+      Row({ space: AppMetrics.space8 }) {
+        TextInput({ text: this.text, placeholder: this.placeholder })
+          .type(this.resolveInputType())
+          .height(AppMetrics.controlHeight)
+          .maxLines(1)
+          .borderRadius(AppMetrics.cardRadius)
+          .fontSize(AppTypography.inputText)
+          .fontColor(AppColors.text)
+          .placeholderColor(AppColors.placeholderText)
+          .backgroundColor(AppColors.surfaceMuted)
+          .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+          .border({ width: 1, color: AppColors.border })
+          .layoutWeight(1)
+          .onChange((value: string) => {
+            this.onChange(value);
+          })
+          .onFocus(() => {
+            this.onFocusInput();
+          })
+          .onBlur(() => {
+            this.onBlurInput();
+          })
+
+        if (this.showsPasswordToggle) {
+          Button(this.isPasswordVisible ? '隐藏' : '显示')
+            .height(AppMetrics.controlHeight)
+            .width(58)
+            .borderRadius(AppMetrics.buttonRadius)
+            .fontSize(AppTypography.smallButtonText)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .backgroundColor(AppColors.surfaceMuted)
+            .border({ width: 1, color: AppColors.border })
+            .stateEffect(true)
+            .onClick(() => {
+              this.isPasswordVisible = !this.isPasswordVisible;
+            })
+        }
+      }
+      .alignItems(VerticalAlign.Center)
+      .width('100%')
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')

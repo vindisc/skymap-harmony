@@ -38,6 +38,8 @@ struct HomeStoragePage {
   @State isSettingsLoaded: boolean = false;
   @State isSaving: boolean = false;
   @State isTestingHomeStorage: boolean = false;
+  @State actionFeedbackText: string = '';
+  @State actionFeedbackLevel: string = 'neutral';
   @State keyboardHeight: number = 0;
   @State focusedInputIndex: number = -1;
 
@@ -166,11 +168,14 @@ struct HomeStoragePage {
         verifiedSettings.remoteDirectory !== this.homeStorageRemoteDirectory ||
         verifiedSettings.username !== this.homeStorageUsername ||
         verifiedSettings.smbDomain !== this.homeStorageDomain) {
+        this.setActionFeedback('已保存，但回读不一致', 'warning');
         promptAction.showToast({ message: '已保存，但回读结果与当前输入不一致' });
         return;
       }
+      this.setActionFeedback('已保存家庭存储设置', 'success');
       promptAction.showToast({ message: '已保存家庭存储设置' });
     } catch (error) {
+      this.setActionFeedback('保存失败，请稍后重试', 'error');
       promptAction.showToast({ message: '保存失败，请稍后重试' });
     } finally {
       this.isSaving = false;
@@ -185,6 +190,7 @@ struct HomeStoragePage {
     this.isTestingHomeStorage = true;
     try {
       const result: HomeStorageOperationResult = await HomeStorageService.testConnection(this.currentHomeStorageSettings());
+      this.setActionFeedback(result.message, result.success ? 'success' : 'error');
       promptAction.showToast({ message: result.message });
     } finally {
       this.isTestingHomeStorage = false;
@@ -232,6 +238,20 @@ struct HomeStoragePage {
     return this.homeStorageHost.trim().length > 0 && this.homeStorageShareName.trim().length > 0;
   }
 
+  private clearActionFeedback(): void {
+    this.actionFeedbackText = '';
+    this.actionFeedbackLevel = 'neutral';
+  }
+
+  private setActionFeedback(message: string, level: string): void {
+    this.actionFeedbackText = message;
+    this.actionFeedbackLevel = level;
+  }
+
+  private sanitizePort(value: string): string {
+    return value.replace(/[^0-9]/g, '');
+  }
+
   private resolveStatusTitle(): string {
     if (!this.isSettingsLoaded) {
       return '读取中';
@@ -241,6 +261,32 @@ struct HomeStoragePage {
 
   private isActionDisabled(): boolean {
     return !this.isSettingsLoaded || this.isSaving || this.isTestingHomeStorage;
+  }
+
+  private resolveFeedbackColor(): string {
+    if (this.actionFeedbackLevel === 'success') {
+      return AppColors.tagGreenText;
+    }
+    if (this.actionFeedbackLevel === 'error') {
+      return AppColors.danger;
+    }
+    if (this.actionFeedbackLevel === 'warning') {
+      return AppColors.tagAmberText;
+    }
+    return AppColors.secondaryText;
+  }
+
+  private resolveFeedbackBackground(): string {
+    if (this.actionFeedbackLevel === 'success') {
+      return AppColors.tagGreen;
+    }
+    if (this.actionFeedbackLevel === 'error') {
+      return AppColors.surface;
+    }
+    if (this.actionFeedbackLevel === 'warning') {
+      return AppColors.tagAmber;
+    }
+    return AppColors.surfaceMuted;
   }
 
   @Builder
@@ -285,13 +331,17 @@ struct HomeStoragePage {
     placeholder: string,
     onChange: (value: string) => void,
     isPassword: boolean = false,
-    inputIndex: number = -1
+    inputIndex: number = -1,
+    inputType: InputType = InputType.Normal,
+    showsPasswordToggle: boolean = false
   ) {
     SettingsTextInput({
       label: label,
       text: text,
       placeholder: placeholder,
       isPassword: isPassword,
+      inputType: inputType,
+      showsPasswordToggle: showsPasswordToggle,
       onChange: onChange,
       onFocusInput: () => {
         if (inputIndex >= 0) {
@@ -307,34 +357,58 @@ struct HomeStoragePage {
   }
 
   @Builder
+  ActionFeedback() {
+    if (this.actionFeedbackText.length > 0) {
+      Text(this.actionFeedbackText)
+        .fontSize(AppTypography.caption)
+        .fontColor(this.resolveFeedbackColor())
+        .lineHeight(AppTypography.captionLineHeight)
+        .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space8, bottom: AppMetrics.space8 })
+        .width('100%')
+        .borderRadius(AppMetrics.cardRadius)
+        .backgroundColor(this.resolveFeedbackBackground())
+        .border({ width: 1, color: this.actionFeedbackLevel === 'error' ? AppColors.danger : AppColors.border })
+        .maxLines(2)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+    }
+  }
+
+  @Builder
   ConfigurationForm() {
     Column({ space: AppMetrics.cardGap }) {
       this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '例如 192.168.3.10', (value: string) => {
         this.homeStorageHost = value;
+        this.clearActionFeedback();
       }, false, 0)
 
       this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
-        this.homeStoragePort = value;
-      }, false, 1)
+        this.homeStoragePort = this.sanitizePort(value);
+        this.clearActionFeedback();
+      }, false, 1, InputType.Number)
 
       this.SettingsInput('共享目录', this.homeStorageShareName, '例如 Photos', (value: string) => {
         this.homeStorageShareName = value;
+        this.clearActionFeedback();
       }, false, 2)
 
       this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '例如 Reviews/2026', (value: string) => {
         this.homeStorageRemoteDirectory = value;
+        this.clearActionFeedback();
       }, false, 3)
 
       this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
         this.homeStorageUsername = value;
+        this.clearActionFeedback();
       }, false, 4)
 
       this.SettingsInput('密码或凭据', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
         this.homeStoragePassword = value;
-      }, true, 5)
+        this.clearActionFeedback();
+      }, true, 5, InputType.Normal, true)
 
       this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
         this.homeStorageDomain = value;
+        this.clearActionFeedback();
       }, false, 6)
     }
     .alignItems(HorizontalAlign.Start)
@@ -365,6 +439,8 @@ struct HomeStoragePage {
 
         Scroll(this.settingsScroller) {
           Column({ space: AppMetrics.cardGap }) {
+            this.ActionFeedback()
+
             if (this.isSettingsLoaded) {
               this.ConfigurationForm()
             } else {

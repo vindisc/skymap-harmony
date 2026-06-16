@@ -1,6 +1,6 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
-import { HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE } from '../app/AppRouter';
+import { HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../app/AppRouter';
 import { AppColors, AppMetrics, AppPageHeader, AppTypography } from '../components/AppDesign';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
@@ -64,6 +64,17 @@ export struct MyPage {
     return this.isHomeStorageConfigured() ? '已配置' : '未配置';
   }
 
+  private resolveHomeStorageDetail(): string {
+    if (!this.isHomeStorageConfigured()) {
+      return '先配置地址和共享目录';
+    }
+    return `${this.homeStorageSettings.smbHost} · ${this.homeStorageSettings.smbShareName}`;
+  }
+
+  private resolveSyncSummary(): string {
+    return this.isHomeStorageConfigured() ? '家庭存储可用' : '需要配置家庭存储';
+  }
+
   private resolveProfileName(): string {
     return this.reviewerName.length > 0 ? this.reviewerName : '见遇';
   }
@@ -74,6 +85,10 @@ export struct MyPage {
 
   private openHomeStorage(): void {
     router.pushUrl({ url: HOME_STORAGE_PAGE });
+  }
+
+  private openSyncCenter(): void {
+    router.pushUrl({ url: SYNC_CENTER_PAGE });
   }
 
   @Builder
@@ -186,19 +201,31 @@ export struct MyPage {
 
         this.IdentityCard()
 
+        this.SectionTitle('设置')
+
         Column({ space: AppMetrics.cardGap }) {
           this.LinkRow('复盘人', this.resolveReviewerSummary(), () => {
             this.openReviewerProfile();
           })
+        }
+
+        this.SectionTitle('同步')
+
+        Column({ space: AppMetrics.cardGap }) {
+          this.LinkRow('同步中心', this.resolveSyncSummary(), () => {
+            this.openSyncCenter();
+          })
 
           this.LinkRow(
             '家庭存储',
-            this.resolveHomeStorageSummary(),
+            this.resolveHomeStorageDetail(),
             () => {
               this.openHomeStorage();
             }
           )
         }
+
+        this.SectionTitle('应用')
 
         this.LinkRow('关于', `${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`, () => {
         })

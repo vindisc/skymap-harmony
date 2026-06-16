@@ -111,7 +111,12 @@ if (!myPageSource.includes('top: AppMetrics.pageTopPadding') ||
 if (!myPageSource.includes("title: '我的'") ||
   !myPageSource.includes("subtitle: '管理复盘人、家庭存储和版本信息'") ||
   !myPageSource.includes('this.IdentityCard()') ||
+  !myPageSource.includes("this.SectionTitle('设置')") ||
+  !myPageSource.includes("this.SectionTitle('同步')") ||
+  !myPageSource.includes("this.SectionTitle('应用')") ||
   !myPageSource.includes("this.LinkRow('复盘人'") ||
+  !myPageSource.includes("this.LinkRow('同步中心'") ||
+  !myPageSource.includes('router.pushUrl({ url: SYNC_CENTER_PAGE });') ||
   !myPageSource.includes("'家庭存储',") ||
   !myPageSource.includes("this.LinkRow('关于'")) {
   failed = true;
