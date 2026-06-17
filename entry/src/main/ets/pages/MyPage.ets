@@ -60,19 +60,15 @@ export struct MyPage {
     return this.reviewerName.length > 0 ? this.reviewerName : '未设置';
   }
 
-  private resolveHomeStorageSummary(): string {
-    return this.isHomeStorageConfigured() ? '已配置' : '未配置';
-  }
-
   private resolveHomeStorageDetail(): string {
     if (!this.isHomeStorageConfigured()) {
-      return '先配置地址和共享目录';
+      return '未配置';
     }
     return `${this.homeStorageSettings.smbHost} · ${this.homeStorageSettings.smbShareName}`;
   }
 
   private resolveSyncSummary(): string {
-    return this.isHomeStorageConfigured() ? '家庭存储可用' : '需要配置家庭存储';
+    return this.isHomeStorageConfigured() ? '可用' : '未配置';
   }
 
   private resolveProfileName(): string {
@@ -167,11 +163,6 @@ export struct MyPage {
           .lineHeight(AppTypography.profileNameLineHeight)
           .width('100%')
 
-        Text('摄影复盘 Beta 用户')
-          .fontSize(AppTypography.body)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.bodyLineHeight)
-          .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
@@ -196,7 +187,7 @@ export struct MyPage {
       Column({ space: AppMetrics.sectionGap }) {
         AppPageHeader({
           title: '我的',
-          subtitle: '管理复盘人、家庭存储和版本信息'
+          subtitle: '账户与同步'
         })
 
         this.IdentityCard()

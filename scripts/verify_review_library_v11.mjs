@@ -30,7 +30,7 @@ if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('
 
 const requiredDetailTokens = [
   "title: '复盘库'",
-  "TextInput({ text: this.searchText, placeholder: '搜索标题、核心关系、卡点、文件名' })",
+  "TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })",
   "this.FilterChip('成立', ReviewJudgementStatus.VALID)",
   "this.FilterChip('待判断', ReviewJudgementStatus.UNSURE)",
   "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)",
@@ -46,8 +46,8 @@ for (const token of requiredDetailTokens) {
 }
 
 const requiredExportTokens = [
-  "review.json 已导出到系统文件：${fileName}，现在可直接发送给 Mac 导入",
-  "review.json 已保存到系统文件：${result.fileName}。现在可直接发送给 Mac 导入。"
+  "已导出 ${fileName}",
+  "已导出 ${result.fileName}"
 ];
 
 if (!exportServiceSource.includes(requiredExportTokens[0])) {

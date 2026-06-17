@@ -158,7 +158,7 @@ async function uploadReviewJsonBySmb(
     return {
       success: true,
       remotePath: remotePath,
-      message: 'review.json 已上传到家庭存储'
+      message: '已上传家庭存储'
     };
   } catch (error) {
     const message: string = error instanceof Error ? error.message : '上传家庭存储失败，请检查网络、账号和目录';
@@ -454,7 +454,7 @@ export class HomeStorageService {
         return {
           success: true,
           remotePath: fallbackResult.remotePath,
-          message: 'review.json 已上传到家庭存储（已自动保存到共享根目录）'
+          message: '已上传共享根目录'
         };
       }
     }

@@ -161,12 +161,12 @@ export struct ProjectDetailPage {
       Column() {
         AppPageHeader({
           title: '复盘库',
-          subtitle: '搜索复盘，查看导入后的历史记录'
+          subtitle: '搜索与回看'
         })
 
         Text(this.summary.recordCount === 0
-          ? '还没有复盘记录'
-          : `当前显示 ${this.filteredItems.length} / ${this.summary.recordCount} 条复盘记录`)
+          ? '0 条'
+          : `${this.filteredItems.length}/${this.summary.recordCount}`)
           .fontSize(AppTypography.auxiliary)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.auxiliaryLineHeight)
@@ -175,7 +175,7 @@ export struct ProjectDetailPage {
           .margin({ top: AppMetrics.space8 })
 
         Column({ space: AppMetrics.space8 }) {
-          TextInput({ text: this.searchText, placeholder: '搜索标题、核心关系、卡点、文件名' })
+          TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })
             .height(AppMetrics.searchHeight)
             .borderRadius(AppMetrics.cardRadius)
             .fontSize(AppTypography.inputPlaceholder)
@@ -207,7 +207,7 @@ export struct ProjectDetailPage {
         Column() {
           EmptyState({
             title: '暂无复盘记录',
-            message: '可先创建第一条复盘，之后这里就是你的复盘库。'
+            message: '先创建一条'
           })
 
           Row() {
@@ -230,12 +230,12 @@ export struct ProjectDetailPage {
         Column() {
           EmptyState({
             title: '没有找到匹配的复盘',
-            message: '试试换一个关键词，或切换成立判断筛选。'
+            message: '换个关键词或筛选'
           })
 
           Row() {
             SecondaryButton({
-              label: '清空搜索与筛选',
+              label: '清空',
               onTap: () => {
                 this.clearFilters();
               }

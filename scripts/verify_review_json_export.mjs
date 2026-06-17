@@ -6,10 +6,10 @@ const exportServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewJ
 let failed = false;
 
 const requiredPreviewStrings = [
-  "this.ExportSheetAction('导出 review.json'",
+  "this.ExportSheetAction('导出 JSON'",
   'private async exportReviewJson(): Promise<void>',
   'ReviewCardHistoryService.markExported(context, this.document, result.path)',
-  "review.json 已保存到系统文件：${result.fileName}。现在可直接发送给 Mac 导入。",
+  "已导出 ${result.fileName}",
   'Text(this.lastReviewJsonExportMessage)'
 ];
 
@@ -26,8 +26,8 @@ const requiredServiceStrings = [
   'stringifyReviewCardExchangeSchemaV1(document, reviewerName)',
   'new picker.DocumentViewPicker(context)',
   "fileSuffixChoices: ['JSON 文件|json']",
-  'review.json 已导出到系统文件：${fileName}，现在可直接发送给 Mac 导入',
-  '未完成导出到文件，已保留应用内备份，请重新选择保存位置',
+  '已导出 ${fileName}',
+  '未选择保存位置，已保留备份',
   'review.json 导出失败，请稍后重试'
 ];
 

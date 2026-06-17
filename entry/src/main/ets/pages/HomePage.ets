@@ -131,9 +131,9 @@ export struct HomePage {
 
   private resolveStatsHintText(): string {
     if (this.historyLoadFailed) {
-      return '历史记录暂时读取失败，请重新进入首页或重启应用再试。';
+      return '历史读取失败';
     }
-    return this.reviewCount > 0 ? '每一次判断都会留下可回看的线索。' : '还没有记录，第一条复盘会从这里开始。';
+    return this.reviewCount > 0 ? '已更新' : '暂无记录';
   }
 
   @Builder
@@ -250,11 +250,6 @@ export struct HomePage {
           .lineHeight(AppTypography.cardTitleLineHeight)
           .width('100%')
 
-        Text('继续训练你的摄影判断。')
-          .fontSize(AppTypography.body)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.bodyLineHeight)
-          .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
@@ -278,8 +273,7 @@ export struct HomePage {
     Scroll() {
       Column({ space: AppMetrics.sectionGap }) {
         AppPageHeader({
-          title: '摄影复盘',
-          subtitle: '看见积累，继续下一次复盘。'
+          title: '摄影复盘'
         })
 
         this.StartReviewPanel()
@@ -305,7 +299,7 @@ export struct HomePage {
 
               Row({ space: AppMetrics.space8 }) {
                 SecondaryButton({
-                  label: '查看详情',
+                  label: '查看',
                   onTap: () => {
                     this.openLatestReview();
                   }
@@ -324,8 +318,7 @@ export struct HomePage {
             }
           } else {
             EmptyState({
-              title: '还没有复盘记录',
-              message: '开始第一条复盘后，这里会展示你最近一次的内容。'
+              title: '暂无记录'
             })
           }
         }

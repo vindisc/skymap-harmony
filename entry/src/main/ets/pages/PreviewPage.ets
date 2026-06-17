@@ -134,7 +134,7 @@ struct PreviewPage {
       const exchangeJson: string = stringifyReviewCardExchangeSchemaV1(this.document, reviewerName);
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, exchangeJson);
       await pasteboard.getSystemPasteboard().setData(data);
-      promptAction.showToast({ message: '已复制复盘数据' });
+      promptAction.showToast({ message: '已复制' });
     } catch (error) {
       promptAction.showToast({ message: '复制失败，请稍后重试' });
     }
@@ -154,7 +154,7 @@ struct PreviewPage {
       }
     }
     this.lastReviewJsonExportMessage = result.success
-      ? `review.json 已保存到系统文件：${result.fileName}。现在可直接发送给 Mac 导入。`
+      ? `已导出 ${result.fileName}`
       : result.message;
     promptAction.showToast({ message: result.message });
   }
@@ -359,25 +359,25 @@ struct PreviewPage {
 
       Column({ space: AppMetrics.space8 }) {
         Column({ space: AppMetrics.space8 }) {
-          Text('导出复盘')
+          Text('导出')
             .fontSize(AppTypography.level2)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.text)
             .width('100%')
 
-          this.ExportSheetAction('导出 review.json', () => {
+          this.ExportSheetAction('导出 JSON', () => {
             this.exportReviewJson();
           })
 
-          this.ExportSheetAction(this.isUploadingHomeStorage ? '上传到家庭存储中...' : '上传到家庭存储', () => {
+          this.ExportSheetAction(this.isUploadingHomeStorage ? '上传中...' : '上传家庭存储', () => {
             this.uploadReviewJsonToHomeStorage();
           })
 
-          this.ExportSheetAction(this.isExporting ? '导出复盘图片中...' : '导出复盘图片', () => {
+          this.ExportSheetAction(this.isExporting ? '导出中...' : '导出图片', () => {
             this.exportImage();
           })
 
-          this.ExportSheetAction('复制复盘数据', () => {
+          this.ExportSheetAction('复制数据', () => {
             this.copyReviewData();
           })
         }

@@ -96,8 +96,8 @@ export class AppTypography {
   static readonly inputPlaceholder: number = TypographyTokens.InputPlaceholder;
   static readonly tabLabel: number = TypographyTokens.TabLabel;
   static readonly tabLabelLineHeight: number = LineHeightTokens.TabLabel;
-  static readonly profileName: number = 24;
-  static readonly profileNameLineHeight: number = 30;
+  static readonly profileName: number = 22;
+  static readonly profileNameLineHeight: number = 28;
   static readonly statNumber: number = TypographyTokens.StatNumber;
   static readonly statNumberLineHeight: number = LineHeightTokens.StatNumber;
   static readonly statLabel: number = TypographyTokens.StatLabel;
@@ -349,7 +349,7 @@ export struct PhotoSummaryCard {
           }
 
           if (this.imageSizeFallbackUsed) {
-            Text('照片信息暂不可显示，可继续填写。')
+            Text('照片信息不可用')
               .fontSize(AppTypography.caption)
               .fontColor(AppColors.mutedText)
               .lineHeight(AppTypography.captionLineHeight)

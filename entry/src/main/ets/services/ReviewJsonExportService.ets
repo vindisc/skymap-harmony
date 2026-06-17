@@ -130,7 +130,7 @@ export class ReviewJsonExportService {
           userSelectedUri: '',
           backupPath: outputPath,
           exportedToUserFiles: false,
-          message: '未完成导出到文件，已保留应用内备份，请重新选择保存位置'
+          message: '未选择保存位置，已保留备份'
         };
       }
       return {
@@ -141,7 +141,7 @@ export class ReviewJsonExportService {
         userSelectedUri: targetUri,
         backupPath: outputPath,
         exportedToUserFiles: true,
-        message: `review.json 已导出到系统文件：${fileName}，现在可直接发送给 Mac 导入`
+        message: `已导出 ${fileName}`
       };
     } catch (error) {
       return {

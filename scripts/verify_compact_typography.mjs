@@ -26,24 +26,24 @@ function assertIncludes(source, marker, message) {
 }
 
 const requiredTypographyTokens = [
-  ['PageTitle', 26],
-  ['PageSubtitle', 15],
-  ['SectionTitle', 18],
-  ['SectionSubtitle', 14],
-  ['CardTitle', 17],
-  ['CardBody', 16],
-  ['CardMeta', 13],
+  ['PageTitle', 24],
+  ['PageSubtitle', 14],
+  ['SectionTitle', 17],
+  ['SectionSubtitle', 13],
+  ['CardTitle', 16],
+  ['CardBody', 15],
+  ['CardMeta', 12],
   ['ListTitle', 16],
-  ['ListBody', 15],
-  ['ListMeta', 13],
-  ['StatNumber', 28],
-  ['StatLabel', 13],
-  ['ButtonText', 16],
-  ['SmallButtonText', 15],
-  ['InputText', 16],
-  ['InputPlaceholder', 16],
-  ['InputLabel', 15],
-  ['TabIcon', 22],
+  ['ListBody', 14],
+  ['ListMeta', 12],
+  ['StatNumber', 26],
+  ['StatLabel', 12],
+  ['ButtonText', 15],
+  ['SmallButtonText', 14],
+  ['InputText', 15],
+  ['InputPlaceholder', 15],
+  ['InputLabel', 14],
+  ['TabIcon', 21],
   ['TabLabel', 12]
 ];
 
@@ -80,23 +80,23 @@ assertIncludes(appDesignSource, 'static readonly tabLabel: number = TypographyTo
 assertIncludes(appDesignSource, 'static readonly tabIconSize: number = TypographyTokens.TabIcon;', 'Tab icon size must be mapped from DesignTokens.');
 
 const maxByToken = new Map([
-  ['PageTitle', 32],
-  ['PageSubtitle', 16],
-  ['SectionTitle', 20],
-  ['SectionSubtitle', 14],
-  ['CardTitle', 18],
-  ['CardBody', 16],
-  ['CardMeta', 13],
+  ['PageTitle', 24],
+  ['PageSubtitle', 14],
+  ['SectionTitle', 17],
+  ['SectionSubtitle', 13],
+  ['CardTitle', 16],
+  ['CardBody', 15],
+  ['CardMeta', 12],
   ['ListTitle', 17],
-  ['ListBody', 15],
-  ['ListMeta', 13],
-  ['StatNumber', 28],
-  ['StatLabel', 13],
-  ['ButtonText', 16],
-  ['SmallButtonText', 15],
-  ['InputText', 16],
-  ['InputPlaceholder', 16],
-  ['InputLabel', 16],
+  ['ListBody', 14],
+  ['ListMeta', 12],
+  ['StatNumber', 26],
+  ['StatLabel', 12],
+  ['ButtonText', 15],
+  ['SmallButtonText', 14],
+  ['InputText', 15],
+  ['InputPlaceholder', 15],
+  ['InputLabel', 14],
   ['TabLabel', 12]
 ]);
 
@@ -179,8 +179,9 @@ if (designTokensSource.includes('static readonly TabLabel: number = 13;') ||
   designTokensSource.includes('static readonly TabLabel: number = 14;')) {
   fail('TabLabel must not exceed 12fp.');
 }
-if (designTokensSource.includes('static readonly ButtonText: number = 17;')) {
-  fail('ButtonText must not exceed 16fp.');
+if (designTokensSource.includes('static readonly ButtonText: number = 16;') ||
+  designTokensSource.includes('static readonly ButtonText: number = 17;')) {
+  fail('ButtonText must not exceed 15fp.');
 }
 
 assertIncludes(homePageSource, 'Text(`${this.reviewCount}`)', 'Home total stats must render scalar reviewCount state directly.');

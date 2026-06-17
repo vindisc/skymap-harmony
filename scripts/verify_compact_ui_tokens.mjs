@@ -44,15 +44,15 @@ for (const marker of requiredTokens) {
 }
 
 const requiredDesignTokens = [
-  'static readonly PageTitle: number = 26;',
-  'static readonly PageSubtitle: number = 15;',
-  'static readonly SectionTitle: number = 18;',
-  'static readonly CardTitle: number = 17;',
-  'static readonly CardBody: number = 16;',
+  'static readonly PageTitle: number = 24;',
+  'static readonly PageSubtitle: number = 14;',
+  'static readonly SectionTitle: number = 17;',
+  'static readonly CardTitle: number = 16;',
+  'static readonly CardBody: number = 15;',
   'static readonly ListTitle: number = 16;',
-  'static readonly ListBody: number = 15;',
-  'static readonly CardMeta: number = 13;',
-  'static readonly ButtonText: number = 16;',
+  'static readonly ListBody: number = 14;',
+  'static readonly CardMeta: number = 12;',
+  'static readonly ButtonText: number = 15;',
   'static readonly TabLabel: number = 12;',
   'static readonly SearchHeight: number = 44;',
   'static readonly ChipHeight: number = 44;',
@@ -166,9 +166,9 @@ if (homePageSource.includes('0天')) {
 assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use shared touch-safe token.');
 assertIncludes(projectDetailSource, '.height(AppMetrics.chipHeight)', 'Library chips must use shared touch-safe token.');
 assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use 72vp thumbnail token.');
-assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use 17fp Compact token.');
-assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use 14fp Compact token.');
-assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'Status tags must use 13fp Compact token.');
+assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use compact token.');
+assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use compact token.');
+assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'Status tags must use compact token.');
 
 const topAlignedPages = [
   ['HomePage', homePageSource],

@@ -314,7 +314,7 @@ struct HomeStoragePage {
   @Builder
   LoadingSettings() {
     Column({ space: AppMetrics.space8 }) {
-      Text('正在读取家庭存储设置')
+      Text('读取中')
         .fontSize(AppTypography.body)
         .fontColor(AppColors.secondaryText)
         .lineHeight(AppTypography.bodyLineHeight)
@@ -376,7 +376,7 @@ struct HomeStoragePage {
   @Builder
   ConfigurationForm() {
     Column({ space: AppMetrics.cardGap }) {
-      this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '例如 192.168.3.10', (value: string) => {
+      this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
         this.homeStorageHost = value;
         this.clearActionFeedback();
       }, false, 0)
@@ -386,27 +386,27 @@ struct HomeStoragePage {
         this.clearActionFeedback();
       }, false, 1, InputType.Number)
 
-      this.SettingsInput('共享目录', this.homeStorageShareName, '例如 Photos', (value: string) => {
+      this.SettingsInput('共享目录', this.homeStorageShareName, 'Photos', (value: string) => {
         this.homeStorageShareName = value;
         this.clearActionFeedback();
       }, false, 2)
 
-      this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, '例如 Reviews/2026', (value: string) => {
+      this.SettingsInput('目标路径', this.homeStorageRemoteDirectory, 'Reviews/2026', (value: string) => {
         this.homeStorageRemoteDirectory = value;
         this.clearActionFeedback();
       }, false, 3)
 
-      this.SettingsInput('用户名', this.homeStorageUsername, '家庭存储账号，可留空', (value: string) => {
+      this.SettingsInput('用户名', this.homeStorageUsername, '账号', (value: string) => {
         this.homeStorageUsername = value;
         this.clearActionFeedback();
       }, false, 4)
 
-      this.SettingsInput('密码或凭据', this.homeStoragePassword, '家庭存储密码，可留空', (value: string) => {
+      this.SettingsInput('密码或凭据', this.homeStoragePassword, '密码', (value: string) => {
         this.homeStoragePassword = value;
         this.clearActionFeedback();
       }, true, 5, InputType.Normal, true)
 
-      this.SettingsInput('工作组或域', this.homeStorageDomain, '可留空', (value: string) => {
+      this.SettingsInput('工作组或域', this.homeStorageDomain, 'WORKGROUP', (value: string) => {
         this.homeStorageDomain = value;
         this.clearActionFeedback();
       }, false, 6)
@@ -419,7 +419,7 @@ struct HomeStoragePage {
   ActionBar() {
     SettingsActionBar({
       primaryLabel: this.isSaving ? '保存中...' : '保存',
-      secondaryLabel: this.isTestingHomeStorage ? '测试中...' : '测试连接',
+      secondaryLabel: this.isTestingHomeStorage ? '测试中...' : '测试',
       isPrimaryDisabled: this.isActionDisabled(),
       isSecondaryDisabled: this.isActionDisabled(),
       onPrimaryTap: () => {

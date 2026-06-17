@@ -109,7 +109,7 @@ if (!myPageSource.includes('top: AppMetrics.pageTopPadding') ||
 }
 
 if (!myPageSource.includes("title: '我的'") ||
-  !myPageSource.includes("subtitle: '管理复盘人、家庭存储和版本信息'") ||
+  !myPageSource.includes("subtitle: '账户与同步'") ||
   !myPageSource.includes('this.IdentityCard()') ||
   !myPageSource.includes("this.SectionTitle('设置')") ||
   !myPageSource.includes("this.SectionTitle('同步')") ||
@@ -163,10 +163,10 @@ for (const marker of disallowedTopLevelActions) {
 }
 
 const requiredExportSheetActions = [
-  "this.ExportSheetAction('导出 review.json'",
-  "this.ExportSheetAction(this.isUploadingHomeStorage ? '上传到家庭存储中...' : '上传到家庭存储'",
-  "this.ExportSheetAction(this.isExporting ? '导出复盘图片中...' : '导出复盘图片'",
-  "this.ExportSheetAction('复制复盘数据'"
+  "this.ExportSheetAction('导出 JSON'",
+  "this.ExportSheetAction(this.isUploadingHomeStorage ? '上传中...' : '上传家庭存储'",
+  "this.ExportSheetAction(this.isExporting ? '导出中...' : '导出图片'",
+  "this.ExportSheetAction('复制数据'"
 ];
 
 for (const marker of requiredExportSheetActions) {
@@ -190,14 +190,14 @@ if (!syncCenterPageSource.includes("title: '同步中心'")) {
   console.error('SyncCenterPage title is missing.');
 }
 
-if (!syncCenterPageSource.includes("label: this.isTesting ? '测试中...' : '测试连接'")) {
+if (!syncCenterPageSource.includes("label: this.isTesting ? '测试中...' : '测试'")) {
   failed = true;
-  console.error('SyncCenterPage must provide 测试连接.');
+  console.error('SyncCenterPage must provide 测试.');
 }
 
-if (!syncCenterPageSource.includes("label: '进入配置'")) {
+if (!syncCenterPageSource.includes("label: '配置'")) {
   failed = true;
-  console.error('SyncCenterPage must provide 进入配置.');
+  console.error('SyncCenterPage must provide 配置.');
 }
 
 if (!appRouterSource.includes("export const SYNC_CENTER_PAGE: string = 'pages/SyncCenterPage';")) {

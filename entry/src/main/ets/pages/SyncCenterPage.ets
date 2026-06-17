@@ -101,7 +101,7 @@ struct SyncCenterPage {
       Column({ space: AppMetrics.sectionGap }) {
         AppPageHeader({
           title: '同步中心',
-          subtitle: '查看家庭存储状态，测试连接并进入同步配置。'
+          subtitle: '家庭存储状态'
         })
 
         Column({ space: AppMetrics.cardGap }) {
@@ -122,7 +122,7 @@ struct SyncCenterPage {
             .alignItems(HorizontalAlign.Start)
             .layoutWeight(1)
 
-            Text(this.isConfigured() ? '已配置家庭存储' : '未配置家庭存储')
+            Text(this.isConfigured() ? '可用' : '未配置')
               .fontSize(AppTypography.caption)
               .fontColor(AppColors.mutedText)
           }
@@ -143,7 +143,7 @@ struct SyncCenterPage {
         .border({ width: 1, color: AppColors.border })
 
         SecondaryButton({
-          label: this.isTesting ? '测试中...' : '测试连接',
+          label: this.isTesting ? '测试中...' : '测试',
           isDisabled: this.isTesting,
           onTap: () => {
             this.testConnection();
@@ -151,7 +151,7 @@ struct SyncCenterPage {
         })
 
         PrimaryButton({
-          label: '进入配置',
+          label: '配置',
           onTap: () => {
             this.openSettings();
           }

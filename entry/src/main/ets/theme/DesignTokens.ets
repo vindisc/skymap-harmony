@@ -1,41 +1,41 @@
 export class TypographyTokens {
-  static readonly PageTitle: number = 26;
-  static readonly PageSubtitle: number = 15;
-  static readonly SectionTitle: number = 18;
-  static readonly SectionSubtitle: number = 14;
-  static readonly CardTitle: number = 17;
-  static readonly CardBody: number = 16;
-  static readonly CardMeta: number = 13;
+  static readonly PageTitle: number = 24;
+  static readonly PageSubtitle: number = 14;
+  static readonly SectionTitle: number = 17;
+  static readonly SectionSubtitle: number = 13;
+  static readonly CardTitle: number = 16;
+  static readonly CardBody: number = 15;
+  static readonly CardMeta: number = 12;
   static readonly ListTitle: number = 16;
-  static readonly ListBody: number = 15;
-  static readonly ListMeta: number = 13;
-  static readonly StatNumber: number = 28;
-  static readonly StatLabel: number = 13;
-  static readonly ButtonText: number = 16;
-  static readonly SmallButtonText: number = 15;
-  static readonly InputText: number = 16;
-  static readonly InputPlaceholder: number = 16;
-  static readonly InputLabel: number = 15;
-  static readonly TabIcon: number = 22;
+  static readonly ListBody: number = 14;
+  static readonly ListMeta: number = 12;
+  static readonly StatNumber: number = 26;
+  static readonly StatLabel: number = 12;
+  static readonly ButtonText: number = 15;
+  static readonly SmallButtonText: number = 14;
+  static readonly InputText: number = 15;
+  static readonly InputPlaceholder: number = 15;
+  static readonly InputLabel: number = 14;
+  static readonly TabIcon: number = 21;
   static readonly TabLabel: number = 12;
 }
 
 export class LineHeightTokens {
-  static readonly PageTitle: number = 32;
-  static readonly PageSubtitle: number = 20;
-  static readonly SectionTitle: number = 24;
+  static readonly PageTitle: number = 30;
+  static readonly PageSubtitle: number = 18;
+  static readonly SectionTitle: number = 22;
   static readonly SectionSubtitle: number = 18;
-  static readonly CardTitle: number = 22;
-  static readonly CardBody: number = 22;
-  static readonly CardMeta: number = 18;
-  static readonly ListTitle: number = 21;
-  static readonly ListBody: number = 20;
-  static readonly ListMeta: number = 18;
-  static readonly StatNumber: number = 32;
-  static readonly StatLabel: number = 18;
-  static readonly ButtonText: number = 22;
-  static readonly InputText: number = 22;
-  static readonly InputLabel: number = 20;
+  static readonly CardTitle: number = 21;
+  static readonly CardBody: number = 21;
+  static readonly CardMeta: number = 17;
+  static readonly ListTitle: number = 20;
+  static readonly ListBody: number = 19;
+  static readonly ListMeta: number = 17;
+  static readonly StatNumber: number = 30;
+  static readonly StatLabel: number = 17;
+  static readonly ButtonText: number = 20;
+  static readonly InputText: number = 21;
+  static readonly InputLabel: number = 18;
   static readonly TabLabel: number = 16;
 }
 
