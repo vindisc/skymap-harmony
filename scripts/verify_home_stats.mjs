@@ -41,7 +41,10 @@ if (!homePageSource.includes('Text(`${this.reviewCount}`)') ||
   assert(false, 'HomePage visible stats must bind directly to scalar @State values, matching MyPage refresh behavior.');
 }
 
-if (homePageSource.includes('StatItem(') || homePageSource.includes('@Builder\n  StatItem')) {
+if (homePageSource.includes('StatItem(') ||
+  homePageSource.includes('@Builder\n  StatItem') ||
+  homePageSource.includes('StatTile(') ||
+  homePageSource.includes('@Builder\n  StatTile')) {
   assert(false, 'HomePage must not pass dynamic stats through a parameterized builder because ArkUI can keep stale values.');
 }
 
