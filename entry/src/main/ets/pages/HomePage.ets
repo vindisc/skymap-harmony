@@ -1,5 +1,6 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
+import pasteboard from '@ohos.pasteboard';
 import promptAction from '@ohos.promptAction';
 import {
   EDITOR_PAGE,
@@ -7,7 +8,10 @@ import {
 } from '../app/AppRouter';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
-import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import {
+  ReviewCardHistoryLoadResult,
+  ReviewCardHistoryService
+} from '../services/ReviewCardHistoryService';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import {
   applyHomeDashboardReloadFailure,
@@ -38,6 +42,7 @@ export struct HomePage {
   @State unsureReviewCount: number = 0;
   @State streakDays: number = 0;
   @State historyLoadFailed: boolean = false;
+  @State historyDiagnosticsText: string = '';
 
   aboutToAppear(): void {
     this.reloadHistory();
@@ -60,11 +65,13 @@ export struct HomePage {
     const context = this.getAbilityContext();
 
     try {
-      const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      if (applyHomeDashboardReloadSuccess(this.dashboardReloadState, requestId, items)) {
+      const result: ReviewCardHistoryLoadResult = await ReviewCardHistoryService.loadWithDiagnostics(context);
+      this.historyDiagnosticsText = ReviewCardHistoryService.formatDiagnostics(result.diagnostics);
+      if (applyHomeDashboardReloadSuccess(this.dashboardReloadState, requestId, result.items)) {
         this.syncDashboardStateFromPresenter();
       }
     } catch (error) {
+      this.historyDiagnosticsText = `首页历史读取异常\nerror=${error}`;
       if (applyHomeDashboardReloadFailure(this.dashboardReloadState, requestId)) {
         this.syncDashboardStateFromPresenter();
       }
@@ -134,6 +141,30 @@ export struct HomePage {
       return '历史读取失败';
     }
     return this.reviewCount > 0 ? '已更新' : '暂无记录';
+  }
+
+  private shouldShowHistoryDiagnostics(): boolean {
+    return this.historyLoadFailed || this.reviewCount === 0;
+  }
+
+  private async copyHistoryDiagnostics(): Promise<void> {
+    const context = this.getAbilityContext();
+    let diagnosticsText: string = this.historyDiagnosticsText;
+    try {
+      const result: ReviewCardHistoryLoadResult = await ReviewCardHistoryService.loadWithDiagnostics(context);
+      diagnosticsText = ReviewCardHistoryService.formatDiagnostics(result.diagnostics);
+      this.historyDiagnosticsText = diagnosticsText;
+    } catch (error) {
+      diagnosticsText = `${diagnosticsText}\ncopyReloadError=${error}`;
+    }
+
+    try {
+      const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, diagnosticsText);
+      await pasteboard.getSystemPasteboard().setData(data);
+      promptAction.showToast({ message: '已复制恢复诊断' });
+    } catch (error) {
+      promptAction.showToast({ message: '复制诊断失败' });
+    }
   }
 
   @Builder
@@ -231,6 +262,25 @@ export struct HomePage {
         .layoutWeight(1)
       }
       .width('100%')
+
+      if (this.shouldShowHistoryDiagnostics()) {
+        Column({ space: 6 }) {
+          Text('历史数据仍为空时，请复制诊断发给开发排查。')
+            .fontSize(AppTypography.meta)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.metaLineHeight)
+            .width('100%')
+
+          SecondaryButton({
+            label: '复制恢复诊断',
+            onTap: () => {
+              this.copyHistoryDiagnostics();
+            }
+          })
+        }
+        .alignItems(HorizontalAlign.Start)
+        .width('100%')
+      }
     }
     .padding(AppMetrics.cardPadding)
     .width('100%')

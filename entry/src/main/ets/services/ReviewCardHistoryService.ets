@@ -20,6 +20,31 @@ const HISTORY_KEY: string = 'items';
 const BACKUP_IMPORT_COMPLETED_KEY: string = 'backup_import_completed';
 const REVIEW_JSON_BACKUP_DIR_NAME: string = 'review_exchange';
 
+export interface ReviewCardHistoryLoadResult {
+  items: Array<ReviewCardHistoryItem>;
+  diagnostics: ReviewCardHistoryDiagnostics;
+}
+
+export interface ReviewCardHistoryDiagnostics {
+  preferencesName: string;
+  historyKey: string;
+  filesDir: string;
+  backupDirectory: string;
+  rawHistoryType: string;
+  rawHistoryLength: number;
+  parsedHistoryCount: number;
+  backupImportCompleted: boolean;
+  forcedBackupReload: boolean;
+  backupDirectoryExists: boolean;
+  backupFileCount: number;
+  parsedBackupCount: number;
+  mergedCount: number;
+  persistedMergedHistory: boolean;
+  latestTitle: string;
+  latestUpdatedAt: number;
+  errorMessage: string;
+}
+
 interface LegacyHistoryPayload {
   items?: Array<ReviewCardHistoryItem | ReviewCardDocument>;
   documents?: Array<ReviewCardDocument>;
@@ -194,6 +219,40 @@ function parseStoredHistory(rawValue: preferences.ValueType): Array<ReviewCardHi
   }
 }
 
+function createEmptyDiagnostics(context: common.UIAbilityContext): ReviewCardHistoryDiagnostics {
+  const backupDirectory: string = `${context.filesDir}/${REVIEW_JSON_BACKUP_DIR_NAME}`;
+  return {
+    preferencesName: PREFERENCES_NAME,
+    historyKey: HISTORY_KEY,
+    filesDir: context.filesDir,
+    backupDirectory: backupDirectory,
+    rawHistoryType: '',
+    rawHistoryLength: 0,
+    parsedHistoryCount: 0,
+    backupImportCompleted: false,
+    forcedBackupReload: false,
+    backupDirectoryExists: false,
+    backupFileCount: 0,
+    parsedBackupCount: 0,
+    mergedCount: 0,
+    persistedMergedHistory: false,
+    latestTitle: '',
+    latestUpdatedAt: 0,
+    errorMessage: ''
+  };
+}
+
+function updateLatestDiagnostics(
+  diagnostics: ReviewCardHistoryDiagnostics,
+  items: Array<ReviewCardHistoryItem>
+): void {
+  diagnostics.mergedCount = items.length;
+  if (items.length > 0) {
+    diagnostics.latestTitle = items[0].document.content.title;
+    diagnostics.latestUpdatedAt = items[0].document.updatedAt;
+  }
+}
+
 export class ReviewCardHistoryService {
   private static cachedItems: Array<ReviewCardHistoryItem> = [];
 
@@ -201,22 +260,30 @@ export class ReviewCardHistoryService {
     return preferences.getPreferences(context, { name: PREFERENCES_NAME });
   }
 
-  private static loadReviewJsonBackupItems(context: common.UIAbilityContext): Array<ReviewCardHistoryItem> {
-    const directory: string = `${context.filesDir}/${REVIEW_JSON_BACKUP_DIR_NAME}`;
-    let fileNames: Array<string> = [];
+  private static listReviewJsonBackupFileNames(diagnostics: ReviewCardHistoryDiagnostics): Array<string> {
     try {
-      fileNames = fs.listFileSync(directory);
+      const fileNames: Array<string> = fs.listFileSync(diagnostics.backupDirectory);
+      diagnostics.backupDirectoryExists = true;
+      diagnostics.backupFileCount = fileNames.length;
+      return fileNames;
     } catch (error) {
+      diagnostics.backupDirectoryExists = false;
+      diagnostics.backupFileCount = 0;
       return [];
     }
+  }
 
+  private static loadReviewJsonBackupItemsWithDiagnostics(
+    diagnostics: ReviewCardHistoryDiagnostics
+  ): Array<ReviewCardHistoryItem> {
+    const fileNames: Array<string> = ReviewCardHistoryService.listReviewJsonBackupFileNames(diagnostics);
     const backupItems: Array<ReviewCardHistoryItem> = [];
     fileNames.forEach((fileName: string): void => {
       if (!fileName.endsWith('.review.json') && !fileName.endsWith('.json')) {
         return;
       }
 
-      const filePath: string = `${directory}/${fileName}`;
+      const filePath: string = `${diagnostics.backupDirectory}/${fileName}`;
       try {
         const rawText: string = fs.readTextSync(filePath);
         const payload = JSON.parse(rawText) as ReviewCardExchangeSchemaV1;
@@ -224,20 +291,24 @@ export class ReviewCardHistoryService {
       } catch (error) {
       }
     });
+    diagnostics.parsedBackupCount = backupItems.length;
     return sortHistoryItems(backupItems);
   }
 
   private static async loadBackupItemsOnce(
-    context: common.UIAbilityContext,
     store: preferences.Preferences,
+    diagnostics: ReviewCardHistoryDiagnostics,
     shouldForceReload: boolean = false
   ): Promise<Array<ReviewCardHistoryItem>> {
     const importedValue = await store.get(BACKUP_IMPORT_COMPLETED_KEY, false);
+    diagnostics.backupImportCompleted = importedValue === true;
+    diagnostics.forcedBackupReload = shouldForceReload;
     if (importedValue === true && !shouldForceReload) {
       return [];
     }
 
-    const backupItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.loadReviewJsonBackupItems(context);
+    const backupItems: Array<ReviewCardHistoryItem> =
+      ReviewCardHistoryService.loadReviewJsonBackupItemsWithDiagnostics(diagnostics);
     await store.put(BACKUP_IMPORT_COMPLETED_KEY, true);
     await store.flush();
     return backupItems;
@@ -254,24 +325,69 @@ export class ReviewCardHistoryService {
     });
   }
 
-  static async load(context: common.UIAbilityContext): Promise<Array<ReviewCardHistoryItem>> {
+  static async loadWithDiagnostics(context: common.UIAbilityContext): Promise<ReviewCardHistoryLoadResult> {
+    const diagnostics: ReviewCardHistoryDiagnostics = createEmptyDiagnostics(context);
     try {
       const store = await ReviewCardHistoryService.getStore(context);
       const rawValue = await store.get(HISTORY_KEY, '[]');
+      diagnostics.rawHistoryType = typeof rawValue;
+      diagnostics.rawHistoryLength = typeof rawValue === 'string' ? rawValue.length : 0;
       const historyItems: Array<ReviewCardHistoryItem> = parseStoredHistory(rawValue);
+      diagnostics.parsedHistoryCount = historyItems.length;
       const backupItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.loadBackupItemsOnce(
-        context,
         store,
+        diagnostics,
         historyItems.length === 0
       );
       const mergedItems: Array<ReviewCardHistoryItem> = mergeHistoryItems(historyItems, backupItems);
       if (backupItems.length > 0) {
         await ReviewCardHistoryService.persist(context, mergedItems);
+        diagnostics.persistedMergedHistory = true;
       }
-      return ReviewCardHistoryService.rememberItems(mergedItems);
+      const items: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(mergedItems);
+      updateLatestDiagnostics(diagnostics, items);
+      return {
+        items: items,
+        diagnostics: diagnostics
+      };
     } catch (error) {
-      return ReviewCardHistoryService.rememberItems(ReviewCardHistoryService.cachedItems);
+      diagnostics.errorMessage = `${error}`;
+      const items: Array<ReviewCardHistoryItem> =
+        ReviewCardHistoryService.rememberItems(ReviewCardHistoryService.cachedItems);
+      updateLatestDiagnostics(diagnostics, items);
+      return {
+        items: items,
+        diagnostics: diagnostics
+      };
     }
+  }
+
+  static async load(context: common.UIAbilityContext): Promise<Array<ReviewCardHistoryItem>> {
+    const result: ReviewCardHistoryLoadResult = await ReviewCardHistoryService.loadWithDiagnostics(context);
+    return result.items;
+  }
+
+  static formatDiagnostics(diagnostics: ReviewCardHistoryDiagnostics): string {
+    return [
+      '摄影复盘历史诊断',
+      `preferences=${diagnostics.preferencesName}`,
+      `historyKey=${diagnostics.historyKey}`,
+      `filesDir=${diagnostics.filesDir}`,
+      `backupDirectory=${diagnostics.backupDirectory}`,
+      `rawHistoryType=${diagnostics.rawHistoryType}`,
+      `rawHistoryLength=${diagnostics.rawHistoryLength}`,
+      `parsedHistoryCount=${diagnostics.parsedHistoryCount}`,
+      `backupImportCompleted=${diagnostics.backupImportCompleted}`,
+      `forcedBackupReload=${diagnostics.forcedBackupReload}`,
+      `backupDirectoryExists=${diagnostics.backupDirectoryExists}`,
+      `backupFileCount=${diagnostics.backupFileCount}`,
+      `parsedBackupCount=${diagnostics.parsedBackupCount}`,
+      `mergedCount=${diagnostics.mergedCount}`,
+      `persistedMergedHistory=${diagnostics.persistedMergedHistory}`,
+      `latestTitle=${diagnostics.latestTitle}`,
+      `latestUpdatedAt=${diagnostics.latestUpdatedAt}`,
+      `error=${diagnostics.errorMessage}`
+    ].join('\n');
   }
 
   static async saveDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {

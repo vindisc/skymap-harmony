@@ -55,10 +55,18 @@ if (homePageSource.includes("import { ReviewProjectService } from '../services/R
 }
 
 if (!homePageSource.includes('beginHomeDashboardReload(this.dashboardReloadState)') ||
-  !homePageSource.includes('applyHomeDashboardReloadSuccess(this.dashboardReloadState, requestId, items)') ||
+  (!homePageSource.includes('applyHomeDashboardReloadSuccess(this.dashboardReloadState, requestId, items)') &&
+    !homePageSource.includes('applyHomeDashboardReloadSuccess(this.dashboardReloadState, requestId, result.items)')) ||
   !homePageSource.includes('applyHomeDashboardReloadFailure(this.dashboardReloadState, requestId)') ||
   !homePageSource.includes('this.syncDashboardStateFromPresenter()')) {
   assert(false, 'HomePage reload flow must delegate stale request gating and data projection to HomeDashboardPresenter.');
+}
+
+if (!homePageSource.includes('ReviewCardHistoryService.loadWithDiagnostics(context)') ||
+  !homePageSource.includes('ReviewCardHistoryService.formatDiagnostics') ||
+  !homePageSource.includes("label: '复制恢复诊断'") ||
+  !homePageSource.includes('pasteboard.createData')) {
+  assert(false, 'HomePage must expose copyable history recovery diagnostics when visible stats are still empty.');
 }
 
 if (!homeDashboardPresenterSource.includes('const summary: ReviewProjectSummary = ReviewProjectService.buildHomeSummary(items)') ||
@@ -156,6 +164,15 @@ if (!historyServiceSource.includes('shouldForceReload: boolean = false') ||
   !historyServiceSource.includes('importedValue === true && !shouldForceReload') ||
   !historyServiceSource.includes('historyItems.length === 0')) {
   assert(false, 'ReviewCardHistoryService must rescan review.json backups when persisted history is empty, even after a previous import marker.');
+}
+
+if (!historyServiceSource.includes('export interface ReviewCardHistoryDiagnostics') ||
+  !historyServiceSource.includes('static async loadWithDiagnostics') ||
+  !historyServiceSource.includes('static formatDiagnostics') ||
+  !historyServiceSource.includes('backupFileCount') ||
+  !historyServiceSource.includes('parsedBackupCount') ||
+  !historyServiceSource.includes('rawHistoryLength')) {
+  assert(false, 'ReviewCardHistoryService must provide structured diagnostics for repeated home stats recovery failures.');
 }
 
 if (!historyServiceSource.includes("!fileName.endsWith('.review.json') && !fileName.endsWith('.json')")) {
