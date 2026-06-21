@@ -170,7 +170,7 @@ assertIncludes(projectDetailSource, '.height(AppMetrics.filterChipHeight)', 'Lib
 assertIncludes(projectDetailSource, '.constraintSize({ minWidth: value === \'all\' ? 60 : 72 })', 'Library filter chips must read as compact horizontal pills.');
 assertIncludes(projectDetailSource, '.borderRadius(AppMetrics.cardRadius)', 'Library filter chips must avoid oversized capsule corners.');
 assertIncludes(projectDetailSource, '.fontSize(AppTypography.meta)', 'Library filter chips must use small label typography.');
-assertIncludes(projectDetailSource, '.fontSize(AppTypography.auxiliary)', 'Library search text must be visually lighter than body forms.');
+assertIncludes(projectDetailSource, '.fontSize(AppTypography.caption)', 'Library search text must stay lighter than body forms.');
 assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use compact 68vp thumbnail token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use compact token.');

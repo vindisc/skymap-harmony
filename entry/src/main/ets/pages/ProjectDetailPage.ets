@@ -195,7 +195,7 @@ export struct ProjectDetailPage {
           TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })
             .height(AppMetrics.searchHeight)
             .borderRadius(AppMetrics.cardRadius)
-            .fontSize(AppTypography.auxiliary)
+            .fontSize(AppTypography.caption)
             .fontColor(AppColors.text)
             .placeholderColor(AppColors.placeholderText)
             .backgroundColor(AppColors.surface)
