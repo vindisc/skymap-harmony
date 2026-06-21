@@ -56,7 +56,7 @@ struct AppShellPage {
   }
 
   private resolveTabBackground(key: RootTabKey): string {
-    return this.isCurrentTab(key) ? AppColors.primarySoft : AppColors.transparent;
+    return AppColors.transparent;
   }
 
   @Builder
@@ -71,16 +71,15 @@ struct AppShellPage {
         .fontWeight(this.resolveTabLabelWeight(item.key))
         .fontColor(this.resolveTabLabelColor(item.key))
         .lineHeight(AppTypography.tabLabelLineHeight)
-        .margin({ top: 2 })
     }
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .layoutWeight(1)
     .height(AppMetrics.tabBarItemHeight)
     .padding({ left: AppMetrics.space8, right: AppMetrics.space8 })
-    .borderRadius(AppMetrics.capsuleRadius)
+    .borderRadius(AppMetrics.buttonRadius)
     .backgroundColor(this.resolveTabBackground(item.key))
-    .opacity(this.isCurrentTab(item.key) ? 1 : 0.9)
+    .opacity(this.isCurrentTab(item.key) ? 1 : 0.82)
     .onClick(() => {
       this.selectTab(item.key);
     })
@@ -106,19 +105,21 @@ struct AppShellPage {
       .width('100%')
 
       Column() {
+        Divider()
+          .strokeWidth(1)
+          .color(AppColors.border)
+          .opacity(0.42)
+          .width('100%')
+
         Row({ space: AppMetrics.space8 }) {
           ForEach(ROOT_TABS, (item: RootTabItem) => {
             this.TabButton(item);
           }, (item: RootTabItem) => item.key)
         }
         .layoutWeight(1)
-        .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })
         .width('100%')
       }
-      .borderRadius(AppMetrics.cardRadius + 4)
-      .backgroundColor(AppColors.tabBarSurface)
-      .border({ width: 1, color: AppColors.border })
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 8, bottom: 12 })
       .width('100%')
       .height(AppMetrics.tabBarHeight)
       .backgroundColor(AppColors.pageBackground)

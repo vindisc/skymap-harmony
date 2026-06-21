@@ -137,61 +137,105 @@ export struct HomePage {
   }
 
   @Builder
-  DashboardStat(label: string, value: string, isEmphasized: boolean = false) {
-    Column({ space: 6 }) {
-      Text(value)
-        .fontSize(isEmphasized ? AppTypography.statNumber + 6 : AppTypography.statNumber)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(isEmphasized ? AppColors.primary : AppColors.text)
-        .lineHeight(isEmphasized ? AppTypography.statNumberLineHeight + 6 : AppTypography.statNumberLineHeight)
-        .maxLines(1)
-
-      Text(label)
-        .fontSize(AppTypography.statLabel)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.statLabelLineHeight)
-    }
-    .alignItems(HorizontalAlign.Start)
-    .padding(AppMetrics.cardPadding)
-    .layoutWeight(1)
-    .borderRadius(AppMetrics.panelRadius)
-    .backgroundColor(isEmphasized ? AppColors.primarySoft : AppColors.surfaceMuted)
-  }
-
-  @Builder
   GrowthStatsPanel() {
     Column({ space: AppMetrics.cardGap }) {
-      Column({ space: 6 }) {
+      Row() {
         Text('复盘概览')
           .fontSize(AppTypography.sectionTitle)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
           .lineHeight(AppTypography.sectionTitleLineHeight)
 
+        Blank()
+
         Text(this.resolveStatsHintText())
-          .fontSize(AppTypography.caption)
+          .fontSize(AppTypography.meta)
           .fontColor(this.historyLoadFailed ? AppColors.tagAmberText : AppColors.secondaryText)
-          .lineHeight(AppTypography.captionLineHeight)
-      }
-      .width('100%')
-      .alignItems(HorizontalAlign.Start)
-
-      Row({ space: AppMetrics.space8 }) {
-        this.DashboardStat('总复盘', `${this.reviewCount}`, true)
-        this.DashboardStat('成立', `${this.validReviewCount}`)
+          .lineHeight(AppTypography.metaLineHeight)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
       }
       .width('100%')
 
       Row({ space: AppMetrics.space8 }) {
-        this.DashboardStat('待判断', `${this.unsureReviewCount}`)
-        this.DashboardStat('连续', this.resolveStreakText())
+        Column({ space: AppMetrics.space8 }) {
+          Text(`${this.reviewCount}`)
+            .fontSize(AppTypography.statNumber + 4)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.primary)
+            .lineHeight(AppTypography.statNumberLineHeight + 4)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text('总复盘')
+            .fontSize(AppTypography.statLabel)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.statLabelLineHeight)
+            .maxLines(1)
+        }
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
+
+        Column({ space: AppMetrics.space8 }) {
+          Text(`${this.validReviewCount}`)
+            .fontSize(AppTypography.statNumber)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.statNumberLineHeight)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text('成立')
+            .fontSize(AppTypography.statLabel)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.statLabelLineHeight)
+            .maxLines(1)
+        }
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
+
+        Column({ space: AppMetrics.space8 }) {
+          Text(`${this.unsureReviewCount}`)
+            .fontSize(AppTypography.statNumber)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.statNumberLineHeight)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text('待判断')
+            .fontSize(AppTypography.statLabel)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.statLabelLineHeight)
+            .maxLines(1)
+        }
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
+
+        Column({ space: AppMetrics.space8 }) {
+          Text(this.resolveStreakText())
+            .fontSize(AppTypography.statNumber)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.statNumberLineHeight)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+          Text('连续')
+            .fontSize(AppTypography.statLabel)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.statLabelLineHeight)
+            .maxLines(1)
+        }
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
       }
       .width('100%')
     }
     .padding(AppMetrics.cardPadding)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(this.historyLoadFailed ? AppColors.tagAmber : AppColors.surfaceRaised)
+    .backgroundColor(this.historyLoadFailed ? AppColors.tagAmber : AppColors.surface)
     .border({ width: 1, color: this.historyLoadFailed ? AppColors.tagAmberText : AppColors.border })
   }
 
@@ -201,16 +245,11 @@ export struct HomePage {
       Column({ space: AppMetrics.space8 }) {
         Text('开始新的复盘')
           .fontSize(AppTypography.cardTitle)
-          .fontWeight(FontWeight.Bold)
+          .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .lineHeight(AppTypography.cardTitleLineHeight)
           .width('100%')
 
-        Text('从一张真实照片开始，把判断、关系和卡点沉淀成可回看的记录。')
-          .fontSize(AppTypography.body)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.bodyLineHeight)
-          .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
@@ -223,10 +262,10 @@ export struct HomePage {
         }
       })
     }
-    .padding(AppMetrics.cardPadding)
+    .padding(AppMetrics.space16)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceRaised)
+    .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
   }
 
@@ -234,8 +273,7 @@ export struct HomePage {
     Scroll() {
       Column({ space: AppMetrics.sectionGap }) {
         AppPageHeader({
-          title: '摄影复盘',
-          subtitle: '让每一次判断都能被安静地保存、回看和继续推进。'
+          title: '摄影复盘'
         })
 
         this.StartReviewPanel()
@@ -243,22 +281,12 @@ export struct HomePage {
         this.GrowthStatsPanel()
 
         Column({ space: AppMetrics.cardGap }) {
-          Column({ space: 6 }) {
-            Text('最近一次')
-              .fontSize(AppTypography.sectionTitle)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .lineHeight(AppTypography.sectionTitleLineHeight)
-              .width('100%')
-
-            Text('回到刚刚停下来的那条复盘，继续补完它。')
-              .fontSize(AppTypography.caption)
-              .fontColor(AppColors.secondaryText)
-              .lineHeight(AppTypography.captionLineHeight)
-              .width('100%')
-          }
-          .alignItems(HorizontalAlign.Start)
-          .width('100%')
+          Text('最近一次')
+            .fontSize(AppTypography.sectionTitle)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.sectionTitleLineHeight)
+            .width('100%')
 
           if (this.latestItem) {
             Column({ space: AppMetrics.cardGap }) {
@@ -270,18 +298,18 @@ export struct HomePage {
               })
 
               Row({ space: AppMetrics.space8 }) {
-                PrimaryButton({
-                  label: '继续编辑',
-                  onTap: () => {
-                    this.continueLatestReview();
-                  }
-                })
-                  .layoutWeight(1)
-
                 SecondaryButton({
                   label: '查看',
                   onTap: () => {
                     this.openLatestReview();
+                  }
+                })
+                  .layoutWeight(1)
+
+                PrimaryButton({
+                  label: '继续编辑',
+                  onTap: () => {
+                    this.continueLatestReview();
                   }
                 })
                   .layoutWeight(1)
@@ -290,8 +318,7 @@ export struct HomePage {
             }
           } else {
             EmptyState({
-              title: '暂无记录',
-              message: '从相册选择一张照片，开始你的第一条复盘。'
+              title: '暂无记录'
             })
           }
         }

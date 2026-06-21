@@ -75,14 +75,6 @@ export struct MyPage {
     return this.reviewerName.length > 0 ? this.reviewerName : '见遇';
   }
 
-  private resolveSyncBadgeText(): string {
-    return this.isHomeStorageConfigured() ? '已接通' : '待配置';
-  }
-
-  private isSyncRow(title: string): boolean {
-    return title === '同步中心' || title === '家庭存储';
-  }
-
   private openReviewerProfile(): void {
     router.pushUrl({ url: REVIEWER_PROFILE_PAGE });
   }
@@ -143,30 +135,17 @@ export struct MyPage {
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
 
-      Column({ space: 8 }) {
-        if (this.isSyncRow(title)) {
-          Text(this.resolveSyncBadgeText())
-            .fontSize(AppTypography.meta)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(this.isHomeStorageConfigured() ? AppColors.tagGreenText : AppColors.tagAmberText)
-            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-            .borderRadius(AppMetrics.capsuleRadius)
-            .backgroundColor(this.isHomeStorageConfigured() ? AppColors.tagGreen : AppColors.tagAmber)
-        }
-
-        Text('›')
-          .fontSize(AppTypography.cardTitle)
-          .fontColor(AppColors.mutedText)
-          .opacity(0.56)
-      }
-      .alignItems(HorizontalAlign.End)
+      Text('›')
+        .fontSize(AppTypography.cardTitle)
+        .fontColor(AppColors.mutedText)
+        .opacity(0.56)
     }
     .alignItems(VerticalAlign.Center)
     .padding(AppMetrics.cardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 78 })
+    .constraintSize({ minHeight: 64, maxHeight: 70 })
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceRaised)
+    .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
 
     .onClick(() => {
@@ -176,15 +155,8 @@ export struct MyPage {
 
   @Builder
   IdentityCard() {
-    Column({ space: AppMetrics.cardGap }) {
-      Column({ space: 6 }) {
-        Text('个人资料')
-          .fontSize(AppTypography.meta)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.metaLineHeight)
-          .width('100%')
-
+    Row({ space: AppMetrics.cardGap }) {
+      Column({ space: 4 }) {
         Text(this.resolveProfileName())
           .fontSize(AppTypography.profileName)
           .fontWeight(FontWeight.Bold)
@@ -200,47 +172,14 @@ export struct MyPage {
           .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
-
-      Row({ space: AppMetrics.space8 }) {
-        Column({ space: 4 }) {
-          Text(`${this.reviewCount}`)
-            .fontSize(AppTypography.sectionTitle)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.primary)
-
-          Text('累计复盘')
-            .fontSize(AppTypography.meta)
-            .fontColor(AppColors.secondaryText)
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-        .padding(AppMetrics.space16)
-        .borderRadius(AppMetrics.panelRadius)
-        .backgroundColor(AppColors.primarySoft)
-
-        Column({ space: 4 }) {
-          Text(this.resolveSyncSummary())
-            .fontSize(AppTypography.sectionTitle)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.isHomeStorageConfigured() ? AppColors.tagGreenText : AppColors.text)
-
-          Text('同步状态')
-            .fontSize(AppTypography.meta)
-            .fontColor(AppColors.secondaryText)
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-        .padding(AppMetrics.space16)
-        .borderRadius(AppMetrics.panelRadius)
-        .backgroundColor(AppColors.surfaceMuted)
-      }
-      .width('100%')
+      .layoutWeight(1)
     }
+    .alignItems(VerticalAlign.Center)
     .padding(AppMetrics.cardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 132 })
+    .constraintSize({ minHeight: 64, maxHeight: 70 })
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceRaised)
+    .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
   }
 
@@ -248,8 +187,7 @@ export struct MyPage {
     Column() {
       Column({ space: AppMetrics.cardGap }) {
         AppPageHeader({
-          title: '我的',
-          subtitle: '把复盘身份、同步方式和应用状态收拢到一个安静的入口里。'
+          title: '我的'
         })
 
         this.IdentityCard()
