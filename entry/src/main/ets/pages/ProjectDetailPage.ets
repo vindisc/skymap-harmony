@@ -61,6 +61,10 @@ export struct ProjectDetailPage {
     return `${this.filteredItems.length}/${this.summary.recordCount}`;
   }
 
+  private hasActiveFilters(): boolean {
+    return this.searchText.length > 0 || this.decisionFilter !== 'all';
+  }
+
   private async openCreateFirstReview(): Promise<void> {
     if (this.isPickingPhoto) {
       return;
@@ -95,7 +99,7 @@ export struct ProjectDetailPage {
   }
 
   private resolveFilterChipBackgroundColor(value: string): string {
-    return this.isFilterSelected(value) ? AppColors.primarySoft : AppColors.transparent;
+    return this.isFilterSelected(value) ? AppColors.primarySoft : AppColors.surfaceTint;
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -151,7 +155,7 @@ export struct ProjectDetailPage {
       .height(AppMetrics.filterChipHeight)
       .constraintSize({ minWidth: value === 'all' ? 60 : 72 })
       .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-      .borderRadius(AppMetrics.cardRadius)
+      .borderRadius(AppMetrics.capsuleRadius)
       .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
@@ -165,24 +169,33 @@ export struct ProjectDetailPage {
 
   @Builder
   HeaderRow() {
-    Row() {
-      Text('复盘库')
-        .fontSize(AppTypography.pageTitle)
-        .fontWeight(700)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.pageTitleLineHeight)
+    Column({ space: 6 }) {
+      Row() {
+        Text('复盘库')
+          .fontSize(AppTypography.pageTitle)
+          .fontWeight(700)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.pageTitleLineHeight)
 
-      Blank()
+        Blank()
 
-      Text(this.resolveResultCountText())
-        .fontSize(AppTypography.meta)
-        .fontColor(AppColors.mutedText)
-        .lineHeight(AppTypography.metaLineHeight)
-        .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 4, bottom: 4 })
-        .borderRadius(AppMetrics.cardRadius)
-        .backgroundColor(AppColors.surfaceMuted)
+        Text(this.resolveResultCountText())
+          .fontSize(AppTypography.meta)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.metaLineHeight)
+          .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+          .borderRadius(AppMetrics.capsuleRadius)
+          .backgroundColor(AppColors.surfaceMuted)
+      }
+      .alignItems(VerticalAlign.Center)
+      .width('100%')
+
+      Text('按照片、判断和卡点回看你的复盘记录。')
+        .fontSize(AppTypography.pageSubtitle)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.pageSubtitleLineHeight)
+        .width('100%')
     }
-    .alignItems(VerticalAlign.Center)
     .width('100%')
   }
 
@@ -191,11 +204,11 @@ export struct ProjectDetailPage {
       Column() {
         this.HeaderRow()
 
-        Column({ space: AppMetrics.space8 }) {
+        Column({ space: AppMetrics.cardGap }) {
           TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })
             .height(AppMetrics.searchHeight)
             .borderRadius(AppMetrics.cardRadius)
-            .fontSize(AppTypography.caption)
+            .fontSize(AppTypography.inputText)
             .fontColor(AppColors.text)
             .placeholderColor(AppColors.placeholderText)
             .backgroundColor(AppColors.surface)
@@ -214,8 +227,21 @@ export struct ProjectDetailPage {
           }
           .width('100%')
           .height(AppMetrics.filterChipHeight)
+
+          if (this.hasActiveFilters()) {
+            Row() {
+              SecondaryButton({
+                label: '清空筛选',
+                onTap: () => {
+                  this.clearFilters();
+                }
+              })
+                .width(112)
+            }
+            .width('100%')
+          }
         }
-        .margin({ top: AppMetrics.cardGap })
+        .margin({ top: AppMetrics.sectionGap })
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: 0 })
       .width('100%')
@@ -225,7 +251,7 @@ export struct ProjectDetailPage {
         Column() {
           EmptyState({
             title: '暂无复盘记录',
-            message: '先创建一条'
+            message: '从相册选择一张照片，创建第一条可回看的复盘。'
           })
 
           Row() {
@@ -248,19 +274,8 @@ export struct ProjectDetailPage {
         Column() {
           EmptyState({
             title: '没有找到匹配的复盘',
-            message: '换个关键词或筛选'
+            message: '换个关键词，或者清空当前筛选条件。'
           })
-
-          Row() {
-            SecondaryButton({
-              label: '清空',
-              onTap: () => {
-                this.clearFilters();
-              }
-            })
-          }
-          .width('100%')
-          .margin({ top: AppMetrics.space16 })
         }
         .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
         .width('100%')

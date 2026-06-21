@@ -233,7 +233,7 @@ struct PreviewPage {
       .fontSize(AppTypography.smallButtonText)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.onPrimary : AppColors.text))
-      .backgroundColor(emphasized ? AppColors.primary : AppColors.surfaceMuted)
+      .backgroundColor(emphasized ? AppColors.primary : AppColors.surfaceTint)
       .border({ width: 1, color: emphasized ? AppColors.primaryPressed : AppColors.border })
       .opacity(isDisabled ? 0.52 : 1)
       .stateEffect(!isDisabled)
@@ -278,39 +278,48 @@ struct PreviewPage {
   @Builder
   ReadingPage() {
     Column() {
-      Row({ space: AppMetrics.space8 }) {
-        Text('复盘记录')
-          .fontSize(AppTypography.level1)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.text)
-          .lineHeight(AppTypography.level1LineHeight)
-
-        Blank()
-
+      Column({ space: AppMetrics.space8 }) {
         Row({ space: AppMetrics.space8 }) {
-          this.ActionButton('编辑', false, this.isActionBusy(), () => {
-            router.replaceUrl({ url: EDITOR_PAGE });
-          })
-          this.ActionButton(this.isExporting ? '导出中' : '导出', true, this.isActionBusy(), () => {
-            this.openExportMenu();
-          })
-        }
-      }
-      .alignItems(VerticalAlign.Center)
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space8 })
-      .width('100%')
+          Column({ space: 4 }) {
+            Text('复盘记录')
+              .fontSize(AppTypography.level1)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(AppColors.text)
+              .lineHeight(AppTypography.level1LineHeight)
 
-      if (this.lastReviewJsonExportMessage.length > 0) {
-        Row() {
+            Text(this.saveStateLabel)
+              .fontSize(AppTypography.meta)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(AppColors.secondaryText)
+              .lineHeight(AppTypography.metaLineHeight)
+          }
+          .alignItems(HorizontalAlign.Start)
+          .layoutWeight(1)
+
+          Row({ space: AppMetrics.space8 }) {
+            this.ActionButton('编辑', false, this.isActionBusy(), () => {
+              router.replaceUrl({ url: EDITOR_PAGE });
+            })
+            this.ActionButton(this.isExporting ? '导出中' : '导出', true, this.isActionBusy(), () => {
+              this.openExportMenu();
+            })
+          }
+        }
+        .alignItems(VerticalAlign.Center)
+
+        if (this.lastReviewJsonExportMessage.length > 0) {
           Text(this.lastReviewJsonExportMessage)
             .fontSize(AppTypography.caption)
             .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.captionLineHeight)
             .maxLines(2)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
         }
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space8 })
-        .width('100%')
       }
+      .alignItems(HorizontalAlign.Start)
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space8 })
+      .width('100%')
 
       Scroll() {
         Column() {
@@ -354,7 +363,7 @@ struct PreviewPage {
 
       Column({ space: AppMetrics.space8 }) {
         Column({ space: AppMetrics.space8 }) {
-          Text('导出')
+          Text('导出与同步')
             .fontSize(AppTypography.level2)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.text)

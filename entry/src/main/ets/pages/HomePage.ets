@@ -137,6 +137,27 @@ export struct HomePage {
   }
 
   @Builder
+  StatTile(value: string, label: string, highlighted: boolean) {
+    Column({ space: 4 }) {
+      Text(value)
+        .fontSize(highlighted ? AppTypography.statNumber + 4 : AppTypography.statNumber)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(highlighted ? AppColors.primary : AppColors.text)
+        .lineHeight(highlighted ? AppTypography.statNumberLineHeight + 4 : AppTypography.statNumberLineHeight)
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+      Text(label)
+        .fontSize(AppTypography.statLabel)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.statLabelLineHeight)
+        .maxLines(1)
+    }
+    .alignItems(HorizontalAlign.Start)
+    .layoutWeight(1)
+  }
+
+  @Builder
   GrowthStatsPanel() {
     Column({ space: AppMetrics.cardGap }) {
       Row() {
@@ -157,78 +178,11 @@ export struct HomePage {
       }
       .width('100%')
 
-      Row({ space: AppMetrics.space8 }) {
-        Column({ space: AppMetrics.space8 }) {
-          Text(`${this.reviewCount}`)
-            .fontSize(AppTypography.statNumber + 4)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.primary)
-            .lineHeight(AppTypography.statNumberLineHeight + 4)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-          Text('总复盘')
-            .fontSize(AppTypography.statLabel)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.statLabelLineHeight)
-            .maxLines(1)
-        }
-        .alignItems(HorizontalAlign.Center)
-        .layoutWeight(1)
-
-        Column({ space: AppMetrics.space8 }) {
-          Text(`${this.validReviewCount}`)
-            .fontSize(AppTypography.statNumber)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.statNumberLineHeight)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-          Text('成立')
-            .fontSize(AppTypography.statLabel)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.statLabelLineHeight)
-            .maxLines(1)
-        }
-        .alignItems(HorizontalAlign.Center)
-        .layoutWeight(1)
-
-        Column({ space: AppMetrics.space8 }) {
-          Text(`${this.unsureReviewCount}`)
-            .fontSize(AppTypography.statNumber)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.statNumberLineHeight)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-          Text('待判断')
-            .fontSize(AppTypography.statLabel)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.statLabelLineHeight)
-            .maxLines(1)
-        }
-        .alignItems(HorizontalAlign.Center)
-        .layoutWeight(1)
-
-        Column({ space: AppMetrics.space8 }) {
-          Text(this.resolveStreakText())
-            .fontSize(AppTypography.statNumber)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.statNumberLineHeight)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-          Text('连续')
-            .fontSize(AppTypography.statLabel)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.statLabelLineHeight)
-            .maxLines(1)
-        }
-        .alignItems(HorizontalAlign.Center)
-        .layoutWeight(1)
+      Row({ space: AppMetrics.space16 }) {
+        this.StatTile(`${this.reviewCount}`, '总复盘', true)
+        this.StatTile(`${this.validReviewCount}`, '成立', false)
+        this.StatTile(`${this.unsureReviewCount}`, '待判断', false)
+        this.StatTile(this.resolveStreakText(), '连续', false)
       }
       .width('100%')
     }
@@ -245,11 +199,16 @@ export struct HomePage {
       Column({ space: AppMetrics.space8 }) {
         Text('开始新的复盘')
           .fontSize(AppTypography.cardTitle)
-          .fontWeight(FontWeight.Medium)
+          .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
           .lineHeight(AppTypography.cardTitleLineHeight)
           .width('100%')
 
+        Text('从一张照片开始，记录它的视觉落点、核心关系和当前卡点。')
+          .fontSize(AppTypography.body)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.bodyLineHeight)
+          .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
@@ -273,7 +232,8 @@ export struct HomePage {
     Scroll() {
       Column({ space: AppMetrics.sectionGap }) {
         AppPageHeader({
-          title: '摄影复盘'
+          title: '摄影复盘',
+          subtitle: '把每一次观看和判断沉淀成可回看的记录。'
         })
 
         this.StartReviewPanel()
@@ -281,12 +241,22 @@ export struct HomePage {
         this.GrowthStatsPanel()
 
         Column({ space: AppMetrics.cardGap }) {
-          Text('最近一次')
-            .fontSize(AppTypography.sectionTitle)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.sectionTitleLineHeight)
-            .width('100%')
+          Column({ space: 4 }) {
+            Text('最近一次')
+              .fontSize(AppTypography.sectionTitle)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(AppColors.text)
+              .lineHeight(AppTypography.sectionTitleLineHeight)
+              .width('100%')
+
+            Text('继续刚刚停下来的那条复盘。')
+              .fontSize(AppTypography.caption)
+              .fontColor(AppColors.secondaryText)
+              .lineHeight(AppTypography.captionLineHeight)
+              .width('100%')
+          }
+          .alignItems(HorizontalAlign.Start)
+          .width('100%')
 
           if (this.latestItem) {
             Column({ space: AppMetrics.cardGap }) {
@@ -318,7 +288,8 @@ export struct HomePage {
             }
           } else {
             EmptyState({
-              title: '暂无记录'
+              title: '暂无记录',
+              message: '开始第一条复盘后，这里会显示最近一次内容。'
             })
           }
         }

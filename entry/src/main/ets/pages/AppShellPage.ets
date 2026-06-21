@@ -56,7 +56,7 @@ struct AppShellPage {
   }
 
   private resolveTabBackground(key: RootTabKey): string {
-    return AppColors.transparent;
+    return this.isCurrentTab(key) ? AppColors.primarySoft : AppColors.transparent;
   }
 
   @Builder
@@ -71,6 +71,7 @@ struct AppShellPage {
         .fontWeight(this.resolveTabLabelWeight(item.key))
         .fontColor(this.resolveTabLabelColor(item.key))
         .lineHeight(AppTypography.tabLabelLineHeight)
+        .margin({ top: 2 })
     }
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
@@ -108,7 +109,7 @@ struct AppShellPage {
         Divider()
           .strokeWidth(1)
           .color(AppColors.border)
-          .opacity(0.42)
+          .opacity(0.32)
           .width('100%')
 
         Row({ space: AppMetrics.space8 }) {
@@ -117,7 +118,7 @@ struct AppShellPage {
           }, (item: RootTabItem) => item.key)
         }
         .layoutWeight(1)
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 5, bottom: 3 })
         .width('100%')
       }
       .width('100%')

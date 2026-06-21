@@ -11,15 +11,16 @@ import { LayoutTokens, LineHeightTokens, TypographyTokens } from '../theme/Desig
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
-  static readonly pageBackground: string = '#F7F6F3';
-  static readonly surface: string = '#FFFEFC';
-  static readonly surfaceMuted: string = '#F1EFE9';
-  static readonly border: string = '#E5E0D7';
-  static readonly borderStrong: string = '#CFC7BA';
-  static readonly text: string = '#171A1F';
-  static readonly secondaryText: string = '#5E6470';
-  static readonly mutedText: string = '#8A8F98';
-  static readonly placeholderText: string = '#6F7682';
+  static readonly pageBackground: string = '#F6F4EF';
+  static readonly surface: string = '#FFFEFB';
+  static readonly surfaceMuted: string = '#F1EEE8';
+  static readonly surfaceTint: string = '#F7F4EF';
+  static readonly border: string = '#E6DED3';
+  static readonly borderStrong: string = '#CBC1B4';
+  static readonly text: string = '#15191F';
+  static readonly secondaryText: string = '#5E6570';
+  static readonly mutedText: string = '#8B919A';
+  static readonly placeholderText: string = '#727A85';
   static readonly primary: string = '#426A7E';
   static readonly primaryPressed: string = '#315266';
   static readonly primarySoft: string = '#E8F1F5';
@@ -31,9 +32,9 @@ export class AppColors {
   static readonly tagBlue: string = '#EAF2F6';
   static readonly tagBlueText: string = '#426A7E';
   static readonly tagGreen: string = '#EAF5ED';
-  static readonly tagGreenText: string = '#2E7D5B';
+  static readonly tagGreenText: string = '#2D7658';
   static readonly tagAmber: string = '#F4EDE1';
-  static readonly tagAmberText: string = '#8A6B2F';
+  static readonly tagAmberText: string = '#85652A';
 }
 
 export class AppMetrics {
@@ -42,9 +43,9 @@ export class AppMetrics {
   static readonly space24: number = 24;
   static readonly space32: number = 32;
   static readonly pagePadding: number = 20;
-  static readonly pageTopPadding: number = 28;
-  static readonly pageBottomPadding: number = 20;
-  static readonly sectionGap: number = 18;
+  static readonly pageTopPadding: number = 32;
+  static readonly pageBottomPadding: number = 22;
+  static readonly sectionGap: number = 22;
   static readonly cardGap: number = 12;
   static readonly cardPadding: number = 16;
   static readonly listCardPadding: number = 12;
@@ -57,9 +58,9 @@ export class AppMetrics {
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
   static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
   static readonly chipHeight: number = LayoutTokens.ChipHeight;
-  static readonly filterChipHeight: number = 36;
-  static readonly toolbarButtonHeight: number = 38;
-  static readonly toolbarButtonWidth: number = 72;
+  static readonly filterChipHeight: number = LayoutTokens.ChipHeight;
+  static readonly toolbarButtonHeight: number = 44;
+  static readonly toolbarButtonWidth: number = 80;
   static readonly tabBarHeight: number = LayoutTokens.TabBarHeight;
   static readonly tabBarItemHeight: number = LayoutTokens.TabBarItemHeight;
   static readonly tabIconSize: number = TypographyTokens.TabIcon;
@@ -133,7 +134,7 @@ export struct AppPageHeader {
           .fontSize(AppTypography.pageSubtitle)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.pageSubtitleLineHeight)
-          .margin({ top: AppMetrics.space8 })
+          .margin({ top: 6 })
           .width('100%')
       }
     }
@@ -183,7 +184,7 @@ export struct SecondaryButton {
       .fontSize(AppTypography.smallButtonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.text)
-      .backgroundColor(AppColors.surfaceMuted)
+      .backgroundColor(AppColors.surfaceTint)
       .border({ width: 1, color: AppColors.border })
       .opacity(this.isDisabled ? 0.72 : 1)
       .enabled(!this.isDisabled)
@@ -265,8 +266,8 @@ export struct TagLabel {
       .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.color)
-      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
-      .borderRadius(AppMetrics.cardRadius)
+      .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+      .borderRadius(AppMetrics.capsuleRadius)
       .backgroundColor(this.tagBackground)
   }
 }
@@ -293,8 +294,15 @@ function getJudgementBadgeColor(value: string): string {
   return AppColors.secondaryText;
 }
 
-function getJudgementBadgeBackground(_value: string): string {
-  return AppColors.surfaceMuted;
+function getJudgementBadgeBackground(value: string): string {
+  const judgement: ReviewJudgementStatus = normalizeReviewJudgement(value);
+  if (judgement === ReviewJudgementStatus.VALID) {
+    return AppColors.tagGreen;
+  }
+  if (judgement === ReviewJudgementStatus.INVALID) {
+    return AppColors.tagAmber;
+  }
+  return AppColors.primarySoft;
 }
 
 @Component
@@ -304,14 +312,13 @@ export struct ReviewJudgementBadge {
   build() {
     Text(getJudgementBadgeText(this.value))
       .fontSize(AppTypography.meta)
-      .fontWeight(FontWeight.Regular)
+      .fontWeight(FontWeight.Medium)
       .fontColor(getJudgementBadgeColor(this.value))
-      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
-      .borderRadius(AppMetrics.cardRadius)
+      .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+      .borderRadius(AppMetrics.capsuleRadius)
       .backgroundColor(getJudgementBadgeBackground(this.value))
       .textAlign(TextAlign.Center)
       .maxLines(1)
-      .opacity(0.78)
   }
 }
 
@@ -580,7 +587,7 @@ export struct RecentReviewCard {
       })
         .width(AppMetrics.listThumbnailSize)
 
-      Column({ space: 5 }) {
+      Column({ space: 6 }) {
         Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
           .fontSize(AppTypography.listTitle)
           .fontWeight(FontWeight.Medium)
@@ -650,7 +657,7 @@ export struct ProjectReviewCard {
       })
         .width(AppMetrics.listThumbnailSize)
 
-      Column({ space: 5 }) {
+      Column({ space: 6 }) {
         Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
           .fontSize(AppTypography.listTitle)
           .fontWeight(FontWeight.Medium)

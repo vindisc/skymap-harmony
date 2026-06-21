@@ -31,10 +31,10 @@ export struct ReadingReviewRecord {
     Text(label)
       .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.secondaryText)
-      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: AppMetrics.space8, bottom: AppMetrics.space8 })
-      .borderRadius(AppMetrics.cardRadius)
-      .backgroundColor(AppColors.surfaceMuted)
+      .fontColor(label === '成立' ? AppColors.tagGreenText : (label === '不成立' ? AppColors.tagAmberText : AppColors.secondaryText))
+      .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+      .borderRadius(AppMetrics.capsuleRadius)
+      .backgroundColor(label === '成立' ? AppColors.tagGreen : (label === '不成立' ? AppColors.tagAmber : AppColors.primarySoft))
   }
 
   @Builder
