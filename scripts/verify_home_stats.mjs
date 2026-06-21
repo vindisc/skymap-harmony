@@ -4,6 +4,7 @@ const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 
 const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
 const historyServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardHistoryService.ets', 'utf8');
 const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
+const reviewJsonExportServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewJsonExportService.ets', 'utf8');
 const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
 const settingsPageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewSettingsPage.ets', 'utf8');
 const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewProjectService.ets', 'utf8');
@@ -187,6 +188,31 @@ if (!historyServiceSource.includes('function parseStoredHistory(rawValue: prefer
 if (!previewPageSource.includes('ReviewCardHistoryService.markExported(context, this.document, result.path)') ||
   !previewPageSource.includes('ReviewCardHistoryService.markExported(context, this.document, result.remotePath)')) {
   assert(false, 'PreviewPage must write successful review.json exports and home-storage uploads into history stats.');
+}
+
+if (!historyServiceSource.includes("import { ReviewJsonExportService } from './ReviewJsonExportService';") ||
+  !historyServiceSource.includes('await ReviewCardHistoryService.writeRecoverableBackup(context, document);') ||
+  !historyServiceSource.includes('await ReviewJsonExportService.writeSandboxReviewJsonBackup(context, document);') ||
+  !reviewJsonExportServiceSource.includes('static async writeSandboxReviewJsonBackup') ||
+  !reviewJsonExportServiceSource.includes('resolveBackupFileName(document)') ||
+  !reviewJsonExportServiceSource.includes('document.createdAt}-${stem}.${REVIEW_JSON_EXTENSION}') ||
+  !historyServiceSource.includes('fileName.match(/^\\d{8}-\\d{6}-(\\d{10,})-/)') ||
+  !reviewJsonExportServiceSource.includes('formatTimestamp(document.createdAt)')) {
+  assert(false, 'Saving history must also write a stable local review.json backup for future home stats recovery.');
+}
+
+if (!previewPageSource.includes('private async ensureCurrentDocumentPersisted(): Promise<void>') ||
+  !previewPageSource.includes('await this.ensureCurrentDocumentPersisted();') ||
+  !previewPageSource.includes('await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);') ||
+  !previewPageSource.includes('private hasMeaningfulDocument(document: ReviewCardDocument): boolean')) {
+  assert(false, 'PreviewPage must persist a meaningful current review when history is missing.');
+}
+
+if (!historyServiceSource.includes('existingItem ? existingItem.exportedPath :') ||
+  !historyServiceSource.includes('deleteRecoverableBackup(context, document)') ||
+  !reviewJsonExportServiceSource.includes('static deleteSandboxReviewJsonBackup') ||
+  !reviewJsonExportServiceSource.includes('fs.unlinkSync')) {
+  assert(false, 'History save/delete must preserve export state and keep automatic recovery backups in sync.');
 }
 
 if (!settingsPageSource.includes("Text('设置')")) {

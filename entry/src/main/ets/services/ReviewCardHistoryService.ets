@@ -14,6 +14,7 @@ import {
   ReviewCardExchangeDecision,
   ReviewCardExchangeSchemaV1
 } from './ReviewCardExchangeSchema';
+import { ReviewJsonExportService } from './ReviewJsonExportService';
 
 const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
@@ -136,6 +137,12 @@ function mapExchangeDecisionToJudgement(decision: string | undefined): ReviewJud
 }
 
 function parseBackupTimestamp(fileName: string): number {
+  const timestampMatch: RegExpMatchArray | null =
+    fileName.match(/^\d{8}-\d{6}-(\d{10,})-/);
+  if (timestampMatch !== null) {
+    return Number(timestampMatch[1]);
+  }
+
   const match: RegExpMatchArray | null = fileName.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-/);
   if (match === null) {
     return Date.now();
@@ -394,7 +401,10 @@ export class ReviewCardHistoryService {
     const items = await ReviewCardHistoryService.load(context);
     const key = getReviewDocumentKey(document);
     const nextItems: Array<ReviewCardHistoryItem> = [];
-    nextItems.push(createHistoryItem(document));
+    const existingItem: ReviewCardHistoryItem | undefined = items.find((item: ReviewCardHistoryItem): boolean => {
+      return getReviewDocumentKey(item.document) === key;
+    });
+    nextItems.push(createHistoryItem(document, existingItem ? existingItem.exportedPath : ''));
 
     items.forEach((item: ReviewCardHistoryItem) => {
       if (getReviewDocumentKey(item.document) !== key) {
@@ -403,6 +413,7 @@ export class ReviewCardHistoryService {
     });
 
     await ReviewCardHistoryService.persist(context, nextItems);
+    await ReviewCardHistoryService.writeRecoverableBackup(context, document);
     return ReviewCardHistoryService.rememberItems(nextItems);
   }
 
@@ -418,6 +429,7 @@ export class ReviewCardHistoryService {
 
     if (nextItems.some((item: ReviewCardHistoryItem): boolean => getReviewDocumentKey(item.document) === key)) {
       await ReviewCardHistoryService.persist(context, nextItems);
+      await ReviewCardHistoryService.writeRecoverableBackup(context, document);
     }
     return ReviewCardHistoryService.rememberItems(nextItems);
   }
@@ -448,6 +460,7 @@ export class ReviewCardHistoryService {
     });
 
     await ReviewCardHistoryService.persist(context, nextItems);
+    ReviewCardHistoryService.deleteRecoverableBackup(context, document);
     return ReviewCardHistoryService.rememberItems(nextItems);
   }
 
@@ -456,5 +469,22 @@ export class ReviewCardHistoryService {
     const persistedItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(items);
     await store.put(HISTORY_KEY, JSON.stringify(persistedItems));
     await store.flush();
+  }
+
+  private static async writeRecoverableBackup(
+    context: common.UIAbilityContext,
+    document: ReviewCardDocument
+  ): Promise<void> {
+    try {
+      await ReviewJsonExportService.writeSandboxReviewJsonBackup(context, document);
+    } catch (error) {
+    }
+  }
+
+  private static deleteRecoverableBackup(context: common.UIAbilityContext, document: ReviewCardDocument): void {
+    try {
+      ReviewJsonExportService.deleteSandboxReviewJsonBackup(context, document);
+    } catch (error) {
+    }
   }
 }

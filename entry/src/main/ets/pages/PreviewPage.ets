@@ -6,6 +6,8 @@ import { EDITOR_PAGE } from '../app/AppRouter';
 import {
   cloneReviewCardDocument,
   createDefaultReviewCardDocument,
+  DEFAULT_REVIEW_JUDGEMENT,
+  DEFAULT_REVIEW_TITLE,
   getReviewDocumentKey,
   ReviewCardDocument,
   ReviewCardRenderMode
@@ -49,8 +51,50 @@ struct PreviewPage {
 
   aboutToAppear(): void {
     this.document = ReviewCardStore.getCurrentDocument();
-    this.recoverImageSizeIfNeeded();
-    this.syncSaveState();
+    this.refreshPersistedState();
+  }
+
+  private async refreshPersistedState(): Promise<void> {
+    await this.recoverImageSizeIfNeeded();
+    await this.ensureCurrentDocumentPersisted();
+    await this.syncSaveState();
+  }
+
+  private hasMeaningfulDocument(document: ReviewCardDocument): boolean {
+    if (hasDisplayableImageUri(document.imageUri)) {
+      return true;
+    }
+
+    const content = document.content;
+    return (content.title.trim().length > 0 && content.title !== DEFAULT_REVIEW_TITLE) ||
+      content.visualFocus.trim().length > 0 ||
+      content.focusReason.trim().length > 0 ||
+      content.visualPath.trim().length > 0 ||
+      content.visibleFacts.trim().length > 0 ||
+      content.coreRelation.trim().length > 0 ||
+      content.extendedUnderstanding.trim().length > 0 ||
+      content.currentBlocker.trim().length > 0 ||
+      (content.judgement.trim().length > 0 && content.judgement !== DEFAULT_REVIEW_JUDGEMENT);
+  }
+
+  private async ensureCurrentDocumentPersisted(): Promise<void> {
+    if (!this.hasMeaningfulDocument(this.document)) {
+      return;
+    }
+
+    try {
+      const items = await ReviewCardHistoryService.load(this.getAbilityContext());
+      const currentKey = getReviewDocumentKey(this.document);
+      const matchedItem = items.find((item) => getReviewDocumentKey(item.document) === currentKey);
+      if (matchedItem) {
+        return;
+      }
+
+      this.document = ReviewCardStore.saveCurrentDocument(this.document);
+      await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+      this.saveStateLabel = PreviewSaveState.SAVED;
+    } catch (error) {
+    }
   }
 
   private async recoverImageSizeIfNeeded(): Promise<void> {

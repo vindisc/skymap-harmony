@@ -21,6 +21,13 @@ export interface ReviewJsonExportResult {
   message: string;
 }
 
+export interface ReviewJsonBackupResult {
+  success: boolean;
+  path: string;
+  directory: string;
+  fileName: string;
+}
+
 const REVIEW_JSON_EXPORT_DIR_NAME: string = 'review_exchange';
 const REVIEW_JSON_EXTENSION: string = 'review.json';
 
@@ -60,6 +67,12 @@ function resolveExportFileName(document: ReviewCardDocument): string {
   const sourceFileName: string = resolveReviewCardExchangeFileName(document).trim();
   const stem: string = sourceFileName.length > 0 ? sanitizeFileStem(sourceFileName) : 'review';
   return `${formatTimestamp(document.updatedAt)}-${stem}.${REVIEW_JSON_EXTENSION}`;
+}
+
+function resolveBackupFileName(document: ReviewCardDocument): string {
+  const sourceFileName: string = resolveReviewCardExchangeFileName(document).trim();
+  const stem: string = sourceFileName.length > 0 ? sanitizeFileStem(sourceFileName) : 'review';
+  return `${formatTimestamp(document.createdAt)}-${document.createdAt}-${stem}.${REVIEW_JSON_EXTENSION}`;
 }
 
 function ensureExportDirectory(context: common.UIAbilityContext): string {
@@ -109,11 +122,48 @@ async function exportToUserSelectedDocument(
 }
 
 export class ReviewJsonExportService {
+  static async writeSandboxReviewJsonBackup(
+    context: common.UIAbilityContext,
+    document: ReviewCardDocument
+  ): Promise<ReviewJsonBackupResult> {
+    try {
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
+      const reviewJson: string = stringifyReviewCardExchangeSchemaV1(document, reviewerName);
+      const directory: string = ensureExportDirectory(context);
+      const fileName: string = resolveBackupFileName(document);
+      const outputPath: string = `${directory}/${fileName}`;
+      writeReviewJson(outputPath, reviewJson);
+      return {
+        success: true,
+        path: outputPath,
+        directory: directory,
+        fileName: fileName
+      };
+    } catch (error) {
+      return {
+        success: false,
+        path: '',
+        directory: '',
+        fileName: ''
+      };
+    }
+  }
+
+  static deleteSandboxReviewJsonBackup(context: common.UIAbilityContext, document: ReviewCardDocument): void {
+    try {
+      const directory: string = ensureExportDirectory(context);
+      const fileName: string = resolveBackupFileName(document);
+      fs.unlinkSync(`${directory}/${fileName}`);
+    } catch (error) {
+    }
+  }
+
   static async exportReviewJson(
     context: common.UIAbilityContext,
     document: ReviewCardDocument
   ): Promise<ReviewJsonExportResult> {
     try {
+      await ReviewJsonExportService.writeSandboxReviewJsonBackup(context, document);
       const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
       const reviewJson: string = stringifyReviewCardExchangeSchemaV1(document, reviewerName);
       const directory: string = ensureExportDirectory(context);
