@@ -186,8 +186,7 @@ export struct MyPage {
     Scroll() {
       Column({ space: AppMetrics.sectionGap }) {
         AppPageHeader({
-          title: '我的',
-          subtitle: '账户与同步'
+          title: '我的'
         })
 
         this.IdentityCard()

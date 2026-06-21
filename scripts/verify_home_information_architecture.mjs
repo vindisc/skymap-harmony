@@ -109,7 +109,7 @@ if (!myPageSource.includes('top: AppMetrics.pageTopPadding') ||
 }
 
 if (!myPageSource.includes("title: '我的'") ||
-  !myPageSource.includes("subtitle: '账户与同步'") ||
+  myPageSource.includes("subtitle: '账户与同步'") ||
   !myPageSource.includes('this.IdentityCard()') ||
   !myPageSource.includes("this.SectionTitle('设置')") ||
   !myPageSource.includes("this.SectionTitle('同步')") ||
@@ -120,7 +120,15 @@ if (!myPageSource.includes("title: '我的'") ||
   !myPageSource.includes("'家庭存储',") ||
   !myPageSource.includes("this.LinkRow('关于'")) {
   failed = true;
-  console.error('MyPage must keep the personal-center structure.');
+  console.error('MyPage must keep the personal-center structure without explanatory header subtitle.');
+}
+
+if (!libraryPageSource.includes('this.HeaderRow()') ||
+  !libraryPageSource.includes('private resolveResultCountText(): string') ||
+  !libraryPageSource.includes('.height(AppMetrics.filterChipHeight)') ||
+  libraryPageSource.includes("subtitle: '搜索与回看'")) {
+  failed = true;
+  console.error('ProjectDetailPage must use compact title count and filter controls without explanatory subtitle.');
 }
 
 const topAlignedPageSources = [
@@ -147,6 +155,13 @@ if (!previewPageSource.includes("this.ActionButton('编辑', false, this.isActio
 if (!previewPageSource.includes("this.ActionButton(this.isExporting ? '导出中' : '导出', true, this.isActionBusy(), () => {")) {
   failed = true;
   console.error('PreviewPage must keep 导出 as the single top-level export action.');
+}
+
+if (!previewPageSource.includes('.height(AppMetrics.toolbarButtonHeight)') ||
+  !previewPageSource.includes('.width(AppMetrics.toolbarButtonWidth)') ||
+  previewPageSource.indexOf("Text('复盘记录')") > previewPageSource.indexOf("this.ActionButton('编辑'")) {
+  failed = true;
+  console.error('PreviewPage actions must sit in the title toolbar with compact button sizing.');
 }
 
 const disallowedTopLevelActions = [

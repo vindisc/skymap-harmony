@@ -227,10 +227,10 @@ struct PreviewPage {
   @Builder
   ActionButton(label: string, emphasized: boolean, isDisabled: boolean, onTap: () => void) {
     Button(label)
-      .height(AppMetrics.chipHeight)
-      .padding({ left: emphasized ? AppMetrics.space16 : AppMetrics.space8, right: emphasized ? AppMetrics.space16 : AppMetrics.space8 })
+      .height(AppMetrics.toolbarButtonHeight)
+      .width(AppMetrics.toolbarButtonWidth)
       .borderRadius(AppMetrics.capsuleRadius)
-      .fontSize(AppTypography.auxiliary)
+      .fontSize(AppTypography.smallButtonText)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.onPrimary : AppColors.text))
       .backgroundColor(emphasized ? AppColors.primary : AppColors.surfaceMuted)
@@ -278,7 +278,7 @@ struct PreviewPage {
   @Builder
   ReadingPage() {
     Column() {
-      Row() {
+      Row({ space: AppMetrics.space8 }) {
         Text('复盘记录')
           .fontSize(AppTypography.level1)
           .fontWeight(FontWeight.Bold)
@@ -286,12 +286,7 @@ struct PreviewPage {
           .lineHeight(AppTypography.level1LineHeight)
 
         Blank()
-      }
-      .alignItems(VerticalAlign.Center)
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space8 })
-      .width('100%')
 
-      Column({ space: AppMetrics.space8 }) {
         Row({ space: AppMetrics.space8 }) {
           this.ActionButton('编辑', false, this.isActionBusy(), () => {
             router.replaceUrl({ url: EDITOR_PAGE });
@@ -300,9 +295,9 @@ struct PreviewPage {
             this.openExportMenu();
           })
         }
-        .height(AppMetrics.chipHeight)
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space8 })
+      .alignItems(VerticalAlign.Center)
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space8 })
       .width('100%')
 
       if (this.lastReviewJsonExportMessage.length > 0) {

@@ -5,7 +5,6 @@ import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
 import {
   AppColors,
   AppMetrics,
-  AppPageHeader,
   AppTypography,
   EmptyState,
   PrimaryButton,
@@ -53,6 +52,13 @@ export struct ProjectDetailPage {
     this.searchText = '';
     this.decisionFilter = 'all';
     this.applyFilters();
+  }
+
+  private resolveResultCountText(): string {
+    if (this.summary.recordCount === 0) {
+      return '0';
+    }
+    return `${this.filteredItems.length}/${this.summary.recordCount}`;
   }
 
   private async openCreateFirstReview(): Promise<void> {
@@ -142,7 +148,7 @@ export struct ProjectDetailPage {
   @Builder
   FilterChip(label: string, value: string) {
     Button(label)
-      .height(AppMetrics.chipHeight)
+      .height(AppMetrics.filterChipHeight)
       .padding({ left: AppMetrics.cardGap, right: AppMetrics.cardGap })
       .borderRadius(AppMetrics.capsuleRadius)
       .fontSize(AppTypography.caption)
@@ -156,23 +162,33 @@ export struct ProjectDetailPage {
       })
   }
 
+  @Builder
+  HeaderRow() {
+    Row() {
+      Text('复盘库')
+        .fontSize(AppTypography.pageTitle)
+        .fontWeight(700)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.pageTitleLineHeight)
+
+      Blank()
+
+      Text(this.resolveResultCountText())
+        .fontSize(AppTypography.meta)
+        .fontColor(AppColors.mutedText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 4, bottom: 4 })
+        .borderRadius(AppMetrics.cardRadius)
+        .backgroundColor(AppColors.surfaceMuted)
+    }
+    .alignItems(VerticalAlign.Center)
+    .width('100%')
+  }
+
   build() {
     Column() {
       Column() {
-        AppPageHeader({
-          title: '复盘库',
-          subtitle: '搜索与回看'
-        })
-
-        Text(this.summary.recordCount === 0
-          ? '0 条'
-          : `${this.filteredItems.length}/${this.summary.recordCount}`)
-          .fontSize(AppTypography.auxiliary)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.auxiliaryLineHeight)
-          .width('100%')
-          .opacity(0.72)
-          .margin({ top: AppMetrics.space8 })
+        this.HeaderRow()
 
         Column({ space: AppMetrics.space8 }) {
           TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })
@@ -197,7 +213,7 @@ export struct ProjectDetailPage {
           }
           .width('100%')
         }
-        .margin({ top: AppMetrics.space16 })
+        .margin({ top: AppMetrics.cardGap })
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: 0 })
       .width('100%')

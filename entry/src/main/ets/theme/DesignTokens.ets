@@ -46,7 +46,7 @@ export class LayoutTokens {
   static readonly ChipHeight: number = 44;
   static readonly PrimaryButtonHeight: number = 48;
   static readonly SecondaryButtonHeight: number = 44;
-  static readonly ListThumbnailSize: number = 72;
-  static readonly ListCardMinHeight: number = 92;
-  static readonly ListCardMaxHeight: number = 104;
+  static readonly ListThumbnailSize: number = 68;
+  static readonly ListCardMinHeight: number = 88;
+  static readonly ListCardMaxHeight: number = 100;
 }

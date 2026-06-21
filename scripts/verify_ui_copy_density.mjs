@@ -27,14 +27,18 @@ const forbiddenCopy = [
   '上传到家庭存储中...',
   '导出复盘图片中...',
   '复制复盘数据',
-  '导出 review.json'
+  '导出 review.json',
+  '账户与同步',
+  '搜索与回看'
 ];
 
 const requiredCopy = [
   ['entry/src/main/ets/pages/HomePage.ets', "return this.reviewCount > 0 ? '已更新' : '暂无记录';"],
-  ['entry/src/main/ets/pages/MyPage.ets', "subtitle: '账户与同步'"],
+  ['entry/src/main/ets/pages/MyPage.ets', "AppPageHeader({\n          title: '我的'\n        })"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', "placeholder: '标题、关系、卡点、文件名'"],
-  ['entry/src/main/ets/pages/SyncCenterPage.ets', "subtitle: '家庭存储状态'"],
+  ['entry/src/main/ets/pages/ProjectDetailPage.ets', "this.HeaderRow()"],
+  ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".height(AppMetrics.filterChipHeight)"],
+  ['entry/src/main/ets/pages/PreviewPage.ets', ".height(AppMetrics.toolbarButtonHeight)"],
   ['entry/src/main/ets/pages/PreviewPage.ets', "this.ExportSheetAction('导出 JSON'"],
   ['entry/src/main/ets/pages/ReviewSettingsPage.ets', "Text('SMB 与凭据')"],
   ['entry/src/main/ets/components/ReviewPhotoBlock.ets', "Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '加载失败' : '照片')"]

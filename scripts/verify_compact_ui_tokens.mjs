@@ -59,7 +59,7 @@ const requiredDesignTokens = [
   'static readonly SecondaryButtonHeight: number = 44;',
   'static readonly PrimaryButtonHeight: number = 48;',
   'static readonly TabBarHeight: number = 68;',
-  'static readonly ListThumbnailSize: number = 72;'
+  'static readonly ListThumbnailSize: number = 68;'
 ];
 
 for (const marker of requiredDesignTokens) {
@@ -164,8 +164,8 @@ if (homePageSource.includes('0天')) {
 }
 
 assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use shared touch-safe token.');
-assertIncludes(projectDetailSource, '.height(AppMetrics.chipHeight)', 'Library chips must use shared touch-safe token.');
-assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use 72vp thumbnail token.');
+assertIncludes(projectDetailSource, '.height(AppMetrics.filterChipHeight)', 'Library chips must use compact filter token.');
+assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use compact 68vp thumbnail token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'Status tags must use compact token.');

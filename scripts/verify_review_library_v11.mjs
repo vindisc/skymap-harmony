@@ -29,7 +29,8 @@ if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('
 }
 
 const requiredDetailTokens = [
-  "title: '复盘库'",
+  "Text('复盘库')",
+  'this.HeaderRow()',
   "TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })",
   "this.FilterChip('成立', ReviewJudgementStatus.VALID)",
   "this.FilterChip('待判断', ReviewJudgementStatus.UNSURE)",

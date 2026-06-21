@@ -57,6 +57,9 @@ export class AppMetrics {
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
   static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
   static readonly chipHeight: number = LayoutTokens.ChipHeight;
+  static readonly filterChipHeight: number = 40;
+  static readonly toolbarButtonHeight: number = 38;
+  static readonly toolbarButtonWidth: number = 72;
   static readonly tabBarHeight: number = LayoutTokens.TabBarHeight;
   static readonly tabBarItemHeight: number = LayoutTokens.TabBarItemHeight;
   static readonly tabIconSize: number = TypographyTokens.TabIcon;

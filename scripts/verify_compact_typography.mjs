@@ -61,9 +61,9 @@ const requiredLayoutTokens = [
   ['ChipHeight', 44],
   ['PrimaryButtonHeight', 48],
   ['SecondaryButtonHeight', 44],
-  ['ListThumbnailSize', 72],
-  ['ListCardMinHeight', 92],
-  ['ListCardMaxHeight', 104]
+  ['ListThumbnailSize', 68],
+  ['ListCardMinHeight', 88],
+  ['ListCardMaxHeight', 100]
 ];
 
 for (const [name, value] of requiredLayoutTokens) {
@@ -211,7 +211,7 @@ for (const filePath of primaryPageFiles) {
   }
 }
 
-assertIncludes(appDesignSource, '.constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })', 'List cards must use compact 92-104vp height tokens.');
+assertIncludes(appDesignSource, '.constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })', 'List cards must use compact 88-100vp height tokens.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use ListTitle token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List bodies must use ListBody token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'List meta and badges must use 13fp token.');

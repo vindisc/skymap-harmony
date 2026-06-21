@@ -48,7 +48,7 @@ struct AppShellPage {
   }
 
   private resolveTabLabelColor(key: RootTabKey): string {
-    return this.isCurrentTab(key) ? AppColors.text : AppColors.mutedText;
+    return this.isCurrentTab(key) ? AppColors.primary : AppColors.mutedText;
   }
 
   private resolveTabLabelWeight(key: RootTabKey): number {
@@ -56,7 +56,7 @@ struct AppShellPage {
   }
 
   private resolveTabBackground(key: RootTabKey): string {
-    return this.isCurrentTab(key) ? AppColors.primarySoft : AppColors.transparent;
+    return AppColors.transparent;
   }
 
   @Builder
@@ -79,6 +79,7 @@ struct AppShellPage {
     .padding({ left: AppMetrics.space8, right: AppMetrics.space8 })
     .borderRadius(AppMetrics.buttonRadius)
     .backgroundColor(this.resolveTabBackground(item.key))
+    .opacity(this.isCurrentTab(item.key) ? 1 : 0.82)
     .onClick(() => {
       this.selectTab(item.key);
     })
