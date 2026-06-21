@@ -11,29 +11,31 @@ import { LayoutTokens, LineHeightTokens, TypographyTokens } from '../theme/Desig
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
-  static readonly pageBackground: string = '#F7F6F3';
-  static readonly surface: string = '#FFFEFC';
-  static readonly surfaceMuted: string = '#F1EFE9';
-  static readonly border: string = '#E5E0D7';
-  static readonly borderStrong: string = '#CFC7BA';
-  static readonly text: string = '#171A1F';
-  static readonly secondaryText: string = '#5E6470';
-  static readonly mutedText: string = '#8A8F98';
-  static readonly placeholderText: string = '#6F7682';
-  static readonly primary: string = '#426A7E';
-  static readonly primaryPressed: string = '#315266';
-  static readonly primarySoft: string = '#E8F1F5';
-  static readonly primaryDisabled: string = '#B9CDD7';
+  static readonly pageBackground: string = '#F4F1EB';
+  static readonly surface: string = '#FFFCF8';
+  static readonly surfaceMuted: string = '#F2EEE7';
+  static readonly surfaceRaised: string = '#FFFFFF';
+  static readonly border: string = '#E8E0D4';
+  static readonly borderStrong: string = '#D5CCBD';
+  static readonly text: string = '#12161B';
+  static readonly secondaryText: string = '#5C6470';
+  static readonly mutedText: string = '#8A9099';
+  static readonly placeholderText: string = '#747C87';
+  static readonly primary: string = '#496F83';
+  static readonly primaryPressed: string = '#36596C';
+  static readonly primarySoft: string = '#E6EFF4';
+  static readonly primaryDisabled: string = '#B8CBD5';
   static readonly onPrimary: string = '#FFFFFF';
   static readonly transparent: string = '#00000000';
   static readonly scrim: string = '#66000000';
   static readonly danger: string = '#B73A31';
   static readonly tagBlue: string = '#EAF2F6';
-  static readonly tagBlueText: string = '#426A7E';
-  static readonly tagGreen: string = '#EAF5ED';
-  static readonly tagGreenText: string = '#2E7D5B';
-  static readonly tagAmber: string = '#F4EDE1';
-  static readonly tagAmberText: string = '#8A6B2F';
+  static readonly tagBlueText: string = '#496F83';
+  static readonly tagGreen: string = '#EDF6F1';
+  static readonly tagGreenText: string = '#2D745A';
+  static readonly tagAmber: string = '#F5EEE3';
+  static readonly tagAmberText: string = '#8B6C31';
+  static readonly tabBarSurface: string = '#FBF8F3';
 }
 
 export class AppMetrics {
@@ -41,23 +43,23 @@ export class AppMetrics {
   static readonly space16: number = 16;
   static readonly space24: number = 24;
   static readonly space32: number = 32;
-  static readonly pagePadding: number = 20;
-  static readonly pageTopPadding: number = 28;
-  static readonly pageBottomPadding: number = 20;
-  static readonly sectionGap: number = 18;
-  static readonly cardGap: number = 12;
-  static readonly cardPadding: number = 16;
-  static readonly listCardPadding: number = 12;
-  static readonly cardRadius: number = 8;
-  static readonly buttonRadius: number = 8;
-  static readonly capsuleRadius: number = 16;
-  static readonly panelRadius: number = 8;
+  static readonly pagePadding: number = 22;
+  static readonly pageTopPadding: number = 32;
+  static readonly pageBottomPadding: number = 22;
+  static readonly sectionGap: number = 24;
+  static readonly cardGap: number = 14;
+  static readonly cardPadding: number = 18;
+  static readonly listCardPadding: number = 14;
+  static readonly cardRadius: number = 18;
+  static readonly buttonRadius: number = 16;
+  static readonly capsuleRadius: number = 22;
+  static readonly panelRadius: number = 16;
   static readonly pressInset: number = 8;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
   static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
   static readonly chipHeight: number = LayoutTokens.ChipHeight;
-  static readonly filterChipHeight: number = 36;
+  static readonly filterChipHeight: number = 42;
   static readonly toolbarButtonHeight: number = 38;
   static readonly toolbarButtonWidth: number = 72;
   static readonly tabBarHeight: number = LayoutTokens.TabBarHeight;
@@ -133,7 +135,7 @@ export struct AppPageHeader {
           .fontSize(AppTypography.pageSubtitle)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.pageSubtitleLineHeight)
-          .margin({ top: AppMetrics.space8 })
+          .margin({ top: 10 })
           .width('100%')
       }
     }
@@ -183,7 +185,7 @@ export struct SecondaryButton {
       .fontSize(AppTypography.smallButtonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.text)
-      .backgroundColor(AppColors.surfaceMuted)
+      .backgroundColor(AppColors.surfaceRaised)
       .border({ width: 1, color: AppColors.border })
       .opacity(this.isDisabled ? 0.72 : 1)
       .enabled(!this.isDisabled)
@@ -210,7 +212,7 @@ export struct DangerButton {
       .fontSize(AppTypography.smallButtonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.danger)
-      .backgroundColor(AppColors.surface)
+      .backgroundColor(AppColors.surfaceRaised)
       .border({ width: 1, color: this.isDisabled ? AppColors.border : AppColors.danger })
       .opacity(this.isDisabled ? 0.72 : 1)
       .enabled(!this.isDisabled)
@@ -249,7 +251,7 @@ export struct EmptyState {
     .padding(AppMetrics.space16)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceRaised)
     .border({ width: 1, color: AppColors.border })
   }
 }
@@ -265,8 +267,8 @@ export struct TagLabel {
       .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.color)
-      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
-      .borderRadius(AppMetrics.cardRadius)
+      .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+      .borderRadius(AppMetrics.capsuleRadius)
       .backgroundColor(this.tagBackground)
   }
 }
@@ -294,7 +296,14 @@ function getJudgementBadgeColor(value: string): string {
 }
 
 function getJudgementBadgeBackground(_value: string): string {
-  return AppColors.surfaceMuted;
+  const judgement: ReviewJudgementStatus = normalizeReviewJudgement(_value);
+  if (judgement === ReviewJudgementStatus.VALID) {
+    return AppColors.tagGreen;
+  }
+  if (judgement === ReviewJudgementStatus.INVALID) {
+    return AppColors.tagAmber;
+  }
+  return AppColors.primarySoft;
 }
 
 @Component
@@ -304,14 +313,14 @@ export struct ReviewJudgementBadge {
   build() {
     Text(getJudgementBadgeText(this.value))
       .fontSize(AppTypography.meta)
-      .fontWeight(FontWeight.Regular)
+      .fontWeight(FontWeight.Medium)
       .fontColor(getJudgementBadgeColor(this.value))
-      .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
-      .borderRadius(AppMetrics.cardRadius)
+      .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+      .borderRadius(AppMetrics.capsuleRadius)
       .backgroundColor(getJudgementBadgeBackground(this.value))
       .textAlign(TextAlign.Center)
       .maxLines(1)
-      .opacity(0.78)
+      .opacity(0.96)
   }
 }
 
@@ -369,7 +378,7 @@ export struct PhotoSummaryCard {
     .padding(AppMetrics.space16)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceRaised)
     .border({ width: 1, color: AppColors.border })
   }
 }
@@ -549,7 +558,7 @@ export struct ProjectHomeCard {
     .width('100%')
     .constraintSize({ minHeight: 124 })
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceRaised)
     .border({ width: 1, color: AppColors.border })
 
     .onClick(() => {
@@ -580,13 +589,13 @@ export struct RecentReviewCard {
       })
         .width(AppMetrics.listThumbnailSize)
 
-      Column({ space: 5 }) {
+      Column({ space: 6 }) {
         Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
           .fontSize(AppTypography.listTitle)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .lineHeight(AppTypography.listTitleLineHeight)
-          .maxLines(1)
+          .maxLines(2)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
 
@@ -619,7 +628,7 @@ export struct RecentReviewCard {
     .width('100%')
     .constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceRaised)
     .border({ width: 1, color: AppColors.border })
 
     .onClick(() => {
@@ -650,13 +659,13 @@ export struct ProjectReviewCard {
       })
         .width(AppMetrics.listThumbnailSize)
 
-      Column({ space: 5 }) {
+      Column({ space: 6 }) {
         Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
           .fontSize(AppTypography.listTitle)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
           .lineHeight(AppTypography.listTitleLineHeight)
-          .maxLines(1)
+          .maxLines(2)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
 
@@ -689,7 +698,7 @@ export struct ProjectReviewCard {
     .width('100%')
     .constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceRaised)
     .border({ width: 1, color: AppColors.border })
 
     .onClick(() => {
