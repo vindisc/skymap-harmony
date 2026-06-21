@@ -110,6 +110,7 @@ if (!myPageSource.includes('top: AppMetrics.pageTopPadding') ||
 
 if (!myPageSource.includes("title: '我的'") ||
   myPageSource.includes("subtitle: '账户与同步'") ||
+  myPageSource.includes('Scroll() {') ||
   !myPageSource.includes('this.IdentityCard()') ||
   !myPageSource.includes("this.SectionTitle('设置')") ||
   !myPageSource.includes("this.SectionTitle('同步')") ||
@@ -126,6 +127,8 @@ if (!myPageSource.includes("title: '我的'") ||
 if (!libraryPageSource.includes('this.HeaderRow()') ||
   !libraryPageSource.includes('private resolveResultCountText(): string') ||
   !libraryPageSource.includes('.height(AppMetrics.filterChipHeight)') ||
+  !libraryPageSource.includes('.constraintSize({ minWidth: value === \'all\' ? 60 : 72 })') ||
+  !libraryPageSource.includes('.fontSize(AppTypography.meta)') ||
   libraryPageSource.includes("subtitle: '搜索与回看'")) {
   failed = true;
   console.error('ProjectDetailPage must use compact title count and filter controls without explanatory subtitle.');

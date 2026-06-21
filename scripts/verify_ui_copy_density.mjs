@@ -38,6 +38,8 @@ const requiredCopy = [
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', "placeholder: '标题、关系、卡点、文件名'"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', "this.HeaderRow()"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".height(AppMetrics.filterChipHeight)"],
+  ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".constraintSize({ minWidth: value === 'all' ? 60 : 72 })"],
+  ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".fontSize(AppTypography.meta)"],
   ['entry/src/main/ets/pages/PreviewPage.ets', ".height(AppMetrics.toolbarButtonHeight)"],
   ['entry/src/main/ets/pages/PreviewPage.ets', "this.ExportSheetAction('导出 JSON'"],
   ['entry/src/main/ets/pages/ReviewSettingsPage.ets', "Text('SMB 与凭据')"],

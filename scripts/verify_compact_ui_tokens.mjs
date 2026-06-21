@@ -58,7 +58,8 @@ const requiredDesignTokens = [
   'static readonly ChipHeight: number = 44;',
   'static readonly SecondaryButtonHeight: number = 44;',
   'static readonly PrimaryButtonHeight: number = 48;',
-  'static readonly TabBarHeight: number = 68;',
+  'static readonly TabBarHeight: number = 58;',
+  'static readonly TabBarItemHeight: number = 50;',
   'static readonly ListThumbnailSize: number = 68;'
 ];
 
@@ -133,6 +134,7 @@ assertIncludes(appShellSource, "$r('app.media.tab_library_active')", 'TabBar mus
 assertIncludes(appShellSource, "$r('app.media.tab_user_active')", 'TabBar must use the user line icon resource.');
 assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use 12fp Compact token.');
 assertIncludes(appShellSource, '.height(AppMetrics.tabBarHeight)', 'TabBar must use shared touch-safe token.');
+assertIncludes(appShellSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })', 'TabBar must not leave oversized blank bottom padding.');
 
 const iconFiles = [
   'tab_home.svg',
@@ -165,6 +167,10 @@ if (homePageSource.includes('0天')) {
 
 assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use shared touch-safe token.');
 assertIncludes(projectDetailSource, '.height(AppMetrics.filterChipHeight)', 'Library chips must use compact filter token.');
+assertIncludes(projectDetailSource, '.constraintSize({ minWidth: value === \'all\' ? 60 : 72 })', 'Library filter chips must read as compact horizontal pills.');
+assertIncludes(projectDetailSource, '.borderRadius(AppMetrics.cardRadius)', 'Library filter chips must avoid oversized capsule corners.');
+assertIncludes(projectDetailSource, '.fontSize(AppTypography.meta)', 'Library filter chips must use small label typography.');
+assertIncludes(projectDetailSource, '.fontSize(AppTypography.auxiliary)', 'Library search text must be visually lighter than body forms.');
 assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use compact 68vp thumbnail token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use compact token.');
@@ -189,6 +195,12 @@ for (const [pageName, source] of topAlignedPages) {
 
 assertIncludes(myPageSource, '.fontSize(AppTypography.profileName)', 'My identity card name must use compact profile token.');
 assertIncludes(myPageSource, '次复盘 ·', 'My identity card must show compact one-line review stats.');
+assertIncludes(appDesignSource, 'static readonly profileName: number = TypographyTokens.CardTitle;', 'My identity name must align with card title scale.');
+assertIncludes(myPageSource, '.constraintSize({ minHeight: 64, maxHeight: 70 })', 'My identity and link rows must use compact card heights.');
+if (myPageSource.includes('Scroll() {')) {
+  failed = true;
+  console.error('MyPage must not scroll when the visible content fits the first screen.');
+}
 assertIncludes(reviewerProfileSource, '.justifyContent(FlexAlign.Start)', 'ReviewerProfilePage must explicitly top-align content.');
 assertIncludes(homeStorageSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding', 'HomeStoragePage must use shared top padding.');
 

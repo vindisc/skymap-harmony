@@ -56,7 +56,8 @@ for (const [name, value] of requiredTypographyTokens) {
 }
 
 const requiredLayoutTokens = [
-  ['TabBarHeight', 68],
+  ['TabBarHeight', 58],
+  ['TabBarItemHeight', 50],
   ['SearchHeight', 44],
   ['ChipHeight', 44],
   ['PrimaryButtonHeight', 48],
@@ -175,6 +176,7 @@ for (const forbiddenSize of [40, 44, 48, 56]) {
 
 assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use TabLabel token.');
 assertIncludes(appShellSource, '.width(AppMetrics.tabIconSize)', 'Tab icon must use TabIcon token.');
+assertIncludes(appShellSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })', 'TabBar must keep compact bottom-safe padding.');
 if (designTokensSource.includes('static readonly TabLabel: number = 13;') ||
   designTokensSource.includes('static readonly TabLabel: number = 14;')) {
   fail('TabLabel must not exceed 12fp.');

@@ -40,8 +40,8 @@ export class LineHeightTokens {
 }
 
 export class LayoutTokens {
-  static readonly TabBarHeight: number = 68;
-  static readonly TabBarItemHeight: number = 56;
+  static readonly TabBarHeight: number = 58;
+  static readonly TabBarItemHeight: number = 50;
   static readonly SearchHeight: number = 44;
   static readonly ChipHeight: number = 44;
   static readonly PrimaryButtonHeight: number = 48;

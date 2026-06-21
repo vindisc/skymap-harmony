@@ -90,9 +90,10 @@ export struct MyPage {
   @Builder
   SectionTitle(title: string) {
     Text(title)
-      .fontSize(AppTypography.caption)
+      .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.secondaryText)
+      .lineHeight(AppTypography.metaLineHeight)
       .width('100%')
   }
 
@@ -142,7 +143,7 @@ export struct MyPage {
     .alignItems(VerticalAlign.Center)
     .padding(AppMetrics.cardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 68, maxHeight: 76 })
+    .constraintSize({ minHeight: 64, maxHeight: 70 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
@@ -154,8 +155,8 @@ export struct MyPage {
 
   @Builder
   IdentityCard() {
-    Column({ space: AppMetrics.cardGap }) {
-      Column({ space: AppMetrics.space8 }) {
+    Row({ space: AppMetrics.cardGap }) {
+      Column({ space: 4 }) {
         Text(this.resolveProfileName())
           .fontSize(AppTypography.profileName)
           .fontWeight(FontWeight.Bold)
@@ -163,28 +164,28 @@ export struct MyPage {
           .lineHeight(AppTypography.profileNameLineHeight)
           .width('100%')
 
+        Text(`${this.reviewCount} 次复盘 · ${this.validReviewCount} 次成立`)
+          .fontSize(AppTypography.caption)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
-      .width('100%')
-
-      Text(`${this.reviewCount} 次复盘 · ${this.validReviewCount} 次成立`)
-        .fontSize(AppTypography.body)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.bodyLineHeight)
-        .width('100%')
+      .layoutWeight(1)
     }
-    .alignItems(HorizontalAlign.Start)
+    .alignItems(VerticalAlign.Center)
     .padding(AppMetrics.cardPadding)
     .width('100%')
+    .constraintSize({ minHeight: 64, maxHeight: 70 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
   }
 
   build() {
-    Scroll() {
-      Column({ space: AppMetrics.sectionGap }) {
+    Column() {
+      Column({ space: AppMetrics.cardGap }) {
         AppPageHeader({
           title: '我的'
         })
@@ -222,11 +223,10 @@ export struct MyPage {
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.pageBottomPadding })
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

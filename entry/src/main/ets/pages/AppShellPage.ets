@@ -109,7 +109,7 @@ struct AppShellPage {
           this.TabButton(item);
         }, (item: RootTabItem) => item.key)
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 6, bottom: 6 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })
       .width('100%')
       .height(AppMetrics.tabBarHeight)
       .backgroundColor(AppColors.pageBackground)

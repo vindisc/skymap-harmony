@@ -149,9 +149,10 @@ export struct ProjectDetailPage {
   FilterChip(label: string, value: string) {
     Button(label)
       .height(AppMetrics.filterChipHeight)
-      .padding({ left: AppMetrics.cardGap, right: AppMetrics.cardGap })
-      .borderRadius(AppMetrics.capsuleRadius)
-      .fontSize(AppTypography.caption)
+      .constraintSize({ minWidth: value === 'all' ? 60 : 72 })
+      .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+      .borderRadius(AppMetrics.cardRadius)
+      .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
@@ -194,7 +195,7 @@ export struct ProjectDetailPage {
           TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })
             .height(AppMetrics.searchHeight)
             .borderRadius(AppMetrics.cardRadius)
-            .fontSize(AppTypography.inputPlaceholder)
+            .fontSize(AppTypography.auxiliary)
             .fontColor(AppColors.text)
             .placeholderColor(AppColors.placeholderText)
             .backgroundColor(AppColors.surface)
@@ -212,6 +213,7 @@ export struct ProjectDetailPage {
             this.FilterChip('不成立', ReviewJudgementStatus.INVALID)
           }
           .width('100%')
+          .height(AppMetrics.filterChipHeight)
         }
         .margin({ top: AppMetrics.cardGap })
       }
