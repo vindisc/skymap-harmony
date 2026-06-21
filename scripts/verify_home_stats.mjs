@@ -147,9 +147,19 @@ if (historyServiceSource.includes('MAX_HISTORY_COUNT')) {
 }
 
 if (!historyServiceSource.includes("const REVIEW_JSON_BACKUP_DIR_NAME: string = 'review_exchange';") ||
-  !historyServiceSource.includes('loadBackupItemsOnce(context, store)') ||
+  !historyServiceSource.includes('loadBackupItemsOnce(') ||
   !historyServiceSource.includes('mergeHistoryItems(historyItems, backupItems)')) {
   assert(false, 'ReviewCardHistoryService must import local review.json backups into history once.');
+}
+
+if (!historyServiceSource.includes('shouldForceReload: boolean = false') ||
+  !historyServiceSource.includes('importedValue === true && !shouldForceReload') ||
+  !historyServiceSource.includes('historyItems.length === 0')) {
+  assert(false, 'ReviewCardHistoryService must rescan review.json backups when persisted history is empty, even after a previous import marker.');
+}
+
+if (!historyServiceSource.includes("!fileName.endsWith('.review.json') && !fileName.endsWith('.json')")) {
+  assert(false, 'ReviewCardHistoryService must recover both *.review.json and legacy *.json review backups.');
 }
 
 if (!historyServiceSource.includes('function parseStoredHistory(rawValue: preferences.ValueType): Array<ReviewCardHistoryItem>') ||
@@ -382,6 +392,18 @@ assert(
     failedReloadState.validReviewCount === 1 &&
     failedReloadState.unsureReviewCount === 1,
   `Failed home reload must keep the last visible stats instead of blanking the dashboard: ${JSON.stringify(failedReloadState)}`
+);
+
+function shouldLoadBackupItems(importMarker, historyCount) {
+  const shouldForceReload = historyCount === 0;
+  return !(importMarker === true && !shouldForceReload);
+}
+
+assert(
+  shouldLoadBackupItems(true, 0) === true &&
+    shouldLoadBackupItems(true, 2) === false &&
+    shouldLoadBackupItems(false, 0) === true,
+  'Backup import marker must not block recovery when current persisted history is empty.'
 );
 
 if (homePageSource.includes('catch (error) {\n      if (requestId === this.reloadRequestId) {\n        this.historyLoadFailed = true;\n        this.reviewCount = 0')) {

@@ -212,7 +212,7 @@ export class ReviewCardHistoryService {
 
     const backupItems: Array<ReviewCardHistoryItem> = [];
     fileNames.forEach((fileName: string): void => {
-      if (!fileName.endsWith('.review.json')) {
+      if (!fileName.endsWith('.review.json') && !fileName.endsWith('.json')) {
         return;
       }
 
@@ -229,10 +229,11 @@ export class ReviewCardHistoryService {
 
   private static async loadBackupItemsOnce(
     context: common.UIAbilityContext,
-    store: preferences.Preferences
+    store: preferences.Preferences,
+    shouldForceReload: boolean = false
   ): Promise<Array<ReviewCardHistoryItem>> {
     const importedValue = await store.get(BACKUP_IMPORT_COMPLETED_KEY, false);
-    if (importedValue === true) {
+    if (importedValue === true && !shouldForceReload) {
       return [];
     }
 
@@ -258,7 +259,11 @@ export class ReviewCardHistoryService {
       const store = await ReviewCardHistoryService.getStore(context);
       const rawValue = await store.get(HISTORY_KEY, '[]');
       const historyItems: Array<ReviewCardHistoryItem> = parseStoredHistory(rawValue);
-      const backupItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.loadBackupItemsOnce(context, store);
+      const backupItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.loadBackupItemsOnce(
+        context,
+        store,
+        historyItems.length === 0
+      );
       const mergedItems: Array<ReviewCardHistoryItem> = mergeHistoryItems(historyItems, backupItems);
       if (backupItems.length > 0) {
         await ReviewCardHistoryService.persist(context, mergedItems);
