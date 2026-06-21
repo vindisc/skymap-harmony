@@ -135,6 +135,12 @@ assertIncludes(appShellSource, "$r('app.media.tab_user_active')", 'TabBar must u
 assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use 12fp Compact token.');
 assertIncludes(appShellSource, '.height(AppMetrics.tabBarHeight)', 'TabBar must use shared touch-safe token.');
 assertIncludes(appShellSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })', 'TabBar must not leave oversized blank bottom padding.');
+assertIncludes(appShellSource, 'Divider()', 'TabBar must use a light top divider instead of a boxed border.');
+assertIncludes(appShellSource, '.opacity(0.42)', 'TabBar divider must stay visually soft.');
+if (appShellSource.includes('.border({ width: 1, color: AppColors.border })')) {
+  failed = true;
+  console.error('TabBar must not use a full boxed border because it creates a detached bottom area.');
+}
 
 const iconFiles = [
   'tab_home.svg',

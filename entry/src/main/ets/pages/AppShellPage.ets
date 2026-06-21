@@ -104,16 +104,25 @@ struct AppShellPage {
       .layoutWeight(1)
       .width('100%')
 
-      Row({ space: AppMetrics.space8 }) {
-        ForEach(ROOT_TABS, (item: RootTabItem) => {
-          this.TabButton(item);
-        }, (item: RootTabItem) => item.key)
+      Column() {
+        Divider()
+          .strokeWidth(1)
+          .color(AppColors.border)
+          .opacity(0.42)
+          .width('100%')
+
+        Row({ space: AppMetrics.space8 }) {
+          ForEach(ROOT_TABS, (item: RootTabItem) => {
+            this.TabButton(item);
+          }, (item: RootTabItem) => item.key)
+        }
+        .layoutWeight(1)
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })
+        .width('100%')
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })
       .width('100%')
       .height(AppMetrics.tabBarHeight)
       .backgroundColor(AppColors.pageBackground)
-      .border({ width: 1, color: AppColors.border })
     }
     .width('100%')
     .height('100%')
