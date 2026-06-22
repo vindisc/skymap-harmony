@@ -24,6 +24,7 @@ const ROOT_TABS: Array<RootTabItem> = [
   { key: RootTabKey.STATS, label: '统计', activeIcon: $r('app.media.tab_stats_active'), inactiveIcon: $r('app.media.tab_stats') },
   { key: RootTabKey.MY, label: '我的', activeIcon: $r('app.media.tab_user_active'), inactiveIcon: $r('app.media.tab_user') }
 ];
+const APP_SHELL_TAB_HORIZONTAL_PADDING: number = 16;
 
 @Entry
 @Component
@@ -80,7 +81,7 @@ struct AppShellPage {
     .alignItems(HorizontalAlign.Center)
     .layoutWeight(1)
     .height(AppMetrics.tabBarItemHeight)
-    .padding({ left: AppMetrics.space8, right: AppMetrics.space8 })
+    .padding({ left: 6, right: 6, top: 2, bottom: 2 })
     .borderRadius(AppMetrics.buttonRadius)
     .backgroundColor(this.resolveTabBackground(item.key))
     .opacity(this.isCurrentTab(item.key) ? 1 : 0.82)
@@ -123,7 +124,12 @@ struct AppShellPage {
           }, (item: RootTabItem) => item.key)
         }
         .layoutWeight(1)
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 5, bottom: 3 })
+        .padding({
+          left: APP_SHELL_TAB_HORIZONTAL_PADDING,
+          right: APP_SHELL_TAB_HORIZONTAL_PADDING,
+          top: 4,
+          bottom: 2
+        })
         .width('100%')
       }
       .width('100%')

@@ -16,8 +16,8 @@ export class TypographyTokens {
   static readonly InputText: number = 16;
   static readonly InputPlaceholder: number = 15;
   static readonly InputLabel: number = 15;
-  static readonly TabIcon: number = 21;
-  static readonly TabLabel: number = 12;
+  static readonly TabIcon: number = 18;
+  static readonly TabLabel: number = 10;
 }
 
 export class LineHeightTokens {
@@ -36,12 +36,12 @@ export class LineHeightTokens {
   static readonly ButtonText: number = 22;
   static readonly InputText: number = 23;
   static readonly InputLabel: number = 20;
-  static readonly TabLabel: number = 16;
+  static readonly TabLabel: number = 13;
 }
 
 export class LayoutTokens {
-  static readonly TabBarHeight: number = 62;
-  static readonly TabBarItemHeight: number = 54;
+  static readonly TabBarHeight: number = 50;
+  static readonly TabBarItemHeight: number = 40;
   static readonly SearchHeight: number = 48;
   static readonly ChipHeight: number = 44;
   static readonly PrimaryButtonHeight: number = 48;
