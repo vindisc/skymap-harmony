@@ -11,7 +11,6 @@ import {
   ReviewCardHistoryLoadResult,
   ReviewCardHistoryService
 } from '../services/ReviewCardHistoryService';
-import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import {
   applyHomeDashboardReloadFailure,
   applyHomeDashboardReloadSuccess,
@@ -23,10 +22,17 @@ import {
   AppColors,
   AppMetrics,
   AppTypography,
-  PrimaryButton,
-  SecondaryButton,
-  TagLabel
+  SecondaryButton
 } from '../components/AppDesign';
+
+const HOME_HERO_HEIGHT: number = 340;
+const HOME_SIDE_PADDING: number = 20;
+const HOME_HERO_TEXT_BOTTOM: number = 24;
+const HOME_METHOD_TAG_HEIGHT: number = 28;
+const HOME_METHOD_TAG_RADIUS: number = 14;
+const HOME_PRIMARY_BUTTON_HEIGHT: number = 48;
+const HOME_STATS_CARD_HEIGHT: number = 72;
+const HOME_STATS_RADIUS: number = 12;
 
 @Component
 export struct HomePage {
@@ -41,8 +47,6 @@ export struct HomePage {
   @State isPickingPhoto: boolean = false;
   @State reviewCount: number = 0;
   @State validReviewCount: number = 0;
-  @State unsureReviewCount: number = 0;
-  @State streakDays: number = 0;
   @State historyLoadFailed: boolean = false;
   @State historyDiagnosticsText: string = '';
 
@@ -84,8 +88,6 @@ export struct HomePage {
   private syncDashboardStateFromPresenter(): void {
     this.reviewCount = this.dashboardReloadState.reviewCount;
     this.validReviewCount = this.dashboardReloadState.validReviewCount;
-    this.unsureReviewCount = this.dashboardReloadState.unsureReviewCount;
-    this.streakDays = this.dashboardReloadState.streakDays;
     this.historyLoadFailed = this.dashboardReloadState.historyLoadFailed;
   }
 
@@ -112,13 +114,6 @@ export struct HomePage {
       result.imageSizeFallbackUsed
     );
     router.pushUrl({ url: EDITOR_PAGE });
-  }
-
-  private resolveStreakText(): string {
-    if (this.reviewCount === 0 || this.streakDays <= 0) {
-      return '—';
-    }
-    return `${this.streakDays}天`;
   }
 
   private shouldShowHistoryDiagnostics(): boolean {
@@ -151,57 +146,54 @@ export struct HomePage {
       Stack({ alignContent: Alignment.BottomStart }) {
         Image($r('app.media.home_review_hero'))
           .width('100%')
-          .height(500)
+          .height(HOME_HERO_HEIGHT)
           .objectFit(ImageFit.Cover)
 
         Column({ space: AppMetrics.space8 }) {
           Text('从一张照片开始，练习你的判断')
-            .fontSize(AppTypography.level2)
-            .fontWeight(FontWeight.Bold)
+            .fontSize(18)
+            .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.onPrimary)
-            .lineHeight(AppTypography.level2LineHeight)
+            .lineHeight(24)
             .maxLines(2)
             .width('100%')
 
           Text('把视觉落点、视线路径和画面关系，沉淀成能回看的复盘卡。')
-            .fontSize(AppTypography.body)
-            .fontColor('#F4F0EA')
-            .lineHeight(AppTypography.bodyLineHeight)
+            .fontSize(14)
+            .fontColor('#D9FFFFFF')
+            .lineHeight(20)
             .maxLines(2)
             .width('100%')
         }
-        .padding(AppMetrics.space16)
+        .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING, bottom: HOME_HERO_TEXT_BOTTOM })
         .width('100%')
         .linearGradient({
           angle: 180,
-          colors: [['#00000000', 0], ['#351E12', 0.62], ['#15110E', 1]]
+          colors: [['#00000000', 0], ['#120E0B55', 0.58], ['#120E0BD9', 1]]
         })
       }
       .width('100%')
-      .height(500)
+      .height(HOME_HERO_HEIGHT)
       .borderRadius(0)
       .clip(true)
 
-      Row({ space: AppMetrics.space8 }) {
-        ForEach(this.heroFeatureTags, (item: string) => {
-          TagLabel({
-            label: item,
-            color: AppColors.primary,
-            tagBackground: AppColors.primarySoft
-          })
-        }, (item: string) => item)
+      Scroll() {
+        Row({ space: AppMetrics.space8 }) {
+          ForEach(this.heroFeatureTags, (item: string) => {
+            this.MethodTag(item)
+          }, (item: string) => item)
+        }
+        .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
       }
       .width('100%')
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding })
+      .scrollable(ScrollDirection.Horizontal)
+      .scrollBar(BarState.Off)
 
-      PrimaryButton({
-        label: this.isPickingPhoto ? '打开相册中...' : '导入照片，开始复盘',
-        isDisabled: this.isPickingPhoto,
-        onTap: () => {
-          this.startPhotoDraft();
-        }
-      })
-      .margin({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding })
+      Column() {
+        this.StartReviewButton()
+      }
+      .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
+      .width('100%')
 
       this.CompactStatsPanel()
     }
@@ -212,21 +204,12 @@ export struct HomePage {
 
   @Builder
   CompactStatsPanel() {
-    Column({ space: AppMetrics.space8 }) {
-      Row({ space: AppMetrics.space8 }) {
+    Row({ space: 12 }) {
         this.StatTile('总复盘', `${this.reviewCount}`)
         this.StatTile('成立', `${this.validReviewCount}`)
-      }
-      .width('100%')
-
-      Row({ space: AppMetrics.space8 }) {
-        this.StatTile('待判断', `${this.unsureReviewCount}`)
-        this.StatTile('连续', this.resolveStreakText())
-      }
-      .width('100%')
     }
     .width('100%')
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding })
+    .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
   }
 
   @Builder
@@ -257,24 +240,60 @@ export struct HomePage {
   StatTile(label: string, value: string) {
     Column({ space: 4 }) {
       Text(value)
-        .fontSize(AppTypography.cardTitle)
-        .fontWeight(FontWeight.Bold)
+        .fontSize(20)
+        .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.text)
-        .lineHeight(AppTypography.cardTitleLineHeight)
+        .lineHeight(24)
         .maxLines(1)
 
       Text(label)
-        .fontSize(AppTypography.caption)
+        .fontSize(12)
         .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.captionLineHeight)
+        .lineHeight(16)
         .maxLines(1)
     }
     .alignItems(HorizontalAlign.Start)
     .layoutWeight(1)
-    .padding({ left: 14, right: 14, top: 12, bottom: 12 })
-    .borderRadius(18)
+    .justifyContent(FlexAlign.Center)
+    .padding({ left: 16, right: 16, top: 12, bottom: 12 })
+    .height(HOME_STATS_CARD_HEIGHT)
+    .borderRadius(HOME_STATS_RADIUS)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
+  }
+
+  @Builder
+  MethodTag(label: string) {
+    Text(label)
+      .fontSize(12)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(AppColors.primary)
+      .height(HOME_METHOD_TAG_HEIGHT)
+      .padding({ left: 12, right: 12 })
+      .borderRadius(HOME_METHOD_TAG_RADIUS)
+      .backgroundColor(AppColors.primarySoft)
+      .maxLines(1)
+  }
+
+  @Builder
+  StartReviewButton() {
+    Button(this.isPickingPhoto ? '打开相册中...' : '导入照片，开始复盘')
+      .height(HOME_PRIMARY_BUTTON_HEIGHT)
+      .width('100%')
+      .borderRadius(9)
+      .fontSize(15)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(AppColors.onPrimary)
+      .backgroundColor(this.isPickingPhoto ? AppColors.primaryDisabled : AppColors.primary)
+      .opacity(this.isPickingPhoto ? 0.72 : 1)
+      .enabled(!this.isPickingPhoto)
+      .stateEffect(!this.isPickingPhoto)
+      .onClick(() => {
+        if (this.isPickingPhoto) {
+          return;
+        }
+        this.startPhotoDraft();
+      })
   }
 
   build() {
