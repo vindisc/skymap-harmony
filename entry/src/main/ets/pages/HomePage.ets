@@ -25,14 +25,22 @@ import {
   SecondaryButton
 } from '../components/AppDesign';
 
-const HOME_HERO_HEIGHT: number = 300;
+const HOME_HERO_HEIGHT: number = 336;
 const HOME_SIDE_PADDING: number = 16;
-const HOME_HERO_TOP_PADDING: number = 14;
-const HOME_HERO_RADIUS: number = 18;
+const HOME_HERO_TEXT_PADDING: number = 20;
+const HOME_HERO_TOP_PADDING: number = 10;
+const HOME_HERO_RADIUS: number = 16;
 const HOME_HERO_TEXT_BOTTOM: number = 22;
 const HOME_METHOD_TAG_HEIGHT: number = 28;
 const HOME_METHOD_TAG_RADIUS: number = 14;
 const HOME_PRIMARY_BUTTON_HEIGHT: number = 48;
+const HOME_FLOW_CARD_HEIGHT: number = 68;
+const HOME_FLOW_CARD_RADIUS: number = 12;
+
+interface ReviewFlowStep {
+  title: string;
+  description: string;
+}
 
 @Component
 export struct HomePage {
@@ -42,6 +50,11 @@ export struct HomePage {
     '视线路径',
     '画面关系',
     '是否成立'
+  ];
+  private readonly reviewFlowSteps: Array<ReviewFlowStep> = [
+    { title: '导入照片', description: '选择一张值得复盘的照片' },
+    { title: '记录观看', description: '写下落点、路径与关系' },
+    { title: '判断成立', description: '留下结论和卡点' }
   ];
   @Prop @Watch('refreshHomeData') refreshToken: number = 0;
   @State isPickingPhoto: boolean = false;
@@ -138,17 +151,17 @@ export struct HomePage {
 
   @Builder
   HeroPanel() {
-    Column({ space: AppMetrics.space16 }) {
+    Column() {
       Stack({ alignContent: Alignment.BottomStart }) {
         Image($r('app.media.home_review_hero'))
           .width('100%')
           .height(HOME_HERO_HEIGHT)
           .objectFit(ImageFit.Cover)
 
-        Column({ space: AppMetrics.space8 }) {
+        Column({ space: 6 }) {
           Text('从一张照片开始，练习你的判断')
             .fontSize(18)
-            .fontWeight(FontWeight.Medium)
+            .fontWeight(600)
             .fontColor(AppColors.onPrimary)
             .lineHeight(24)
             .maxLines(2)
@@ -161,11 +174,15 @@ export struct HomePage {
             .maxLines(2)
             .width('100%')
         }
-        .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING, bottom: HOME_HERO_TEXT_BOTTOM })
+        .padding({
+          left: HOME_HERO_TEXT_PADDING,
+          right: HOME_HERO_TEXT_PADDING,
+          bottom: HOME_HERO_TEXT_BOTTOM
+        })
         .width('100%')
         .linearGradient({
           angle: 180,
-          colors: [['#00000000', 0], ['#0F121B33', 0.58], ['#0F121BAA', 1]]
+          colors: [['#00000000', 0], ['#0F121B2E', 0.58], ['#0F121B99', 1]]
         })
       }
       .width('100%')
@@ -185,8 +202,16 @@ export struct HomePage {
       .width('100%')
       .scrollable(ScrollDirection.Horizontal)
       .scrollBar(BarState.Off)
+      .margin({ top: 14 })
 
-      this.StartReviewButton()
+      Column() {
+        this.StartReviewButton()
+      }
+      .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
+      .width('100%')
+      .margin({ top: 16 })
+
+      this.ReviewFlowPanel()
     }
     .width('100%')
     .padding({ top: 0, bottom: AppMetrics.space16 })
@@ -235,10 +260,9 @@ export struct HomePage {
     Button(this.isPickingPhoto ? '打开相册中...' : '导入照片，开始复盘')
       .height(HOME_PRIMARY_BUTTON_HEIGHT)
       .width('100%')
-      .margin({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
       .borderRadius(10)
       .fontSize(15)
-      .fontWeight(FontWeight.Medium)
+      .fontWeight(600)
       .fontColor(AppColors.onPrimary)
       .backgroundColor(this.isPickingPhoto ? AppColors.primaryDisabled : AppColors.primary)
       .opacity(this.isPickingPhoto ? 0.72 : 1)
@@ -250,6 +274,44 @@ export struct HomePage {
         }
         this.startPhotoDraft();
       })
+  }
+
+  @Builder
+  ReviewFlowPanel() {
+    Row({ space: AppMetrics.space8 }) {
+      ForEach(this.reviewFlowSteps, (step: ReviewFlowStep) => {
+        this.FlowStepCard(step)
+      }, (step: ReviewFlowStep) => step.title)
+    }
+    .width('100%')
+    .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
+    .margin({ top: 20 })
+  }
+
+  @Builder
+  FlowStepCard(step: ReviewFlowStep) {
+    Column({ space: 4 }) {
+      Text(step.title)
+        .fontSize(13)
+        .fontWeight(600)
+        .fontColor(AppColors.text)
+        .lineHeight(18)
+        .maxLines(1)
+
+      Text(step.description)
+        .fontSize(11)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(15)
+        .maxLines(2)
+    }
+    .alignItems(HorizontalAlign.Start)
+    .justifyContent(FlexAlign.Center)
+    .layoutWeight(1)
+    .height(HOME_FLOW_CARD_HEIGHT)
+    .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+    .borderRadius(HOME_FLOW_CARD_RADIUS)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: '#EAEAEA' })
   }
 
   build() {
