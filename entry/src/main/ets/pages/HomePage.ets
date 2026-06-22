@@ -28,12 +28,19 @@ import {
   EmptyState,
   PrimaryButton,
   RecentReviewCard,
-  SecondaryButton
+  SecondaryButton,
+  TagLabel
 } from '../components/AppDesign';
 
 @Component
 export struct HomePage {
   private dashboardReloadState: HomeDashboardReloadState = createHomeDashboardReloadState();
+  private readonly heroFeatureTags: Array<string> = [
+    '视觉落点',
+    '视线路径',
+    '画面关系',
+    '是否成立'
+  ];
   @Prop @Watch('refreshHomeData') refreshToken: number = 0;
   @State isPickingPhoto: boolean = false;
   @State latestItem: ReviewCardHistoryItem | undefined = undefined;
@@ -144,7 +151,7 @@ export struct HomePage {
   }
 
   private shouldShowHistoryDiagnostics(): boolean {
-    return this.historyLoadFailed || this.reviewCount === 0;
+    return this.historyLoadFailed;
   }
 
   private async copyHistoryDiagnostics(): Promise<void> {
@@ -168,7 +175,70 @@ export struct HomePage {
   }
 
   @Builder
-  GrowthStatsPanel() {
+  HeroPanel() {
+    Column({ space: AppMetrics.cardGap }) {
+      Stack({ alignContent: Alignment.BottomStart }) {
+        Image($r('app.media.home_review_hero'))
+          .width('100%')
+          .height(360)
+          .objectFit(ImageFit.Cover)
+
+        Column({ space: AppMetrics.space8 }) {
+          Text('从一张照片开始，练习你的判断')
+            .fontSize(AppTypography.level2)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.onPrimary)
+            .lineHeight(AppTypography.level2LineHeight)
+            .maxLines(2)
+            .width('100%')
+
+          Text('把视觉落点、视线路径和画面关系，沉淀成能回看的复盘卡。')
+            .fontSize(AppTypography.body)
+            .fontColor('#F4F0EA')
+            .lineHeight(AppTypography.bodyLineHeight)
+            .maxLines(2)
+            .width('100%')
+        }
+        .padding(AppMetrics.space16)
+        .width('100%')
+        .linearGradient({
+          angle: 180,
+          colors: [['#00000000', 0], ['#351E12', 0.62], ['#15110E', 1]]
+        })
+      }
+      .width('100%')
+      .height(360)
+      .borderRadius(24)
+      .clip(true)
+
+      Row({ space: AppMetrics.space8 }) {
+        ForEach(this.heroFeatureTags, (item: string) => {
+          TagLabel({
+            label: item,
+            color: AppColors.primary,
+            tagBackground: AppColors.primarySoft
+          })
+        }, (item: string) => item)
+      }
+      .width('100%')
+
+      PrimaryButton({
+        label: this.isPickingPhoto ? '打开相册中...' : '导入照片，开始复盘',
+        isDisabled: this.isPickingPhoto,
+        onTap: () => {
+          this.startPhotoDraft();
+        }
+      })
+    }
+    .padding(AppMetrics.space16)
+    .width('100%')
+    .borderRadius(28)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+  }
+
+  @Builder
+  CompactStatsPanel() {
     Column({ space: AppMetrics.cardGap }) {
       Row() {
         Text('复盘概览')
@@ -191,10 +261,10 @@ export struct HomePage {
       Row({ space: AppMetrics.space16 }) {
         Column({ space: 4 }) {
           Text(`${this.reviewCount}`)
-            .fontSize(AppTypography.statNumber + 4)
+            .fontSize(AppTypography.statNumber)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.primary)
-            .lineHeight(AppTypography.statNumberLineHeight + 4)
+            .lineHeight(AppTypography.statNumberLineHeight)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
 
@@ -282,46 +352,93 @@ export struct HomePage {
         .width('100%')
       }
     }
-    .padding(AppMetrics.cardPadding)
+    .padding(AppMetrics.space16)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(this.historyLoadFailed ? AppColors.tagAmber : AppColors.surface)
-    .border({ width: 1, color: this.historyLoadFailed ? AppColors.tagAmberText : AppColors.border })
+    .backgroundColor(AppColors.surfaceTint)
+    .border({ width: 1, color: AppColors.border })
   }
 
   @Builder
-  StartReviewPanel() {
+  RecentReviewSection() {
     Column({ space: AppMetrics.cardGap }) {
-      Column({ space: AppMetrics.space8 }) {
-        Text('开始新的复盘')
-          .fontSize(AppTypography.cardTitle)
-          .fontWeight(FontWeight.Bold)
+      Column({ space: 4 }) {
+        Text('最近一次')
+          .fontSize(AppTypography.sectionTitle)
+          .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.text)
-          .lineHeight(AppTypography.cardTitleLineHeight)
+          .lineHeight(AppTypography.sectionTitleLineHeight)
           .width('100%')
 
-        Text('从一张照片开始，记录它的视觉落点、核心关系和当前卡点。')
-          .fontSize(AppTypography.body)
+        Text('继续刚刚停下来的那条复盘。')
+          .fontSize(AppTypography.caption)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.bodyLineHeight)
+          .lineHeight(AppTypography.captionLineHeight)
           .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
 
-      PrimaryButton({
-        label: this.isPickingPhoto ? '打开相册中...' : '开始复盘',
-        isDisabled: this.isPickingPhoto,
+      if (this.latestItem) {
+        Column({ space: AppMetrics.cardGap }) {
+          RecentReviewCard({
+            item: this.latestItem,
+            onTap: () => {
+              this.openLatestReview();
+            }
+          })
+
+          Row({ space: AppMetrics.space8 }) {
+            SecondaryButton({
+              label: '查看',
+              onTap: () => {
+                this.openLatestReview();
+              }
+            })
+              .layoutWeight(1)
+
+            PrimaryButton({
+              label: '继续编辑',
+              onTap: () => {
+                this.continueLatestReview();
+              }
+            })
+              .layoutWeight(1)
+          }
+          .width('100%')
+        }
+      } else {
+        EmptyState({
+          title: '暂无记录',
+          message: '导入一张照片后，这里会保留你最近一次复盘。'
+        })
+      }
+    }
+    .width('100%')
+  }
+
+  @Builder
+  DiagnosticsPanel() {
+    Column({ space: 6 }) {
+      Text('历史记录读取失败，可复制诊断信息继续排查。')
+        .fontSize(AppTypography.meta)
+        .fontColor(AppColors.tagAmberText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .width('100%')
+
+      SecondaryButton({
+        label: '复制恢复诊断',
         onTap: () => {
-          this.startPhotoDraft();
+          this.copyHistoryDiagnostics();
         }
       })
     }
+    .alignItems(HorizontalAlign.Start)
     .padding(AppMetrics.space16)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: AppColors.border })
+    .backgroundColor(AppColors.tagAmber)
+    .border({ width: 1, color: AppColors.tagAmberText })
   }
 
   build() {
@@ -329,68 +446,23 @@ export struct HomePage {
       Column({ space: AppMetrics.sectionGap }) {
         AppPageHeader({
           title: '摄影复盘',
-          subtitle: '把每一次观看和判断沉淀成可回看的记录。'
+          subtitle: '先看到成品，再开始判断。'
         })
 
-        this.StartReviewPanel()
+        this.HeroPanel()
+        this.RecentReviewSection()
+        this.CompactStatsPanel()
 
-        this.GrowthStatsPanel()
-
-        Column({ space: AppMetrics.cardGap }) {
-          Column({ space: 4 }) {
-            Text('最近一次')
-              .fontSize(AppTypography.sectionTitle)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(AppColors.text)
-              .lineHeight(AppTypography.sectionTitleLineHeight)
-              .width('100%')
-
-            Text('继续刚刚停下来的那条复盘。')
-              .fontSize(AppTypography.caption)
-              .fontColor(AppColors.secondaryText)
-              .lineHeight(AppTypography.captionLineHeight)
-              .width('100%')
-          }
-          .alignItems(HorizontalAlign.Start)
-          .width('100%')
-
-          if (this.latestItem) {
-            Column({ space: AppMetrics.cardGap }) {
-              RecentReviewCard({
-                item: this.latestItem,
-                onTap: () => {
-                  this.openLatestReview();
-                }
-              })
-
-              Row({ space: AppMetrics.space8 }) {
-                SecondaryButton({
-                  label: '查看',
-                  onTap: () => {
-                    this.openLatestReview();
-                  }
-                })
-                  .layoutWeight(1)
-
-                PrimaryButton({
-                  label: '继续编辑',
-                  onTap: () => {
-                    this.continueLatestReview();
-                  }
-                })
-                  .layoutWeight(1)
-              }
-              .width('100%')
-            }
-          } else {
-            EmptyState({
-              title: '暂无记录',
-              message: '开始第一条复盘后，这里会显示最近一次内容。'
-            })
-          }
+        if (this.shouldShowHistoryDiagnostics()) {
+          this.DiagnosticsPanel()
         }
       }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding })
+      .padding({
+        left: AppMetrics.pagePadding,
+        right: AppMetrics.pagePadding,
+        top: AppMetrics.pageTopPadding,
+        bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding
+      })
       .width('100%')
       .alignItems(HorizontalAlign.Start)
     }
