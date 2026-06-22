@@ -25,17 +25,17 @@ import {
   SecondaryButton
 } from '../components/AppDesign';
 
-const HOME_HERO_HEIGHT: number = 362;
-const HOME_HERO_WIDTH_PERCENT: string = '76%';
+const HOME_HERO_HEIGHT: number = 320;
 const HOME_SIDE_PADDING: number = 16;
 const HOME_HERO_TEXT_PADDING: number = 20;
 const HOME_HERO_TOP_PADDING: number = 10;
 const HOME_HERO_RADIUS: number = 16;
 const HOME_HERO_TEXT_BOTTOM: number = 22;
-const HOME_METHOD_TAG_HEIGHT: number = 28;
-const HOME_METHOD_TAG_RADIUS: number = 14;
-const HOME_PRIMARY_BUTTON_HEIGHT: number = 48;
-const HOME_FLOW_CARD_HEIGHT: number = 68;
+const HOME_METHOD_TAG_HEIGHT: number = 26;
+const HOME_METHOD_TAG_RADIUS: number = 13;
+const HOME_PRIMARY_BUTTON_HEIGHT: number = 46;
+const HOME_FLOW_CARD_GAP: number = 10;
+const HOME_FLOW_CARD_HEIGHT: number = 64;
 const HOME_FLOW_CARD_RADIUS: number = 12;
 
 interface ReviewFlowStep {
@@ -161,17 +161,17 @@ export struct HomePage {
 
         Column({ space: 6 }) {
           Text('从一张照片开始，练习你的判断')
-            .fontSize(18)
+            .fontSize(17)
             .fontWeight(600)
             .fontColor(AppColors.onPrimary)
-            .lineHeight(24)
+            .lineHeight(23)
             .maxLines(2)
             .width('100%')
 
           Text('看见视觉落点、视线路径和画面关系。')
-            .fontSize(14)
+            .fontSize(13)
             .fontColor('#D9FFFFFF')
-            .lineHeight(20)
+            .lineHeight(19)
             .maxLines(2)
             .width('100%')
         }
@@ -186,7 +186,7 @@ export struct HomePage {
           colors: [['#00000000', 0], ['#0F121B2E', 0.58], ['#0F121B99', 1]]
         })
       }
-      .width(HOME_HERO_WIDTH_PERCENT)
+      .width('100%')
       .height(HOME_HERO_HEIGHT)
       .borderRadius(HOME_HERO_RADIUS)
       .clip(true)
@@ -205,25 +205,22 @@ export struct HomePage {
             this.MethodTag(item)
           }, (item: string) => item)
         }
-        .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
       }
       .width('100%')
       .scrollable(ScrollDirection.Horizontal)
       .scrollBar(BarState.Off)
-      .margin({ top: 14 })
+      .margin({ top: 12 })
 
       Column() {
         this.StartReviewButton()
       }
-      .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
       .width('100%')
-      .margin({ top: 16 })
+      .margin({ top: 14 })
 
       this.ReviewFlowPanel()
     }
     .width('100%')
-    .alignItems(HorizontalAlign.Center)
-    .padding({ top: 0, bottom: AppMetrics.space16 })
+    .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING, top: 0, bottom: AppMetrics.space16 })
     .backgroundColor(AppColors.pageBackground)
   }
 
@@ -287,14 +284,13 @@ export struct HomePage {
 
   @Builder
   ReviewFlowPanel() {
-    Row({ space: AppMetrics.space8 }) {
+    Row({ space: HOME_FLOW_CARD_GAP }) {
       ForEach(this.reviewFlowSteps, (step: ReviewFlowStep) => {
         this.FlowStepCard(step)
       }, (step: ReviewFlowStep) => step.title)
     }
     .width('100%')
-    .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
-    .margin({ top: 20 })
+    .margin({ top: 18 })
   }
 
   @Builder
