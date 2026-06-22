@@ -25,14 +25,14 @@ import {
   SecondaryButton
 } from '../components/AppDesign';
 
-const HOME_HERO_HEIGHT: number = 340;
-const HOME_SIDE_PADDING: number = 20;
-const HOME_HERO_TEXT_BOTTOM: number = 24;
+const HOME_HERO_HEIGHT: number = 300;
+const HOME_SIDE_PADDING: number = 16;
+const HOME_HERO_TOP_PADDING: number = 14;
+const HOME_HERO_RADIUS: number = 18;
+const HOME_HERO_TEXT_BOTTOM: number = 22;
 const HOME_METHOD_TAG_HEIGHT: number = 28;
 const HOME_METHOD_TAG_RADIUS: number = 14;
 const HOME_PRIMARY_BUTTON_HEIGHT: number = 48;
-const HOME_STATS_CARD_HEIGHT: number = 72;
-const HOME_STATS_RADIUS: number = 12;
 
 @Component
 export struct HomePage {
@@ -45,8 +45,6 @@ export struct HomePage {
   ];
   @Prop @Watch('refreshHomeData') refreshToken: number = 0;
   @State isPickingPhoto: boolean = false;
-  @State reviewCount: number = 0;
-  @State validReviewCount: number = 0;
   @State historyLoadFailed: boolean = false;
   @State historyDiagnosticsText: string = '';
 
@@ -86,8 +84,6 @@ export struct HomePage {
   }
 
   private syncDashboardStateFromPresenter(): void {
-    this.reviewCount = this.dashboardReloadState.reviewCount;
-    this.validReviewCount = this.dashboardReloadState.validReviewCount;
     this.historyLoadFailed = this.dashboardReloadState.historyLoadFailed;
   }
 
@@ -158,7 +154,7 @@ export struct HomePage {
             .maxLines(2)
             .width('100%')
 
-          Text('把视觉落点、视线路径和画面关系，沉淀成能回看的复盘卡。')
+          Text('看见视觉落点、视线路径和画面关系。')
             .fontSize(14)
             .fontColor('#D9FFFFFF')
             .lineHeight(20)
@@ -169,13 +165,14 @@ export struct HomePage {
         .width('100%')
         .linearGradient({
           angle: 180,
-          colors: [['#00000000', 0], ['#120E0B55', 0.58], ['#120E0BD9', 1]]
+          colors: [['#00000000', 0], ['#0F121B33', 0.58], ['#0F121BAA', 1]]
         })
       }
       .width('100%')
       .height(HOME_HERO_HEIGHT)
-      .borderRadius(0)
+      .borderRadius(HOME_HERO_RADIUS)
       .clip(true)
+      .margin({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING, top: HOME_HERO_TOP_PADDING })
 
       Scroll() {
         Row({ space: AppMetrics.space8 }) {
@@ -189,27 +186,11 @@ export struct HomePage {
       .scrollable(ScrollDirection.Horizontal)
       .scrollBar(BarState.Off)
 
-      Column() {
-        this.StartReviewButton()
-      }
-      .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
-      .width('100%')
-
-      this.CompactStatsPanel()
+      this.StartReviewButton()
     }
     .width('100%')
     .padding({ top: 0, bottom: AppMetrics.space16 })
     .backgroundColor(AppColors.pageBackground)
-  }
-
-  @Builder
-  CompactStatsPanel() {
-    Row({ space: 12 }) {
-        this.StatTile('总复盘', `${this.reviewCount}`)
-        this.StatTile('成立', `${this.validReviewCount}`)
-    }
-    .width('100%')
-    .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
   }
 
   @Builder
@@ -237,32 +218,6 @@ export struct HomePage {
   }
 
   @Builder
-  StatTile(label: string, value: string) {
-    Column({ space: 4 }) {
-      Text(value)
-        .fontSize(20)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.text)
-        .lineHeight(24)
-        .maxLines(1)
-
-      Text(label)
-        .fontSize(12)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(16)
-        .maxLines(1)
-    }
-    .alignItems(HorizontalAlign.Start)
-    .layoutWeight(1)
-    .justifyContent(FlexAlign.Center)
-    .padding({ left: 16, right: 16, top: 12, bottom: 12 })
-    .height(HOME_STATS_CARD_HEIGHT)
-    .borderRadius(HOME_STATS_RADIUS)
-    .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: AppColors.border })
-  }
-
-  @Builder
   MethodTag(label: string) {
     Text(label)
       .fontSize(12)
@@ -280,7 +235,8 @@ export struct HomePage {
     Button(this.isPickingPhoto ? '打开相册中...' : '导入照片，开始复盘')
       .height(HOME_PRIMARY_BUTTON_HEIGHT)
       .width('100%')
-      .borderRadius(9)
+      .margin({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING })
+      .borderRadius(10)
       .fontSize(15)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.onPrimary)

@@ -1,11 +1,13 @@
 import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { HomePage } from './HomePage';
 import { ProjectDetailPage } from './ProjectDetailPage';
+import { StatsPage } from './StatsPage';
 import { MyPage } from './MyPage';
 
 enum RootTabKey {
   HOME = 'home',
   LIBRARY = 'library',
+  STATS = 'stats',
   MY = 'my'
 }
 
@@ -19,6 +21,7 @@ interface RootTabItem {
 const ROOT_TABS: Array<RootTabItem> = [
   { key: RootTabKey.HOME, label: '首页', activeIcon: $r('app.media.tab_home_active'), inactiveIcon: $r('app.media.tab_home') },
   { key: RootTabKey.LIBRARY, label: '复盘库', activeIcon: $r('app.media.tab_library_active'), inactiveIcon: $r('app.media.tab_library') },
+  { key: RootTabKey.STATS, label: '统计', activeIcon: $r('app.media.tab_stats_active'), inactiveIcon: $r('app.media.tab_stats') },
   { key: RootTabKey.MY, label: '我的', activeIcon: $r('app.media.tab_user_active'), inactiveIcon: $r('app.media.tab_user') }
 ];
 
@@ -92,6 +95,8 @@ struct AppShellPage {
       HomePage({ refreshToken: this.homeRefreshToken })
     } else if (this.currentTab === RootTabKey.LIBRARY) {
       ProjectDetailPage()
+    } else if (this.currentTab === RootTabKey.STATS) {
+      StatsPage()
     } else {
       MyPage()
     }
