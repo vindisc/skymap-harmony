@@ -25,7 +25,8 @@ import {
   SecondaryButton
 } from '../components/AppDesign';
 
-const HOME_HERO_HEIGHT: number = 336;
+const HOME_HERO_HEIGHT: number = 362;
+const HOME_HERO_WIDTH_PERCENT: string = '76%';
 const HOME_SIDE_PADDING: number = 16;
 const HOME_HERO_TEXT_PADDING: number = 20;
 const HOME_HERO_TOP_PADDING: number = 10;
@@ -185,11 +186,18 @@ export struct HomePage {
           colors: [['#00000000', 0], ['#0F121B2E', 0.58], ['#0F121B99', 1]]
         })
       }
-      .width('100%')
+      .width(HOME_HERO_WIDTH_PERCENT)
       .height(HOME_HERO_HEIGHT)
       .borderRadius(HOME_HERO_RADIUS)
       .clip(true)
-      .margin({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING, top: HOME_HERO_TOP_PADDING })
+      .border({ width: 1, color: '#E4DCD0' })
+      .shadow({
+        radius: 18,
+        color: '#1F15191F',
+        offsetX: 0,
+        offsetY: 8
+      })
+      .margin({ top: HOME_HERO_TOP_PADDING })
 
       Scroll() {
         Row({ space: AppMetrics.space8 }) {
@@ -214,6 +222,7 @@ export struct HomePage {
       this.ReviewFlowPanel()
     }
     .width('100%')
+    .alignItems(HorizontalAlign.Center)
     .padding({ top: 0, bottom: AppMetrics.space16 })
     .backgroundColor(AppColors.pageBackground)
   }
