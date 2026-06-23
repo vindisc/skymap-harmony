@@ -34,6 +34,7 @@ struct HomeStoragePage {
   @State homeStorageUsername: string = '';
   @State homeStoragePassword: string = '';
   @State homeStorageDomain: string = '';
+  @State persistedHomeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State isSettingsLoaded: boolean = false;
   @State isSaving: boolean = false;
   @State isTestingHomeStorage: boolean = false;
@@ -121,6 +122,7 @@ struct HomeStoragePage {
       return;
     }
 
+    this.persistedHomeStorageSettings = homeStorageSettings;
     this.homeStorageHost = homeStorageSettings.smbHost;
     this.homeStoragePort = homeStorageSettings.smbPort;
     this.homeStorageShareName = homeStorageSettings.smbShareName;
@@ -171,6 +173,7 @@ struct HomeStoragePage {
         promptAction.showToast({ message: '已保存，但回读结果与当前输入不一致' });
         return;
       }
+      this.persistedHomeStorageSettings = verifiedSettings;
       this.setActionFeedback('已保存家庭存储设置', 'success');
       promptAction.showToast({ message: '已保存家庭存储设置' });
     } catch (error) {
@@ -233,7 +236,7 @@ struct HomeStoragePage {
   }
 
   private resolveHomeStorageStatus(): HomeStorageConfigStatus {
-    return HomeStorageService.getConfigurationStatus(this.currentHomeStorageSettings());
+    return HomeStorageService.getConfigurationStatus(this.persistedHomeStorageSettings);
   }
 
   private clearActionFeedback(): void {

@@ -14,6 +14,7 @@ const APP_BUILD_TEXT: string = 'Harmony Beta V1';
 @Component
 export struct MyPage {
   private loadRequestId: number = 0;
+  @Prop @Watch('refreshPageData') refreshToken: number = 0;
   @State reviewerName: string = '';
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State reviewCount: number = 0;
@@ -28,6 +29,10 @@ export struct MyPage {
   }
 
   onPageShow(): void {
+    this.reloadData();
+  }
+
+  refreshPageData(): void {
     this.reloadData();
   }
 
@@ -50,6 +55,9 @@ export struct MyPage {
     }
 
     this.homeStorageSettings = await HomeStorageService.loadSettings(context);
+    if (requestId !== this.loadRequestId) {
+      return;
+    }
   }
 
   private resolveHomeStorageStatus(): HomeStorageConfigStatus {
@@ -61,26 +69,26 @@ export struct MyPage {
   }
 
   private resolveHomeStorageDetail(): string {
-    if (this.homeStorageSettings.smbHost.length === 0) {
+    if (this.resolveHomeStorageStatus() === HomeStorageConfigStatus.EMPTY) {
       return '未配置';
     }
     return `${this.homeStorageSettings.smbHost} · ${this.homeStorageSettings.smbShareName || '共享目录未填'}`;
   }
 
   private resolveSyncSummary(): string {
-    return HomeStorageService.resolveAvailabilityLabel(this.resolveHomeStorageStatus());
+    return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
   }
 
   private resolveHomeStorageBadge(): string {
-    return HomeStorageService.resolveConfigurationStatusLabel(this.resolveHomeStorageStatus());
+    return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
   }
 
   private resolveSyncBadge(): string {
-    return HomeStorageService.resolveAvailabilityLabel(this.resolveHomeStorageStatus());
+    return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
   }
 
   private resolveProfileName(): string {
-    return this.reviewerName.length > 0 ? this.reviewerName : '见遇';
+    return this.resolveReviewerSummary();
   }
 
   private openReviewerProfile(): void {

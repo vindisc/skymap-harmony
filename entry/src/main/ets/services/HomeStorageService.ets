@@ -451,6 +451,16 @@ export class HomeStorageService {
     return '未配置';
   }
 
+  static resolveEntryStatusLabel(status: HomeStorageConfigStatus): string {
+    if (status === HomeStorageConfigStatus.COMPLETE) {
+      return '已配置';
+    }
+    if (status === HomeStorageConfigStatus.PARTIAL) {
+      return '待完善';
+    }
+    return '未配置';
+  }
+
   static resolveAvailabilityLabel(status: HomeStorageConfigStatus): string {
     if (status === HomeStorageConfigStatus.COMPLETE) {
       return '可用';
