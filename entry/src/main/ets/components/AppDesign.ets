@@ -42,17 +42,17 @@ export class AppMetrics {
   static readonly space16: number = 16;
   static readonly space24: number = 24;
   static readonly space32: number = 32;
-  static readonly pagePadding: number = 20;
-  static readonly pageTopPadding: number = 32;
-  static readonly pageBottomPadding: number = 22;
-  static readonly sectionGap: number = 22;
+  static readonly pagePadding: number = 16;
+  static readonly pageTopPadding: number = 16;
+  static readonly pageBottomPadding: number = 20;
+  static readonly sectionGap: number = 20;
   static readonly cardGap: number = 12;
   static readonly cardPadding: number = 16;
   static readonly listCardPadding: number = 12;
-  static readonly cardRadius: number = 8;
-  static readonly buttonRadius: number = 8;
-  static readonly capsuleRadius: number = 16;
-  static readonly panelRadius: number = 8;
+  static readonly cardRadius: number = 16;
+  static readonly buttonRadius: number = 12;
+  static readonly capsuleRadius: number = 12;
+  static readonly panelRadius: number = 14;
   static readonly pressInset: number = 8;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
@@ -100,8 +100,8 @@ export class AppTypography {
   static readonly inputPlaceholder: number = TypographyTokens.InputPlaceholder;
   static readonly tabLabel: number = TypographyTokens.TabLabel;
   static readonly tabLabelLineHeight: number = LineHeightTokens.TabLabel;
-  static readonly profileName: number = TypographyTokens.CardTitle;
-  static readonly profileNameLineHeight: number = LineHeightTokens.CardTitle;
+  static readonly profileName: number = 24;
+  static readonly profileNameLineHeight: number = 30;
   static readonly statNumber: number = TypographyTokens.StatNumber;
   static readonly statNumberLineHeight: number = LineHeightTokens.StatNumber;
   static readonly statLabel: number = TypographyTokens.StatLabel;
@@ -120,6 +120,7 @@ export class AppTypography {
 export struct AppPageHeader {
   @Prop title: string = '';
   @Prop subtitle: string = '';
+  @Prop subtitleTop: number = 6;
 
   build() {
     Column() {
@@ -134,7 +135,7 @@ export struct AppPageHeader {
           .fontSize(AppTypography.pageSubtitle)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.pageSubtitleLineHeight)
-          .margin({ top: 6 })
+          .margin({ top: this.subtitleTop })
           .width('100%')
       }
     }
@@ -155,7 +156,7 @@ export struct PrimaryButton {
       .width('100%')
       .borderRadius(AppMetrics.buttonRadius)
       .fontSize(AppTypography.buttonText)
-      .fontWeight(FontWeight.Medium)
+      .fontWeight(600)
       .fontColor(AppColors.onPrimary)
       .backgroundColor(this.isDisabled ? AppColors.primaryDisabled : AppColors.primary)
       .opacity(this.isDisabled ? 0.72 : 1)
@@ -180,9 +181,9 @@ export struct SecondaryButton {
     Button(this.label)
       .height(AppMetrics.compactControlHeight)
       .width('100%')
-      .borderRadius(AppMetrics.capsuleRadius)
+      .borderRadius(AppMetrics.buttonRadius)
       .fontSize(AppTypography.smallButtonText)
-      .fontWeight(FontWeight.Medium)
+      .fontWeight(600)
       .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.text)
       .backgroundColor(AppColors.surfaceTint)
       .border({ width: 1, color: AppColors.border })
@@ -209,7 +210,7 @@ export struct DangerButton {
       .height(AppMetrics.compactControlHeight)
       .borderRadius(AppMetrics.buttonRadius)
       .fontSize(AppTypography.smallButtonText)
-      .fontWeight(FontWeight.Medium)
+      .fontWeight(600)
       .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.danger)
       .backgroundColor(AppColors.surface)
       .border({ width: 1, color: this.isDisabled ? AppColors.border : AppColors.danger })
@@ -314,8 +315,8 @@ export struct ReviewJudgementBadge {
       .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(getJudgementBadgeColor(this.value))
-      .padding({ left: 10, right: 10, top: 5, bottom: 5 })
-      .borderRadius(AppMetrics.capsuleRadius)
+      .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+      .borderRadius(10)
       .backgroundColor(getJudgementBadgeBackground(this.value))
       .textAlign(TextAlign.Center)
       .maxLines(1)

@@ -21,6 +21,7 @@ import {
 import {
   AppColors,
   AppMetrics,
+  AppPageHeader,
   AppTypography,
   SecondaryButton
 } from '../components/AppDesign';
@@ -28,7 +29,6 @@ import {
 const HOME_HERO_ASPECT_RATIO: number = 0.75;
 const HOME_SIDE_PADDING: number = 16;
 const HOME_HERO_TEXT_PADDING: number = 18;
-const HOME_HERO_TOP_PADDING: number = 8;
 const HOME_HERO_RADIUS: number = 16;
 const HOME_HERO_TEXT_BOTTOM: number = 18;
 const HOME_METHOD_TAG_HEIGHT: number = 24;
@@ -36,8 +36,8 @@ const HOME_METHOD_TAG_RADIUS: number = 12;
 const HOME_METHOD_TAG_GAP: number = 6;
 const HOME_PRIMARY_BUTTON_HEIGHT: number = 42;
 const HOME_FLOW_CARD_GAP: number = 8;
-const HOME_FLOW_CARD_HEIGHT: number = 54;
-const HOME_FLOW_CARD_RADIUS: number = 10;
+const HOME_FLOW_CARD_HEIGHT: number = 58;
+const HOME_FLOW_CARD_RADIUS: number = 12;
 
 interface ReviewFlowStep {
   title: string;
@@ -154,6 +154,12 @@ export struct HomePage {
   @Builder
   HeroPanel() {
     Column() {
+      AppPageHeader({
+        title: '摄影复盘',
+        subtitle: '从照片里练习观看与判断',
+        subtitleTop: 4
+      })
+
       Stack({ alignContent: Alignment.BottomStart }) {
         Image($r('app.media.home_review_hero'))
           .width('100%')
@@ -179,12 +185,13 @@ export struct HomePage {
         .padding({
           left: HOME_HERO_TEXT_PADDING,
           right: HOME_HERO_TEXT_PADDING,
+          top: 36,
           bottom: HOME_HERO_TEXT_BOTTOM
         })
         .width('100%')
         .linearGradient({
           angle: 180,
-          colors: [['#00000000', 0], ['#0F121B2E', 0.58], ['#0F121B99', 1]]
+          colors: [['#00000000', 0], ['#0F121B12', 0.55], ['#0F121B80', 1]]
         })
       }
       .width('100%')
@@ -192,13 +199,7 @@ export struct HomePage {
       .borderRadius(HOME_HERO_RADIUS)
       .clip(true)
       .border({ width: 1, color: '#E4DCD0' })
-      .shadow({
-        radius: 18,
-        color: '#1F15191F',
-        offsetX: 0,
-        offsetY: 8
-      })
-      .margin({ top: HOME_HERO_TOP_PADDING })
+      .margin({ top: 12 })
 
       Scroll() {
         Row({ space: HOME_METHOD_TAG_GAP }) {
@@ -259,6 +260,7 @@ export struct HomePage {
       .padding({ left: 10, right: 10 })
       .borderRadius(HOME_METHOD_TAG_RADIUS)
       .backgroundColor('#EDF4F7')
+      .border({ width: 1, color: '#DDE8EE' })
       .maxLines(1)
   }
 
@@ -267,7 +269,7 @@ export struct HomePage {
     Button(this.isPickingPhoto ? '打开相册中...' : '导入照片，开始复盘')
       .height(HOME_PRIMARY_BUTTON_HEIGHT)
       .width('100%')
-      .borderRadius(10)
+      .borderRadius(AppMetrics.buttonRadius)
       .fontSize(14)
       .fontWeight(600)
       .fontColor(AppColors.onPrimary)
@@ -332,8 +334,8 @@ export struct HomePage {
       .padding({
         left: 0,
         right: 0,
-        top: 0,
-        bottom: AppMetrics.tabBarHeight
+        top: AppMetrics.pageTopPadding,
+        bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding
       })
       .width('100%')
       .alignItems(HorizontalAlign.Start)

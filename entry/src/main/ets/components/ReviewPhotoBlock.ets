@@ -15,21 +15,19 @@ export struct ReviewPhotoBlock {
 
   @Builder
   Placeholder() {
-    Column() {
+    Column({ space: 4 }) {
       Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '加载失败' : '照片')
-        .fontSize(this.compact ? AppTypography.auxiliary : AppTypography.body)
+        .fontSize(this.compact ? AppTypography.caption : AppTypography.body)
         .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.text)
+        .fontColor(AppColors.secondaryText)
       if (hasDisplayableImageUri(this.imageUri) && this.loadFailed) {
         Text('重新选择')
-          .fontSize(AppTypography.auxiliary)
-          .fontColor(AppColors.secondaryText)
-          .margin({ top: AppMetrics.space8 })
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.mutedText)
       } else if (this.imageSizeFallbackUsed) {
         Text('信息不可用')
-          .fontSize(AppTypography.auxiliary)
-          .fontColor(AppColors.secondaryText)
-          .margin({ top: AppMetrics.space8 })
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.mutedText)
       }
     }
     .justifyContent(FlexAlign.Center)

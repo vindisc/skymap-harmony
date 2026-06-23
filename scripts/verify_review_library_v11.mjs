@@ -11,9 +11,9 @@ let failed = false;
 
 const requiredHomeTokens = [
   "title: '摄影复盘'",
-  "Text('开始新的复盘')",
-  "Text('最近一次')",
-  "Text('复盘概览')"
+  "subtitle: '从照片里练习观看与判断'",
+  "Text('从一张照片开始，练习判断')",
+  "Text('看见落点、路径和关系。')"
 ];
 
 for (const token of requiredHomeTokens) {
@@ -23,13 +23,8 @@ for (const token of requiredHomeTokens) {
   }
 }
 
-if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('this.GrowthStatsPanel()')) {
-  failed = true;
-  console.error('HomePage must place start action before review overview.');
-}
-
 const requiredDetailTokens = [
-  "Text('复盘库')",
+  "title: '复盘库'",
   'this.HeaderRow()',
   "TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })",
   "this.FilterChip('成立', ReviewJudgementStatus.VALID)",

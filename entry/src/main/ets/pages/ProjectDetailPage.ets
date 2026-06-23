@@ -5,6 +5,7 @@ import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
 import {
   AppColors,
   AppMetrics,
+  AppPageHeader,
   AppTypography,
   EmptyState,
   PrimaryButton,
@@ -95,11 +96,11 @@ export struct ProjectDetailPage {
   }
 
   private resolveFilterChipTextColor(value: string): string {
-    return this.isFilterSelected(value) ? AppColors.text : AppColors.secondaryText;
+    return this.isFilterSelected(value) ? AppColors.primary : AppColors.secondaryText;
   }
 
   private resolveFilterChipBackgroundColor(value: string): string {
-    return this.isFilterSelected(value) ? AppColors.primarySoft : AppColors.surfaceTint;
+    return this.isFilterSelected(value) ? AppColors.primarySoft : AppColors.surface;
   }
 
   private openHistory(document: ReviewCardDocument): void {
@@ -154,9 +155,9 @@ export struct ProjectDetailPage {
     Button(label)
       .height(AppMetrics.filterChipHeight)
       .constraintSize({ minWidth: value === 'all' ? 60 : 72 })
-      .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-      .borderRadius(AppMetrics.capsuleRadius)
-      .fontSize(AppTypography.meta)
+      .padding({ left: 14, right: 14 })
+      .borderRadius(12)
+      .fontSize(13)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
@@ -171,30 +172,25 @@ export struct ProjectDetailPage {
   HeaderRow() {
     Column({ space: 6 }) {
       Row() {
-        Text('复盘库')
-          .fontSize(AppTypography.pageTitle)
-          .fontWeight(700)
-          .fontColor(AppColors.text)
-          .lineHeight(AppTypography.pageTitleLineHeight)
-
-        Blank()
+        Column({ space: 6 }) {
+          AppPageHeader({
+            title: '复盘库',
+            subtitle: '按照片、判断和卡点回看你的复盘记录。'
+          })
+        }
+        .layoutWeight(1)
 
         Text(this.resolveResultCountText())
-          .fontSize(AppTypography.meta)
+          .fontSize(13)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.metaLineHeight)
-          .padding({ left: 10, right: 10, top: 5, bottom: 5 })
-          .borderRadius(AppMetrics.capsuleRadius)
+          .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+          .borderRadius(10)
           .backgroundColor(AppColors.surfaceMuted)
+          .border({ width: 1, color: AppColors.border })
       }
-      .alignItems(VerticalAlign.Center)
+      .alignItems(VerticalAlign.Top)
       .width('100%')
-
-      Text('按照片、判断和卡点回看你的复盘记录。')
-        .fontSize(AppTypography.pageSubtitle)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.pageSubtitleLineHeight)
-        .width('100%')
     }
     .width('100%')
   }
@@ -207,7 +203,7 @@ export struct ProjectDetailPage {
         Column({ space: AppMetrics.cardGap }) {
           TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })
             .height(AppMetrics.searchHeight)
-            .borderRadius(AppMetrics.cardRadius)
+            .borderRadius(14)
             .fontSize(AppTypography.inputText)
             .fontColor(AppColors.text)
             .placeholderColor(AppColors.placeholderText)
@@ -219,14 +215,18 @@ export struct ProjectDetailPage {
               this.applyFilters();
             })
 
-          Row({ space: AppMetrics.space8 }) {
-            this.FilterChip('全部', 'all')
-            this.FilterChip('成立', ReviewJudgementStatus.VALID)
-            this.FilterChip('待判断', ReviewJudgementStatus.UNSURE)
-            this.FilterChip('不成立', ReviewJudgementStatus.INVALID)
+          Scroll() {
+            Row({ space: AppMetrics.space8 }) {
+              this.FilterChip('全部', 'all')
+              this.FilterChip('成立', ReviewJudgementStatus.VALID)
+              this.FilterChip('待判断', ReviewJudgementStatus.UNSURE)
+              this.FilterChip('不成立', ReviewJudgementStatus.INVALID)
+            }
           }
           .width('100%')
           .height(AppMetrics.filterChipHeight)
+          .scrollable(ScrollDirection.Horizontal)
+          .scrollBar(BarState.Off)
 
           if (this.hasActiveFilters()) {
             Row() {
@@ -282,7 +282,7 @@ export struct ProjectDetailPage {
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
       } else {
-        List({ space: AppMetrics.space8 }) {
+        List({ space: AppMetrics.cardGap }) {
           ForEach(this.filteredItems, (item: ReviewCardHistoryItem) => {
             ListItem() {
               ProjectReviewCard({

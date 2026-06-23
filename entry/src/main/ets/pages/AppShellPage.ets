@@ -24,8 +24,6 @@ const ROOT_TABS: Array<RootTabItem> = [
   { key: RootTabKey.STATS, label: '统计', activeIcon: $r('app.media.tab_stats_active'), inactiveIcon: $r('app.media.tab_stats') },
   { key: RootTabKey.MY, label: '我的', activeIcon: $r('app.media.tab_user_active'), inactiveIcon: $r('app.media.tab_user') }
 ];
-const APP_SHELL_TAB_HORIZONTAL_PADDING: number = 16;
-
 @Entry
 @Component
 struct AppShellPage {
@@ -56,7 +54,7 @@ struct AppShellPage {
   }
 
   private resolveTabLabelWeight(key: RootTabKey): number {
-    return this.isCurrentTab(key) ? FontWeight.Medium : FontWeight.Regular;
+    return this.isCurrentTab(key) ? 600 : FontWeight.Regular;
   }
 
   private resolveTabBackground(key: RootTabKey): string {
@@ -81,10 +79,10 @@ struct AppShellPage {
     .alignItems(HorizontalAlign.Center)
     .layoutWeight(1)
     .height(AppMetrics.tabBarItemHeight)
-    .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+    .padding({ left: 6, right: 6, top: 4, bottom: 4 })
     .borderRadius(AppMetrics.buttonRadius)
     .backgroundColor(this.resolveTabBackground(item.key))
-    .opacity(this.isCurrentTab(item.key) ? 1 : 0.82)
+    .opacity(this.isCurrentTab(item.key) ? 1 : 0.86)
     .onClick(() => {
       this.selectTab(item.key);
     })
@@ -115,7 +113,7 @@ struct AppShellPage {
         Divider()
           .strokeWidth(1)
           .color(AppColors.border)
-          .opacity(0.32)
+          .opacity(0.42)
           .width('100%')
 
         Row({ space: AppMetrics.space8 }) {
@@ -125,10 +123,10 @@ struct AppShellPage {
         }
         .layoutWeight(1)
         .padding({
-          left: APP_SHELL_TAB_HORIZONTAL_PADDING,
-          right: APP_SHELL_TAB_HORIZONTAL_PADDING,
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
           top: 4,
-          bottom: 2
+          bottom: 4
         })
         .width('100%')
       }

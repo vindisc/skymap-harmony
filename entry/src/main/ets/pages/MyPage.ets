@@ -94,7 +94,7 @@ export struct MyPage {
   @Builder
   SectionTitle(title: string) {
     Text(title)
-      .fontSize(AppTypography.meta)
+      .fontSize(13)
       .fontWeight(FontWeight.Medium)
       .fontColor(AppColors.secondaryText)
       .lineHeight(AppTypography.metaLineHeight)
@@ -124,14 +124,14 @@ export struct MyPage {
     Row({ space: AppMetrics.cardGap }) {
       Column({ space: AppMetrics.space8 }) {
         Text(title)
-          .fontSize(AppTypography.cardTitle)
-          .fontWeight(FontWeight.Medium)
+          .fontSize(16)
+          .fontWeight(600)
           .fontColor(AppColors.text)
           .lineHeight(AppTypography.cardTitleLineHeight)
           .width('100%')
 
         Text(value)
-          .fontSize(AppTypography.caption)
+          .fontSize(13)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.captionLineHeight)
           .width('100%')
@@ -141,23 +141,23 @@ export struct MyPage {
 
       if (status.length > 0) {
         Text(status)
-          .fontSize(AppTypography.meta)
+          .fontSize(12)
           .fontWeight(FontWeight.Medium)
           .fontColor(status === '已配置' ? AppColors.tagGreenText : AppColors.tagAmberText)
-          .padding({ left: 10, right: 10, top: 5, bottom: 5 })
-          .borderRadius(AppMetrics.capsuleRadius)
+          .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+          .borderRadius(10)
           .backgroundColor(status === '已配置' ? AppColors.tagGreen : AppColors.tagAmber)
       }
 
       Text('›')
-        .fontSize(AppTypography.cardTitle)
+        .fontSize(18)
         .fontColor(AppColors.mutedText)
-        .opacity(0.56)
+        .opacity(0.42)
     }
     .alignItems(VerticalAlign.Center)
     .padding(AppMetrics.cardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 72 })
+    .constraintSize({ minHeight: 74, maxHeight: 82 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
@@ -172,7 +172,7 @@ export struct MyPage {
     Column({ space: AppMetrics.cardGap }) {
       Column({ space: 4 }) {
         Text('个人复盘资料')
-          .fontSize(AppTypography.meta)
+          .fontSize(13)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.metaLineHeight)
@@ -186,7 +186,7 @@ export struct MyPage {
           .width('100%')
 
         Text(`${this.reviewCount} 次复盘 · ${this.validReviewCount} 次成立`)
-          .fontSize(AppTypography.caption)
+          .fontSize(13)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.captionLineHeight)
@@ -203,7 +203,7 @@ export struct MyPage {
             .lineHeight(AppTypography.statNumberLineHeight)
 
           Text('累计复盘')
-            .fontSize(AppTypography.statLabel)
+            .fontSize(12)
             .fontColor(AppColors.secondaryText)
             .lineHeight(AppTypography.statLabelLineHeight)
         }
@@ -214,11 +214,11 @@ export struct MyPage {
           Text(`${this.validReviewCount}`)
             .fontSize(AppTypography.statNumber)
             .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
+            .fontColor(AppColors.primary)
             .lineHeight(AppTypography.statNumberLineHeight)
 
           Text('成立记录')
-            .fontSize(AppTypography.statLabel)
+            .fontSize(12)
             .fontColor(AppColors.secondaryText)
             .lineHeight(AppTypography.statLabelLineHeight)
         }
@@ -230,7 +230,7 @@ export struct MyPage {
     .alignItems(HorizontalAlign.Start)
     .padding(AppMetrics.cardPadding)
     .width('100%')
-    .constraintSize({ minHeight: 132 })
+    .constraintSize({ minHeight: 148 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
