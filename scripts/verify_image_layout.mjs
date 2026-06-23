@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 const HORIZONTAL_ASPECT_RATIO = 1.15;
 const VERTICAL_ASPECT_RATIO = 0.87;
 
@@ -96,3 +98,22 @@ if (exportCanvasWidth !== 560) {
   process.exit(1);
 }
 console.log(`export canvas: width=${exportCanvasWidth}`);
+
+const exportCardSource = fs.readFileSync('entry/src/main/ets/components/LongFormExportReviewCard.ets', 'utf8');
+const requiredHorizontalTokens = [
+  'function isHorizontalExportLayout(document: ReviewCardDocument): boolean',
+  "this.HorizontalPanelTitle('观看过程')",
+  "this.HorizontalPanelTitle('判断摘要')",
+  "this.HorizontalSection('最强关系', this.document.content.coreRelation)",
+  "this.HorizontalSection(\n          '卡点',",
+  "Text('复盘信息')"
+];
+
+for (const token of requiredHorizontalTokens) {
+  if (!exportCardSource.includes(token)) {
+    console.error(`horizontal export layout missing token: ${token}`);
+    process.exit(1);
+  }
+}
+
+console.log('horizontal export layout: dual-column summary verified');
