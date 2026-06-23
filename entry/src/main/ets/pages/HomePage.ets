@@ -323,26 +323,22 @@ export struct HomePage {
   }
 
   build() {
-    Scroll() {
-      Column({ space: AppMetrics.sectionGap }) {
-        this.HeroPanel()
+    Column({ space: AppMetrics.sectionGap }) {
+      this.HeroPanel()
 
-        if (this.shouldShowHistoryDiagnostics()) {
-          this.DiagnosticsPanel()
-        }
+      if (this.shouldShowHistoryDiagnostics()) {
+        this.DiagnosticsPanel()
       }
-      .padding({
-        left: 0,
-        right: 0,
-        top: AppMetrics.pageTopPadding,
-        bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding
-      })
-      .width('100%')
-      .alignItems(HorizontalAlign.Start)
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
+    .padding({
+      left: 0,
+      right: 0,
+      top: AppMetrics.pageTopPadding,
+      bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding
+    })
+    .alignItems(HorizontalAlign.Start)
     .backgroundColor(AppColors.pageBackground)
   }
 }

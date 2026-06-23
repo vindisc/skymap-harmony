@@ -2,9 +2,10 @@ import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
-import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppPageHeader, AppTypography } from '../components/AppDesign';
 import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
 import {
+  HomeStorageConfigStatus,
   HomeStorageOperationResult,
   HomeStorageService,
   HomeStorageSettings
@@ -15,8 +16,6 @@ const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
 const SETTINGS_FORM_BOTTOM_PADDING: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
-const SETTINGS_ACTION_BAR_HEIGHT: number = 80;
-const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 8;
 
 @Entry
 @Component
@@ -202,12 +201,11 @@ struct HomeStoragePage {
   }
 
   private getSettingsBottomPadding(): number {
-    const actionBarPadding: number = SETTINGS_ACTION_BAR_HEIGHT + SETTINGS_ACTION_BAR_BOTTOM_GAP;
     if (this.isKeyboardActive()) {
-      return this.keyboardHeight + SETTINGS_KEYBOARD_BOTTOM_PADDING + actionBarPadding;
+      return this.keyboardHeight + SETTINGS_KEYBOARD_BOTTOM_PADDING;
     }
 
-    return SETTINGS_FORM_BOTTOM_PADDING + actionBarPadding;
+    return SETTINGS_FORM_BOTTOM_PADDING;
   }
 
   private focusInput(index: number): void {
@@ -234,8 +232,8 @@ struct HomeStoragePage {
     }, SETTINGS_INPUT_SCROLL_DELAY);
   }
 
-  private hasRequiredHomeStorageSettings(): boolean {
-    return this.homeStorageHost.trim().length > 0 && this.homeStorageShareName.trim().length > 0;
+  private resolveHomeStorageStatus(): HomeStorageConfigStatus {
+    return HomeStorageService.getConfigurationStatus(this.currentHomeStorageSettings());
   }
 
   private clearActionFeedback(): void {
@@ -256,7 +254,7 @@ struct HomeStoragePage {
     if (!this.isSettingsLoaded) {
       return '读取中';
     }
-    return this.hasRequiredHomeStorageSettings() ? '已配置' : '未配置';
+    return HomeStorageService.resolveConfigurationStatusLabel(this.resolveHomeStorageStatus());
   }
 
   private isActionDisabled(): boolean {
@@ -292,22 +290,25 @@ struct HomeStoragePage {
   @Builder
   Header() {
     Row({ space: AppMetrics.space16 }) {
-      Text('家庭存储')
-        .fontSize(AppTypography.pageTitle)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.pageTitleLineHeight)
+      Column({ space: 6 }) {
+        AppPageHeader({
+          title: '家庭存储',
+          subtitle: '管理家庭存储连接与保存位置。'
+        })
+      }
         .layoutWeight(1)
 
       Text(this.resolveStatusTitle())
-        .fontSize(AppTypography.meta)
-        .fontColor(this.hasRequiredHomeStorageSettings() ? AppColors.tagBlueText : AppColors.secondaryText)
+        .fontSize(AppTypography.caption)
+        .fontColor(this.resolveHomeStorageStatus() === HomeStorageConfigStatus.COMPLETE ? AppColors.tagGreenText
+          : this.resolveHomeStorageStatus() === HomeStorageConfigStatus.PARTIAL ? AppColors.tagAmberText : AppColors.secondaryText)
         .lineHeight(AppTypography.metaLineHeight)
-        .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 5, bottom: 5 })
-        .borderRadius(AppMetrics.cardRadius)
-        .backgroundColor(this.hasRequiredHomeStorageSettings() ? AppColors.tagBlue : AppColors.surfaceMuted)
+        .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+        .borderRadius(10)
+        .backgroundColor(this.resolveHomeStorageStatus() === HomeStorageConfigStatus.COMPLETE ? AppColors.tagGreen
+          : this.resolveHomeStorageStatus() === HomeStorageConfigStatus.PARTIAL ? AppColors.tagAmber : AppColors.surfaceMuted)
     }
-    .alignItems(VerticalAlign.Center)
+    .alignItems(VerticalAlign.Top)
     .width('100%')
   }
 
@@ -415,52 +416,44 @@ struct HomeStoragePage {
     .width('100%')
   }
 
-  @Builder
-  ActionBar() {
-    SettingsActionBar({
-      primaryLabel: this.isSaving ? '保存中...' : '保存',
-      secondaryLabel: this.isTestingHomeStorage ? '测试中...' : '测试',
-      isPrimaryDisabled: this.isActionDisabled(),
-      isSecondaryDisabled: this.isActionDisabled(),
-      onPrimaryTap: () => {
-        this.saveSettings();
-      },
-      onSecondaryTap: () => {
-        this.testHomeStorage();
-      }
-    })
-    .height(SETTINGS_ACTION_BAR_HEIGHT)
-  }
-
   build() {
-    Stack({ alignContent: Alignment.Bottom }) {
-      Column() {
+    Scroll(this.settingsScroller) {
+      Column({ space: AppMetrics.cardGap }) {
         this.Header()
 
-        Scroll(this.settingsScroller) {
-          Column({ space: AppMetrics.cardGap }) {
-            this.ActionFeedback()
+        this.ActionFeedback()
 
-            if (this.isSettingsLoaded) {
-              this.ConfigurationForm()
-            } else {
-              this.LoadingSettings()
-            }
-          }
-          .alignItems(HorizontalAlign.Start)
-          .padding({ top: AppMetrics.space24, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
+        if (this.isSettingsLoaded) {
+          this.ConfigurationForm()
+        } else {
+          this.LoadingSettings()
         }
-        .scrollBar(BarState.Off)
+
+        SettingsActionBar({
+          primaryLabel: this.isSaving ? '保存中...' : '保存',
+          secondaryLabel: this.isTestingHomeStorage ? '测试中...' : '测试',
+          isPrimaryDisabled: this.isActionDisabled(),
+          isSecondaryDisabled: this.isActionDisabled(),
+          onPrimaryTap: () => {
+            this.saveSettings();
+          },
+          onSecondaryTap: () => {
+            this.testHomeStorage();
+          }
+        })
       }
       .alignItems(HorizontalAlign.Start)
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: 0 })
       .width('100%')
-      .height('100%')
-
-      this.ActionBar()
+      .padding({
+        left: AppMetrics.pagePadding,
+        right: AppMetrics.pagePadding,
+        top: AppMetrics.pageTopPadding,
+        bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding
+      })
     }
     .width('100%')
     .height('100%')
+    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

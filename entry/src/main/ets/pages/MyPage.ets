@@ -5,7 +5,7 @@ import { AppColors, AppMetrics, AppPageHeader, AppTypography } from '../componen
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewProjectService } from '../services/ReviewProjectService';
-import { HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
+import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
@@ -52,8 +52,8 @@ export struct MyPage {
     this.homeStorageSettings = await HomeStorageService.loadSettings(context);
   }
 
-  private isHomeStorageConfigured(): boolean {
-    return HomeStorageService.validateSettings(this.homeStorageSettings).length === 0;
+  private resolveHomeStorageStatus(): HomeStorageConfigStatus {
+    return HomeStorageService.getConfigurationStatus(this.homeStorageSettings);
   }
 
   private resolveReviewerSummary(): string {
@@ -61,18 +61,22 @@ export struct MyPage {
   }
 
   private resolveHomeStorageDetail(): string {
-    if (!this.isHomeStorageConfigured()) {
+    if (this.homeStorageSettings.smbHost.length === 0) {
       return '未配置';
     }
-    return `${this.homeStorageSettings.smbHost} · ${this.homeStorageSettings.smbShareName}`;
+    return `${this.homeStorageSettings.smbHost} · ${this.homeStorageSettings.smbShareName || '共享目录未填'}`;
   }
 
   private resolveSyncSummary(): string {
-    return this.isHomeStorageConfigured() ? '可用' : '未配置';
+    return HomeStorageService.resolveAvailabilityLabel(this.resolveHomeStorageStatus());
+  }
+
+  private resolveHomeStorageBadge(): string {
+    return HomeStorageService.resolveConfigurationStatusLabel(this.resolveHomeStorageStatus());
   }
 
   private resolveSyncBadge(): string {
-    return this.isHomeStorageConfigured() ? '已配置' : '待配置';
+    return HomeStorageService.resolveAvailabilityLabel(this.resolveHomeStorageStatus());
   }
 
   private resolveProfileName(): string {
@@ -89,34 +93,6 @@ export struct MyPage {
 
   private openSyncCenter(): void {
     router.pushUrl({ url: SYNC_CENTER_PAGE });
-  }
-
-  @Builder
-  SectionTitle(title: string) {
-    Text(title)
-      .fontSize(13)
-      .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.secondaryText)
-      .lineHeight(AppTypography.metaLineHeight)
-      .width('100%')
-  }
-
-  @Builder
-  StatusRow(label: string, value: string) {
-    Row({ space: AppMetrics.space16 }) {
-      Text(label)
-        .fontSize(AppTypography.auxiliary)
-        .fontColor(AppColors.secondaryText)
-        .width(72)
-
-      Text(value)
-        .fontSize(AppTypography.auxiliary)
-        .fontColor(AppColors.text)
-        .layoutWeight(1)
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
-    }
-    .width('100%')
   }
 
   @Builder
@@ -143,10 +119,12 @@ export struct MyPage {
         Text(status)
           .fontSize(12)
           .fontWeight(FontWeight.Medium)
-          .fontColor(status === '已配置' ? AppColors.tagGreenText : AppColors.tagAmberText)
+          .fontColor(status === '已配置' || status === '可用' ? AppColors.tagGreenText
+            : status === '待完善' ? AppColors.tagAmberText : AppColors.secondaryText)
           .padding({ left: 10, right: 10, top: 4, bottom: 4 })
           .borderRadius(10)
-          .backgroundColor(status === '已配置' ? AppColors.tagGreen : AppColors.tagAmber)
+          .backgroundColor(status === '已配置' || status === '可用' ? AppColors.tagGreen
+            : status === '待完善' ? AppColors.tagAmber : AppColors.surfaceMuted)
       }
 
       Text('›')
@@ -237,7 +215,7 @@ export struct MyPage {
   }
 
   build() {
-    Column() {
+    Scroll() {
       Column({ space: AppMetrics.cardGap }) {
         AppPageHeader({
           title: '我的',
@@ -246,42 +224,38 @@ export struct MyPage {
 
         this.IdentityCard()
 
-        this.SectionTitle('设置')
+        this.LinkRow('复盘人', this.resolveReviewerSummary(), () => {
+          this.openReviewerProfile();
+        })
 
-        Column({ space: AppMetrics.cardGap }) {
-          this.LinkRow('复盘人', this.resolveReviewerSummary(), () => {
-            this.openReviewerProfile();
-          })
-        }
+        this.LinkRow(
+          '家庭存储',
+          this.resolveHomeStorageDetail(),
+          () => {
+            this.openHomeStorage();
+          },
+          this.resolveHomeStorageBadge()
+        )
 
-        this.SectionTitle('同步')
-
-        Column({ space: AppMetrics.cardGap }) {
-          this.LinkRow('同步中心', this.resolveSyncSummary(), () => {
-            this.openSyncCenter();
-          }, this.resolveSyncBadge())
-
-          this.LinkRow(
-            '家庭存储',
-            this.resolveHomeStorageDetail(),
-            () => {
-              this.openHomeStorage();
-            },
-            this.resolveSyncBadge()
-          )
-        }
-
-        this.SectionTitle('应用')
+        this.LinkRow('同步中心', this.resolveSyncSummary(), () => {
+          this.openSyncCenter();
+        }, this.resolveSyncBadge())
 
         this.LinkRow('关于', `${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`, () => {
         })
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.pageBottomPadding })
+      .padding({
+        left: AppMetrics.pagePadding,
+        right: AppMetrics.pagePadding,
+        top: AppMetrics.pageTopPadding,
+        bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space16
+      })
     }
     .width('100%')
     .height('100%')
+    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

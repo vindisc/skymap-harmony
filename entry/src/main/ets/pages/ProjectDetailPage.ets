@@ -169,6 +169,35 @@ export struct ProjectDetailPage {
   }
 
   @Builder
+  SearchField() {
+    Row({ space: 10 }) {
+      Text('⌕')
+        .fontSize(18)
+        .fontColor(AppColors.placeholderText)
+
+      TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })
+        .layoutWeight(1)
+        .height(AppMetrics.searchHeight)
+        .fontSize(AppTypography.inputText)
+        .fontColor(AppColors.text)
+        .placeholderColor(AppColors.placeholderText)
+        .backgroundColor(AppColors.transparent)
+        .padding({ left: 0, right: 0 })
+        .onChange((value: string) => {
+          this.searchText = value;
+          this.applyFilters();
+        })
+    }
+    .alignItems(VerticalAlign.Center)
+    .width('100%')
+    .height(AppMetrics.searchHeight)
+    .padding({ left: 14, right: 14 })
+    .borderRadius(14)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+  }
+
+  @Builder
   HeaderRow() {
     Column({ space: 6 }) {
       Row() {
@@ -201,19 +230,7 @@ export struct ProjectDetailPage {
         this.HeaderRow()
 
         Column({ space: AppMetrics.cardGap }) {
-          TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })
-            .height(AppMetrics.searchHeight)
-            .borderRadius(14)
-            .fontSize(AppTypography.inputText)
-            .fontColor(AppColors.text)
-            .placeholderColor(AppColors.placeholderText)
-            .backgroundColor(AppColors.surface)
-            .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-            .border({ width: 1, color: AppColors.border })
-            .onChange((value: string) => {
-              this.searchText = value;
-              this.applyFilters();
-            })
+          this.SearchField()
 
           Scroll() {
             Row({ space: AppMetrics.space8 }) {

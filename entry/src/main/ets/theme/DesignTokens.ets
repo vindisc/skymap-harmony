@@ -1,13 +1,13 @@
 export class TypographyTokens {
-  static readonly PageTitle: number = 25;
+  static readonly PageTitle: number = 26;
   static readonly PageSubtitle: number = 14;
-  static readonly SectionTitle: number = 18;
-  static readonly SectionSubtitle: number = 13;
-  static readonly CardTitle: number = 17;
+  static readonly SectionTitle: number = 16;
+  static readonly SectionSubtitle: number = 12;
+  static readonly CardTitle: number = 16;
   static readonly CardBody: number = 14;
-  static readonly CardMeta: number = 13;
-  static readonly ListTitle: number = 15;
-  static readonly ListBody: number = 13;
+  static readonly CardMeta: number = 12;
+  static readonly ListTitle: number = 16;
+  static readonly ListBody: number = 14;
   static readonly ListMeta: number = 12;
   static readonly StatNumber: number = 30;
   static readonly StatLabel: number = 12;
@@ -21,15 +21,15 @@ export class TypographyTokens {
 }
 
 export class LineHeightTokens {
-  static readonly PageTitle: number = 31;
+  static readonly PageTitle: number = 32;
   static readonly PageSubtitle: number = 20;
-  static readonly SectionTitle: number = 24;
-  static readonly SectionSubtitle: number = 18;
+  static readonly SectionTitle: number = 22;
+  static readonly SectionSubtitle: number = 16;
   static readonly CardTitle: number = 22;
   static readonly CardBody: number = 20;
-  static readonly CardMeta: number = 18;
+  static readonly CardMeta: number = 16;
   static readonly ListTitle: number = 20;
-  static readonly ListBody: number = 18;
+  static readonly ListBody: number = 20;
   static readonly ListMeta: number = 17;
   static readonly StatNumber: number = 34;
   static readonly StatLabel: number = 16;
@@ -42,8 +42,8 @@ export class LineHeightTokens {
 export class LayoutTokens {
   static readonly TabBarHeight: number = 60;
   static readonly TabBarItemHeight: number = 44;
-  static readonly SearchHeight: number = 46;
-  static readonly ChipHeight: number = 36;
+  static readonly SearchHeight: number = 44;
+  static readonly ChipHeight: number = 34;
   static readonly PrimaryButtonHeight: number = 44;
   static readonly SecondaryButtonHeight: number = 44;
   static readonly ListThumbnailSize: number = 68;

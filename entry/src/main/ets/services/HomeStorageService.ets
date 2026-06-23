@@ -37,6 +37,12 @@ export interface HomeStorageOperationResult {
   message: string;
 }
 
+export enum HomeStorageConfigStatus {
+  EMPTY = 'empty',
+  PARTIAL = 'partial',
+  COMPLETE = 'complete'
+}
+
 interface ParsedSmbAddress {
   host: string;
   shareName: string;
@@ -392,7 +398,67 @@ export class HomeStorageService {
     if (normalized.smbShareName.length === 0) {
       return '请先填写共享目录';
     }
+    if (normalized.remoteDirectory.length === 0) {
+      return '请先填写目标路径';
+    }
+    if (normalized.username.length === 0) {
+      return '请先填写用户名';
+    }
+    if (normalized.password.length === 0) {
+      return '请先填写密码或凭据';
+    }
     return '';
+  }
+
+  static getConfigurationStatus(settings: HomeStorageSettings): HomeStorageConfigStatus {
+    const normalized: HomeStorageSettings = normalizeSettings(settings);
+    const hasHost: boolean = normalized.smbHost.length > 0;
+    const hasValidPort: boolean = parsePort(normalized.smbPort) > 0 && parsePort(normalized.smbPort) <= 65535;
+    const hasShareName: boolean = normalized.smbShareName.length > 0;
+    const hasRemoteDirectory: boolean = normalized.remoteDirectory.length > 0;
+    const hasUsername: boolean = normalized.username.length > 0;
+    const hasPassword: boolean = normalized.password.length > 0;
+    const meaningfulCount: number = [
+      hasHost,
+      hasShareName,
+      hasRemoteDirectory,
+      hasUsername,
+      hasPassword
+    ].filter((item: boolean): boolean => item).length;
+
+    if (meaningfulCount === 0 && (normalized.smbPort.length === 0 || normalized.smbPort === DEFAULT_SMB_PORT)) {
+      return HomeStorageConfigStatus.EMPTY;
+    }
+
+    if (hasHost && hasValidPort && hasShareName && hasRemoteDirectory && hasUsername && hasPassword) {
+      return HomeStorageConfigStatus.COMPLETE;
+    }
+
+    return HomeStorageConfigStatus.PARTIAL;
+  }
+
+  static isConfigured(settings: HomeStorageSettings): boolean {
+    return HomeStorageService.getConfigurationStatus(settings) === HomeStorageConfigStatus.COMPLETE;
+  }
+
+  static resolveConfigurationStatusLabel(status: HomeStorageConfigStatus): string {
+    if (status === HomeStorageConfigStatus.COMPLETE) {
+      return '已配置';
+    }
+    if (status === HomeStorageConfigStatus.PARTIAL) {
+      return '待完善';
+    }
+    return '未配置';
+  }
+
+  static resolveAvailabilityLabel(status: HomeStorageConfigStatus): string {
+    if (status === HomeStorageConfigStatus.COMPLETE) {
+      return '可用';
+    }
+    if (status === HomeStorageConfigStatus.PARTIAL) {
+      return '待完善';
+    }
+    return '未配置';
   }
 
   static async testConnection(settings: HomeStorageSettings): Promise<HomeStorageOperationResult> {

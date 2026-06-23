@@ -94,6 +94,7 @@ export class AppTypography {
   static readonly buttonText: number = TypographyTokens.ButtonText;
   static readonly buttonTextLineHeight: number = LineHeightTokens.ButtonText;
   static readonly smallButtonText: number = TypographyTokens.SmallButtonText;
+  static readonly bodyStrong: number = TypographyTokens.ButtonText;
   static readonly inputLabel: number = TypographyTokens.InputLabel;
   static readonly inputLabelLineHeight: number = LineHeightTokens.InputLabel;
   static readonly inputText: number = TypographyTokens.InputText;
@@ -113,8 +114,8 @@ export class AppTypography {
   static readonly level2LineHeight: number = LineHeightTokens.SectionTitle;
   static readonly level3: number = TypographyTokens.CardTitle;
   static readonly level3LineHeight: number = LineHeightTokens.CardTitle;
-  static readonly auxiliary: number = TypographyTokens.ListBody;
-  static readonly auxiliaryLineHeight: number = LineHeightTokens.ListBody;
+  static readonly auxiliary: number = TypographyTokens.CardMeta;
+  static readonly auxiliaryLineHeight: number = LineHeightTokens.CardMeta;
 }
 
 @Component

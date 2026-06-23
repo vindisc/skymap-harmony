@@ -24,7 +24,7 @@ export struct SettingsTextInput {
     Column({ space: AppMetrics.space8 }) {
       Text(this.label)
         .fontSize(AppTypography.inputLabel)
-        .fontWeight(FontWeight.Medium)
+        .fontWeight(600)
         .fontColor(AppColors.text)
         .lineHeight(AppTypography.inputLabelLineHeight)
         .width('100%')
@@ -34,13 +34,12 @@ export struct SettingsTextInput {
           .type(this.resolveInputType())
           .height(AppMetrics.controlHeight)
           .maxLines(1)
-          .borderRadius(AppMetrics.cardRadius)
+          .borderRadius(AppMetrics.buttonRadius)
           .fontSize(AppTypography.inputText)
           .fontColor(AppColors.text)
           .placeholderColor(AppColors.placeholderText)
-          .backgroundColor(AppColors.surfaceMuted)
+          .backgroundColor(AppColors.transparent)
           .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-          .border({ width: 1, color: AppColors.border })
           .layoutWeight(1)
           .onChange((value: string) => {
             this.onChange(value);
@@ -54,13 +53,15 @@ export struct SettingsTextInput {
 
         if (this.showsPasswordToggle) {
           Button(this.isPasswordVisible ? '隐藏' : '显示')
-            .height(AppMetrics.controlHeight)
-            .width(58)
-            .borderRadius(AppMetrics.buttonRadius)
-            .fontSize(AppTypography.smallButtonText)
+            .height(32)
+            .constraintSize({ minWidth: 52 })
+            .padding({ left: 10, right: 10 })
+            .margin({ right: 8 })
+            .borderRadius(10)
+            .fontSize(AppTypography.caption)
             .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .backgroundColor(AppColors.surfaceMuted)
+            .fontColor(AppColors.primary)
+            .backgroundColor(AppColors.primarySoft)
             .border({ width: 1, color: AppColors.border })
             .stateEffect(true)
             .onClick(() => {
@@ -70,6 +71,10 @@ export struct SettingsTextInput {
       }
       .alignItems(VerticalAlign.Center)
       .width('100%')
+      .height(AppMetrics.controlHeight)
+      .borderRadius(AppMetrics.buttonRadius)
+      .backgroundColor(AppColors.surface)
+      .border({ width: 1, color: AppColors.border })
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
@@ -112,7 +117,7 @@ export struct SettingsActionBar {
       .alignItems(VerticalAlign.Center)
       .width('100%')
     }
-    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.cardGap, bottom: AppMetrics.cardGap })
+    .padding({ left: 0, right: 0, top: AppMetrics.cardGap, bottom: AppMetrics.cardGap })
     .width('100%')
     .backgroundColor(AppColors.pageBackground)
   }
