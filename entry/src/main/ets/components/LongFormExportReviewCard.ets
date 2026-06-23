@@ -31,6 +31,7 @@ const EXPORT_CARD_INFO_TOP_MARGIN: number = 14;
 const EXPORT_CARD_DIVIDER_HEIGHT: number = 1;
 const EXPORT_CARD_MIN_HEIGHT: number = 640;
 const EXPORT_CARD_TEXT_WIDTH_RATIO: number = 0.92;
+const EXPORT_CARD_BOTTOM_SAFETY_PADDING: number = 120;
 
 function normalizeExportText(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
@@ -98,7 +99,7 @@ export function resolveLongFormExportCardHeight(document: ReviewCardDocument, ca
     + (fieldValues.length > 0 ? EXPORT_CARD_INFO_TOP_MARGIN + infoHeight : 0);
   return Math.max(
     EXPORT_CARD_MIN_HEIGHT,
-    Math.ceil(EXPORT_CARD_CANVAS_PADDING * 2 + photoHeight + textHeight)
+    Math.ceil(EXPORT_CARD_CANVAS_PADDING * 2 + photoHeight + textHeight + EXPORT_CARD_BOTTOM_SAFETY_PADDING)
   );
 }
 
