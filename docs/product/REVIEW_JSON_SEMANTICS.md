@@ -35,6 +35,17 @@
 - Mac 导入时若同时存在顶层摘要字段和 `templateConfig` 同名字段，摘要字段负责覆盖同名复盘正文；`reviewTimeText`、`reviewerText` 仍依赖 `templateConfig` 恢复。
 - Harmony 导出时即使阅读页或导出图不展示空字段，复制/导出的 `review.json` 仍要保留对应 key，并使用空字符串表示空值。
 
+## 与 HarmonyOS 复盘库存储的关系
+
+`review.json` 是交换和备份格式，不等于 HarmonyOS 端复盘库主查询源。
+
+当前 HarmonyOS 端需要明确：
+
+- 复盘库主数据源仍然是 `Preferences(review_card_history.items)`
+- `review_exchange/*.review.json` 会作为沙箱备份存在
+- 当前已经存在有限自动恢复逻辑，会在特定条件下扫描 `review_exchange` 并重建历史项
+- 详细存储、删除和恢复语义见 [`REVIEW_LIBRARY_STORAGE_AUDIT.md`](./REVIEW_LIBRARY_STORAGE_AUDIT.md)
+
 ## 字段语义矩阵
 
 | 字段 | 用户含义 | 是否必填 | 空值策略 | Mac 展示责任 | Harmony 展示责任 | 导入导出责任 |

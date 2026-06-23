@@ -58,6 +58,18 @@ Review 表示一次针对照片的摄影复盘。
 
 `review.json` 的字段语义以 [`REVIEW_JSON_SEMANTICS.md`](./REVIEW_JSON_SEMANTICS.md) 为准；当前表格只定义 Review 领域对象中必须稳定存在的产品字段。
 
+### HarmonyOS 端复盘库存储说明
+
+HarmonyOS 端当前复盘库主存储详见 [`REVIEW_LIBRARY_STORAGE_AUDIT.md`](./REVIEW_LIBRARY_STORAGE_AUDIT.md)。
+
+当前必须明确：
+
+- HarmonyOS 端复盘库主数据源是 `Preferences(review_card_history.items)`
+- 当前历史项结构为 `ReviewCardHistoryItem = document + exportedPath`
+- 原图二进制不进入复盘库，`imageUri` 只是原图引用
+- `exportedPath` 是导出结果引用，不是原图路径
+- `review.json` 可以作为交换和恢复副本存在，但不等于复盘库主查询源
+
 | 字段 | 职责 | 归属 |
 | --- | --- | --- |
 | reviewId | 标识一次复盘，便于归档、同步和去重。 | 产品模型 |
