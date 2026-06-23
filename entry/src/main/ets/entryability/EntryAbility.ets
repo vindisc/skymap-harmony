@@ -1,7 +1,7 @@
 import UIAbility from '@ohos.app.ability.UIAbility';
 import window from '@ohos.window';
 
-const APP_PAGE_BACKGROUND: string = '#F7F6F3';
+const APP_PAGE_BACKGROUND: string = '#F6F4EF';
 
 export default class EntryAbility extends UIAbility {
   onWindowStageCreate(windowStage: window.WindowStage): void {

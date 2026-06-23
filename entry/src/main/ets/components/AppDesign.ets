@@ -12,6 +12,7 @@ import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
   static readonly pageBackground: string = '#F6F4EF';
+  static readonly tabBarBackground: string = '#F6F4EF';
   static readonly surface: string = '#FFFEFB';
   static readonly surfaceMuted: string = '#F1EEE8';
   static readonly surfaceTint: string = '#F7F4EF';

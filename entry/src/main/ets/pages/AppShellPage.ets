@@ -108,6 +108,7 @@ struct AppShellPage {
       }
       .layoutWeight(1)
       .width('100%')
+      .backgroundColor(AppColors.pageBackground)
 
       Column() {
         Divider()
@@ -132,10 +133,12 @@ struct AppShellPage {
       }
       .width('100%')
       .height(AppMetrics.tabBarHeight)
-      .backgroundColor(AppColors.pageBackground)
+      .backgroundColor(AppColors.tabBarBackground)
+      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
     }
     .width('100%')
     .height('100%')
     .backgroundColor(AppColors.pageBackground)
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
   }
 }
