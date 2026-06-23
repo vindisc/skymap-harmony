@@ -38,7 +38,6 @@ enum PreviewSaveState {
 @Component
 struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
-  @State reviewerName: string = '';
   @State isExporting: boolean = false;
   @State isUploadingHomeStorage: boolean = false;
   @State isExportSnapshotMode: boolean = false;
@@ -59,11 +58,6 @@ struct PreviewPage {
     await this.recoverImageSizeIfNeeded();
     await this.ensureCurrentDocumentPersisted();
     await this.syncSaveState();
-    await this.loadReviewerName();
-  }
-
-  private async loadReviewerName(): Promise<void> {
-    this.reviewerName = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
   }
 
   private hasMeaningfulDocument(document: ReviewCardDocument): boolean {
@@ -256,7 +250,7 @@ struct PreviewPage {
   }
 
   private getExportCanvasHeight(): number {
-    return resolveLongFormExportCardHeight(this.document, this.getExportCanvasWidth(), this.reviewerName);
+    return resolveLongFormExportCardHeight(this.document, this.getExportCanvasWidth());
   }
 
   private isActionBusy(): boolean {
@@ -300,8 +294,7 @@ struct PreviewPage {
         document: this.document,
         renderMode: ReviewCardRenderMode.EXPORT_CARD,
         exportComponentId: this.getExportComponentId(),
-        exportCanvasHeight: this.getExportCanvasHeight(),
-        reviewerName: this.reviewerName
+        exportCanvasHeight: this.getExportCanvasHeight()
       })
     }
     .width(this.getExportCanvasWidth())

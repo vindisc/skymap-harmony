@@ -13,7 +13,6 @@ export struct ReviewCardPreview {
   @Prop renderMode: ReviewCardRenderMode = ReviewCardRenderMode.MOBILE_READING;
   @Prop exportComponentId: string = '';
   @Prop exportCanvasHeight: number = 0;
-  @Prop reviewerName: string = '';
 
   private getLayout() {
     return resolveReviewCardLayoutResolution(this.document);
@@ -27,8 +26,7 @@ export struct ReviewCardPreview {
           renderMode: this.renderMode,
           layoutType: this.getLayout().layoutType,
           exportComponentId: this.exportComponentId,
-          exportCanvasHeight: this.exportCanvasHeight,
-          reviewerName: this.reviewerName
+          exportCanvasHeight: this.exportCanvasHeight
         })
       }
       .width(ReviewCardStylePreset.resolve(this.renderMode, this.getLayout().layoutType).canvasWidth)
