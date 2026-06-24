@@ -100,11 +100,33 @@ CREATE TABLE IF NOT EXISTS reviews (
 | `blocker_text` | 卡点。 |
 | `raw_document_json` | 完整 `ReviewCardDocument` JSON 快照。 |
 | `backup_json_path` | 对应沙箱 `review_exchange/*.review.json` 备份路径。 |
-| `is_deleted` | 软删除标记，第一阶段可以保留，实际删除策略另行明确。 |
+| `is_deleted` | 软删除预留标记，第一阶段不启用。 |
 
 注意：`image_uri` 只是原图引用，不代表原图已经归档进数据库。`exported_path` 只是导出结果引用，不等于原图路径。
 
-## 五、索引设计
+## 五、Review ID 生成策略
+
+当前 `ReviewCardDocument` 没有稳定 `id` / `review_id` 字段。v0 代码实际使用 `getReviewDocumentKey(document)` 作为历史记录匹配 key，而该函数当前返回的是 `createdAt` 字符串。
+
+这意味着：`createdAt` 在 v0 阶段承担了“临时记录 key”的职责，但它本质上是时间，不是长期可靠的业务 ID。RDB 迁移时不能把这个状态固化成长期设计。
+
+第一阶段策略：
+
+- 迁移旧数据时，可以临时使用 `getReviewDocumentKey(document)` 作为 `reviews.id`。
+- 如果迁移时发现 `id` 冲突，需要追加短 hash 或恢复序号，例如 `${createdAt}-${shortHash}` 或 `${createdAt}-recovered-${index}`。
+- 新创建的 RDB 记录应生成稳定 `review_id`，不再依赖 `createdAt` 充当业务 ID。
+- 后续应考虑把 `review_id` 写回 `ReviewCardDocument` / `raw_document_json`，避免长期依赖 `createdAt`。
+- 在 `ReviewCardDocument` 字段正式扩展前，RDB 的 `reviews.id` 可以先作为数据库层稳定 ID 存在。
+
+建议生成规则：
+
+- 新记录使用本地生成的稳定字符串 ID，例如 `review_${timestamp}_${random}` 或 UUID。
+- ID 生成必须在保存新复盘记录时一次性完成，后续更新、导出和删除都复用同一个 ID。
+- 迁移旧数据时要记录来源：来自 `Preferences.items` 的数据优先沿用 `createdAt` 临时 key；来自 `review_exchange` 恢复的数据如果缺少稳定 key，需要做冲突兜底。
+
+后续如果把 `review_id` 写回 `ReviewCardDocument`，必须作为独立数据模型变更设计，不混入第一阶段 RDB 接入。
+
+## 六、索引设计
 
 第一阶段建议索引：
 
@@ -129,7 +151,7 @@ CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at);
 
 关键词搜索第一阶段可以先使用 SQL `LIKE` 或内存二次过滤，不必一开始做全文索引。
 
-## 六、为什么保留 raw_document_json
+## 七、为什么保留 raw_document_json
 
 第一阶段数据库不是为了彻底范式化 `ReviewCardDocument`，而是先解决索引和查询问题。
 
@@ -144,7 +166,7 @@ CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at);
 
 因此，`reviews` 表不是产品领域模型的最终范式化结果，而是“完整文档快照 + 高频索引字段”的本地索引表。
 
-## 七、服务拆分设计
+## 八、服务拆分设计
 
 ### 1. ReviewCardHistoryService
 
@@ -224,7 +246,7 @@ class ReviewCardMigrationService {
 
 迁移完成标记可以继续放在轻量 `Preferences` 中，但它只表示迁移状态，不再承担复盘库主索引职责。
 
-## 八、迁移阶段设计
+## 九、迁移阶段设计
 
 迁移必须分阶段，不允许一次性重构。
 
@@ -273,7 +295,7 @@ class ReviewCardMigrationService {
 - 不再依赖 `Preferences` 做列表查询。
 - 文档更新存储边界。
 
-## 九、关于双写策略
+## 十、关于双写策略
 
 不建议长期“三方双写”：
 
@@ -295,28 +317,34 @@ class ReviewCardMigrationService {
 - `review_exchange` 继续作为备份 / 交换 / 有限恢复来源。
 - `Preferences.items` 只作为迁移来源，不再作为持续写入目标。
 
-## 十、删除语义设计
+## 十一、第一阶段删除策略
 
 数据库化后删除语义仍然沿用当前 v0 边界。
 
+第一阶段采用硬删除，不启用软删除。
+
 删除复盘记录时：
 
-- 删除 RDB 中对应记录，或设置 `is_deleted = 1`。
+- `deleteReview(id)` 删除 RDB 中对应记录。
 - 删除对应沙箱 `review_exchange` 备份。
 - 不删除原始照片。
 - 不删除用户已经导出的图片。
 - 不删除用户已经导出的 `review.json`。
-- 不删除家庭存储远端文件，除非未来明确设计远端清理能力。
+- 不删除家庭存储远端文件。
+- `is_deleted` 字段仅作为预留，本阶段不启用。
 
 未来可以新增“彻底清理”能力，但必须独立设计，不要混入普通删除。
 
-第一阶段需要在实现前明确最终采用硬删除还是软删除：
+如果未来要做回收站 / 最近删除 / 彻底清理，再启用软删除并单独设计：
 
-- 如果采用硬删除，`is_deleted` 可作为预留字段暂不使用。
-- 如果采用软删除，列表、统计、搜索必须默认过滤 `is_deleted = 0`。
-- 无论采用哪种策略，普通删除都不应扩大到原图、导出物或远端文件。
+- 回收站列表如何展示。
+- 最近删除保留多久。
+- 恢复时如何重建 `review_exchange` 备份。
+- 彻底清理是否删除导出物或远端文件。
 
-## 十一、恢复语义设计
+这些都不属于第一阶段 RDB 主索引迁移范围。
+
+## 十二、恢复语义设计
 
 数据库化后恢复链路：
 
@@ -337,7 +365,7 @@ class ReviewCardMigrationService {
 
 恢复去重优先使用复盘记录 `id`。当旧备份缺少稳定 `id` 时，可结合标题、时间、图片引用和内容摘要生成兼容判断，但这属于迁移实现阶段的细节，不在本文阶段落代码。
 
-## 十二、摄影边框扩展预留
+## 十三、摄影边框扩展预留
 
 长期方向可以保留更完整的对象模型：
 
@@ -362,7 +390,7 @@ class ReviewCardMigrationService {
 
 第一阶段只落地 `reviews`。如果导出查询压力提前出现，最多再评估极简 `export_records`，但不应把四表全量模型作为第一阶段实现要求。
 
-## 十三、不推荐现在做的事
+## 十四、不推荐现在做的事
 
 第一阶段不推荐：
 
@@ -376,20 +404,21 @@ class ReviewCardMigrationService {
 - 保存原图二进制到数据库。
 - 引入服务器或账号体系。
 
-## 十四、验收标准
+## 十五、验收标准
 
 本文完成后必须满足：
 
 - 明确 RDB 是本地数据库，不需要服务器。
 - 明确第一阶段只解决复盘库主索引。
 - 明确第一阶段只建议落地 `reviews` 主表。
+- 明确 `ReviewCardDocument` 当前没有稳定 ID，旧数据迁移可临时使用 `createdAt` key，但新 RDB 记录应生成稳定 `review_id`。
 - 明确保留 `raw_document_json`。
 - 明确 `review_exchange` 继续作为备份 / 交换 / 有限恢复来源。
 - 明确 `Preferences.items` 后续降级为迁移来源。
 - 明确 `ReviewCardHistoryService` 仍是页面层唯一入口。
 - 明确摄影边框只做架构预留，不在第一阶段实装。
-- 明确删除和恢复语义。
+- 明确第一阶段采用硬删除，`is_deleted` 只作为预留。
+- 明确恢复语义。
 - 不改业务代码。
 - 不改 `Review JSON` 字段。
 - 不引入数据库实现代码。
-
