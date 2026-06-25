@@ -33,7 +33,10 @@ assert(appShellSource.includes('ReviewLibraryRefreshService.getRefreshToken()'),
 assert(appShellSource.includes('ProjectDetailPage({ refreshToken: this.reviewLibraryRefreshToken })'), 'AppShell must pass token to ProjectDetailPage.');
 assert(appShellSource.includes('StatsPage({ refreshToken: this.reviewLibraryRefreshToken })'), 'AppShell must pass token to StatsPage.');
 assert(appShellSource.includes('HomePage({ refreshToken: this.homeRefreshToken + this.reviewLibraryRefreshToken })'), 'HomePage must refresh on review library changes.');
-assert(appShellSource.includes('MyPage({ refreshToken: this.myRefreshToken + this.reviewLibraryRefreshToken })'), 'MyPage must refresh on review library changes.');
+assert(
+  appShellSource.includes('MyPage({ refreshToken: this.myRefreshToken + this.reviewLibraryRefreshToken + this.settingsRefreshToken })'),
+  'MyPage must refresh on review library and settings changes.'
+);
 
 assert(projectDetailSource.includes("@Prop @Watch('refreshReviewLibraryData') refreshToken"), 'ProjectDetailPage must watch refreshToken.');
 assert(projectDetailSource.includes('refreshReviewLibraryData()'), 'ProjectDetailPage must reload when token changes.');

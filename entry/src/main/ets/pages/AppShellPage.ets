@@ -4,6 +4,7 @@ import { ProjectDetailPage } from './ProjectDetailPage';
 import { StatsPage } from './StatsPage';
 import { MyPage } from './MyPage';
 import { ReviewLibraryRefreshService } from '../services/ReviewLibraryRefreshService';
+import { SettingsRefreshService } from '../services/SettingsRefreshService';
 
 enum RootTabKey {
   HOME = 'home',
@@ -28,13 +29,25 @@ const ROOT_TABS: Array<RootTabItem> = [
 @Entry
 @Component
 struct AppShellPage {
+  private settingsRefreshListener: (token: number, reason: string) => void = (token: number, reason: string): void => {
+    this.settingsRefreshToken = token;
+    if (this.currentTab === RootTabKey.MY) {
+      this.myRefreshToken += 1;
+    }
+  };
   @State currentTab: RootTabKey = RootTabKey.HOME;
   @State homeRefreshToken: number = 0;
   @State myRefreshToken: number = 0;
   @State reviewLibraryRefreshToken: number = ReviewLibraryRefreshService.getRefreshToken();
+  @State settingsRefreshToken: number = SettingsRefreshService.getRefreshToken();
+
+  aboutToAppear(): void {
+    SettingsRefreshService.subscribe(this.settingsRefreshListener);
+  }
 
   onPageShow(): void {
     this.syncReviewLibraryRefreshToken();
+    this.syncSettingsRefreshToken();
     this.refreshCurrentTabIfNeeded();
   }
 
@@ -42,6 +55,13 @@ struct AppShellPage {
     const nextToken: number = ReviewLibraryRefreshService.getRefreshToken();
     if (nextToken !== this.reviewLibraryRefreshToken) {
       this.reviewLibraryRefreshToken = nextToken;
+    }
+  }
+
+  private syncSettingsRefreshToken(): void {
+    const nextToken: number = SettingsRefreshService.getRefreshToken();
+    if (nextToken !== this.settingsRefreshToken) {
+      this.settingsRefreshToken = nextToken;
     }
   }
 
@@ -63,6 +83,7 @@ struct AppShellPage {
   private selectTab(key: RootTabKey): void {
     this.currentTab = key;
     this.syncReviewLibraryRefreshToken();
+    this.syncSettingsRefreshToken();
     if (key === RootTabKey.HOME) {
       this.homeRefreshToken += 1;
     }
@@ -119,7 +140,7 @@ struct AppShellPage {
     } else if (this.currentTab === RootTabKey.STATS) {
       StatsPage({ refreshToken: this.reviewLibraryRefreshToken })
     } else {
-      MyPage({ refreshToken: this.myRefreshToken + this.reviewLibraryRefreshToken })
+      MyPage({ refreshToken: this.myRefreshToken + this.reviewLibraryRefreshToken + this.settingsRefreshToken })
     }
   }
 

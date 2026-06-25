@@ -9,11 +9,13 @@ import {
   HomeStorageService,
   HomeStorageSettings
 } from '../services/HomeStorageService';
+import { SettingsRefreshService } from '../services/SettingsRefreshService';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
 
 @Entry
 @Component
 struct SyncCenterPage {
+  private settingsRefreshToken: number = SettingsRefreshService.getRefreshToken();
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State isTesting: boolean = false;
   @State lastCheckedAt: number = 0;
@@ -27,7 +29,15 @@ struct SyncCenterPage {
   }
 
   onPageShow(): void {
+    this.syncSettingsRefreshToken();
     this.loadSettings();
+  }
+
+  private syncSettingsRefreshToken(): void {
+    const nextToken: number = SettingsRefreshService.getRefreshToken();
+    if (nextToken !== this.settingsRefreshToken) {
+      this.settingsRefreshToken = nextToken;
+    }
   }
 
   private async loadSettings(): Promise<void> {

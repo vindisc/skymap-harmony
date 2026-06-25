@@ -1,5 +1,6 @@
 import preferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
+import { SettingsRefreshService } from './SettingsRefreshService';
 
 const PREFERENCES_NAME: string = 'review_settings';
 const REVIEWER_NAME_KEY: string = 'reviewer_name';
@@ -35,6 +36,7 @@ export class ReviewSettingsService {
     const store = await ReviewSettingsService.getStore(context);
     await store.put(REVIEWER_NAME_KEY, normalizedName);
     await store.flush();
+    SettingsRefreshService.notifySettingsChanged('reviewer_name_saved');
     return normalizedName;
   }
 }

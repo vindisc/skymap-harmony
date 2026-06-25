@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 
 const homeStorageServiceSource = fs.readFileSync('entry/src/main/ets/services/HomeStorageService.ets', 'utf8');
+const reviewSettingsServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewSettingsService.ets', 'utf8');
+const settingsRefreshServiceSource = fs.readFileSync('entry/src/main/ets/services/SettingsRefreshService.ets', 'utf8');
 const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
 const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
 
@@ -41,7 +43,17 @@ expectIncludes(myPageSource, 'return this.resolveReviewerSummary();', 'MyPage');
 
 expectIncludes(appShellSource, '@State myRefreshToken: number = 0;', 'AppShellPage');
 expectIncludes(appShellSource, 'this.myRefreshToken += 1;', 'AppShellPage');
-expectIncludes(appShellSource, 'MyPage({ refreshToken: this.myRefreshToken })', 'AppShellPage');
+expectIncludes(appShellSource, '@State settingsRefreshToken: number = SettingsRefreshService.getRefreshToken();', 'AppShellPage');
+expectIncludes(appShellSource, 'SettingsRefreshService.subscribe(this.settingsRefreshListener);', 'AppShellPage');
+expectIncludes(
+  appShellSource,
+  'MyPage({ refreshToken: this.myRefreshToken + this.reviewLibraryRefreshToken + this.settingsRefreshToken })',
+  'AppShellPage'
+);
+expectIncludes(settingsRefreshServiceSource, 'notifySettingsChanged(reason: string)', 'SettingsRefreshService');
+expectIncludes(settingsRefreshServiceSource, 'subscribe(listener: SettingsRefreshListener)', 'SettingsRefreshService');
+expectIncludes(reviewSettingsServiceSource, "notifySettingsChanged('reviewer_name_saved')", 'ReviewSettingsService');
+expectIncludes(homeStorageServiceSource, "notifySettingsChanged('home_storage_saved')", 'HomeStorageService');
 
 const HomeStorageConfigStatus = {
   EMPTY: 'empty',

@@ -7,6 +7,7 @@ import {
 } from './ReviewCardExchangeSchema';
 import { HomeStorageSecretService } from './HomeStorageSecretService';
 import { Smb2Client, Smb2UploadOptions } from './Smb2Client';
+import { SettingsRefreshService } from './SettingsRefreshService';
 
 const PREFERENCES_NAME: string = 'home_storage_settings';
 const USERNAME_KEY: string = 'username';
@@ -363,7 +364,9 @@ export class HomeStorageService {
 
     await store.put(SETTINGS_SNAPSHOT_KEY, HomeStorageService.createSettingsSnapshot(normalized));
     await store.flush();
-    return HomeStorageService.rememberSettings(normalized);
+    const savedSettings: HomeStorageSettings = HomeStorageService.rememberSettings(normalized);
+    SettingsRefreshService.notifySettingsChanged('home_storage_saved');
+    return savedSettings;
   }
 
   static async verifySavedSettings(context: common.UIAbilityContext): Promise<HomeStorageSettings> {
