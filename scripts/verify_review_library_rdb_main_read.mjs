@@ -35,9 +35,9 @@ assert(
   'RDB failures must emit a diagnostic log before fallback.'
 );
 assert(
-  historyServiceSource.includes('loadLegacyItemsForWrite') &&
-    countOccurrences(historyServiceSource, 'ReviewCardHistoryService.loadLegacyItemsForWrite(context)') === 4,
-  'save/update/delete/markExported must keep using the legacy Preferences-backed write base.'
+  historyServiceSource.includes('RDB_MAIN_INDEX_READY_KEY') &&
+    historyServiceSource.includes('isRdbMainIndexReady(context)'),
+  'Phase 4 main read must distinguish a migrated empty RDB from a not-yet-migrated empty RDB.'
 );
 assert(
   !migrationServiceSource.includes("import { ReviewCardHistoryService }") &&
@@ -52,9 +52,8 @@ assert(!myPageSource.includes('ReviewCardRdbService'), 'MyPage must not directly
 const writeMethodNames = ['saveDocument', 'updateDocument', 'markExported', 'deleteDocument'];
 for (const methodName of writeMethodNames) {
   const body = extractMethodBody(historyServiceSource, `static async ${methodName}`);
-  assert(body.includes('loadLegacyItemsForWrite(context)'), `${methodName} must read the legacy list as write base.`);
-  assert(!body.includes('ReviewCardRdbService.'), `${methodName} must not switch to RDB main write in phase 3.`);
-  assert(body.includes('persist(context') || methodName === 'updateDocument', `${methodName} must keep Preferences persistence.`);
+  assert(body.includes('ReviewCardRdbService.'), `${methodName} must use RDB as the phase 4 main write target.`);
+  assert(body.includes('persistLegacy'), `${methodName} must keep a legacy fallback when RDB write fails.`);
 }
 
 function countOccurrences(source, token) {

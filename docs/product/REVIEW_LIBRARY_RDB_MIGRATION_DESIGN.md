@@ -377,11 +377,27 @@ console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationRe
 
 ### 阶段 4：切换主写
 
-- `saveDocument` / `updateDocument` / `deleteDocument` / `markExported` 写入 RDB。
-- 评估是否保留短期旁路同步或一次性迁移标记升级。
-- `review_exchange` 继续作为备份。
-- `Preferences.items` 降级为迁移来源。
-- 不再长期双写 `Preferences`。
+阶段 4 当前边界：
+
+- `saveDocument` 主写 RDB：新保存记录写入 `reviews`，`raw_document_json` 保留完整 `ReviewCardDocument` 快照，保存成功后主读立刻从 RDB 读到新记录。
+- `updateDocument` 主写 RDB：按现有 `createdAt` key 更新同一条 RDB 记录，刷新 `raw_document_json` 和标题、判断、关系、卡点等索引字段，并保留原有 `exported_path`。
+- `deleteDocument` 主写 RDB：调用 `deleteReview(id)` 硬删除记录，不启用 `is_deleted` 软删除。
+- `markExported` 主写 RDB：更新 `exported_path`，不把 `exportedPath` 理解为原图路径。
+- `review_exchange` 继续作为备份 / 交换 / 有限恢复来源：保存和更新继续写沙箱备份，删除继续删除对应沙箱备份。
+- 删除语义继续沿用 v0：删除 RDB 索引和沙箱 `review_exchange` 备份，不删除原图、不删除用户已经导出的图片、不删除用户导出的 `review.json`、不删除家庭存储远端文件。
+- `Preferences.items` 降级为迁移 / 失败回退来源，不再作为复盘库长期主索引。
+- 为了 RDB 写失败时不丢用户数据，当前会 best-effort 维护一份 `Preferences.items` 回退镜像；这只是短期兼容和故障回退，不是 RDB + Preferences 双主存储。
+- 新增轻量 `rdb_main_index_ready` 标记，用来区分“RDB 主索引已接管后的真实空库”和“尚未迁移的空 RDB”，避免删除最后一条记录后被旧 Preferences 再次迁回。
+- RDB 写入失败时记录诊断日志，并回退旧 Preferences 写入链路，避免保存、更新、删除或导出标记失败导致用户数据丢失。
+
+阶段 4 明确不做：
+
+- 不修改 Review JSON 字段。
+- 不修改 `ReviewCardDocument` 字段。
+- 不修改 UI。
+- 不让页面直接调用 `ReviewCardRdbService`。
+- 不引入 `photo_assets` / `templates` / `export_records`。
+- 不实现摄影边框模板系统。
 
 ### 阶段 5：Preferences 退场
 

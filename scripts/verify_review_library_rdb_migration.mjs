@@ -90,7 +90,10 @@ assert(historyServiceSource.includes("import { ReviewCardRdbListResult, ReviewCa
 assert(historyServiceSource.includes('loadFromRdbWithDiagnostics'), 'ReviewCardHistoryService must isolate RDB-first read logic.');
 assert(historyServiceSource.includes('ReviewCardMigrationService.migrateFromPreferencesToRdb(context)'), 'RDB empty should trigger Preferences to RDB migration.');
 assert(historyServiceSource.includes('loadLegacyWithDiagnostics'), 'ReviewCardHistoryService must keep the legacy Preferences + review_exchange fallback path.');
-assert(historyServiceSource.includes('loadLegacyItemsForWrite'), 'Phase 3 writes must keep using the legacy Preferences-backed list as write base.');
+assert(historyServiceSource.includes('ReviewCardRdbService.upsertReview(context'), 'Phase 4 save/update must write RDB.');
+assert(historyServiceSource.includes('ReviewCardRdbService.deleteReview(context'), 'Phase 4 delete must write RDB.');
+assert(historyServiceSource.includes('ReviewCardRdbService.markExported(context'), 'Phase 4 markExported must write RDB.');
+assert(historyServiceSource.includes('persistPreferencesFallbackMirror'), 'Phase 4 should keep Preferences as a best-effort fallback mirror.');
 assert(!projectDetailSource.includes('ReviewCardRdbService'), 'ProjectDetailPage must not directly read RDB.');
 assert(!homePageSource.includes('ReviewCardRdbService'), 'HomePage must not directly read RDB.');
 assert(!previewPageSource.includes('ReviewCardRdbService'), 'PreviewPage must not directly read RDB.');
