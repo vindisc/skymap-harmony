@@ -385,10 +385,10 @@ console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationRe
 - `markExported` 主写 RDB：更新 `exported_path`，不把 `exportedPath` 理解为原图路径。
 - `review_exchange` 继续作为备份 / 交换 / 有限恢复来源：保存和更新继续写沙箱备份，删除继续删除对应沙箱备份。
 - 删除语义继续沿用 v0：删除 RDB 索引和沙箱 `review_exchange` 备份，不删除原图、不删除用户已经导出的图片、不删除用户导出的 `review.json`、不删除家庭存储远端文件。
-- `Preferences.items` 降级为迁移 / 失败回退来源，不再作为复盘库长期主索引。
-- 为了 RDB 写失败时不丢用户数据，当前会 best-effort 维护一份 `Preferences.items` 回退镜像；这只是短期兼容和故障回退，不是 RDB + Preferences 双主存储。
+- `Preferences.items` 在阶段 4 先降级为迁移 / 失败回退来源，不再作为复盘库长期主索引；阶段 5 会进一步停止常规镜像写入。
+- 阶段 4 为了 RDB 写失败时不丢用户数据，曾短期 best-effort 维护 `Preferences.items` 回退镜像；这只是兼容过渡，不是 RDB + Preferences 双主存储。
 - 新增轻量 `rdb_main_index_ready` 标记，用来区分“RDB 主索引已接管后的真实空库”和“尚未迁移的空 RDB”，避免删除最后一条记录后被旧 Preferences 再次迁回。
-- RDB 写入失败时记录诊断日志，并回退旧 Preferences 写入链路，避免保存、更新、删除或导出标记失败导致用户数据丢失。
+- 阶段 4 RDB 写入失败时记录诊断日志，并回退旧 Preferences 写入链路；阶段 5 后不再保留这种静默主写回退。
 
 阶段 4 明确不做：
 
@@ -404,7 +404,7 @@ console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationRe
 - 真机验证确认 RDB 主读主写成立，但发现复盘库列表、导出状态和统计类页面存在状态刷新不及时问题。
 - 根因是页面本地 state 和 Tab 缓存没有统一响应复盘库数据变化：`AppShellPage` 原先只给首页和我的页维护局部 refreshToken，复盘库和统计页没有接收复盘库变更版本；同时复盘库删除后只更新 summary，未立即重算筛选列表。
 - 新增轻量 `ReviewLibraryRefreshService`，通过 `reviewLibraryRefreshToken` 表示复盘库数据版本。
-- `saveDocument` / `updateDocument` / `deleteDocument` / `markExported` 成功后递增版本；RDB 写失败但旧链路回退成功时也递增版本。
+- `saveDocument` / `updateDocument` / `deleteDocument` / `markExported` 成功后递增版本；阶段 4 期间 RDB 写失败但旧链路回退成功时也会递增版本。
 - `Preferences -> RDB` 迁移产生记录、`review_exchange` 恢复产生记录后同样递增版本。
 - `AppShellPage` 在页面显示和切 Tab 时同步全局版本，并传给首页、复盘库、统计和我的页。
 - `ProjectDetailPage` 监听版本变化后重新 `ReviewCardHistoryService.load(...)`，并保留当前搜索词和筛选条件。
@@ -413,10 +413,28 @@ console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationRe
 
 ### 阶段 5：Preferences 退场
 
-- 保留一次性迁移逻辑。
-- 不再把 `Preferences` 作为主索引。
-- 不再依赖 `Preferences` 做列表查询。
-- 文档更新存储边界。
+阶段 5 当前边界：
+
+- RDB 已成为复盘库唯一主索引：`load` 主读 RDB，`saveDocument` / `updateDocument` / `deleteDocument` / `markExported` 主写 RDB。
+- `Preferences(review_card_history.items)` 已从主索引降级为旧版本数据的一次性迁移来源和失败诊断来源。
+- 常规保存、更新、删除、导出标记不再写入 `Preferences.items`，也不再维护 Preferences 回退镜像。
+- RDB 有记录时，`loadWithDiagnostics` 直接返回 RDB 结果，不合并 `Preferences.items` 残留数据。
+- RDB 为空且 `rdb_main_index_ready` 尚未标记时，才检查 `Preferences.items` 并执行 `Preferences -> RDB` 迁移；迁移后再次从 RDB 读取。
+- `rdb_main_index_ready` 已标记后，即使 RDB 为空，也视为 RDB 主索引接管后的真实空库，不会自动把旧 Preferences 残留再次迁回。
+- `review_exchange/*.review.json` 继续作为备份 / 交换 / 有限恢复来源：保存和更新继续写沙箱备份，删除继续删除对应沙箱备份。
+- RDB 与 Preferences 都无法提供记录时，旧链路仍可扫描 `review_exchange` 做有限恢复；恢复结果会写入 RDB，不再回写 `Preferences.items`。
+- 删除语义继续沿用 v0：删除 RDB 记录和对应沙箱备份，不删除原图、不删除用户导出图、不删除用户导出的 `review.json`、不删除家庭存储远端文件。
+- RDB 写失败时不再静默写 Preferences 当主索引；保存 / 更新会 best-effort 写 `review_exchange` 备份，然后向上抛出明确错误。当前 UI 已有保存 / 删除等失败 toast，后续可补更细的“RDB 保存失败但已留下沙箱备份”提示。
+
+阶段 5 明确不做：
+
+- 不修改 Review JSON 字段。
+- 不修改 `ReviewCardDocument` 字段。
+- 不修改 UI。
+- 不修改 RDB 表结构。
+- 不删除 Preferences 迁移读取能力。
+- 不删除 `review_exchange` 备份机制。
+- 不让页面直接调用 RDB。
 
 ## 十、关于双写策略
 
@@ -438,7 +456,7 @@ console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationRe
 - 切换前，可以短期验证 RDB 写入。
 - 切换后，RDB 是主索引。
 - `review_exchange` 继续作为备份 / 交换 / 有限恢复来源。
-- `Preferences.items` 只作为迁移来源，不再作为持续写入目标。
+- `Preferences.items` 只作为迁移 / 诊断来源，不再作为持续写入目标。
 
 ## 十一、第一阶段删除策略
 

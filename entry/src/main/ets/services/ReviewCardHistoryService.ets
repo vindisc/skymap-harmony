@@ -68,6 +68,11 @@ interface LegacyHistoryPayload {
   document?: ReviewCardDocument;
 }
 
+interface RecoverableBackupResult {
+  success: boolean;
+  path: string;
+}
+
 function createHistoryItem(document: ReviewCardDocument, exportedPath: string = ''): ReviewCardHistoryItem {
   return {
     document: cloneReviewCardDocument(document),
@@ -292,6 +297,10 @@ function notifyReviewLibraryChanged(reason: string): void {
   ReviewLibraryRefreshService.notifyReviewLibraryChanged(reason);
 }
 
+function createRdbWriteError(operationName: string, error: Error | Object | string | undefined): Error {
+  return new Error(`[ReviewCardHistoryService] RDB ${operationName}失败，已停止 Preferences 主索引回退：${error}`);
+}
+
 export class ReviewCardHistoryService {
   private static cachedItems: Array<ReviewCardHistoryItem> = [];
 
@@ -393,8 +402,12 @@ export class ReviewCardHistoryService {
     );
     const mergedItems: Array<ReviewCardHistoryItem> = mergeHistoryItems(historyItems, backupItems);
     if (backupItems.length > 0) {
-      await ReviewCardHistoryService.persist(context, mergedItems);
-      diagnostics.persistedMergedHistory = true;
+      try {
+        await ReviewCardHistoryService.migrateRecoveredBackupItemsToRdb(context, backupItems);
+        diagnostics.persistedMergedHistory = true;
+      } catch (error) {
+        console.warn(`[ReviewCardHistoryService] review_exchange 恢复写入 RDB 失败，保留旧链路回退结果：${error}`);
+      }
       notifyReviewLibraryChanged('review_exchange_recovered');
     }
     const items: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(mergedItems);
@@ -403,6 +416,18 @@ export class ReviewCardHistoryService {
       items: items,
       diagnostics: diagnostics
     };
+  }
+
+  private static async migrateRecoveredBackupItemsToRdb(
+    context: common.UIAbilityContext,
+    backupItems: Array<ReviewCardHistoryItem>
+  ): Promise<void> {
+    await ReviewCardRdbService.init(context);
+    for (let index = 0; index < backupItems.length; index += 1) {
+      const item: ReviewCardHistoryItem = backupItems[index];
+      await ReviewCardRdbService.upsertReview(context, item, getReviewDocumentKey(item.document));
+    }
+    await ReviewCardHistoryService.markRdbMainIndexReady(context);
   }
 
   private static async loadFromRdbWithDiagnostics(
@@ -483,18 +508,6 @@ export class ReviewCardHistoryService {
     return undefined;
   }
 
-  private static async loadLegacyItemsForWrite(context: common.UIAbilityContext): Promise<Array<ReviewCardHistoryItem>> {
-    try {
-      const result: ReviewCardHistoryLoadResult = await ReviewCardHistoryService.loadLegacyWithDiagnostics(
-        context,
-        createEmptyDiagnostics(context)
-      );
-      return result.items;
-    } catch (error) {
-      return ReviewCardHistoryService.rememberItems(ReviewCardHistoryService.cachedItems);
-    }
-  }
-
   private static buildSavedItems(
     items: Array<ReviewCardHistoryItem>,
     document: ReviewCardDocument,
@@ -513,90 +526,6 @@ export class ReviewCardHistoryService {
       }
     });
     return sortHistoryItems(nextItems);
-  }
-
-  private static async persistLegacySave(
-    context: common.UIAbilityContext,
-    document: ReviewCardDocument
-  ): Promise<Array<ReviewCardHistoryItem>> {
-    const items = await ReviewCardHistoryService.loadLegacyItemsForWrite(context);
-    const nextItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.buildSavedItems(items, document);
-    await ReviewCardHistoryService.persist(context, nextItems);
-    await ReviewCardHistoryService.writeRecoverableBackup(context, document);
-    notifyReviewLibraryChanged('save_legacy_fallback');
-    return ReviewCardHistoryService.rememberItems(nextItems);
-  }
-
-  private static async persistLegacyUpdate(
-    context: common.UIAbilityContext,
-    document: ReviewCardDocument
-  ): Promise<Array<ReviewCardHistoryItem>> {
-    const items = await ReviewCardHistoryService.loadLegacyItemsForWrite(context);
-    const key = getReviewDocumentKey(document);
-    const nextItems = items.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
-      if (getReviewDocumentKey(item.document) === key) {
-        return createHistoryItem(document, item.exportedPath);
-      }
-      return createHistoryItem(item.document, item.exportedPath);
-    });
-
-    if (nextItems.some((item: ReviewCardHistoryItem): boolean => getReviewDocumentKey(item.document) === key)) {
-      await ReviewCardHistoryService.persist(context, nextItems);
-      await ReviewCardHistoryService.writeRecoverableBackup(context, document);
-      notifyReviewLibraryChanged('update_legacy_fallback');
-    }
-    return ReviewCardHistoryService.rememberItems(nextItems);
-  }
-
-  private static async persistLegacyMarkExported(
-    context: common.UIAbilityContext,
-    document: ReviewCardDocument,
-    exportedPath: string
-  ): Promise<Array<ReviewCardHistoryItem>> {
-    const items = await ReviewCardHistoryService.loadLegacyItemsForWrite(context);
-    const key = getReviewDocumentKey(document);
-    const nextItems = items.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
-      if (getReviewDocumentKey(item.document) === key) {
-        return createHistoryItem(document, exportedPath);
-      }
-      return createHistoryItem(item.document, item.exportedPath);
-    });
-
-    if (!nextItems.some((item: ReviewCardHistoryItem): boolean => getReviewDocumentKey(item.document) === key)) {
-      nextItems.unshift(createHistoryItem(document, exportedPath));
-    }
-
-    await ReviewCardHistoryService.persist(context, nextItems);
-    notifyReviewLibraryChanged('mark_exported_legacy_fallback');
-    return ReviewCardHistoryService.rememberItems(nextItems);
-  }
-
-  private static async persistLegacyDelete(
-    context: common.UIAbilityContext,
-    document: ReviewCardDocument
-  ): Promise<Array<ReviewCardHistoryItem>> {
-    const items = await ReviewCardHistoryService.loadLegacyItemsForWrite(context);
-    const key = getReviewDocumentKey(document);
-    const nextItems = items.filter((item: ReviewCardHistoryItem): boolean => {
-      return getReviewDocumentKey(item.document) !== key;
-    });
-
-    await ReviewCardHistoryService.persist(context, nextItems);
-    ReviewCardHistoryService.deleteRecoverableBackup(context, document);
-    notifyReviewLibraryChanged('delete_legacy_fallback');
-    return ReviewCardHistoryService.rememberItems(nextItems);
-  }
-
-  private static async persistPreferencesFallbackMirror(
-    context: common.UIAbilityContext,
-    items: Array<ReviewCardHistoryItem>,
-    operationName: string
-  ): Promise<void> {
-    try {
-      await ReviewCardHistoryService.persist(context, items);
-    } catch (error) {
-      console.warn(`[ReviewCardHistoryService] Preferences 回退镜像${operationName}失败：${error}`);
-    }
   }
 
   static async loadWithDiagnostics(context: common.UIAbilityContext): Promise<ReviewCardHistoryLoadResult> {
@@ -677,13 +606,13 @@ export class ReviewCardHistoryService {
       const savedItem: ReviewCardHistoryItem = savedItems[0];
       await ReviewCardRdbService.upsertReview(context, savedItem, getReviewDocumentKey(document));
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
-      await ReviewCardHistoryService.persistPreferencesFallbackMirror(context, savedItems, '保存');
       await ReviewCardHistoryService.writeRecoverableBackup(context, document);
       notifyReviewLibraryChanged('save_document');
       return ReviewCardHistoryService.load(context);
     } catch (error) {
-      console.warn(`[ReviewCardHistoryService] RDB 保存失败，回退旧链路：${error}`);
-      return ReviewCardHistoryService.persistLegacySave(context, document);
+      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+      console.error(`[ReviewCardHistoryService] RDB 保存失败，已停止 Preferences 主索引回退，backup=${backupResult.success}, path=${backupResult.path}, error=${error}`);
+      throw createRdbWriteError('保存', error as Error | Object | string | undefined);
     }
   }
 
@@ -698,13 +627,13 @@ export class ReviewCardHistoryService {
       );
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
       const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      await ReviewCardHistoryService.persistPreferencesFallbackMirror(context, latestItems, '更新');
       await ReviewCardHistoryService.writeRecoverableBackup(context, document);
       notifyReviewLibraryChanged('update_document');
       return latestItems;
     } catch (error) {
-      console.warn(`[ReviewCardHistoryService] RDB 更新失败，回退旧链路：${error}`);
-      return ReviewCardHistoryService.persistLegacyUpdate(context, document);
+      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+      console.error(`[ReviewCardHistoryService] RDB 更新失败，已停止 Preferences 主索引回退，backup=${backupResult.success}, path=${backupResult.path}, error=${error}`);
+      throw createRdbWriteError('更新', error as Error | Object | string | undefined);
     }
   }
 
@@ -719,12 +648,11 @@ export class ReviewCardHistoryService {
       }
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
       const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      await ReviewCardHistoryService.persistPreferencesFallbackMirror(context, latestItems, '导出标记');
       notifyReviewLibraryChanged('mark_exported');
       return latestItems;
     } catch (error) {
-      console.warn(`[ReviewCardHistoryService] RDB 导出标记失败，回退旧链路：${error}`);
-      return ReviewCardHistoryService.persistLegacyMarkExported(context, document, exportedPath);
+      console.error(`[ReviewCardHistoryService] RDB 导出标记失败，已停止 Preferences 主索引回退：${error}`);
+      throw createRdbWriteError('导出标记', error as Error | Object | string | undefined);
     }
   }
 
@@ -734,33 +662,33 @@ export class ReviewCardHistoryService {
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
       ReviewCardHistoryService.deleteRecoverableBackup(context, document);
       const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      await ReviewCardHistoryService.persistPreferencesFallbackMirror(context, latestItems, '删除');
       notifyReviewLibraryChanged('delete_document');
       return latestItems;
     } catch (error) {
-      console.warn(`[ReviewCardHistoryService] RDB 删除失败，回退旧链路：${error}`);
-      return ReviewCardHistoryService.persistLegacyDelete(context, document);
+      console.error(`[ReviewCardHistoryService] RDB 删除失败，已停止 Preferences 主索引回退：${error}`);
+      throw createRdbWriteError('删除', error as Error | Object | string | undefined);
     }
-  }
-
-  private static async persist(context: common.UIAbilityContext, items: Array<ReviewCardHistoryItem>): Promise<void> {
-    const store = await ReviewCardHistoryService.getStore(context);
-    const persistedItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(items);
-    await store.put(HISTORY_KEY, JSON.stringify(persistedItems));
-    await store.flush();
   }
 
   private static async writeRecoverableBackup(
     context: common.UIAbilityContext,
     document: ReviewCardDocument
-  ): Promise<void> {
+  ): Promise<RecoverableBackupResult> {
     try {
       const result: ReviewJsonBackupResult = await ReviewJsonExportService.writeSandboxReviewJsonBackup(context, document);
       if (!result.success) {
         console.warn('[ReviewCardHistoryService] review_exchange 备份写入失败');
       }
+      return {
+        success: result.success,
+        path: result.path
+      };
     } catch (error) {
       console.warn(`[ReviewCardHistoryService] review_exchange 备份写入异常：${error}`);
+      return {
+        success: false,
+        path: ''
+      };
     }
   }
 

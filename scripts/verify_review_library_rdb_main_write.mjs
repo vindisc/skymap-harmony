@@ -43,37 +43,46 @@ assert(historyServiceSource.includes('ReviewCardRdbService.deleteReview(context'
 assert(historyServiceSource.includes('ReviewCardRdbService.markExported(context'), 'markExported should update RDB exported_path.');
 assert(historyServiceSource.includes('writeRecoverableBackup(context, document)'), 'save/update should keep review_exchange backup writes.');
 assert(historyServiceSource.includes('deleteRecoverableBackup(context, document)'), 'deleteDocument should keep review_exchange backup deletion.');
-assert(historyServiceSource.includes('persistPreferencesFallbackMirror'), 'Phase 4 should keep a short-term Preferences fallback mirror.');
-assert(historyServiceSource.includes('RDB_MAIN_INDEX_READY_KEY'), 'Phase 4 should mark RDB main index readiness.');
+assert(!historyServiceSource.includes('persistPreferencesFallbackMirror'), 'Phase 5 must remove Preferences fallback mirror writes.');
+assert(!historyServiceSource.includes('persistLegacySave'), 'Phase 5 must remove legacy Preferences save fallback.');
+assert(!historyServiceSource.includes('persistLegacyUpdate'), 'Phase 5 must remove legacy Preferences update fallback.');
+assert(!historyServiceSource.includes('persistLegacyMarkExported'), 'Phase 5 must remove legacy Preferences export fallback.');
+assert(!historyServiceSource.includes('persistLegacyDelete'), 'Phase 5 must remove legacy Preferences delete fallback.');
+assert(!historyServiceSource.includes("store.put(HISTORY_KEY, JSON.stringify"), 'ReviewCardHistoryService must not write Preferences.items.');
+assert(historyServiceSource.includes('RDB_MAIN_INDEX_READY_KEY'), 'Phase 5 should keep RDB main index readiness marker.');
 
 const saveBody = extractMethodBody(historyServiceSource, 'static async saveDocument');
 assert(saveBody.includes('ReviewCardRdbService.upsertReview'), 'saveDocument must write RDB.');
 assert(saveBody.includes('writeRecoverableBackup'), 'saveDocument must write review_exchange backup.');
-assert(saveBody.includes('persistLegacySave'), 'saveDocument must fall back to legacy Preferences write if RDB fails.');
+assert(!saveBody.includes('persistLegacy'), 'saveDocument must not silently fall back to Preferences.');
+assert(saveBody.includes('throw createRdbWriteError'), 'saveDocument must surface RDB write failure.');
 assert(saveBody.includes('ReviewCardHistoryService.load(context)'), 'saveDocument should return the RDB-backed load result after success.');
 
 const updateBody = extractMethodBody(historyServiceSource, 'static async updateDocument');
 assert(updateBody.includes('ReviewCardRdbService.getReview'), 'updateDocument should preserve existing exportedPath from RDB.');
 assert(updateBody.includes('ReviewCardRdbService.upsertReview'), 'updateDocument must update RDB raw_document_json and index columns.');
 assert(updateBody.includes('writeRecoverableBackup'), 'updateDocument must refresh review_exchange backup.');
-assert(updateBody.includes('persistLegacyUpdate'), 'updateDocument must fall back to legacy Preferences update if RDB fails.');
+assert(!updateBody.includes('persistLegacy'), 'updateDocument must not silently fall back to Preferences.');
+assert(updateBody.includes('throw createRdbWriteError'), 'updateDocument must surface RDB write failure.');
 
 const markExportedBody = extractMethodBody(historyServiceSource, 'static async markExported');
 assert(markExportedBody.includes('ReviewCardRdbService.markExported'), 'markExported must update RDB exported_path.');
 assert(markExportedBody.includes('ReviewCardRdbService.upsertReview'), 'markExported must create an RDB row if missing.');
-assert(markExportedBody.includes('persistLegacyMarkExported'), 'markExported must fall back to legacy Preferences export mark if RDB fails.');
+assert(!markExportedBody.includes('persistLegacy'), 'markExported must not silently fall back to Preferences.');
+assert(markExportedBody.includes('throw createRdbWriteError'), 'markExported must surface RDB write failure.');
 
 const deleteBody = extractMethodBody(historyServiceSource, 'static async deleteDocument');
 assert(deleteBody.includes('ReviewCardRdbService.deleteReview'), 'deleteDocument must hard delete from RDB.');
 assert(deleteBody.includes('deleteRecoverableBackup'), 'deleteDocument must delete sandbox review_exchange backup.');
-assert(deleteBody.includes('persistLegacyDelete'), 'deleteDocument must fall back to legacy Preferences delete if RDB fails.');
-assert(!deleteBody.includes('is_deleted'), 'deleteDocument must keep phase 4 hard delete semantics.');
+assert(!deleteBody.includes('persistLegacy'), 'deleteDocument must not silently fall back to Preferences.');
+assert(deleteBody.includes('throw createRdbWriteError'), 'deleteDocument must surface RDB write failure.');
+assert(!deleteBody.includes('is_deleted'), 'deleteDocument must keep phase 5 hard delete semantics.');
 
 assert(!projectDetailSource.includes('ReviewCardRdbService'), 'ProjectDetailPage must not directly call RDB.');
 assert(!homePageSource.includes('ReviewCardRdbService'), 'HomePage must not directly call RDB.');
 assert(!previewPageSource.includes('ReviewCardRdbService'), 'PreviewPage must not directly call RDB.');
 assert(!myPageSource.includes('ReviewCardRdbService'), 'MyPage must not directly call RDB outside diagnostics service.');
-assert(!reviewModelSource.includes('reviewId'), 'ReviewCardDocument fields must not be changed for phase 4.');
+assert(!reviewModelSource.includes('reviewId'), 'ReviewCardDocument fields must not be changed for phase 5.');
 
 function cloneDocument(document) {
   return JSON.parse(JSON.stringify(document));
@@ -213,12 +222,10 @@ class InMemoryHistoryStore {
       this.rdb.upsert(item);
       this.rdbReady = true;
       this.backups.add(getReviewDocumentKey(document));
-      this.preferences = buildSavedItems(existingItems, document);
       return this.load();
     } catch (error) {
-      this.preferences = buildSavedItems(this.preferences, document);
       this.backups.add(getReviewDocumentKey(document));
-      return sortItems(this.preferences.map(cloneItem));
+      throw error;
     }
   }
 
@@ -229,16 +236,10 @@ class InMemoryHistoryStore {
       this.rdb.upsert(createItemFromDocument(document, existingItem ? existingItem.exportedPath : ''));
       this.rdbReady = true;
       this.backups.add(key);
-      this.preferences = this.load();
       return this.load();
     } catch (error) {
-      this.preferences = this.preferences.map((item) => {
-        return getReviewDocumentKey(item.document) === getReviewDocumentKey(document)
-          ? createItemFromDocument(document, item.exportedPath)
-          : cloneItem(item);
-      });
       this.backups.add(getReviewDocumentKey(document));
-      return sortItems(this.preferences.map(cloneItem));
+      throw error;
     }
   }
 
@@ -251,11 +252,9 @@ class InMemoryHistoryStore {
         this.rdb.upsert(createItemFromDocument(document, exportedPath));
       }
       this.rdbReady = true;
-      this.preferences = this.load();
       return this.load();
     } catch (error) {
-      this.preferences = markExportedInItems(this.preferences, document, exportedPath);
-      return sortItems(this.preferences.map(cloneItem));
+      throw error;
     }
   }
 
@@ -265,13 +264,9 @@ class InMemoryHistoryStore {
       this.rdb.delete(key);
       this.rdbReady = true;
       this.backups.delete(key);
-      this.preferences = this.load();
       return this.load();
     } catch (error) {
-      const key = getReviewDocumentKey(document);
-      this.preferences = this.preferences.filter((item) => getReviewDocumentKey(item.document) !== key);
-      this.backups.delete(key);
-      return sortItems(this.preferences.map(cloneItem));
+      throw error;
     }
   }
 }
@@ -290,41 +285,16 @@ function createItemFromDocument(document, exportedPath = '') {
   };
 }
 
-function buildSavedItems(items, document) {
-  const key = getReviewDocumentKey(document);
-  const existingItem = items.find((item) => getReviewDocumentKey(item.document) === key);
-  const nextItems = [createItemFromDocument(document, existingItem ? existingItem.exportedPath : '')];
-  for (const item of items) {
-    if (getReviewDocumentKey(item.document) !== key) {
-      nextItems.push(cloneItem(item));
-    }
-  }
-  return sortItems(nextItems);
-}
-
-function markExportedInItems(items, document, exportedPath) {
-  const key = getReviewDocumentKey(document);
-  let found = false;
-  const nextItems = items.map((item) => {
-    if (getReviewDocumentKey(item.document) === key) {
-      found = true;
-      return createItemFromDocument(document, exportedPath);
-    }
-    return cloneItem(item);
-  });
-  if (!found) {
-    nextItems.unshift(createItemFromDocument(document, exportedPath));
-  }
-  return sortItems(nextItems);
-}
-
-const store = new InMemoryHistoryStore();
+const stalePreferenceItem = createItem('旧 Preferences 残留', 1700000000001, 1700000000001);
+const store = new InMemoryHistoryStore({ preferences: [stalePreferenceItem] });
 const savedDocument = createItem('新保存记录', 1700000001000, 1700000001000).document;
 const saveResult = store.saveDocument(savedDocument);
 assert(store.rdb.get('1700000001000'), 'saveDocument should write a new RDB row.');
 assert(store.rdb.get('1700000001000').document.content.title === '新保存记录', 'saveDocument should preserve raw_document_json.');
 assert(store.backups.has('1700000001000'), 'saveDocument should write review_exchange backup.');
 assert(saveResult.some((item) => item.document.content.title === '新保存记录'), 'save then load should return the RDB record immediately.');
+assert(saveResult.every((item) => item.document.content.title !== '旧 Preferences 残留'), 'RDB main list must not be polluted by stale Preferences items.');
+assert(store.preferences.length === 1 && store.preferences[0].document.content.title === '旧 Preferences 残留', 'saveDocument must not rewrite Preferences.items.');
 
 const updatedDocument = cloneDocument(savedDocument);
 updatedDocument.content.title = '更新后的记录';
@@ -334,6 +304,7 @@ const updateResult = store.updateDocument(updatedDocument);
 assert(store.rdb.get('1700000001000').document.content.title === '更新后的记录', 'updateDocument should update raw_document_json.');
 assert(store.rdb.get('1700000001000').document.content.currentBlocker === '新的卡点', 'updateDocument should update indexed source fields.');
 assert(updateResult[0].document.content.title === '更新后的记录', 'update then load should return updated RDB content.');
+assert(store.preferences[0].document.content.title === '旧 Preferences 残留', 'updateDocument must not rewrite Preferences.items.');
 
 const missingUpdateStore = new InMemoryHistoryStore();
 const missingUpdateDocument = createItem('缺失时更新补写', 1700000001500, 1700000001501).document;
@@ -343,21 +314,28 @@ assert(missingUpdateStore.rdb.get('1700000001500'), 'updateDocument should upser
 const exportResult = store.markExported(updatedDocument, '/data/storage/el2/base/files/review_exports/exported.jpg');
 assert(store.rdb.get('1700000001000').exportedPath === '/data/storage/el2/base/files/review_exports/exported.jpg', 'markExported should update RDB exported_path.');
 assert(exportResult[0].exportedPath === '/data/storage/el2/base/files/review_exports/exported.jpg', 'markExported then load should expose exportedPath.');
+assert(store.preferences[0].exportedPath === '', 'markExported must not rewrite Preferences.items.');
 
 const deleteResult = store.deleteDocument(updatedDocument);
 assert(!store.rdb.get('1700000001000'), 'deleteDocument should hard delete the RDB row.');
 assert(!store.backups.has('1700000001000'), 'deleteDocument should delete review_exchange backup.');
 assert(deleteResult.every((item) => getReviewDocumentKey(item.document) !== '1700000001000'), 'delete then load should not return the deleted record.');
+assert(store.preferences.length === 1 && store.preferences[0].document.content.title === '旧 Preferences 残留', 'deleteDocument must not rewrite Preferences.items.');
 
-const failingDocument = createItem('失败回退记录', 1700000003000, 1700000003000).document;
+const failingDocument = createItem('失败不回退 Preferences', 1700000003000, 1700000003000).document;
 const failingStore = new InMemoryHistoryStore({ rdb: new InMemoryRdb({ failWrite: true }) });
-const fallbackSaveResult = failingStore.saveDocument(failingDocument);
-assert(fallbackSaveResult.length === 1, 'RDB write failure should still return the saved legacy record.');
-assert(fallbackSaveResult[0].document.content.title === '失败回退记录', 'RDB write failure must not drop user data.');
-assert(failingStore.backups.has('1700000003000'), 'Fallback save should still write review_exchange backup.');
+let failedSaveThrown = false;
+try {
+  failingStore.saveDocument(failingDocument);
+} catch (error) {
+  failedSaveThrown = true;
+}
+assert(failedSaveThrown, 'RDB write failure should surface instead of returning a Preferences-backed success.');
+assert(failingStore.preferences.length === 0, 'RDB write failure must not write Preferences.items.');
+assert(failingStore.backups.has('1700000003000'), 'Failed save should still best-effort write review_exchange backup.');
 
 if (failed) {
   process.exit(1);
 }
 
-console.log('review library RDB phase 4 main-write: save/update/delete/markExported, backups, immediate RDB load, fallback verified');
+console.log('review library RDB phase 5 main-write: save/update/delete/markExported, backup retention, Preferences retirement, failure surfacing verified');

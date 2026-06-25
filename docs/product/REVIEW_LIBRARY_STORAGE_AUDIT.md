@@ -1,6 +1,6 @@
 # 复盘库存储架构审计
 
-更新时间：2026-06-23
+更新时间：2026-06-26
 
 本文基于当前 HarmonyOS 端代码实现整理，目标是准确描述复盘库当前的主存储、备份、恢复、删除和风险边界。本文不代表未来目标架构，只描述现在已经落地的行为。
 
@@ -27,12 +27,13 @@
 
 ### 2. `ReviewCardHistoryService` 的职责
 
-- `ReviewCardHistoryService` 是复盘库历史记录的主持久化服务。
+- `ReviewCardHistoryService` 是复盘库历史记录的主入口服务，页面层只通过它读写复盘库。
 - 它负责：
-  - 从 `Preferences` 读取历史记录
-  - 将 `ReviewCardHistoryItem[]` 序列化为 JSON 并写回 `Preferences`
+  - 优先从 RDB 读取历史记录
+  - 将保存、更新、删除、导出标记写入 RDB 主索引
   - 在保存/更新时写入一份 `review.json` 沙箱备份
-  - 在加载时按条件扫描 `review_exchange` 目录并尝试恢复历史项
+  - 在 RDB 为空且旧数据存在时触发 `Preferences -> RDB` 迁移
+  - 在有限恢复场景下扫描 `review_exchange` 目录并将恢复项写入 RDB
   - 删除历史项
   - 维护 `exportedPath`
   - 输出诊断信息
@@ -55,14 +56,29 @@
 参考代码：
 - [entry/src/main/ets/services/ReviewProjectService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewProjectService.ets:88)
 
-### 4. `Preferences(review_card_history.items)` 的职责
+### 4. RDB `reviews` 的职责
 
-- 当前复盘库的主数据源是 HarmonyOS `@ohos.data.preferences`。
+- 当前复盘库唯一主索引是 ArkData RDB / RelationalStore 中的 `reviews` 表。
+- `saveDocument` / `updateDocument` / `deleteDocument` / `markExported` 都以 RDB 为主写目标。
+- `loadWithDiagnostics` 优先初始化并查询 RDB；RDB 有记录时直接返回，不再合并 `Preferences.items` 残留数据。
+- RDB 行保留 `raw_document_json`，用于完整还原 `ReviewCardDocument`。
+- 标题、判断、图片引用、关系、卡点、导出路径等字段作为索引列存在，方便列表、筛选、搜索和统计。
+
+参考代码：
+- [entry/src/main/ets/services/ReviewCardRdbService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardRdbService.ets:129)
+- [entry/src/main/ets/services/ReviewCardRdbModel.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardRdbModel.ets:1)
+
+### 5. `Preferences(review_card_history.items)` 的职责
+
+- `Preferences(review_card_history.items)` 已不再是复盘库主索引，也不再参与保存、更新、删除、导出标记的常规写入。
 - `Preferences` 名称为：
   - `review_card_history`
-- 主 key 为：
+- 旧历史 key 为：
   - `items`
-- 该 key 的值是一个 JSON 字符串，反序列化后为 `ReviewCardHistoryItem[]`。
+- 该 key 的值是旧版本留下的 JSON 字符串，反序列化后为 `ReviewCardHistoryItem[]`。
+- 当前仅保留为旧版本升级时的一次性迁移来源和诊断来源。
+- RDB 为空且 `rdb_main_index_ready` 尚未标记时，才会读取该 key 并迁移到 RDB。
+- RDB 已接管后，即使 `Preferences.items` 仍有旧残留，也不会污染当前主列表。
 
 当前每条历史项结构：
 
@@ -79,10 +95,10 @@ interface ReviewCardHistoryItem {
 
 参考代码：
 - [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:19)
-- [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:467)
+- [entry/src/main/ets/services/ReviewCardMigrationService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardMigrationService.ets:131)
 - [entry/src/main/ets/model/ReviewCardModel.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/model/ReviewCardModel.ets:84)
 
-### 5. `review_exchange/*.review.json` 的职责
+### 6. `review_exchange/*.review.json` 的职责
 
 - `review_exchange` 目录位于应用沙箱 `context.filesDir` 下。
 - 每次 `saveDocument` / `updateDocument` 时，会额外写入一份 `review.json` 备份。
@@ -93,12 +109,13 @@ interface ReviewCardHistoryItem {
 注意：
 - 它不是复盘库列表的主查询源。
 - 但当前实现已经支持在部分条件下扫描该目录并重建历史项。
+- 阶段 5 后，恢复结果写入 RDB，不再回写 `Preferences.items`。
 
 参考代码：
 - [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:474)
 - [entry/src/main/ets/services/ReviewJsonExportService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewJsonExportService.ets:31)
 
-### 6. `exportedPath` 的职责
+### 7. `exportedPath` 的职责
 
 - `exportedPath` 记录的是“这条复盘记录最近一次导出结果的引用”。
 - 这个导出结果可能是：
@@ -111,7 +128,7 @@ interface ReviewCardHistoryItem {
 - [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:437)
 - [entry/src/main/ets/pages/PreviewPage.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/pages/PreviewPage.ets:170)
 
-### 7. `imageUri` 的含义和风险
+### 8. `imageUri` 的含义和风险
 
 - `imageUri` 保存的是原始照片的 URI 或路径引用。
 - 当前复盘库不会保存原图二进制。
@@ -136,18 +153,19 @@ interface ReviewCardHistoryItem {
 3. 进入预览页后，当前文档仍以 `ReviewCardStore` 为当前工作副本
 4. 保存时：
    - 文档先更新 `updatedAt`
-   - 通过 `ReviewCardHistoryService.saveDocument(...)` 写入 `Preferences(review_card_history.items)`
+   - 通过 `ReviewCardHistoryService.saveDocument(...)` 写入 RDB `reviews`
    - 同时写入 `review_exchange/*.review.json` 备份
 5. 复盘库页面加载时：
    - 调用 `ReviewCardHistoryService.load(...)`
-   - 读取 `Preferences.items`
-   - 必要时扫描 `review_exchange` 目录并尝试恢复
+   - 优先读取 RDB
+   - RDB 为空且迁移未完成时，从 `Preferences.items` 迁移旧数据
+   - 必要时扫描 `review_exchange` 目录并将恢复项写入 RDB
    - 将结果交给 `ReviewProjectService` 做搜索、筛选和统计
 6. 图片导出或 JSON 导出后：
    - 调用 `markExported(...)`
-   - 更新该历史项的 `exportedPath`
+   - 更新 RDB 中该历史项的 `exportedPath`
 7. 删除复盘记录时：
-   - 删除 `Preferences.items` 中对应历史项
+   - 硬删除 RDB 中对应历史项
    - 同时删除该条记录的沙箱 `review.json` 备份文件
    - 不删除原始照片
    - 不删除用户已导出的图片
@@ -160,7 +178,7 @@ flowchart TD
   B --> C["编辑页读取当前草稿"]
   C --> D["预览页读取当前草稿"]
   D --> E["保存 saveDocument()"]
-  E --> F["Preferences: review_card_history.items"]
+  E --> F["RDB: reviews 主索引"]
   E --> G["沙箱备份: review_exchange/*.review.json"]
 
   D --> H["导出图片 / 导出 JSON / 上传家庭存储"]
@@ -169,8 +187,10 @@ flowchart TD
 
   J["复盘库页面"] --> K["ReviewCardHistoryService.load()"]
   K --> F
+  K --> R["必要时从 Preferences.items 迁移旧数据"]
+  R --> F
   K --> L["必要时扫描 review_exchange"]
-  L --> M["mergeHistoryItems()"]
+  L --> M["恢复项写入 RDB"]
   M --> F
   K --> N["ReviewProjectService.filter/buildSummary"]
   N --> J
@@ -185,19 +205,21 @@ flowchart TD
 
 当前必须明确以下事实：
 
-- 复盘库当前主数据源是 `Preferences` 中的 `review_card_history.items`
+- 复盘库当前主索引是 RDB `reviews`
+- `Preferences` 中的 `review_card_history.items` 已退出常规主索引
+- `Preferences(review_card_history.items)` 只是旧数据迁移 / 诊断来源，不再是常规写入目标
 - `review_exchange/*.review.json` 是恢复备份和交换副本，不是复盘库列表的主查询源
 - 原图不进入复盘库，只保存 `imageUri` / 路径引用
 - `exportedPath` 是导出结果引用，不等于原图，也不等于原图备份
 
 补充说明：
-- 当前实现虽然在特定条件下会扫描 `review_exchange` 并把结果重新合并回 `items`，但重建后的结果仍会回写到 `Preferences.items`，因此长期主数据源仍然是 `Preferences.items`
+- 当前实现虽然在特定条件下会扫描 `review_exchange` 并重建历史项，但恢复结果写入 RDB，因此长期主索引仍然是 RDB。
 
 ## 四、删除语义
 
 当前删除行为如下：
 
-- 删除复盘库记录时，会删除 `Preferences.items` 中的对应历史项
+- 删除复盘库记录时，会硬删除 RDB 中的对应历史项
 - 不默认删除原始照片
 - 不默认删除用户已经导出的图片
 - 当前代码会删除这条记录对应的沙箱 `review_exchange` 备份文件
@@ -205,7 +227,7 @@ flowchart TD
 
 这意味着当前删除语义是：
 
-- 删除的是“复盘库索引项 + 沙箱备份”
+- 删除的是“RDB 复盘库索引项 + 沙箱备份”
 - 不删除“原始照片”
 - 不删除“用户导出到图库或用户文件系统的结果”
 
@@ -225,15 +247,16 @@ flowchart TD
 
 当前行为是：
 
-- `ReviewCardHistoryService.loadWithDiagnostics(...)` 先读 `Preferences.items`
-- 如果历史项为空，或者之前未完成过备份导入，会扫描 `review_exchange` 目录
+- `ReviewCardHistoryService.loadWithDiagnostics(...)` 先读 RDB
+- RDB 为空且迁移未完成时，会读取 `Preferences.items` 并迁移到 RDB
+- 如果 RDB 和 Preferences 都无法提供记录，会扫描 `review_exchange` 目录
 - 扫描到的 `*.review.json` / `*.json` 会被解析为 `ReviewCardHistoryItem`
-- 然后通过 `mergeHistoryItems(...)` 合并到历史列表
-- 如果合并结果非空，会重新持久化回 `Preferences.items`
+- 恢复项会写入 RDB，作为有限恢复结果
+- 不再重新持久化回 `Preferences.items`
 
 因此，当前恢复语义可以准确描述为：
 
-- 当 `Preferences` 历史为空，或备份导入尚未完成时，系统会尝试从 `review_exchange` 扫描并恢复索引
+- 当 RDB 和旧 Preferences 都无法提供可用记录时，系统会尝试从 `review_exchange` 扫描并恢复索引
 - 当前恢复是“轻量自动恢复”，不是用户可见的独立恢复流程
 - 当前没有单独的“手动重建索引”入口
 - 当前没有更细粒度的恢复冲突处理、人工确认或恢复日志界面
@@ -254,27 +277,29 @@ flowchart TD
 
 ## 七、当前方案风险
 
-### 1. `Preferences + JSON 数组` 不适合大量记录
+### 1. RDB 写失败需要更明确的用户反馈
 
-- 当前是整包读取、整包解析、整包写回
-- 当记录数上升后，性能和稳定性都会变差
+- 阶段 5 后不再静默写 `Preferences` 当主索引回退。
+- 保存 / 更新失败时会 best-effort 写 `review_exchange` 备份并向上抛出错误。
+- 当前 UI 已有基础失败 toast，后续可以补“已保留沙箱备份，可稍后恢复”的更明确提示。
 
-### 2. 每次更新可能需要整体读写
+### 2. `Preferences.items` 残留需要继续作为迁移来源保留
 
-- 保存、删除、标记导出都不是局部更新
-- 都要先加载全量数组，再整体序列化回写
+- 旧版本升级时仍需要读取 `Preferences.items`。
+- 不能为了退场清理彻底删除迁移读取能力。
+- 诊断入口仍需要能统计旧 Preferences 数据数量。
 
 ### 3. `imageUri` 可能失效
 
 - 原图只保留引用
 - 原图被删除、移动、失去权限后，复盘记录会失去图像可用性
 
-### 4. `Preferences` 与 `review_exchange` 可能不一致
+### 4. RDB 与 `review_exchange` 可能不一致
 
-- 备份和主索引不是强事务同步
+- 沙箱备份和 RDB 主索引不是强事务同步
 - 某些异常场景下可能出现：
-  - `items` 已更新但备份未写成功
-  - 备份在，但 `items` 被清空或损坏
+  - RDB 已更新但备份未写成功
+  - 备份在，但 RDB 写入失败或被清空
 
 ### 5. `exportedPath` 可能失效
 
@@ -283,13 +308,13 @@ flowchart TD
 
 ### 6. 缺少分页能力
 
-- 当前复盘库直接加载完整历史数组
+- 当前页面仍以完整列表方式消费 `ReviewCardHistoryService.load(...)` 结果
 - 条目多后，首屏加载会越来越重
 
 ### 7. 缺少更强的索引能力
 
-- 搜索和筛选都依赖内存遍历
-- 不适合更复杂的维度查询
+- RDB 已具备索引基础，但页面层搜索 / 筛选仍主要走现有 `ReviewProjectService` 加工链路
+- 后续可以逐步把分页、关键词、判断筛选下推到 RDB 查询
 
 ### 8. 缺少更强的自动恢复索引能力
 
@@ -304,25 +329,25 @@ flowchart TD
 
 ## 八、短期改进建议
 
-短期不建议立刻引入数据库，先做低成本加固：
+短期建议围绕 RDB 阶段 5 做收口：
 
-- 为 `ReviewCardHistoryService` 增加更多回归测试
-- 增强 `Preferences JSON` 损坏时的容错与诊断
+- 为 `ReviewCardHistoryService` 增加更多 RDB 写失败 / 备份恢复真机验证
+- 保留并验证 `Preferences JSON` 旧数据迁移容错
 - 增加空数组、坏数据、字段缺失、旧结构输入的兼容覆盖
 - 在产品文档和交互层明确删除行为
 - 在 UI 层明确 `imageUri` 失效时的降级表现
-- 补一份 `review_exchange` 扫描恢复能力的设计说明
+- 补保存失败时的更明确提示
 - 如需进一步稳态化，可考虑把恢复诊断信息暴露到调试页或设置页
 
 本轮不建议做：
 
-- 直接把复盘库迁移到数据库
 - 修改现有 `Review JSON` 字段
-- 让 `review_exchange` 取代 `Preferences.items` 成为主查询源
+- 让 `review_exchange` 取代 RDB 成为主查询源
+- 删除 `Preferences.items` 迁移读取能力
 
 ## 九、中期迁移建议
 
-建议在以下条件出现后，再考虑迁移到数据库或更正式的索引层：
+RDB 主索引已经落地。中期建议从“迁移”转为“RDB 查询能力和同步能力增强”：
 
 - 复盘记录超过 300 / 500 / 1000 条
 - 需要分页加载
@@ -331,9 +356,9 @@ flowchart TD
 - 需要按照片、标签、时间、成立状态建立索引
 - 需要多设备增量同步
 
-到那个阶段，可以考虑的方向包括：
+可以考虑的方向包括：
 
-- 以数据库作为主索引层
+- 分页查询、关键词搜索、判断筛选逐步下推到 RDB
 - `review.json` 继续保留为交换格式和恢复备份格式
 - 将原图引用、历史索引、导出状态、同步状态解耦
 - 增加显式 schema version 与迁移流程
@@ -342,12 +367,12 @@ flowchart TD
 
 本文确认以下事实成立：
 
-- 当前代码没有使用数据库作为复盘库主存储
-- 当前主数据源是 `Preferences(review_card_history.items)`
+- 当前代码已经使用 RDB `reviews` 作为复盘库唯一主索引
+- `Preferences(review_card_history.items)` 已退场为旧数据迁移 / 诊断来源
 - `review_exchange/*.review.json` 不是主查询源
 - 原图二进制没有进入复盘库
 - `imageUri` 保存的是引用
 - `exportedPath` 保存的是导出结果引用
 - 删除复盘记录不会默认删除原图和用户导出结果
 - 当前删除会同步删除对应沙箱 `review_exchange` 备份
-- 当前存在有限的自动恢复逻辑：会在特定条件下扫描 `review_exchange` 重建历史项
+- 当前存在有限的自动恢复逻辑：会在特定条件下扫描 `review_exchange` 并写入 RDB

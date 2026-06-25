@@ -52,8 +52,8 @@ assert(!myPageSource.includes('ReviewCardRdbService'), 'MyPage must not directly
 const writeMethodNames = ['saveDocument', 'updateDocument', 'markExported', 'deleteDocument'];
 for (const methodName of writeMethodNames) {
   const body = extractMethodBody(historyServiceSource, `static async ${methodName}`);
-  assert(body.includes('ReviewCardRdbService.'), `${methodName} must use RDB as the phase 4 main write target.`);
-  assert(body.includes('persistLegacy'), `${methodName} must keep a legacy fallback when RDB write fails.`);
+  assert(body.includes('ReviewCardRdbService.'), `${methodName} must use RDB as the phase 5 main write target.`);
+  assert(!body.includes('persistLegacy'), `${methodName} must not keep a legacy Preferences write fallback after phase 5.`);
 }
 
 function countOccurrences(source, token) {
