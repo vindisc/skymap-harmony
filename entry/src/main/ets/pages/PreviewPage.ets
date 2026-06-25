@@ -140,7 +140,7 @@ struct PreviewPage {
       this.document = ReviewCardStore.saveCurrentDocument(this.document);
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
       this.saveStateLabel = PreviewSaveState.SAVED;
-      promptAction.showToast({ message: '已保存复盘记录' });
+      promptAction.showToast({ message: '复盘已保存' });
     } catch (error) {
       promptAction.showToast({ message: '保存失败，请稍后重试' });
     }
@@ -164,8 +164,12 @@ struct PreviewPage {
       if (result.savedToPhotoLibrary) {
         await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path);
         this.saveStateLabel = PreviewSaveState.EXPORTED;
+        promptAction.showToast({ message: '导出完成' });
+      } else {
+        promptAction.showToast({ message: '导出失败，请重试' });
       }
-      promptAction.showToast({ message: result.message });
+    } catch (error) {
+      promptAction.showToast({ message: '导出失败，请重试' });
     } finally {
       this.isExportSnapshotMode = false;
       this.isExporting = false;
@@ -345,7 +349,7 @@ struct PreviewPage {
           this.ActionButton('编辑', false, this.isActionBusy(), () => {
             router.replaceUrl({ url: EDITOR_PAGE });
           })
-          this.ActionButton(this.isExporting ? '导出中' : '导出', true, this.isActionBusy(), () => {
+          this.ActionButton(this.isExporting ? '导出中…' : '导出', true, this.isActionBusy(), () => {
             this.openExportMenu();
           })
         }
@@ -421,7 +425,7 @@ struct PreviewPage {
             this.uploadReviewJsonToHomeStorage();
           })
 
-          this.ExportSheetAction(this.isExporting ? '导出中...' : '导出图片', () => {
+          this.ExportSheetAction(this.isExporting ? '导出中…' : '导出图片', () => {
             this.exportImage();
           })
 

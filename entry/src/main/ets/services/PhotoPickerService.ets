@@ -138,6 +138,6 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
       message: ''
     };
   } catch (error) {
-    return emptyResult(false, '无法打开系统相册，请稍后重试');
+    return emptyResult(false, '照片导入失败，请重新选择');
   }
 }

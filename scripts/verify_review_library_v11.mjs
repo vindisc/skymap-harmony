@@ -30,7 +30,7 @@ const requiredDetailTokens = [
   "this.FilterChip('成立', ReviewJudgementStatus.VALID)",
   "this.FilterChip('待判断', ReviewJudgementStatus.UNSURE)",
   "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)",
-  "label: this.isPickingPhoto ? '打开相册中...' : '创建第一条复盘'",
+  "label: this.isPickingPhoto ? '打开相册中…' : '创建第一条复盘'",
   'ReviewProjectService.filterItems('
 ];
 

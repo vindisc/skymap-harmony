@@ -1,6 +1,7 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import display from '@ohos.display';
+import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { PREVIEW_PAGE } from '../app/AppRouter';
@@ -71,6 +72,7 @@ struct EditorPage {
   @State viewportWidth: number = EDITOR_CONTENT_FALLBACK_WIDTH + EDITOR_PAGE_HORIZONTAL_PADDING * 2;
   @State viewportHeight: number = EDITOR_VIEWPORT_FALLBACK_HEIGHT;
   @State keyboardHeight: number = 0;
+  @State isSaving: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -179,10 +181,22 @@ struct EditorPage {
   }
 
   private async saveAndPreview(): Promise<void> {
+    if (this.isSaving) {
+      return;
+    }
+
+    this.isSaving = true;
     this.syncDocumentFromInput();
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
-    await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
-    router.replaceUrl({ url: PREVIEW_PAGE });
+    try {
+      await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+      promptAction.showToast({ message: '复盘已保存' });
+      router.replaceUrl({ url: PREVIEW_PAGE });
+    } catch (error) {
+      promptAction.showToast({ message: '保存失败，请稍后重试' });
+    } finally {
+      this.isSaving = false;
+    }
   }
 
   private isKeyboardActive(): boolean {
@@ -421,7 +435,8 @@ struct EditorPage {
     Column() {
       if (!this.isKeyboardActive()) {
         PrimaryButton({
-          label: '保存并进入阅读',
+          label: this.isSaving ? '保存中…' : '保存并进入阅读',
+          isDisabled: this.isSaving,
           onTap: () => {
             this.saveAndPreview();
           }

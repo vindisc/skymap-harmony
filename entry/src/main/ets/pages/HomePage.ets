@@ -266,7 +266,7 @@ export struct HomePage {
 
   @Builder
   StartReviewButton() {
-    Button(this.isPickingPhoto ? '打开相册中...' : '导入照片，开始复盘')
+    Button(this.isPickingPhoto ? '打开相册中…' : '导入照片，开始复盘')
       .height(HOME_PRIMARY_BUTTON_HEIGHT)
       .width('100%')
       .borderRadius(AppMetrics.buttonRadius)

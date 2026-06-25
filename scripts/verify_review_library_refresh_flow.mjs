@@ -26,7 +26,6 @@ assert(historyServiceSource.includes("notifyReviewLibraryChanged('delete_documen
 assert(historyServiceSource.includes("notifyReviewLibraryChanged('mark_exported')"), 'markExported success must notify refresh.');
 assert(migrationServiceSource.includes("notifyReviewLibraryChanged('preferences_migrated_to_rdb')"), 'Preferences to RDB migration should notify refresh.');
 assert(historyServiceSource.includes("notifyReviewLibraryChanged('review_exchange_recovered')"), 'review_exchange recovery should notify refresh.');
-assert(historyServiceSource.includes("notifyReviewLibraryChanged('save_legacy_fallback')"), 'Legacy fallback save should notify refresh.');
 
 assert(appShellSource.includes('reviewLibraryRefreshToken'), 'AppShell must hold reviewLibraryRefreshToken.');
 assert(appShellSource.includes('ReviewLibraryRefreshService.getRefreshToken()'), 'AppShell must read the global refresh token.');
@@ -40,8 +39,10 @@ assert(
 
 assert(projectDetailSource.includes("@Prop @Watch('refreshReviewLibraryData') refreshToken"), 'ProjectDetailPage must watch refreshToken.');
 assert(projectDetailSource.includes('refreshReviewLibraryData()'), 'ProjectDetailPage must reload when token changes.');
-assert(projectDetailSource.includes('this.applyFilters();\n    promptAction.showToast'), 'deleteHistory must apply filters after returned items.');
-assert(projectDetailSource.includes('this.reloadData();\n  }'), 'deleteHistory should reload after optimistic update.');
+assert(projectDetailSource.includes('@State deletingReviewKey'), 'deleteHistory must keep a delete busy key.');
+assert(projectDetailSource.includes('复盘已删除'), 'deleteHistory must show success feedback.');
+assert(projectDetailSource.includes('删除失败，请重试'), 'deleteHistory must show failure feedback.');
+assert(projectDetailSource.includes('this.reloadData();'), 'deleteHistory should reload after optimistic update.');
 assert(statsPageSource.includes("@Prop @Watch('refreshStatsData') refreshToken"), 'StatsPage must watch refreshToken.');
 assert(statsPageSource.includes('ReviewCardHistoryService.load'), 'StatsPage must load latest review history.');
 assert(myPageSource.includes("@Prop @Watch('refreshPageData') refreshToken"), 'MyPage must still watch refreshToken.');

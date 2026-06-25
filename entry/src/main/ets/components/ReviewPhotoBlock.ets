@@ -16,12 +16,12 @@ export struct ReviewPhotoBlock {
   @Builder
   Placeholder() {
     Column({ space: 4 }) {
-      Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '加载失败' : '照片')
+      Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '照片暂不可见' : '照片')
         .fontSize(this.compact ? AppTypography.caption : AppTypography.body)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.secondaryText)
       if (hasDisplayableImageUri(this.imageUri) && this.loadFailed) {
-        Text('重新选择')
+        Text('可稍后重试')
           .fontSize(AppTypography.caption)
           .fontColor(AppColors.mutedText)
       } else if (this.imageSizeFallbackUsed) {

@@ -27,7 +27,8 @@ export struct MyPage {
   @State validReviewCount: number = 0;
   @State isRdbDiagnosticsRunning: boolean = false;
   @State rdbDiagnosticsSummary: string = '未运行';
-  @State rdbDiagnosticsStatus: string = '开发期';
+  @State rdbDiagnosticsStatus: string = '开发';
+  @State dataLoadFailed: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -50,13 +51,21 @@ export struct MyPage {
     this.loadRequestId = requestId;
     const context = this.getAbilityContext();
 
-    const historyItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-    if (requestId !== this.loadRequestId) {
-      return;
+    try {
+      const historyItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
+      if (requestId !== this.loadRequestId) {
+        return;
+      }
+      const summary = ReviewProjectService.buildHomeSummary(historyItems);
+      this.reviewCount = summary.recordCount;
+      this.validReviewCount = summary.stats.validCount;
+      this.dataLoadFailed = false;
+    } catch (error) {
+      if (requestId !== this.loadRequestId) {
+        return;
+      }
+      this.dataLoadFailed = true;
     }
-    const summary = ReviewProjectService.buildHomeSummary(historyItems);
-    this.reviewCount = summary.recordCount;
-    this.validReviewCount = summary.stats.validCount;
 
     this.reviewerName = await ReviewSettingsService.loadReviewerName(context);
     if (requestId !== this.loadRequestId) {
@@ -100,6 +109,13 @@ export struct MyPage {
     return this.resolveReviewerSummary();
   }
 
+  private resolveReviewCountSummary(): string {
+    if (this.dataLoadFailed) {
+      return '复盘统计暂时无法刷新';
+    }
+    return `${this.reviewCount} 次复盘 · ${this.validReviewCount} 次成立`;
+  }
+
   private openReviewerProfile(): void {
     router.pushUrl({ url: REVIEWER_PROFILE_PAGE });
   }
@@ -110,6 +126,29 @@ export struct MyPage {
 
   private openSyncCenter(): void {
     router.pushUrl({ url: SYNC_CENTER_PAGE });
+  }
+
+  private confirmRdbDeveloperDiagnostics(): void {
+    if (this.isRdbDiagnosticsRunning) {
+      return;
+    }
+
+    AlertDialog.show({
+      title: '运行开发诊断？',
+      message: '此入口仅用于开发期验证 RDB 与迁移链路，普通使用不需要运行。',
+      autoCancel: true,
+      primaryButton: {
+        value: '取消',
+        action: () => {
+        }
+      },
+      secondaryButton: {
+        value: '运行',
+        action: () => {
+          this.runRdbDeveloperDiagnostics();
+        }
+      }
+    });
   }
 
   private async runRdbDeveloperDiagnostics(): Promise<void> {
@@ -213,7 +252,7 @@ export struct MyPage {
           .lineHeight(AppTypography.profileNameLineHeight)
           .width('100%')
 
-        Text(`${this.reviewCount} 次复盘 · ${this.validReviewCount} 次成立`)
+        Text(this.resolveReviewCountSummary())
           .fontSize(13)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.secondaryText)
@@ -295,10 +334,10 @@ export struct MyPage {
         })
 
         this.LinkRow(
-          'RDB开发诊断',
-          this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : this.rdbDiagnosticsSummary,
+          '开发诊断',
+          this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : `RDB 验证 · ${this.rdbDiagnosticsSummary}`,
           () => {
-            this.runRdbDeveloperDiagnostics();
+            this.confirmRdbDeveloperDiagnostics();
           },
           this.rdbDiagnosticsStatus
         )

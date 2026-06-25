@@ -13,7 +13,13 @@ import {
   SecondaryButton
 } from '../components/AppDesign';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
-import { ReviewCardDocument, ReviewCardHistoryItem, ReviewJudgementStatus } from '../model/ReviewCardModel';
+import {
+  createDefaultReviewCardDocument,
+  getReviewDocumentKey,
+  ReviewCardDocument,
+  ReviewCardHistoryItem,
+  ReviewJudgementStatus
+} from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
@@ -28,6 +34,8 @@ export struct ProjectDetailPage {
   @State searchText: string = '';
   @State decisionFilter: string = 'all';
   @State isPickingPhoto: boolean = false;
+  @State deletingReviewKey: string = '';
+  @State libraryLoadFailed: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -48,12 +56,20 @@ export struct ProjectDetailPage {
   private async reloadData(): Promise<void> {
     const requestId: number = this.loadRequestId + 1;
     this.loadRequestId = requestId;
-    const items = await ReviewCardHistoryService.load(this.getAbilityContext());
-    if (requestId !== this.loadRequestId) {
-      return;
+    try {
+      const items = await ReviewCardHistoryService.load(this.getAbilityContext());
+      if (requestId !== this.loadRequestId) {
+        return;
+      }
+      this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
+      this.libraryLoadFailed = false;
+      this.applyFilters();
+    } catch (error) {
+      if (requestId !== this.loadRequestId) {
+        return;
+      }
+      this.libraryLoadFailed = true;
     }
-    this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
-    this.applyFilters();
   }
 
   private applyFilters(): void {
@@ -121,8 +137,8 @@ export struct ProjectDetailPage {
 
   private confirmDeleteHistory(document: ReviewCardDocument): void {
     AlertDialog.show({
-      title: '删除这条复盘记录？',
-      message: '删除后无法恢复',
+      title: '删除这条复盘？',
+      message: '只会删除复盘记录和应用内备份，不会删除原始照片或你已经导出的图片。',
       autoCancel: true,
       primaryButton: {
         value: '取消',
@@ -140,16 +156,43 @@ export struct ProjectDetailPage {
   }
 
   private async deleteHistory(document: ReviewCardDocument): Promise<void> {
-    const items = await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
-    this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
+    const deletingKey: string = getReviewDocumentKey(document);
+    if (this.deletingReviewKey.length > 0) {
+      return;
+    }
+
+    this.deletingReviewKey = deletingKey;
+    const previousItems: Array<ReviewCardHistoryItem> = this.summary.items;
+    const nextItems: Array<ReviewCardHistoryItem> = previousItems.filter((item: ReviewCardHistoryItem): boolean => {
+      return getReviewDocumentKey(item.document) !== deletingKey;
+    });
+    this.summary = ReviewProjectService.buildDefaultProjectSummary(nextItems);
     this.applyFilters();
-    promptAction.showToast({ message: '已删除复盘记录' });
-    this.reloadData();
+    try {
+      const items = await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
+      this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
+      this.applyFilters();
+      const currentDocument: ReviewCardDocument = ReviewCardStore.getCurrentDocument();
+      if (getReviewDocumentKey(currentDocument) === deletingKey) {
+        ReviewCardStore.setCurrentDocument(this.summary.items.length > 0
+          ? this.summary.items[0].document
+          : createDefaultReviewCardDocument());
+      }
+      promptAction.showToast({ message: '复盘已删除' });
+      this.reloadData();
+    } catch (error) {
+      this.summary = ReviewProjectService.buildDefaultProjectSummary(previousItems);
+      this.applyFilters();
+      promptAction.showToast({ message: '删除失败，请重试' });
+      this.reloadData();
+    } finally {
+      this.deletingReviewKey = '';
+    }
   }
 
   @Builder
   DeleteSwipeAction(document: ReviewCardDocument) {
-    Button('删除')
+    Button(this.deletingReviewKey === getReviewDocumentKey(document) ? '删除中' : '删除')
       .height(AppMetrics.compactControlHeight)
       .width(72)
       .borderRadius(AppMetrics.cardRadius)
@@ -158,6 +201,8 @@ export struct ProjectDetailPage {
       .fontColor(AppColors.danger)
       .backgroundColor(AppColors.surface)
       .border({ width: 1, color: AppColors.danger })
+      .opacity(this.deletingReviewKey === getReviewDocumentKey(document) ? 0.52 : 1)
+      .enabled(this.deletingReviewKey.length === 0)
       .onClick(() => {
         this.confirmDeleteHistory(document);
       })
@@ -200,6 +245,21 @@ export struct ProjectDetailPage {
           this.searchText = value;
           this.applyFilters();
         })
+
+      if (this.searchText.length > 0) {
+        Button('×')
+          .width(36)
+          .height(36)
+          .borderRadius(18)
+          .fontSize(18)
+          .fontColor(AppColors.secondaryText)
+          .backgroundColor(AppColors.surfaceMuted)
+          .stateEffect(true)
+          .onClick(() => {
+            this.searchText = '';
+            this.applyFilters();
+          })
+      }
     }
     .alignItems(VerticalAlign.Center)
     .width('100%')
@@ -277,7 +337,18 @@ export struct ProjectDetailPage {
       .width('100%')
       .alignItems(HorizontalAlign.Start)
 
-      if (this.summary.recordCount === 0) {
+      if (this.libraryLoadFailed) {
+        Column() {
+          EmptyState({
+            title: '复盘库暂时无法刷新',
+            message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
+          })
+        }
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+      } else if (this.summary.recordCount === 0) {
         Column() {
           EmptyState({
             title: '暂无复盘记录',
@@ -286,7 +357,7 @@ export struct ProjectDetailPage {
 
           Row() {
             PrimaryButton({
-              label: this.isPickingPhoto ? '打开相册中...' : '创建第一条复盘',
+              label: this.isPickingPhoto ? '打开相册中…' : '创建第一条复盘',
               isDisabled: this.isPickingPhoto,
               onTap: () => {
                 this.openCreateFirstReview();

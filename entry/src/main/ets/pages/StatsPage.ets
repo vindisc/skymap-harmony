@@ -1,5 +1,5 @@
 import common from '@ohos.app.ability.common';
-import { AppColors, AppMetrics, AppPageHeader } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppPageHeader, AppTypography } from '../components/AppDesign';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewProjectService } from '../services/ReviewProjectService';
@@ -12,6 +12,7 @@ export struct StatsPage {
   @State validCount: number = 0;
   @State invalidCount: number = 0;
   @State unsureCount: number = 0;
+  @State statsLoadFailed: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -32,25 +33,46 @@ export struct StatsPage {
   private async reloadStats(): Promise<void> {
     const requestId: number = this.loadRequestId + 1;
     this.loadRequestId = requestId;
-    const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(this.getAbilityContext());
-    if (requestId !== this.loadRequestId) {
-      return;
+    try {
+      const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(this.getAbilityContext());
+      if (requestId !== this.loadRequestId) {
+        return;
+      }
+      const summary = ReviewProjectService.buildHomeSummary(items);
+      this.totalCount = summary.recordCount;
+      this.validCount = summary.stats.validCount;
+      this.invalidCount = summary.stats.invalidCount;
+      this.unsureCount = summary.stats.unsureCount;
+      this.statsLoadFailed = false;
+    } catch (error) {
+      if (requestId !== this.loadRequestId) {
+        return;
+      }
+      this.statsLoadFailed = true;
     }
-    const summary = ReviewProjectService.buildHomeSummary(items);
-    this.totalCount = summary.recordCount;
-    this.validCount = summary.stats.validCount;
-    this.invalidCount = summary.stats.invalidCount;
-    this.unsureCount = summary.stats.unsureCount;
   }
 
   private resolveSummaryTitle(): string {
+    if (this.statsLoadFailed) {
+      return '统计暂时无法刷新';
+    }
     return this.totalCount > 0 ? `${this.totalCount} 次复盘` : '还没有统计数据';
   }
 
   private resolveSummaryDescription(): string {
+    if (this.statsLoadFailed) {
+      return '稍后返回本页会自动重试，已保存的复盘不会受影响。';
+    }
     return this.totalCount > 0
       ? `成立 ${this.validCount} · 待判断 ${this.unsureCount} · 不成立 ${this.invalidCount}`
       : '先从首页导入一张照片，完成第一条摄影复盘。';
+  }
+
+  private resolveRecordSectionTitle(): string {
+    if (this.totalCount > 0) {
+      return '当前记录';
+    }
+    return '开始后会记录';
   }
 
   @Builder
@@ -79,17 +101,17 @@ export struct StatsPage {
       })
 
       Column({ space: 8 }) {
-          Text(this.resolveSummaryTitle())
-          .fontSize(18)
+        Text(this.resolveSummaryTitle())
+          .fontSize(AppTypography.sectionTitle)
           .fontWeight(600)
           .fontColor(AppColors.text)
-          .lineHeight(24)
+          .lineHeight(AppTypography.sectionTitleLineHeight)
           .width('100%')
 
         Text(this.resolveSummaryDescription())
-          .fontSize(14)
+          .fontSize(AppTypography.body)
           .fontColor(AppColors.secondaryText)
-          .lineHeight(20)
+          .lineHeight(AppTypography.bodyLineHeight)
           .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
@@ -103,8 +125,8 @@ export struct StatsPage {
       .margin({ top: 12 })
 
       Column({ space: 10 }) {
-        Text('将会记录')
-          .fontSize(13)
+        Text(this.resolveRecordSectionTitle())
+          .fontSize(AppTypography.meta)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.secondaryText)
           .lineHeight(18)
