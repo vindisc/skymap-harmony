@@ -18,9 +18,9 @@ export struct ReviewInfoGroup {
   @Prop labelColor: string = ReviewCardStyleTokens.labelColor;
   @Prop bodyColor: string = ReviewCardStyleTokens.bodyColor;
   @Prop dividerColor: string = ReviewCardStyleTokens.hairlineColor;
-  @Prop valueTopGap: number = 7;
-  @Prop dividerBottomGap: number = 16;
-  @Prop itemBottomGap: number = 8;
+  @Prop valueTopGap: number = 8;
+  @Prop dividerBottomGap: number = 14;
+  @Prop itemBottomGap: number = 10;
 
   private hasValue(value: string): boolean {
     return value.trim().length > 0;

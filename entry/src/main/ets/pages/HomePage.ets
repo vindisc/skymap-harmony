@@ -28,16 +28,16 @@ import {
 
 const HOME_HERO_ASPECT_RATIO: number = 0.75;
 const HOME_SIDE_PADDING: number = 16;
-const HOME_HERO_TEXT_PADDING: number = 18;
-const HOME_HERO_RADIUS: number = 16;
-const HOME_HERO_TEXT_BOTTOM: number = 18;
+const HOME_HERO_TEXT_PADDING: number = 20;
+const HOME_HERO_RADIUS: number = 18;
+const HOME_HERO_TEXT_BOTTOM: number = 20;
 const HOME_METHOD_TAG_HEIGHT: number = 24;
-const HOME_METHOD_TAG_RADIUS: number = 12;
+const HOME_METHOD_TAG_RADIUS: number = 999;
 const HOME_METHOD_TAG_GAP: number = 6;
-const HOME_PRIMARY_BUTTON_HEIGHT: number = 42;
-const HOME_FLOW_CARD_GAP: number = 8;
-const HOME_FLOW_CARD_HEIGHT: number = 58;
-const HOME_FLOW_CARD_RADIUS: number = 12;
+const HOME_PRIMARY_BUTTON_HEIGHT: number = 44;
+const HOME_FLOW_CARD_GAP: number = 10;
+const HOME_FLOW_CARD_HEIGHT: number = 62;
+const HOME_FLOW_CARD_RADIUS: number = 16;
 
 interface ReviewFlowStep {
   title: string;
@@ -185,7 +185,7 @@ export struct HomePage {
         .padding({
           left: HOME_HERO_TEXT_PADDING,
           right: HOME_HERO_TEXT_PADDING,
-          top: 36,
+          top: 40,
           bottom: HOME_HERO_TEXT_BOTTOM
         })
         .width('100%')
@@ -198,7 +198,7 @@ export struct HomePage {
       .aspectRatio(HOME_HERO_ASPECT_RATIO)
       .borderRadius(HOME_HERO_RADIUS)
       .clip(true)
-      .border({ width: 1, color: '#E4DCD0' })
+      .border({ width: 1, color: AppColors.border })
       .margin({ top: 12 })
 
       Scroll() {
@@ -274,6 +274,7 @@ export struct HomePage {
       .fontWeight(600)
       .fontColor(AppColors.onPrimary)
       .backgroundColor(this.isPickingPhoto ? AppColors.primaryDisabled : AppColors.primary)
+      .border({ width: 1, color: this.isPickingPhoto ? AppColors.primaryDisabled : AppColors.primaryPressed })
       .opacity(this.isPickingPhoto ? 0.72 : 1)
       .enabled(!this.isPickingPhoto)
       .stateEffect(!this.isPickingPhoto)
@@ -316,10 +317,10 @@ export struct HomePage {
     .justifyContent(FlexAlign.Center)
     .layoutWeight(1)
     .height(HOME_FLOW_CARD_HEIGHT)
-    .padding({ left: 8, right: 8, top: 6, bottom: 6 })
+    .padding({ left: 10, right: 10, top: 8, bottom: 8 })
     .borderRadius(HOME_FLOW_CARD_RADIUS)
     .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: '#EAEAEA' })
+    .border({ width: 1, color: AppColors.border })
   }
 
   build() {

@@ -53,7 +53,7 @@ export struct ReviewInputForm {
       Text(label)
         .fontSize(labelSize)
         .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.secondaryText)
+        .fontColor(AppColors.text)
         .lineHeight(AppTypography.inputLabelLineHeight)
         .width('100%')
     }
@@ -85,7 +85,7 @@ export struct ReviewInputForm {
         .selectedOptionFontColor(AppColors.text)
         .optionFont({ size: SECONDARY_FIELD_INPUT_SIZE })
         .optionFontColor(AppColors.secondaryText)
-        .backgroundColor(AppColors.surface)
+        .backgroundColor(AppColors.surfaceTint)
         .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
         .border({ width: 1, color: AppColors.border })
         .onSelect((index: number, value: string) => {
@@ -115,7 +115,7 @@ export struct ReviewInputForm {
         .lineHeight(REVIEW_TEXTAREA_LINE_HEIGHT)
         .fontColor(AppColors.text)
         .placeholderColor(AppColors.placeholderText)
-        .backgroundColor(AppColors.surface)
+        .backgroundColor(AppColors.surfaceTint)
         .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space16, bottom: AppMetrics.space16 })
         .border({ width: 1, color: AppColors.border })
         .onFocus(() => {
@@ -141,7 +141,7 @@ export struct ReviewInputForm {
           .fontSize(PRIMARY_FIELD_INPUT_SIZE)
           .fontColor(AppColors.text)
           .placeholderColor(AppColors.placeholderText)
-          .backgroundColor(AppColors.surface)
+          .backgroundColor(AppColors.surfaceTint)
           .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
           .border({ width: 1, color: AppColors.border })
           .onFocus(() => {

@@ -323,33 +323,33 @@ struct PreviewPage {
   ReadingPage() {
     Column() {
       Column({ space: AppMetrics.space8 }) {
-        Row({ space: AppMetrics.space8 }) {
-          Column({ space: 4 }) {
-            Text('复盘记录')
-              .fontSize(AppTypography.level1)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .lineHeight(AppTypography.level1LineHeight)
+        Column({ space: 4 }) {
+          Text('复盘记录')
+            .fontSize(AppTypography.level1)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.level1LineHeight)
+            .width('100%')
 
-            Text(this.saveStateLabel)
-              .fontSize(AppTypography.meta)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(AppColors.secondaryText)
-              .lineHeight(AppTypography.metaLineHeight)
-          }
-          .alignItems(HorizontalAlign.Start)
-          .layoutWeight(1)
-
-          Row({ space: AppMetrics.space8 }) {
-            this.ActionButton('编辑', false, this.isActionBusy(), () => {
-              router.replaceUrl({ url: EDITOR_PAGE });
-            })
-            this.ActionButton(this.isExporting ? '导出中' : '导出', true, this.isActionBusy(), () => {
-              this.openExportMenu();
-            })
-          }
+          Text(this.saveStateLabel)
+            .fontSize(AppTypography.meta)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.metaLineHeight)
+            .width('100%')
         }
-        .alignItems(VerticalAlign.Center)
+        .alignItems(HorizontalAlign.Start)
+        .width('100%')
+
+        Row({ space: AppMetrics.space8 }) {
+          this.ActionButton('编辑', false, this.isActionBusy(), () => {
+            router.replaceUrl({ url: EDITOR_PAGE });
+          })
+          this.ActionButton(this.isExporting ? '导出中' : '导出', true, this.isActionBusy(), () => {
+            this.openExportMenu();
+          })
+        }
+        .width('100%')
 
         if (this.lastReviewJsonExportMessage.length > 0) {
           Text(this.lastReviewJsonExportMessage)
@@ -362,7 +362,7 @@ struct PreviewPage {
         }
       }
       .alignItems(HorizontalAlign.Start)
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space8 })
+      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space10 })
       .width('100%')
 
       Scroll() {
@@ -370,7 +370,7 @@ struct PreviewPage {
           ReadingReviewRecord({ document: this.document })
         }
         .alignItems(HorizontalAlign.Start)
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space8, bottom: AppMetrics.space32 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space10, bottom: AppMetrics.space32 })
         .width('100%')
       }
       .layoutWeight(1)
@@ -400,7 +400,7 @@ struct PreviewPage {
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor(AppColors.scrim)
+        .backgroundColor('#73000000')
         .onClick(() => {
           this.closeExportMenu();
         })
@@ -433,6 +433,7 @@ struct PreviewPage {
         .width('100%')
         .borderRadius(AppMetrics.cardRadius)
         .backgroundColor(AppColors.pageBackground)
+        .border({ width: 1, color: AppColors.border })
 
         this.ExportSheetAction('取消', () => {
         })

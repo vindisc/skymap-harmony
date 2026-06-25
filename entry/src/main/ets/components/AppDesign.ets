@@ -11,35 +11,36 @@ import { LayoutTokens, LineHeightTokens, TypographyTokens } from '../theme/Desig
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
-  static readonly pageBackground: string = '#F6F4EF';
-  static readonly tabBarBackground: string = '#F6F4EF';
-  static readonly surface: string = '#FFFEFB';
-  static readonly surfaceMuted: string = '#F1EEE8';
-  static readonly surfaceTint: string = '#F7F4EF';
-  static readonly border: string = '#E6DED3';
-  static readonly borderStrong: string = '#CBC1B4';
+  static readonly pageBackground: string = '#F7F5F0';
+  static readonly tabBarBackground: string = '#F8F6F1';
+  static readonly surface: string = '#FFFEFC';
+  static readonly surfaceMuted: string = '#F3EFE7';
+  static readonly surfaceTint: string = '#F8F5EE';
+  static readonly border: string = '#E3DBCF';
+  static readonly borderStrong: string = '#C8C0B4';
   static readonly text: string = '#15191F';
   static readonly secondaryText: string = '#5E6570';
   static readonly mutedText: string = '#8B919A';
   static readonly placeholderText: string = '#727A85';
-  static readonly primary: string = '#426A7E';
-  static readonly primaryPressed: string = '#315266';
-  static readonly primarySoft: string = '#E8F1F5';
-  static readonly primaryDisabled: string = '#B9CDD7';
+  static readonly primary: string = '#365F75';
+  static readonly primaryPressed: string = '#28495B';
+  static readonly primarySoft: string = '#E5EEF3';
+  static readonly primaryDisabled: string = '#AFC5D0';
   static readonly onPrimary: string = '#FFFFFF';
   static readonly transparent: string = '#00000000';
   static readonly scrim: string = '#66000000';
   static readonly danger: string = '#B73A31';
-  static readonly tagBlue: string = '#EAF2F6';
+  static readonly tagBlue: string = '#ECF3F7';
   static readonly tagBlueText: string = '#426A7E';
-  static readonly tagGreen: string = '#EAF5ED';
-  static readonly tagGreenText: string = '#2D7658';
-  static readonly tagAmber: string = '#F4EDE1';
-  static readonly tagAmberText: string = '#85652A';
+  static readonly tagGreen: string = '#E7F1EA';
+  static readonly tagGreenText: string = '#2E7156';
+  static readonly tagAmber: string = '#F3EADA';
+  static readonly tagAmberText: string = '#8A6426';
 }
 
 export class AppMetrics {
   static readonly space8: number = 8;
+  static readonly space10: number = 10;
   static readonly space16: number = 16;
   static readonly space24: number = 24;
   static readonly space32: number = 32;
@@ -50,10 +51,10 @@ export class AppMetrics {
   static readonly cardGap: number = 12;
   static readonly cardPadding: number = 16;
   static readonly listCardPadding: number = 12;
-  static readonly cardRadius: number = 16;
-  static readonly buttonRadius: number = 12;
-  static readonly capsuleRadius: number = 12;
-  static readonly panelRadius: number = 14;
+  static readonly cardRadius: number = 18;
+  static readonly buttonRadius: number = 14;
+  static readonly capsuleRadius: number = 999;
+  static readonly panelRadius: number = 16;
   static readonly pressInset: number = 8;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
@@ -131,12 +132,16 @@ export struct AppPageHeader {
         .fontWeight(700)
         .fontColor(AppColors.text)
         .lineHeight(AppTypography.pageTitleLineHeight)
+        .maxLines(2)
+        .wordBreak(WordBreak.BREAK_WORD)
         .width('100%')
       if (this.subtitle.length > 0) {
         Text(this.subtitle)
           .fontSize(AppTypography.pageSubtitle)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.pageSubtitleLineHeight)
+          .maxLines(2)
+          .wordBreak(WordBreak.BREAK_WORD)
           .margin({ top: this.subtitleTop })
           .width('100%')
       }
@@ -153,17 +158,18 @@ export struct PrimaryButton {
   onTap: () => void = () => {};
 
   build() {
-    Button(this.label)
-      .height(AppMetrics.controlHeight)
-      .width('100%')
-      .borderRadius(AppMetrics.buttonRadius)
-      .fontSize(AppTypography.buttonText)
-      .fontWeight(600)
-      .fontColor(AppColors.onPrimary)
-      .backgroundColor(this.isDisabled ? AppColors.primaryDisabled : AppColors.primary)
-      .opacity(this.isDisabled ? 0.72 : 1)
-      .enabled(!this.isDisabled)
-      .stateEffect(!this.isDisabled)
+      Button(this.label)
+        .height(AppMetrics.controlHeight)
+        .width('100%')
+        .borderRadius(AppMetrics.buttonRadius)
+        .fontSize(AppTypography.buttonText)
+        .fontWeight(600)
+        .fontColor(AppColors.onPrimary)
+        .backgroundColor(this.isDisabled ? AppColors.primaryDisabled : AppColors.primary)
+        .border({ width: 1, color: this.isDisabled ? AppColors.primaryDisabled : AppColors.primaryPressed })
+        .opacity(this.isDisabled ? 0.72 : 1)
+        .enabled(!this.isDisabled)
+        .stateEffect(!this.isDisabled)
       .onClick(() => {
         if (this.isDisabled) {
           return;
@@ -180,18 +186,18 @@ export struct SecondaryButton {
   onTap: () => void = () => {};
 
   build() {
-    Button(this.label)
-      .height(AppMetrics.compactControlHeight)
-      .width('100%')
-      .borderRadius(AppMetrics.buttonRadius)
-      .fontSize(AppTypography.smallButtonText)
-      .fontWeight(600)
-      .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.text)
-      .backgroundColor(AppColors.surfaceTint)
-      .border({ width: 1, color: AppColors.border })
-      .opacity(this.isDisabled ? 0.72 : 1)
-      .enabled(!this.isDisabled)
-      .stateEffect(!this.isDisabled)
+      Button(this.label)
+        .height(AppMetrics.compactControlHeight)
+        .width('100%')
+        .borderRadius(AppMetrics.buttonRadius)
+        .fontSize(AppTypography.smallButtonText)
+        .fontWeight(600)
+        .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.text)
+        .backgroundColor(AppColors.surface)
+        .border({ width: 1, color: AppColors.border })
+        .opacity(this.isDisabled ? 0.72 : 1)
+        .enabled(!this.isDisabled)
+        .stateEffect(!this.isDisabled)
       .onClick(() => {
         if (this.isDisabled) {
           return;
@@ -208,17 +214,17 @@ export struct DangerButton {
   onTap: () => void = () => {};
 
   build() {
-    Button(this.label)
-      .height(AppMetrics.compactControlHeight)
-      .borderRadius(AppMetrics.buttonRadius)
-      .fontSize(AppTypography.smallButtonText)
-      .fontWeight(600)
-      .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.danger)
-      .backgroundColor(AppColors.surface)
-      .border({ width: 1, color: this.isDisabled ? AppColors.border : AppColors.danger })
-      .opacity(this.isDisabled ? 0.72 : 1)
-      .enabled(!this.isDisabled)
-      .stateEffect(!this.isDisabled)
+      Button(this.label)
+        .height(AppMetrics.compactControlHeight)
+        .borderRadius(AppMetrics.buttonRadius)
+        .fontSize(AppTypography.smallButtonText)
+        .fontWeight(600)
+        .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.danger)
+        .backgroundColor(AppColors.surfaceTint)
+        .border({ width: 1, color: this.isDisabled ? AppColors.border : AppColors.danger })
+        .opacity(this.isDisabled ? 0.72 : 1)
+        .enabled(!this.isDisabled)
+        .stateEffect(!this.isDisabled)
       .onClick(() => {
         if (this.isDisabled) {
           return;
@@ -239,12 +245,16 @@ export struct EmptyState {
         .fontSize(AppTypography.cardTitle)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.text)
+        .maxLines(2)
+        .wordBreak(WordBreak.BREAK_WORD)
         .width('100%')
       if (this.message.length > 0) {
         Text(this.message)
           .fontSize(AppTypography.auxiliary)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.auxiliaryLineHeight)
+          .maxLines(3)
+          .wordBreak(WordBreak.BREAK_WORD)
           .margin({ top: AppMetrics.space8 })
           .width('100%')
       }

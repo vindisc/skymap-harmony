@@ -24,7 +24,7 @@ export struct ReviewInfoItem {
           .strokeWidth(1)
           .color(this.dividerColor)
           .width('100%')
-          .opacity(0.14)
+          .opacity(0.18)
           .margin({ bottom: this.dividerBottomGap })
       }
       Text(this.label)
@@ -41,7 +41,7 @@ export struct ReviewInfoItem {
         .fontWeight(FontWeight.Regular)
         .fontColor(this.value.length > 0 ? this.bodyColor : this.labelColor)
         .lineHeight(this.bodyLineHeight)
-        .margin({ top: this.valueTopGap })
+        .margin({ top: this.valueTopGap + 1 })
         .width('100%')
         .wordBreak(WordBreak.BREAK_WORD)
         .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)

@@ -16,6 +16,7 @@ export struct ReviewCardTitle {
       .lineHeight(this.titleLineHeight)
       .width('100%')
       .wordBreak(WordBreak.BREAK_WORD)
+      .maxLines(2)
       .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
       .textOverflow({ overflow: TextOverflow.Clip })
   }
