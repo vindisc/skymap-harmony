@@ -1,8 +1,8 @@
 # HarmonyOS 复盘库 RDB 迁移设计
 
-更新时间：2026-06-24
+更新时间：2026-06-25
 
-本文为 HarmonyOS 端复盘库从 `Preferences + JSON` 升级到 ArkData RDB / RelationalStore 的落地设计。本文只描述下一阶段存储升级方案，不代表当前代码已经接入 RDB。
+本文为 HarmonyOS 端复盘库从 `Preferences + JSON` 升级到 ArkData RDB / RelationalStore 的落地设计。当前代码已完成阶段 1 的旁路 RDB 基础服务和迁移验证脚本，但页面主链路仍未切换到 RDB。
 
 当前存储基线见 [`REVIEW_LIBRARY_STORAGE_AUDIT.md`](./REVIEW_LIBRARY_STORAGE_AUDIT.md)。
 
@@ -258,6 +258,34 @@ class ReviewCardMigrationService {
 - 不接入 RDB。
 
 ### 阶段 1：新增 RDB 服务，但不切主链路
+
+阶段 1 已新增以下文件：
+
+- `entry/src/main/ets/services/ReviewCardRdbModel.ets`
+- `entry/src/main/ets/services/ReviewCardRdbService.ets`
+- `entry/src/main/ets/services/ReviewCardMigrationService.ets`
+- `scripts/verify_review_library_rdb_migration.mjs`
+
+本阶段实际边界：
+
+- `ReviewCardRdbService` 负责初始化 `review_library.db`、创建 `reviews` 表和索引，并提供 upsert / get / list / count / delete / mark exported / stats / clear all 能力。
+- `ReviewCardRdbModel` 负责 `ReviewCardHistoryItem`、`ReviewCardDocument` 与 `reviews` 行模型之间的映射。
+- `raw_document_json` 保存完整 `ReviewCardDocument` JSON，结构化列只抽取标题、判断、图片引用、尺寸、导出路径和复盘关键文本。
+- `ReviewCardMigrationService` 提供手动迁移和验证函数，可从 `Preferences(review_card_history.items)` 迁移到 RDB。
+- 当 Preferences 为空时，迁移服务会复用现有 `ReviewCardHistoryService.load(context)` 的有限 `review_exchange` 恢复能力；这只是恢复来源，不代表 `review_exchange` 变成主查询源。
+- `backup_json_path` 第一阶段无法从 Preferences 历史项稳定反推出对应备份文件，当前默认留空，后续可在切主写或专门重建索引时补齐。
+- 验证脚本是 Node 层映射与迁移语义验证，不代表真机 RDB 已执行；ArkData RDB API 的可编译性由 HAP 构建验证。
+
+本阶段仍未做：
+
+- 未让页面直接调用 RDB。
+- 未把 `ReviewCardHistoryService.load` 主读切到 RDB。
+- 未把 `saveDocument` / `updateDocument` / `deleteDocument` / `markExported` 主写切到 RDB。
+- 未停止写 `Preferences`。
+- 未停止写 `review_exchange`。
+- 未修改 Review JSON 字段。
+- 未修改 UI。
+- 未实现摄影边框模板系统。
 
 - 新增 `ReviewCardRdbService`。
 - 新增 `ReviewCardMigrationService`。
