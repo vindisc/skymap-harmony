@@ -8,6 +8,7 @@ import {
 } from '../model/ReviewCardModel';
 import { ReviewCardRdbService } from './ReviewCardRdbService';
 import { ReviewCardRdbRow } from './ReviewCardRdbModel';
+import { ReviewLibraryRefreshService } from './ReviewLibraryRefreshService';
 
 const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
@@ -163,6 +164,10 @@ export class ReviewCardMigrationService {
         result.failedCount += 1;
         result.errors.push(`${getReviewDocumentKey(item.document)}: ${error}`);
       }
+    }
+
+    if (result.insertedCount > 0) {
+      ReviewLibraryRefreshService.notifyReviewLibraryChanged('preferences_migrated_to_rdb');
     }
 
     return result;

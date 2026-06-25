@@ -17,6 +17,7 @@ import {
 import { MigrationResult, ReviewCardMigrationService } from './ReviewCardMigrationService';
 import { ReviewCardRdbListResult, ReviewCardRdbService } from './ReviewCardRdbService';
 import { ReviewJsonBackupResult, ReviewJsonExportService } from './ReviewJsonExportService';
+import { ReviewLibraryRefreshService } from './ReviewLibraryRefreshService';
 
 const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
@@ -287,6 +288,10 @@ function updateLatestDiagnostics(
   }
 }
 
+function notifyReviewLibraryChanged(reason: string): void {
+  ReviewLibraryRefreshService.notifyReviewLibraryChanged(reason);
+}
+
 export class ReviewCardHistoryService {
   private static cachedItems: Array<ReviewCardHistoryItem> = [];
 
@@ -390,6 +395,7 @@ export class ReviewCardHistoryService {
     if (backupItems.length > 0) {
       await ReviewCardHistoryService.persist(context, mergedItems);
       diagnostics.persistedMergedHistory = true;
+      notifyReviewLibraryChanged('review_exchange_recovered');
     }
     const items: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(mergedItems);
     updateLatestDiagnostics(diagnostics, items);
@@ -517,6 +523,7 @@ export class ReviewCardHistoryService {
     const nextItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.buildSavedItems(items, document);
     await ReviewCardHistoryService.persist(context, nextItems);
     await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+    notifyReviewLibraryChanged('save_legacy_fallback');
     return ReviewCardHistoryService.rememberItems(nextItems);
   }
 
@@ -536,6 +543,7 @@ export class ReviewCardHistoryService {
     if (nextItems.some((item: ReviewCardHistoryItem): boolean => getReviewDocumentKey(item.document) === key)) {
       await ReviewCardHistoryService.persist(context, nextItems);
       await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+      notifyReviewLibraryChanged('update_legacy_fallback');
     }
     return ReviewCardHistoryService.rememberItems(nextItems);
   }
@@ -559,6 +567,7 @@ export class ReviewCardHistoryService {
     }
 
     await ReviewCardHistoryService.persist(context, nextItems);
+    notifyReviewLibraryChanged('mark_exported_legacy_fallback');
     return ReviewCardHistoryService.rememberItems(nextItems);
   }
 
@@ -574,6 +583,7 @@ export class ReviewCardHistoryService {
 
     await ReviewCardHistoryService.persist(context, nextItems);
     ReviewCardHistoryService.deleteRecoverableBackup(context, document);
+    notifyReviewLibraryChanged('delete_legacy_fallback');
     return ReviewCardHistoryService.rememberItems(nextItems);
   }
 
@@ -669,6 +679,7 @@ export class ReviewCardHistoryService {
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
       await ReviewCardHistoryService.persistPreferencesFallbackMirror(context, savedItems, '保存');
       await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+      notifyReviewLibraryChanged('save_document');
       return ReviewCardHistoryService.load(context);
     } catch (error) {
       console.warn(`[ReviewCardHistoryService] RDB 保存失败，回退旧链路：${error}`);
@@ -689,6 +700,7 @@ export class ReviewCardHistoryService {
       const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
       await ReviewCardHistoryService.persistPreferencesFallbackMirror(context, latestItems, '更新');
       await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+      notifyReviewLibraryChanged('update_document');
       return latestItems;
     } catch (error) {
       console.warn(`[ReviewCardHistoryService] RDB 更新失败，回退旧链路：${error}`);
@@ -708,6 +720,7 @@ export class ReviewCardHistoryService {
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
       const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
       await ReviewCardHistoryService.persistPreferencesFallbackMirror(context, latestItems, '导出标记');
+      notifyReviewLibraryChanged('mark_exported');
       return latestItems;
     } catch (error) {
       console.warn(`[ReviewCardHistoryService] RDB 导出标记失败，回退旧链路：${error}`);
@@ -722,6 +735,7 @@ export class ReviewCardHistoryService {
       ReviewCardHistoryService.deleteRecoverableBackup(context, document);
       const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
       await ReviewCardHistoryService.persistPreferencesFallbackMirror(context, latestItems, '删除');
+      notifyReviewLibraryChanged('delete_document');
       return latestItems;
     } catch (error) {
       console.warn(`[ReviewCardHistoryService] RDB 删除失败，回退旧链路：${error}`);

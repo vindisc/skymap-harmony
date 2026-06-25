@@ -399,6 +399,18 @@ console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationRe
 - 不引入 `photo_assets` / `templates` / `export_records`。
 - 不实现摄影边框模板系统。
 
+阶段 4 后页面刷新机制修复：
+
+- 真机验证确认 RDB 主读主写成立，但发现复盘库列表、导出状态和统计类页面存在状态刷新不及时问题。
+- 根因是页面本地 state 和 Tab 缓存没有统一响应复盘库数据变化：`AppShellPage` 原先只给首页和我的页维护局部 refreshToken，复盘库和统计页没有接收复盘库变更版本；同时复盘库删除后只更新 summary，未立即重算筛选列表。
+- 新增轻量 `ReviewLibraryRefreshService`，通过 `reviewLibraryRefreshToken` 表示复盘库数据版本。
+- `saveDocument` / `updateDocument` / `deleteDocument` / `markExported` 成功后递增版本；RDB 写失败但旧链路回退成功时也递增版本。
+- `Preferences -> RDB` 迁移产生记录、`review_exchange` 恢复产生记录后同样递增版本。
+- `AppShellPage` 在页面显示和切 Tab 时同步全局版本，并传给首页、复盘库、统计和我的页。
+- `ProjectDetailPage` 监听版本变化后重新 `ReviewCardHistoryService.load(...)`，并保留当前搜索词和筛选条件。
+- 删除操作会先用返回结果更新当前列表，再异步 reload 校准，避免“已经删除但仍显示”的旧 state。
+- 这是页面状态同步问题，不是 RDB 存储失败；Preferences 退场前必须先完成这类页面刷新机制修复。
+
 ### 阶段 5：Preferences 退场
 
 - 保留一次性迁移逻辑。

@@ -3,6 +3,7 @@ import { HomePage } from './HomePage';
 import { ProjectDetailPage } from './ProjectDetailPage';
 import { StatsPage } from './StatsPage';
 import { MyPage } from './MyPage';
+import { ReviewLibraryRefreshService } from '../services/ReviewLibraryRefreshService';
 
 enum RootTabKey {
   HOME = 'home',
@@ -30,9 +31,18 @@ struct AppShellPage {
   @State currentTab: RootTabKey = RootTabKey.HOME;
   @State homeRefreshToken: number = 0;
   @State myRefreshToken: number = 0;
+  @State reviewLibraryRefreshToken: number = ReviewLibraryRefreshService.getRefreshToken();
 
   onPageShow(): void {
+    this.syncReviewLibraryRefreshToken();
     this.refreshCurrentTabIfNeeded();
+  }
+
+  private syncReviewLibraryRefreshToken(): void {
+    const nextToken: number = ReviewLibraryRefreshService.getRefreshToken();
+    if (nextToken !== this.reviewLibraryRefreshToken) {
+      this.reviewLibraryRefreshToken = nextToken;
+    }
   }
 
   private refreshCurrentTabIfNeeded(): void {
@@ -52,6 +62,7 @@ struct AppShellPage {
 
   private selectTab(key: RootTabKey): void {
     this.currentTab = key;
+    this.syncReviewLibraryRefreshToken();
     if (key === RootTabKey.HOME) {
       this.homeRefreshToken += 1;
     }
@@ -102,13 +113,13 @@ struct AppShellPage {
   @Builder
   CurrentTabPage() {
     if (this.currentTab === RootTabKey.HOME) {
-      HomePage({ refreshToken: this.homeRefreshToken })
+      HomePage({ refreshToken: this.homeRefreshToken + this.reviewLibraryRefreshToken })
     } else if (this.currentTab === RootTabKey.LIBRARY) {
-      ProjectDetailPage()
+      ProjectDetailPage({ refreshToken: this.reviewLibraryRefreshToken })
     } else if (this.currentTab === RootTabKey.STATS) {
-      StatsPage()
+      StatsPage({ refreshToken: this.reviewLibraryRefreshToken })
     } else {
-      MyPage({ refreshToken: this.myRefreshToken })
+      MyPage({ refreshToken: this.myRefreshToken + this.reviewLibraryRefreshToken })
     }
   }
 

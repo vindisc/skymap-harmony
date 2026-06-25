@@ -21,6 +21,8 @@ import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerServi
 
 @Component
 export struct ProjectDetailPage {
+  private loadRequestId: number = 0;
+  @Prop @Watch('refreshReviewLibraryData') refreshToken: number = 0;
   @State summary: ReviewProjectSummary = createDefaultProjectSummary();
   @State filteredItems: Array<ReviewCardHistoryItem> = [];
   @State searchText: string = '';
@@ -39,8 +41,17 @@ export struct ProjectDetailPage {
     this.reloadData();
   }
 
+  refreshReviewLibraryData(): void {
+    this.reloadData();
+  }
+
   private async reloadData(): Promise<void> {
+    const requestId: number = this.loadRequestId + 1;
+    this.loadRequestId = requestId;
     const items = await ReviewCardHistoryService.load(this.getAbilityContext());
+    if (requestId !== this.loadRequestId) {
+      return;
+    }
     this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
     this.applyFilters();
   }
@@ -131,7 +142,9 @@ export struct ProjectDetailPage {
   private async deleteHistory(document: ReviewCardDocument): Promise<void> {
     const items = await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
     this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
+    this.applyFilters();
     promptAction.showToast({ message: '已删除复盘记录' });
+    this.reloadData();
   }
 
   @Builder

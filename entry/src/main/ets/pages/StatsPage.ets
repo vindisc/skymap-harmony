@@ -1,7 +1,58 @@
+import common from '@ohos.app.ability.common';
 import { AppColors, AppMetrics, AppPageHeader } from '../components/AppDesign';
+import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
+import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import { ReviewProjectService } from '../services/ReviewProjectService';
 
 @Component
 export struct StatsPage {
+  private loadRequestId: number = 0;
+  @Prop @Watch('refreshStatsData') refreshToken: number = 0;
+  @State totalCount: number = 0;
+  @State validCount: number = 0;
+  @State invalidCount: number = 0;
+  @State unsureCount: number = 0;
+
+  private getAbilityContext(): common.UIAbilityContext {
+    return getContext(this) as common.UIAbilityContext;
+  }
+
+  aboutToAppear(): void {
+    this.reloadStats();
+  }
+
+  onPageShow(): void {
+    this.reloadStats();
+  }
+
+  refreshStatsData(): void {
+    this.reloadStats();
+  }
+
+  private async reloadStats(): Promise<void> {
+    const requestId: number = this.loadRequestId + 1;
+    this.loadRequestId = requestId;
+    const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(this.getAbilityContext());
+    if (requestId !== this.loadRequestId) {
+      return;
+    }
+    const summary = ReviewProjectService.buildHomeSummary(items);
+    this.totalCount = summary.recordCount;
+    this.validCount = summary.stats.validCount;
+    this.invalidCount = summary.stats.invalidCount;
+    this.unsureCount = summary.stats.unsureCount;
+  }
+
+  private resolveSummaryTitle(): string {
+    return this.totalCount > 0 ? `${this.totalCount} 次复盘` : '还没有统计数据';
+  }
+
+  private resolveSummaryDescription(): string {
+    return this.totalCount > 0
+      ? `成立 ${this.validCount} · 待判断 ${this.unsureCount} · 不成立 ${this.invalidCount}`
+      : '先从首页导入一张照片，完成第一条摄影复盘。';
+  }
+
   @Builder
   PreviewChip(label: string) {
     Column({ space: 6 }) {
@@ -28,14 +79,14 @@ export struct StatsPage {
       })
 
       Column({ space: 8 }) {
-        Text('还没有统计数据')
+          Text(this.resolveSummaryTitle())
           .fontSize(18)
           .fontWeight(600)
           .fontColor(AppColors.text)
           .lineHeight(24)
           .width('100%')
 
-        Text('先从首页导入一张照片，完成第一条摄影复盘。')
+        Text(this.resolveSummaryDescription())
           .fontSize(14)
           .fontColor(AppColors.secondaryText)
           .lineHeight(20)
@@ -60,9 +111,9 @@ export struct StatsPage {
           .width('100%')
 
         Row({ space: 8 }) {
-          this.PreviewChip('累计复盘')
-          this.PreviewChip('成立记录')
-          this.PreviewChip('常见卡点')
+          this.PreviewChip(`累计 ${this.totalCount}`)
+          this.PreviewChip(`成立 ${this.validCount}`)
+          this.PreviewChip(`待判断 ${this.unsureCount}`)
         }
         .width('100%')
       }
