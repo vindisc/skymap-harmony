@@ -299,6 +299,7 @@ class ReviewCardMigrationService {
 阶段 2 新增开发期诊断服务：
 
 - `entry/src/main/ets/services/ReviewCardRdbDiagnosticsService.ets`
+- `entry/src/main/ets/pages/MyPage.ets` 中临时增加“RDB开发诊断”入口
 
 诊断服务只作为 DevEco / 真机侧手动调用入口，不接入正式页面，不作为用户可见功能。它用于验证设备侧 ArkData RDB 实际运行结果：
 
@@ -318,10 +319,18 @@ const migrationResult = await ReviewCardRdbDiagnosticsService.runMigrationDiagno
 console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationResult));
 ```
 
+当前真机触发方式：
+
+- 打开“我的”页底部的“RDB开发诊断”。
+- 点击后会连续执行 `runRdbDiagnostics(context)` 和 `runMigrationDiagnostics(context)`。
+- 页面只显示轻量的通过 / 失败、步骤数量和错误数量。
+- 完整结果通过 `console.info` 输出，前缀分别为 `[RDB开发诊断]` 和 `[Preferences迁移诊断]`。
+
 注意：
 
 - 诊断写入的记录使用 `diagnostic_review_rdb_` 前缀，验证结束后只删除自己的诊断记录，不调用 `clearAll`，避免误删真实复盘库数据。
 - 迁移诊断会真实写入 RDB 旁路库，但不会改变当前页面读取来源。
+- “RDB开发诊断”是临时开发入口，不放在首页，不进入普通复盘流程；阶段 3 切主读前或发布前可直接删除该入口。
 - 当前仍未切主读写，`ReviewCardHistoryService` 仍然是页面入口。
 - 真机旁路验证通过后，才评估阶段 3：切 `ReviewCardHistoryService.load` 主读。
 

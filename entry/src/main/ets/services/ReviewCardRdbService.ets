@@ -17,6 +17,11 @@ const REVIEW_LIBRARY_RDB_CONFIG: relationalStore.StoreConfig = {
   securityLevel: relationalStore.SecurityLevel.S1
 };
 
+interface ReviewRdbWhereClause {
+  sql: string;
+  args: Array<relationalStore.ValueType>;
+}
+
 function normalizeLimit(value: number | undefined): number {
   if (typeof value === 'number' && value > 0) {
     return Math.floor(value);
@@ -90,7 +95,7 @@ function rowFromResultSet(resultSet: relationalStore.ResultSet): ReviewCardRdbRo
   };
 }
 
-function buildWhereClause(query?: ReviewListQuery): { sql: string; args: Array<relationalStore.ValueType> } {
+function buildWhereClause(query?: ReviewListQuery): ReviewRdbWhereClause {
   const whereParts: Array<string> = [];
   const args: Array<relationalStore.ValueType> = [];
 

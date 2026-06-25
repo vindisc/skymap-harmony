@@ -8,6 +8,7 @@ const historyServiceSource = fs.readFileSync('entry/src/main/ets/services/Review
 const projectDetailSource = fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8');
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
 const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
+const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
 
 let failed = false;
 
@@ -92,6 +93,10 @@ assert(!previewPageSource.includes('ReviewCardRdbService'), 'PreviewPage must no
 assert(!projectDetailSource.includes('ReviewCardRdbDiagnosticsService'), 'ProjectDetailPage must not expose diagnostics as a formal UI flow.');
 assert(!homePageSource.includes('ReviewCardRdbDiagnosticsService'), 'HomePage must not expose diagnostics as a formal UI flow.');
 assert(!previewPageSource.includes('ReviewCardRdbDiagnosticsService'), 'PreviewPage must not expose diagnostics as a formal UI flow.');
+assert(myPageSource.includes('RDB开发诊断'), 'MyPage should expose the temporary developer RDB diagnostics entry.');
+assert(myPageSource.includes('runRdbDiagnostics(context)'), 'MyPage diagnostics should run RDB sidecar diagnostics.');
+assert(myPageSource.includes('runMigrationDiagnostics(context)'), 'MyPage diagnostics should run Preferences to RDB migration diagnostics.');
+assert(myPageSource.includes('console.info(`[RDB开发诊断]'), 'MyPage diagnostics should write full results to console.info.');
 
 function cloneDocument(document) {
   const fallback = createDocument({});

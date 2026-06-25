@@ -257,7 +257,7 @@ export class ReviewCardRdbDiagnosticsService {
       appendStep(result, 'readPreferences', true, `Preferences 当前历史数量 ${result.preferencesCount}`);
 
       result.migrationResult = await ReviewCardMigrationService.migrateFromPreferencesToRdb(context);
-      appendStep(
+      assertStep(
         result,
         'migrateFromPreferencesToRdb',
         result.migrationResult.failedCount === 0,
@@ -267,7 +267,7 @@ export class ReviewCardRdbDiagnosticsService {
 
       result.verifyResult = await ReviewCardMigrationService.verifyRdbMigration(context);
       result.rdbCount = result.verifyResult.rdbCount;
-      appendStep(
+      assertStep(
         result,
         'verifyRdbMigration',
         result.verifyResult.success,

@@ -1,9 +1,15 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
+import promptAction from '@ohos.promptAction';
 import { HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../app/AppRouter';
 import { AppColors, AppMetrics, AppPageHeader, AppTypography } from '../components/AppDesign';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import {
+  RdbDiagnosticsResult,
+  RdbMigrationDiagnosticsResult,
+  ReviewCardRdbDiagnosticsService
+} from '../services/ReviewCardRdbDiagnosticsService';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
@@ -19,6 +25,9 @@ export struct MyPage {
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State reviewCount: number = 0;
   @State validReviewCount: number = 0;
+  @State isRdbDiagnosticsRunning: boolean = false;
+  @State rdbDiagnosticsSummary: string = '未运行';
+  @State rdbDiagnosticsStatus: string = '开发期';
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -101,6 +110,39 @@ export struct MyPage {
 
   private openSyncCenter(): void {
     router.pushUrl({ url: SYNC_CENTER_PAGE });
+  }
+
+  private async runRdbDeveloperDiagnostics(): Promise<void> {
+    if (this.isRdbDiagnosticsRunning) {
+      return;
+    }
+
+    this.isRdbDiagnosticsRunning = true;
+    this.rdbDiagnosticsSummary = '正在运行 RDB 旁路诊断';
+    this.rdbDiagnosticsStatus = '运行中';
+    try {
+      const context = this.getAbilityContext();
+      const rdbResult: RdbDiagnosticsResult = await ReviewCardRdbDiagnosticsService.runRdbDiagnostics(context);
+      const migrationResult: RdbMigrationDiagnosticsResult =
+        await ReviewCardRdbDiagnosticsService.runMigrationDiagnostics(context);
+      const formattedRdbResult: string = ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(rdbResult);
+      const formattedMigrationResult: string = ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationResult);
+      console.info(`[RDB开发诊断]\n${formattedRdbResult}\n\n[Preferences迁移诊断]\n${formattedMigrationResult}`);
+
+      const isSuccess: boolean = rdbResult.success && migrationResult.success;
+      const errorCount: number = rdbResult.errors.length + migrationResult.errors.length;
+      this.rdbDiagnosticsStatus = isSuccess ? '通过' : '失败';
+      this.rdbDiagnosticsSummary =
+        `${isSuccess ? '通过' : '失败'} · RDB ${rdbResult.steps.length} 步 · 迁移 ${migrationResult.steps.length} 步 · 错误 ${errorCount}`;
+      promptAction.showToast({ message: isSuccess ? 'RDB开发诊断通过' : 'RDB开发诊断失败，查看日志' });
+    } catch (error) {
+      this.rdbDiagnosticsStatus = '失败';
+      this.rdbDiagnosticsSummary = `异常：${error}`;
+      console.info(`[RDB开发诊断] exception=${error}`);
+      promptAction.showToast({ message: 'RDB开发诊断异常，查看日志' });
+    } finally {
+      this.isRdbDiagnosticsRunning = false;
+    }
   }
 
   @Builder
@@ -251,6 +293,15 @@ export struct MyPage {
 
         this.LinkRow('关于', `${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`, () => {
         })
+
+        this.LinkRow(
+          'RDB开发诊断',
+          this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : this.rdbDiagnosticsSummary,
+          () => {
+            this.runRdbDeveloperDiagnostics();
+          },
+          this.rdbDiagnosticsStatus
+        )
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
