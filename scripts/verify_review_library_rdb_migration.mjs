@@ -3,6 +3,7 @@ import fs from 'node:fs';
 const rdbModelSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardRdbModel.ets', 'utf8');
 const rdbServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardRdbService.ets', 'utf8');
 const migrationServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardMigrationService.ets', 'utf8');
+const diagnosticsServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardRdbDiagnosticsService.ets', 'utf8');
 const historyServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardHistoryService.ets', 'utf8');
 const projectDetailSource = fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8');
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
@@ -58,14 +59,39 @@ for (const token of requiredServiceTokens) {
 assert(
   migrationServiceSource.includes('migrateFromPreferencesToRdb') &&
     migrationServiceSource.includes('verifyRdbMigration') &&
+    migrationServiceSource.includes('countPreferenceHistoryItems') &&
     migrationServiceSource.includes('ReviewCardHistoryService.load(context)'),
   'ReviewCardMigrationService must expose manual migration and verification with review_exchange fallback through existing load.'
 );
+
+const requiredDiagnosticsTokens = [
+  'RdbDiagnosticsResult',
+  'RdbDiagnosticsStep',
+  'runRdbDiagnostics',
+  'runMigrationDiagnostics',
+  'ReviewCardRdbService.init(context)',
+  'ReviewCardRdbService.upsertReview',
+  'ReviewCardRdbService.getReview',
+  'ReviewCardRdbService.listReviews',
+  'ReviewCardRdbService.markExported',
+  'ReviewCardRdbService.getStats',
+  'ReviewCardRdbService.deleteReview',
+  'ReviewCardMigrationService.migrateFromPreferencesToRdb',
+  'ReviewCardMigrationService.verifyRdbMigration',
+  'formatDiagnosticsResult'
+];
+
+for (const token of requiredDiagnosticsTokens) {
+  assert(diagnosticsServiceSource.includes(token), `ReviewCardRdbDiagnosticsService missing token: ${token}`);
+}
 
 assert(!historyServiceSource.includes('ReviewCardRdbService'), 'ReviewCardHistoryService must not switch to RDB in phase 1.');
 assert(!projectDetailSource.includes('ReviewCardRdbService'), 'ProjectDetailPage must not directly read RDB.');
 assert(!homePageSource.includes('ReviewCardRdbService'), 'HomePage must not directly read RDB.');
 assert(!previewPageSource.includes('ReviewCardRdbService'), 'PreviewPage must not directly read RDB.');
+assert(!projectDetailSource.includes('ReviewCardRdbDiagnosticsService'), 'ProjectDetailPage must not expose diagnostics as a formal UI flow.');
+assert(!homePageSource.includes('ReviewCardRdbDiagnosticsService'), 'HomePage must not expose diagnostics as a formal UI flow.');
+assert(!previewPageSource.includes('ReviewCardRdbDiagnosticsService'), 'PreviewPage must not expose diagnostics as a formal UI flow.');
 
 function cloneDocument(document) {
   const fallback = createDocument({});

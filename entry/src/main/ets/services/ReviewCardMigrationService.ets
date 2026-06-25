@@ -129,6 +129,12 @@ function parseStoredHistory(rawValue: preferences.ValueType): Array<ReviewCardHi
 }
 
 export class ReviewCardMigrationService {
+  static async countPreferenceHistoryItems(context: common.UIAbilityContext): Promise<number> {
+    const store: preferences.Preferences = await preferences.getPreferences(context, { name: PREFERENCES_NAME });
+    const rawValue: preferences.ValueType = await store.get(HISTORY_KEY, '[]');
+    return parseStoredHistory(rawValue).length;
+  }
+
   static async migrateFromPreferencesToRdb(context: common.UIAbilityContext): Promise<MigrationResult> {
     await ReviewCardRdbService.init(context);
     const sourceItems: Array<ReviewCardHistoryItem> = await ReviewCardMigrationService.loadMigrationSource(context);

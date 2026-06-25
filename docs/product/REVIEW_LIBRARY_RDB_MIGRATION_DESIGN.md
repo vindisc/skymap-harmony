@@ -294,7 +294,38 @@ class ReviewCardMigrationService {
 - 页面仍然走旧 `ReviewCardHistoryService` 逻辑。
 - 不影响现有复盘库。
 
-### 阶段 2：迁移验证
+### 阶段 2：设备侧旁路验证
+
+阶段 2 新增开发期诊断服务：
+
+- `entry/src/main/ets/services/ReviewCardRdbDiagnosticsService.ets`
+
+诊断服务只作为 DevEco / 真机侧手动调用入口，不接入正式页面，不作为用户可见功能。它用于验证设备侧 ArkData RDB 实际运行结果：
+
+- `runRdbDiagnostics(context)`：初始化 RDB、创建表、写入两条诊断记录、按 id 读取、验证 `raw_document_json` 可恢复、验证关键字段映射、验证倒序列表、判断筛选、关键词搜索、导出路径更新、统计增量和硬删除。
+- `runMigrationDiagnostics(context)`：读取当前 `Preferences(review_card_history.items)` 数量，手动调用 `migrateFromPreferencesToRdb(context)`，再调用 `verifyRdbMigration(context)`，输出 `sourceCount` / `insertedCount` / `skippedCount` / `failedCount`、RDB 数量和 `raw_document_json` 校验结果。
+- `formatDiagnosticsResult(result)`：把诊断结果格式化成多行文本，便于临时 `console.info(...)`、断点查看或 DevEco 日志检查。
+
+临时调用示例：
+
+```ts
+import { ReviewCardRdbDiagnosticsService } from '../services/ReviewCardRdbDiagnosticsService';
+
+const result = await ReviewCardRdbDiagnosticsService.runRdbDiagnostics(this.context);
+console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(result));
+
+const migrationResult = await ReviewCardRdbDiagnosticsService.runMigrationDiagnostics(this.context);
+console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationResult));
+```
+
+注意：
+
+- 诊断写入的记录使用 `diagnostic_review_rdb_` 前缀，验证结束后只删除自己的诊断记录，不调用 `clearAll`，避免误删真实复盘库数据。
+- 迁移诊断会真实写入 RDB 旁路库，但不会改变当前页面读取来源。
+- 当前仍未切主读写，`ReviewCardHistoryService` 仍然是页面入口。
+- 真机旁路验证通过后，才评估阶段 3：切 `ReviewCardHistoryService.load` 主读。
+
+阶段 2 仍需验证：
 
 - 从 `Preferences.items` 迁移到 RDB。
 - 验证迁移数量、字段完整性、`raw_document_json` 可恢复。
