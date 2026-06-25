@@ -14,6 +14,8 @@ import {
   ReviewCardExchangeDecision,
   ReviewCardExchangeSchemaV1
 } from './ReviewCardExchangeSchema';
+import { MigrationResult, ReviewCardMigrationService } from './ReviewCardMigrationService';
+import { ReviewCardRdbListResult, ReviewCardRdbService } from './ReviewCardRdbService';
 import { ReviewJsonExportService } from './ReviewJsonExportService';
 
 const PREFERENCES_NAME: string = 'review_card_history';
@@ -44,6 +46,18 @@ export interface ReviewCardHistoryDiagnostics {
   latestTitle: string;
   latestUpdatedAt: number;
   errorMessage: string;
+  rdbPrimaryReadAttempted: boolean;
+  rdbPrimaryReadUsed: boolean;
+  rdbRowCount: number;
+  rdbParsedCount: number;
+  rdbInvalidRowCount: number;
+  rdbMigrationAttempted: boolean;
+  rdbMigrationSourceCount: number;
+  rdbMigrationInsertedCount: number;
+  rdbMigrationSkippedCount: number;
+  rdbMigrationFailedCount: number;
+  rdbFallbackUsed: boolean;
+  rdbErrorMessage: string;
 }
 
 interface LegacyHistoryPayload {
@@ -245,7 +259,19 @@ function createEmptyDiagnostics(context: common.UIAbilityContext): ReviewCardHis
     persistedMergedHistory: false,
     latestTitle: '',
     latestUpdatedAt: 0,
-    errorMessage: ''
+    errorMessage: '',
+    rdbPrimaryReadAttempted: false,
+    rdbPrimaryReadUsed: false,
+    rdbRowCount: 0,
+    rdbParsedCount: 0,
+    rdbInvalidRowCount: 0,
+    rdbMigrationAttempted: false,
+    rdbMigrationSourceCount: 0,
+    rdbMigrationInsertedCount: 0,
+    rdbMigrationSkippedCount: 0,
+    rdbMigrationFailedCount: 0,
+    rdbFallbackUsed: false,
+    rdbErrorMessage: ''
   };
 }
 
@@ -332,33 +358,133 @@ export class ReviewCardHistoryService {
     });
   }
 
-  static async loadWithDiagnostics(context: common.UIAbilityContext): Promise<ReviewCardHistoryLoadResult> {
-    const diagnostics: ReviewCardHistoryDiagnostics = createEmptyDiagnostics(context);
-    try {
-      const store = await ReviewCardHistoryService.getStore(context);
-      const rawValue = await store.get(HISTORY_KEY, '[]');
-      diagnostics.rawHistoryType = typeof rawValue;
-      diagnostics.rawHistoryLength = typeof rawValue === 'string' ? rawValue.length : 0;
-      const historyItems: Array<ReviewCardHistoryItem> = parseStoredHistory(rawValue);
-      diagnostics.parsedHistoryCount = historyItems.length;
-      const backupItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.loadBackupItemsOnce(
-        store,
-        diagnostics,
-        historyItems.length === 0
-      );
-      const mergedItems: Array<ReviewCardHistoryItem> = mergeHistoryItems(historyItems, backupItems);
-      if (backupItems.length > 0) {
-        await ReviewCardHistoryService.persist(context, mergedItems);
-        diagnostics.persistedMergedHistory = true;
-      }
-      const items: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(mergedItems);
+  private static async loadLegacyWithDiagnostics(
+    context: common.UIAbilityContext,
+    diagnostics: ReviewCardHistoryDiagnostics
+  ): Promise<ReviewCardHistoryLoadResult> {
+    const store = await ReviewCardHistoryService.getStore(context);
+    const rawValue = await store.get(HISTORY_KEY, '[]');
+    diagnostics.rawHistoryType = typeof rawValue;
+    diagnostics.rawHistoryLength = typeof rawValue === 'string' ? rawValue.length : 0;
+    const historyItems: Array<ReviewCardHistoryItem> = parseStoredHistory(rawValue);
+    diagnostics.parsedHistoryCount = historyItems.length;
+    const backupItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.loadBackupItemsOnce(
+      store,
+      diagnostics,
+      historyItems.length === 0
+    );
+    const mergedItems: Array<ReviewCardHistoryItem> = mergeHistoryItems(historyItems, backupItems);
+    if (backupItems.length > 0) {
+      await ReviewCardHistoryService.persist(context, mergedItems);
+      diagnostics.persistedMergedHistory = true;
+    }
+    const items: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(mergedItems);
+    updateLatestDiagnostics(diagnostics, items);
+    return {
+      items: items,
+      diagnostics: diagnostics
+    };
+  }
+
+  private static async loadFromRdbWithDiagnostics(
+    context: common.UIAbilityContext,
+    diagnostics: ReviewCardHistoryDiagnostics
+  ): Promise<ReviewCardHistoryLoadResult | undefined> {
+    diagnostics.rdbPrimaryReadAttempted = true;
+    await ReviewCardRdbService.init(context);
+    let rdbResult: ReviewCardRdbListResult = await ReviewCardRdbService.listReviewsWithDiagnostics(context, {
+      includeDeleted: false
+    });
+    diagnostics.rdbRowCount = rdbResult.rowCount;
+    diagnostics.rdbParsedCount = rdbResult.items.length;
+    diagnostics.rdbInvalidRowCount = rdbResult.invalidRowCount;
+
+    if (rdbResult.items.length > 0) {
+      diagnostics.rdbPrimaryReadUsed = true;
+      const items: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(rdbResult.items);
       updateLatestDiagnostics(diagnostics, items);
       return {
         items: items,
         diagnostics: diagnostics
       };
+    }
+
+    if (rdbResult.rowCount > 0 && rdbResult.invalidRowCount > 0) {
+      throw new Error(`RDB raw_document_json 解析失败：${rdbResult.invalidRowCount}/${rdbResult.rowCount}`);
+    }
+
+    diagnostics.rdbMigrationSourceCount = await ReviewCardMigrationService.countPreferenceHistoryItems(context);
+    if (diagnostics.rdbMigrationSourceCount === 0) {
+      return undefined;
+    }
+
+    diagnostics.rdbMigrationAttempted = true;
+    const migrationResult: MigrationResult = await ReviewCardMigrationService.migrateFromPreferencesToRdb(context);
+    diagnostics.rdbMigrationSourceCount = migrationResult.sourceCount;
+    diagnostics.rdbMigrationInsertedCount = migrationResult.insertedCount;
+    diagnostics.rdbMigrationSkippedCount = migrationResult.skippedCount;
+    diagnostics.rdbMigrationFailedCount = migrationResult.failedCount;
+    if (migrationResult.failedCount > 0) {
+      throw new Error(`RDB 迁移失败：${migrationResult.errors.join('; ')}`);
+    }
+
+    rdbResult = await ReviewCardRdbService.listReviewsWithDiagnostics(context, {
+      includeDeleted: false
+    });
+    diagnostics.rdbRowCount = rdbResult.rowCount;
+    diagnostics.rdbParsedCount = rdbResult.items.length;
+    diagnostics.rdbInvalidRowCount = rdbResult.invalidRowCount;
+
+    if (rdbResult.items.length > 0) {
+      diagnostics.rdbPrimaryReadUsed = true;
+      const items: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(rdbResult.items);
+      updateLatestDiagnostics(diagnostics, items);
+      return {
+        items: items,
+        diagnostics: diagnostics
+      };
+    }
+
+    if (rdbResult.rowCount > 0 && rdbResult.invalidRowCount > 0) {
+      throw new Error(`RDB 迁移后 raw_document_json 解析失败：${rdbResult.invalidRowCount}/${rdbResult.rowCount}`);
+    }
+
+    return undefined;
+  }
+
+  private static async loadLegacyItemsForWrite(context: common.UIAbilityContext): Promise<Array<ReviewCardHistoryItem>> {
+    try {
+      const result: ReviewCardHistoryLoadResult = await ReviewCardHistoryService.loadLegacyWithDiagnostics(
+        context,
+        createEmptyDiagnostics(context)
+      );
+      return result.items;
+    } catch (error) {
+      return ReviewCardHistoryService.rememberItems(ReviewCardHistoryService.cachedItems);
+    }
+  }
+
+  static async loadWithDiagnostics(context: common.UIAbilityContext): Promise<ReviewCardHistoryLoadResult> {
+    const diagnostics: ReviewCardHistoryDiagnostics = createEmptyDiagnostics(context);
+    try {
+      const rdbResult: ReviewCardHistoryLoadResult | undefined =
+        await ReviewCardHistoryService.loadFromRdbWithDiagnostics(context, diagnostics);
+      if (rdbResult) {
+        return rdbResult;
+      }
+    } catch (rdbError) {
+      diagnostics.rdbErrorMessage = `${rdbError}`;
+      console.warn(`[ReviewCardHistoryService] RDB 主读失败，回退旧链路：${diagnostics.rdbErrorMessage}`);
+    }
+
+    try {
+      diagnostics.rdbFallbackUsed = true;
+      return await ReviewCardHistoryService.loadLegacyWithDiagnostics(context, diagnostics);
     } catch (error) {
       diagnostics.errorMessage = `${error}`;
+      if (diagnostics.rdbErrorMessage.length > 0) {
+        diagnostics.errorMessage = `${diagnostics.errorMessage}; rdb=${diagnostics.rdbErrorMessage}`;
+      }
       const items: Array<ReviewCardHistoryItem> =
         ReviewCardHistoryService.rememberItems(ReviewCardHistoryService.cachedItems);
       updateLatestDiagnostics(diagnostics, items);
@@ -391,6 +517,18 @@ export class ReviewCardHistoryService {
       `parsedBackupCount=${diagnostics.parsedBackupCount}`,
       `mergedCount=${diagnostics.mergedCount}`,
       `persistedMergedHistory=${diagnostics.persistedMergedHistory}`,
+      `rdbPrimaryReadAttempted=${diagnostics.rdbPrimaryReadAttempted}`,
+      `rdbPrimaryReadUsed=${diagnostics.rdbPrimaryReadUsed}`,
+      `rdbRowCount=${diagnostics.rdbRowCount}`,
+      `rdbParsedCount=${diagnostics.rdbParsedCount}`,
+      `rdbInvalidRowCount=${diagnostics.rdbInvalidRowCount}`,
+      `rdbMigrationAttempted=${diagnostics.rdbMigrationAttempted}`,
+      `rdbMigrationSourceCount=${diagnostics.rdbMigrationSourceCount}`,
+      `rdbMigrationInsertedCount=${diagnostics.rdbMigrationInsertedCount}`,
+      `rdbMigrationSkippedCount=${diagnostics.rdbMigrationSkippedCount}`,
+      `rdbMigrationFailedCount=${diagnostics.rdbMigrationFailedCount}`,
+      `rdbFallbackUsed=${diagnostics.rdbFallbackUsed}`,
+      `rdbError=${diagnostics.rdbErrorMessage}`,
       `latestTitle=${diagnostics.latestTitle}`,
       `latestUpdatedAt=${diagnostics.latestUpdatedAt}`,
       `error=${diagnostics.errorMessage}`
@@ -398,7 +536,7 @@ export class ReviewCardHistoryService {
   }
 
   static async saveDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
-    const items = await ReviewCardHistoryService.load(context);
+    const items = await ReviewCardHistoryService.loadLegacyItemsForWrite(context);
     const key = getReviewDocumentKey(document);
     const nextItems: Array<ReviewCardHistoryItem> = [];
     const existingItem: ReviewCardHistoryItem | undefined = items.find((item: ReviewCardHistoryItem): boolean => {
@@ -418,7 +556,7 @@ export class ReviewCardHistoryService {
   }
 
   static async updateDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
-    const items = await ReviewCardHistoryService.load(context);
+    const items = await ReviewCardHistoryService.loadLegacyItemsForWrite(context);
     const key = getReviewDocumentKey(document);
     const nextItems = items.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
       if (getReviewDocumentKey(item.document) === key) {
@@ -435,7 +573,7 @@ export class ReviewCardHistoryService {
   }
 
   static async markExported(context: common.UIAbilityContext, document: ReviewCardDocument, exportedPath: string): Promise<Array<ReviewCardHistoryItem>> {
-    const items = await ReviewCardHistoryService.load(context);
+    const items = await ReviewCardHistoryService.loadLegacyItemsForWrite(context);
     const key = getReviewDocumentKey(document);
     const nextItems = items.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
       if (getReviewDocumentKey(item.document) === key) {
@@ -453,7 +591,7 @@ export class ReviewCardHistoryService {
   }
 
   static async deleteDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
-    const items = await ReviewCardHistoryService.load(context);
+    const items = await ReviewCardHistoryService.loadLegacyItemsForWrite(context);
     const key = getReviewDocumentKey(document);
     const nextItems = items.filter((item: ReviewCardHistoryItem): boolean => {
       return getReviewDocumentKey(item.document) !== key;

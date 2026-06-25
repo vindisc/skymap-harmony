@@ -272,7 +272,8 @@ class ReviewCardMigrationService {
 - `ReviewCardRdbModel` 负责 `ReviewCardHistoryItem`、`ReviewCardDocument` 与 `reviews` 行模型之间的映射。
 - `raw_document_json` 保存完整 `ReviewCardDocument` JSON，结构化列只抽取标题、判断、图片引用、尺寸、导出路径和复盘关键文本。
 - `ReviewCardMigrationService` 提供手动迁移和验证函数，可从 `Preferences(review_card_history.items)` 迁移到 RDB。
-- 当 Preferences 为空时，迁移服务会复用现有 `ReviewCardHistoryService.load(context)` 的有限 `review_exchange` 恢复能力；这只是恢复来源，不代表 `review_exchange` 变成主查询源。
+- 阶段 3 后，迁移服务只读取 `Preferences(review_card_history.items)` 作为迁移源，不再反向调用 `ReviewCardHistoryService.load(context)`，避免主读切到 RDB 后出现递归。
+- 当 RDB 与 Preferences 都为空时，`ReviewCardHistoryService.load(...)` 会回退旧链路，由旧链路保留有限 `review_exchange` 恢复能力；这只是恢复来源，不代表 `review_exchange` 变成主查询源。
 - `backup_json_path` 第一阶段无法从 Preferences 历史项稳定反推出对应备份文件，当前默认留空，后续可在切主写或专门重建索引时补齐。
 - 验证脚本是 Node 层映射与迁移语义验证，不代表真机 RDB 已执行；ArkData RDB API 的可编译性由 HAP 构建验证。
 
@@ -344,14 +345,40 @@ console.info(ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationRe
 
 ### 阶段 3：切换 ReviewCardHistoryService 主读
 
-- `ReviewCardHistoryService.load(...)` 优先从 RDB 读取。
-- 复盘库、统计、我的页数据来自 RDB。
-- 如果 RDB 为空，触发迁移或恢复。
-- 页面层不直接调用 RDB。
+阶段 3 当前边界：
+
+- `ReviewCardHistoryService.load(...)` / `loadWithDiagnostics(...)` 优先初始化并查询 RDB。
+- 如果 RDB 有可解析记录，直接返回 RDB 记录，不再把 `Preferences.items` 当作主列表。
+- 如果 RDB 为空，会先检查 `Preferences(review_card_history.items)` 数量；只有 Preferences 有记录时才触发 `Preferences -> RDB` 迁移。
+- 迁移成功后再次查询 RDB，并返回迁移后的 RDB 记录。
+- 如果 RDB 仍为空，回退旧 `Preferences + review_exchange` 读取链路。
+- 如果 RDB 初始化、查询、`raw_document_json` 解析或迁移发生异常，会记录诊断日志并回退旧链路，避免用户看到空库误判。
+- `Preferences` 在本阶段降级为迁移来源和失败回退来源，但仍保留旧主写职责。
+- `review_exchange` 继续作为备份 / 交换 / 有限恢复来源，只在旧链路回退或旧主写备份中发挥作用。
+- 页面层仍然只调用 `ReviewCardHistoryService`，不直接依赖 `ReviewCardRdbService`。
+
+阶段 3 明确不做：
+
+- 不切 `saveDocument` 主写。
+- 不切 `updateDocument` 主写。
+- 不切 `deleteDocument` 主写。
+- 不切 `markExported` 主写。
+- 不停止写 `Preferences`。
+- 不停止写 `review_exchange`。
+- 不修改 Review JSON 字段。
+- 不修改 UI。
+
+阶段 3 的一致性风险：
+
+- 本阶段只验证 RDB 主读，不做复杂增量同步。
+- 旧链路保存、更新、删除、导出标记仍写入 Preferences / `review_exchange`，RDB 不一定立刻拥有最新变更。
+- 为避免旧主写误用 RDB 快照，`saveDocument` / `updateDocument` / `deleteDocument` / `markExported` 内部仍使用旧 Preferences 链路作为写入基准。
+- 真正解决“新写入立刻进入 RDB 主索引”的一致性问题，放到阶段 4 主写切换或明确的旁路同步设计中。
 
 ### 阶段 4：切换主写
 
 - `saveDocument` / `updateDocument` / `deleteDocument` / `markExported` 写入 RDB。
+- 评估是否保留短期旁路同步或一次性迁移标记升级。
 - `review_exchange` 继续作为备份。
 - `Preferences.items` 降级为迁移来源。
 - 不再长期双写 `Preferences`。

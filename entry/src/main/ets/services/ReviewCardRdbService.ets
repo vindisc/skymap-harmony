@@ -22,6 +22,12 @@ interface ReviewRdbWhereClause {
   args: Array<relationalStore.ValueType>;
 }
 
+export interface ReviewCardRdbListResult {
+  items: Array<ReviewCardHistoryItem>;
+  rowCount: number;
+  invalidRowCount: number;
+}
+
 function normalizeLimit(value: number | undefined): number {
   if (typeof value === 'number' && value > 0) {
     return Math.floor(value);
@@ -171,15 +177,30 @@ export class ReviewCardRdbService {
   }
 
   static async listReviews(context: common.UIAbilityContext, query?: ReviewListQuery): Promise<Array<ReviewCardHistoryItem>> {
+    const result: ReviewCardRdbListResult = await ReviewCardRdbService.listReviewsWithDiagnostics(context, query);
+    return result.items;
+  }
+
+  static async listReviewsWithDiagnostics(
+    context: common.UIAbilityContext,
+    query?: ReviewListQuery
+  ): Promise<ReviewCardRdbListResult> {
     const rows: Array<ReviewCardRdbRow> = await ReviewCardRdbService.listReviewRows(context, query);
     const items: Array<ReviewCardHistoryItem> = [];
+    let invalidRowCount: number = 0;
     rows.forEach((row: ReviewCardRdbRow): void => {
       const item: ReviewCardHistoryItem | undefined = ReviewCardRdbMapper.toHistoryItem(row);
       if (item) {
         items.push(item);
+      } else {
+        invalidRowCount += 1;
       }
     });
-    return items;
+    return {
+      items: items,
+      rowCount: rows.length,
+      invalidRowCount: invalidRowCount
+    };
   }
 
   static async listReviewRows(context: common.UIAbilityContext, query?: ReviewListQuery): Promise<Array<ReviewCardRdbRow>> {

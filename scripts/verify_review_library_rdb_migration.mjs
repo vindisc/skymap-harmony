@@ -61,8 +61,8 @@ assert(
   migrationServiceSource.includes('migrateFromPreferencesToRdb') &&
     migrationServiceSource.includes('verifyRdbMigration') &&
     migrationServiceSource.includes('countPreferenceHistoryItems') &&
-    migrationServiceSource.includes('ReviewCardHistoryService.load(context)'),
-  'ReviewCardMigrationService must expose manual migration and verification with review_exchange fallback through existing load.'
+    !migrationServiceSource.includes("import { ReviewCardHistoryService }"),
+  'ReviewCardMigrationService must expose migration and avoid calling ReviewCardHistoryService.load after phase 3 main-read switch.'
 );
 
 const requiredDiagnosticsTokens = [
@@ -86,7 +86,11 @@ for (const token of requiredDiagnosticsTokens) {
   assert(diagnosticsServiceSource.includes(token), `ReviewCardRdbDiagnosticsService missing token: ${token}`);
 }
 
-assert(!historyServiceSource.includes('ReviewCardRdbService'), 'ReviewCardHistoryService must not switch to RDB in phase 1.');
+assert(historyServiceSource.includes("import { ReviewCardRdbListResult, ReviewCardRdbService } from './ReviewCardRdbService';"), 'ReviewCardHistoryService must own the phase 3 RDB main-read switch.');
+assert(historyServiceSource.includes('loadFromRdbWithDiagnostics'), 'ReviewCardHistoryService must isolate RDB-first read logic.');
+assert(historyServiceSource.includes('ReviewCardMigrationService.migrateFromPreferencesToRdb(context)'), 'RDB empty should trigger Preferences to RDB migration.');
+assert(historyServiceSource.includes('loadLegacyWithDiagnostics'), 'ReviewCardHistoryService must keep the legacy Preferences + review_exchange fallback path.');
+assert(historyServiceSource.includes('loadLegacyItemsForWrite'), 'Phase 3 writes must keep using the legacy Preferences-backed list as write base.');
 assert(!projectDetailSource.includes('ReviewCardRdbService'), 'ProjectDetailPage must not directly read RDB.');
 assert(!homePageSource.includes('ReviewCardRdbService'), 'HomePage must not directly read RDB.');
 assert(!previewPageSource.includes('ReviewCardRdbService'), 'PreviewPage must not directly read RDB.');

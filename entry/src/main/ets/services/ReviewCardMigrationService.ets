@@ -6,7 +6,6 @@ import {
   ReviewCardDocument,
   ReviewCardHistoryItem
 } from '../model/ReviewCardModel';
-import { ReviewCardHistoryService } from './ReviewCardHistoryService';
 import { ReviewCardRdbService } from './ReviewCardRdbService';
 import { ReviewCardRdbRow } from './ReviewCardRdbModel';
 
@@ -207,12 +206,6 @@ export class ReviewCardMigrationService {
   private static async loadMigrationSource(context: common.UIAbilityContext): Promise<Array<ReviewCardHistoryItem>> {
     const store: preferences.Preferences = await preferences.getPreferences(context, { name: PREFERENCES_NAME });
     const rawValue: preferences.ValueType = await store.get(HISTORY_KEY, '[]');
-    const preferenceItems: Array<ReviewCardHistoryItem> = parseStoredHistory(rawValue);
-    if (preferenceItems.length > 0) {
-      return preferenceItems;
-    }
-
-    // Preferences 为空时复用现有 load 的有限 review_exchange 恢复能力；本服务不把它变成主查询源。
-    return ReviewCardHistoryService.load(context);
+    return parseStoredHistory(rawValue);
   }
 }
