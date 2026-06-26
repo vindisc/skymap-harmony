@@ -44,6 +44,7 @@ struct PreviewPage {
   @State isExportMenuVisible: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
   @State lastReviewJsonExportMessage: string = '';
+  @State reviewerText: string = '';
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -55,9 +56,14 @@ struct PreviewPage {
   }
 
   private async refreshPersistedState(): Promise<void> {
+    await this.loadReviewerText();
     await this.recoverImageSizeIfNeeded();
     await this.ensureCurrentDocumentPersisted();
     await this.syncSaveState();
+  }
+
+  private async loadReviewerText(): Promise<void> {
+    this.reviewerText = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
   }
 
   private hasMeaningfulDocument(document: ReviewCardDocument): boolean {
@@ -297,6 +303,7 @@ struct PreviewPage {
       ReviewCardPreview({
         document: this.document,
         renderMode: ReviewCardRenderMode.EXPORT_CARD,
+        reviewerText: this.reviewerText,
         exportComponentId: this.getExportComponentId(),
         exportCanvasHeight: this.getExportCanvasHeight()
       })

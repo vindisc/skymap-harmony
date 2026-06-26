@@ -12,6 +12,7 @@ export struct ReviewCardRenderer {
   @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
   @Prop renderMode: ReviewCardRenderMode = ReviewCardRenderMode.MOBILE_READING;
   @Prop layoutType: ReviewCardLayoutType = ReviewCardLayoutType.HORIZONTAL;
+  @Prop reviewerText: string = '';
   @Prop exportComponentId: string = '';
   @Prop exportCanvasHeight: number = 0;
 
@@ -24,6 +25,7 @@ export struct ReviewCardRenderer {
     } else {
       LongFormExportReviewCard({
         document: this.document,
+        reviewerText: this.reviewerText,
         exportComponentId: this.exportComponentId,
         canvasHeight: this.exportCanvasHeight
       })

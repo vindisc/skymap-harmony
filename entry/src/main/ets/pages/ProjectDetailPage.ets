@@ -247,11 +247,12 @@ export struct ProjectDetailPage {
         })
 
       if (this.searchText.length > 0) {
-        Button('清除')
+        Button('×')
           .height(34)
-          .padding({ left: 12, right: 12 })
+          .width(34)
+          .padding(0)
           .borderRadius(17)
-          .fontSize(AppTypography.caption)
+          .fontSize(18)
           .fontColor(AppColors.secondaryText)
           .backgroundColor(AppColors.surfaceMuted)
           .stateEffect(true)

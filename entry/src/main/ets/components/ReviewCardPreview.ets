@@ -11,6 +11,7 @@ import { ReviewCardStylePreset } from './ReviewCardStylePreset';
 export struct ReviewCardPreview {
   @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
   @Prop renderMode: ReviewCardRenderMode = ReviewCardRenderMode.MOBILE_READING;
+  @Prop reviewerText: string = '';
   @Prop exportComponentId: string = '';
   @Prop exportCanvasHeight: number = 0;
 
@@ -25,6 +26,7 @@ export struct ReviewCardPreview {
           document: this.document,
           renderMode: this.renderMode,
           layoutType: this.getLayout().layoutType,
+          reviewerText: this.reviewerText,
           exportComponentId: this.exportComponentId,
           exportCanvasHeight: this.exportCanvasHeight
         })
