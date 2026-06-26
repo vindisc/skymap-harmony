@@ -367,50 +367,65 @@ export struct StatsPage {
   }
 
   build() {
-    Scroll() {
-      Column({ space: AppMetrics.cardGap }) {
+    Column() {
+      Column() {
         AppPageHeader({
           title: '统计',
           subtitle: '完成复盘后，这里会展示你的判断变化。'
         })
-
-        if (this.statsLoadFailed) {
-          EmptyState({
-            title: '统计暂时无法刷新',
-            message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
-          })
-            .margin({ top: AppMetrics.space8 })
-        } else if (!this.hasStatsData()) {
-          EmptyState({
-            title: '还没有复盘数据',
-            message: '完成第一张照片复盘后，这里会显示你的判断变化。'
-          })
-            .margin({ top: AppMetrics.space8 })
-        } else {
-          Column({ space: AppMetrics.cardGap }) {
-            this.OverviewCard()
-            this.Recent30DaysCard()
-            this.DistributionCard()
-            this.BlockersCard()
-            this.RecentReviewsCard()
-          }
-          .width('100%')
-          .margin({ top: AppMetrics.space8 })
-        }
       }
-      .alignItems(HorizontalAlign.Start)
       .padding({
         left: AppMetrics.pagePadding,
         right: AppMetrics.pagePadding,
         top: AppMetrics.pageTopPadding,
-        bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding
+        bottom: 0
       })
       .width('100%')
+      .alignItems(HorizontalAlign.Start)
+      .backgroundColor(AppColors.pageBackground)
+
+      Scroll() {
+        Column({ space: AppMetrics.cardGap }) {
+          if (this.statsLoadFailed) {
+            EmptyState({
+              title: '统计暂时无法刷新',
+              message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
+            })
+              .margin({ top: AppMetrics.space8 })
+          } else if (!this.hasStatsData()) {
+            EmptyState({
+              title: '还没有复盘数据',
+              message: '完成第一张照片复盘后，这里会显示你的判断变化。'
+            })
+              .margin({ top: AppMetrics.space8 })
+          } else {
+            Column({ space: AppMetrics.cardGap }) {
+              this.OverviewCard()
+              this.Recent30DaysCard()
+              this.DistributionCard()
+              this.BlockersCard()
+              this.RecentReviewsCard()
+            }
+            .width('100%')
+            .margin({ top: AppMetrics.space8 })
+          }
+        }
+        .alignItems(HorizontalAlign.Start)
+        .padding({
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
+          top: AppMetrics.sectionGap,
+          bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding
+        })
+        .width('100%')
+      }
+      .width('100%')
+      .layoutWeight(1)
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.None)
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
-    .edgeEffect(EdgeEffect.None)
     .backgroundColor(AppColors.pageBackground)
   }
 }

@@ -5,10 +5,10 @@ import { HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../a
 import {
   AppColors,
   AppMetrics,
+  AppPageHeader,
   AppTypography,
   SettingsEntryTone,
   SettingsLinkRow,
-  SettingsPageHeader,
   SettingsSectionHeader
 } from '../components/AppDesign';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
@@ -359,31 +359,46 @@ export struct MyPage {
   }
 
   build() {
-    Scroll() {
-      Column({ space: AppMetrics.sectionGap }) {
-        SettingsPageHeader({
+    Column() {
+      Column() {
+        AppPageHeader({
           title: '我的',
           subtitle: '复盘身份、存储同步和应用状态。'
         })
-
-        this.IdentityCard()
-
-        this.SettingsSection()
-
-        this.AboutSection()
       }
-      .alignItems(HorizontalAlign.Start)
-      .width('100%')
       .padding({
         left: AppMetrics.pagePadding,
         right: AppMetrics.pagePadding,
         top: AppMetrics.pageTopPadding,
-        bottom: MY_PAGE_BOTTOM_PADDING
+        bottom: 0
       })
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+      .backgroundColor(AppColors.pageBackground)
+
+      Scroll() {
+        Column({ space: AppMetrics.sectionGap }) {
+          this.IdentityCard()
+
+          this.SettingsSection()
+
+          this.AboutSection()
+        }
+        .alignItems(HorizontalAlign.Start)
+        .width('100%')
+        .padding({
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
+          top: AppMetrics.sectionGap,
+          bottom: MY_PAGE_BOTTOM_PADDING
+        })
+      }
+      .width('100%')
+      .layoutWeight(1)
+      .scrollBar(BarState.Off)
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

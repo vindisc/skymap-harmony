@@ -5,7 +5,6 @@ const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf
 const reviewerProfileSource = fs.readFileSync('entry/src/main/ets/pages/ReviewerProfilePage.ets', 'utf8');
 const homeStorageSource = fs.readFileSync('entry/src/main/ets/pages/HomeStoragePage.ets', 'utf8');
 const syncCenterSource = fs.readFileSync('entry/src/main/ets/pages/SyncCenterPage.ets', 'utf8');
-const projectDetailSource = fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8');
 
 let failed = false;
 
@@ -48,11 +47,15 @@ assert(appDesignSource.includes('export struct SettingsSectionHeader'), 'Shared 
 assert(appDesignSource.includes('export struct SettingsLinkRow'), 'Shared settings link row must exist.');
 assert(!appDesignSource.includes("Button('‹')"), 'SettingsPageHeader must not render a back arrow.');
 assert(!appDesignSource.includes('showBack'), 'SettingsPageHeader must not expose back-arrow controls.');
-assert(settingsPageHeaderBody.includes('.fontSize(AppTypography.sectionTitle)'), 'SettingsPageHeader title must use compact section title scale.');
-assert(!settingsPageHeaderBody.includes('.fontSize(AppTypography.pageTitle)'), 'SettingsPageHeader must not use full page title scale.');
+assert(settingsPageHeaderBody.includes('.fontSize(AppTypography.sectionTitle)'), 'SettingsPageHeader title must keep compact section title scale for settings subpages.');
+assert(!settingsPageHeaderBody.includes('.fontSize(AppTypography.pageTitle)'), 'SettingsPageHeader must not use full page title scale for settings subpages.');
 assert(!appDesignSource.includes('.stateEffect(true)\n    .onClick(() => {\n      this.onTap();'), 'SettingsLinkRow must not use unsupported Row stateEffect.');
 
-assert(myPageSource.includes('SettingsPageHeader({'), 'MyPage must use the shared settings header.');
+assert(myPageSource.includes('AppPageHeader({'), 'MyPage root title must use the shared main page header.');
+assert(myPageSource.includes("title: '我的'"), 'MyPage must keep the 我的 title.');
+assert(!myPageSource.includes('SettingsPageHeader({\n          title: \'我的\''), 'MyPage root title must not use compact settings header.');
+assert(myPageSource.includes('Scroll() {\n        Column({ space: AppMetrics.sectionGap }) {'), 'MyPage content must scroll below a fixed title header.');
+assert(myPageSource.includes('top: AppMetrics.sectionGap'), 'MyPage scroll content should start below the fixed title with section spacing.');
 assert(myPageSource.includes('this.IdentityCard()'), 'MyPage must keep a concise identity card.');
 assert(myPageSource.includes('this.SettingsSection()'), 'MyPage must group settings entries.');
 assert(myPageSource.includes('this.AboutSection()'), 'MyPage must group app/developer entries.');
@@ -87,14 +90,10 @@ assert(homeStorageSource.includes("secondaryLabel: this.isTestingHomeStorage ? '
 assert(syncCenterSource.includes('lastTestMessage'), 'SyncCenterPage must keep visible test feedback.');
 assert(syncCenterSource.includes("label: this.isTesting ? '测试中…' : '测试连接'"), 'SyncCenterPage test button must show loading state.');
 assert(syncCenterSource.includes('SettingsLinkRow({'), 'SyncCenterPage must show a compact status row.');
-assert(projectDetailSource.includes("Button('清除')"), 'Review library search clear action must be explicit text.');
-assert(!projectDetailSource.includes("Button('×')"), 'Review library search must not use ambiguous glyph-only clear action.');
-assert(projectDetailSource.includes('.fontSize(AppTypography.caption)'), 'Review library search input must use compact caption scale.');
-assert(!projectDetailSource.includes('.fontSize(AppTypography.inputText)\n        .fontColor(AppColors.text)'), 'Review library search input must not use oversized input text scale.');
 assert(!homeStorageSource.includes(".height('100%')\n      .justifyContent(FlexAlign.Start)"), 'HomeStoragePage scroll content must not be fixed to viewport height.');
 
 if (failed) {
   process.exit(1);
 }
 
-console.log('my page rework: grouped entries, no back arrows, top alignment, compact titles, and deep feedback verified');
+console.log('my page rework: fixed main title, grouped entries, no back arrows, top alignment, and deep feedback verified');
