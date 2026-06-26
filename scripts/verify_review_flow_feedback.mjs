@@ -52,7 +52,10 @@ assert(files.photoBlock.includes('可稍后重试'), 'Thumbnail failure helper c
 
 assert(files.stats.includes("@Prop @Watch('refreshStatsData') refreshToken"), 'Stats must still refresh from library token.');
 assert(files.stats.includes('统计暂时无法刷新'), 'Stats should expose a load failure state.');
-assert(files.stats.includes('当前记录'), 'Stats should label real data without placeholder tone.');
+assert(files.stats.includes('最近 30 天'), 'Stats should replace placeholder chips with recent 30 days feedback.');
+assert(files.stats.includes('判断分布'), 'Stats should show lightweight decision distribution feedback.');
+assert(files.stats.includes('最近卡点'), 'Stats should show recent blocker feedback.');
+assert(!files.stats.includes("Text('当前记录')"), 'Stats must remove the old 当前记录 placeholder section.');
 
 assert(files.my.includes("@Prop @Watch('refreshPageData') refreshToken"), 'My page must still refresh from shell token.');
 assert(files.my.includes('复盘统计暂时无法刷新'), 'My page should expose a load failure state.');
