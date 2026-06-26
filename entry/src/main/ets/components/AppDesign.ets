@@ -71,6 +71,14 @@ export class AppMetrics {
   static readonly listCardMaxHeight: number = LayoutTokens.ListCardMaxHeight;
 }
 
+export enum SettingsEntryTone {
+  DEFAULT = 'default',
+  SUCCESS = 'success',
+  WARNING = 'warning',
+  DANGER = 'danger',
+  MUTED = 'muted'
+}
+
 export class AppTypography {
   static readonly pageTitle: number = TypographyTokens.PageTitle;
   static readonly pageTitleLineHeight: number = LineHeightTokens.PageTitle;
@@ -103,8 +111,8 @@ export class AppTypography {
   static readonly inputPlaceholder: number = TypographyTokens.InputPlaceholder;
   static readonly tabLabel: number = TypographyTokens.TabLabel;
   static readonly tabLabelLineHeight: number = LineHeightTokens.TabLabel;
-  static readonly profileName: number = 24;
-  static readonly profileNameLineHeight: number = 30;
+  static readonly profileName: number = TypographyTokens.CardTitle;
+  static readonly profileNameLineHeight: number = LineHeightTokens.CardTitle;
   static readonly statNumber: number = TypographyTokens.StatNumber;
   static readonly statNumberLineHeight: number = LineHeightTokens.StatNumber;
   static readonly statLabel: number = TypographyTokens.StatLabel;
@@ -148,6 +156,167 @@ export struct AppPageHeader {
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
+  }
+}
+
+function resolveSettingsToneTextColor(tone: SettingsEntryTone): string {
+  if (tone === SettingsEntryTone.SUCCESS) {
+    return AppColors.tagGreenText;
+  }
+  if (tone === SettingsEntryTone.WARNING) {
+    return AppColors.tagAmberText;
+  }
+  if (tone === SettingsEntryTone.DANGER) {
+    return AppColors.danger;
+  }
+  if (tone === SettingsEntryTone.MUTED) {
+    return AppColors.mutedText;
+  }
+  return AppColors.primary;
+}
+
+function resolveSettingsToneBackground(tone: SettingsEntryTone): string {
+  if (tone === SettingsEntryTone.SUCCESS) {
+    return AppColors.tagGreen;
+  }
+  if (tone === SettingsEntryTone.WARNING) {
+    return AppColors.tagAmber;
+  }
+  if (tone === SettingsEntryTone.DANGER) {
+    return AppColors.surfaceTint;
+  }
+  if (tone === SettingsEntryTone.MUTED) {
+    return AppColors.surfaceMuted;
+  }
+  return AppColors.primarySoft;
+}
+
+@Component
+export struct SettingsPageHeader {
+  @Prop title: string = '';
+  @Prop subtitle: string = '';
+  @Prop showBack: boolean = false;
+  onBack: () => void = () => {};
+
+  build() {
+    Column({ space: AppMetrics.space16 }) {
+      if (this.showBack) {
+        Button('‹')
+          .width(44)
+          .height(40)
+          .borderRadius(AppMetrics.buttonRadius)
+          .fontSize(24)
+          .fontColor(AppColors.text)
+          .backgroundColor(AppColors.surface)
+          .border({ width: 1, color: AppColors.border })
+          .stateEffect(true)
+          .onClick(() => {
+            this.onBack();
+          })
+      }
+
+      AppPageHeader({
+        title: this.title,
+        subtitle: this.subtitle
+      })
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+  }
+}
+
+@Component
+export struct SettingsSectionHeader {
+  @Prop title: string = '';
+  @Prop description: string = '';
+
+  build() {
+    Column({ space: 4 }) {
+      Text(this.title)
+        .fontSize(AppTypography.meta)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .width('100%')
+
+      if (this.description.length > 0) {
+        Text(this.description)
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.mutedText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
+          .maxLines(2)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+  }
+}
+
+@Component
+export struct SettingsLinkRow {
+  @Prop title: string = '';
+  @Prop value: string = '';
+  @Prop status: string = '';
+  @Prop tone: SettingsEntryTone = SettingsEntryTone.DEFAULT;
+  @Prop showChevron: boolean = true;
+  onTap: () => void = () => {};
+
+  build() {
+    Row({ space: AppMetrics.cardGap }) {
+      Column({ space: 4 }) {
+        Text(this.title)
+          .fontSize(AppTypography.body)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.bodyLineHeight)
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+        if (this.value.length > 0) {
+          Text(this.value)
+            .fontSize(AppTypography.caption)
+            .fontColor(AppColors.secondaryText)
+            .lineHeight(AppTypography.captionLineHeight)
+            .width('100%')
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      if (this.status.length > 0) {
+        Text(this.status)
+          .fontSize(AppTypography.meta)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(resolveSettingsToneTextColor(this.tone))
+          .lineHeight(AppTypography.metaLineHeight)
+          .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+          .borderRadius(10)
+          .backgroundColor(resolveSettingsToneBackground(this.tone))
+          .maxLines(1)
+      }
+
+      if (this.showChevron) {
+        Text('›')
+          .fontSize(18)
+          .fontColor(AppColors.mutedText)
+          .opacity(0.5)
+      }
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding({ left: AppMetrics.cardPadding, right: AppMetrics.cardPadding, top: 14, bottom: 14 })
+    .width('100%')
+    .constraintSize({ minHeight: 68 })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+    .onClick(() => {
+      this.onTap();
+    })
   }
 }
 

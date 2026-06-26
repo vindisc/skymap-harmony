@@ -2,7 +2,17 @@ import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import { HOME_STORAGE_PAGE } from '../app/AppRouter';
-import { AppColors, AppMetrics, AppPageHeader, AppTypography, PrimaryButton, SecondaryButton } from '../components/AppDesign';
+import {
+  AppColors,
+  AppMetrics,
+  AppTypography,
+  PrimaryButton,
+  SecondaryButton,
+  SettingsEntryTone,
+  SettingsLinkRow,
+  SettingsPageHeader,
+  SettingsSectionHeader
+} from '../components/AppDesign';
 import {
   HomeStorageConfigStatus,
   HomeStorageOperationResult,
@@ -19,6 +29,8 @@ struct SyncCenterPage {
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State isTesting: boolean = false;
   @State lastCheckedAt: number = 0;
+  @State lastTestMessage: string = '';
+  @State lastTestSucceeded: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -52,6 +64,17 @@ struct SyncCenterPage {
     return HomeStorageService.resolveConfigurationStatusLabel(this.resolveStatus());
   }
 
+  private resolveStatusTone(): SettingsEntryTone {
+    const status: HomeStorageConfigStatus = this.resolveStatus();
+    if (status === HomeStorageConfigStatus.COMPLETE) {
+      return SettingsEntryTone.SUCCESS;
+    }
+    if (status === HomeStorageConfigStatus.PARTIAL) {
+      return SettingsEntryTone.WARNING;
+    }
+    return SettingsEntryTone.MUTED;
+  }
+
   private resolveAvailabilityText(): string {
     return HomeStorageService.resolveAvailabilityLabel(this.resolveStatus());
   }
@@ -70,11 +93,15 @@ struct SyncCenterPage {
   }
 
   private resolveRemoteDirectory(): string {
-    return this.homeStorageSettings.remoteDirectory.length > 0 ? this.homeStorageSettings.remoteDirectory : '未配置';
+    return this.homeStorageSettings.remoteDirectory.length > 0 ? this.homeStorageSettings.remoteDirectory : '共享根目录';
   }
 
   private openSettings(): void {
     router.pushUrl({ url: HOME_STORAGE_PAGE });
+  }
+
+  private goBack(): void {
+    router.back();
   }
 
   private async testConnection(): Promise<void> {
@@ -86,6 +113,8 @@ struct SyncCenterPage {
     try {
       const result: HomeStorageOperationResult = await HomeStorageService.testConnection(this.homeStorageSettings);
       this.lastCheckedAt = Date.now();
+      this.lastTestMessage = result.message;
+      this.lastTestSucceeded = result.success;
       promptAction.showToast({ message: result.message });
     } finally {
       this.isTesting = false;
@@ -114,35 +143,34 @@ struct SyncCenterPage {
   build() {
     Scroll() {
       Column({ space: AppMetrics.sectionGap }) {
-        AppPageHeader({
+        SettingsPageHeader({
           title: '同步中心',
-          subtitle: '管理家庭存储状态。'
+          subtitle: '查看家庭存储状态，测试连接。',
+          showBack: true,
+          onBack: () => {
+            this.goBack();
+          }
         })
 
-        Column({ space: AppMetrics.cardGap }) {
-          Row() {
-            Column({ space: AppMetrics.space8 }) {
-              Text('家庭存储')
-                .fontSize(AppTypography.cardTitle)
-                .fontWeight(600)
-                .fontColor(AppColors.text)
-                .lineHeight(AppTypography.cardTitleLineHeight)
-                .width('100%')
+        Column({ space: AppMetrics.space8 }) {
+          SettingsSectionHeader({
+            title: '家庭存储',
+            description: ''
+          })
+
+          SettingsLinkRow({
+            title: this.resolveAvailabilityText(),
+            value: `${this.resolveHomeStorageAddress()} · ${this.resolveShareName()} · ${this.resolveRemoteDirectory()}`,
+            status: this.resolveStatusText(),
+            tone: this.resolveStatusTone(),
+            showChevron: false,
+            onTap: () => {
             }
-            .alignItems(HorizontalAlign.Start)
-            .layoutWeight(1)
+          })
+        }
+        .width('100%')
 
-            Text(this.resolveStatusText())
-              .fontSize(AppTypography.caption)
-              .fontColor(this.resolveStatus() === HomeStorageConfigStatus.COMPLETE ? AppColors.tagGreenText
-                : this.resolveStatus() === HomeStorageConfigStatus.PARTIAL ? AppColors.tagAmberText : AppColors.secondaryText)
-              .padding({ left: 10, right: 10, top: 4, bottom: 4 })
-              .borderRadius(10)
-              .backgroundColor(this.resolveStatus() === HomeStorageConfigStatus.COMPLETE ? AppColors.tagGreen
-                : this.resolveStatus() === HomeStorageConfigStatus.PARTIAL ? AppColors.tagAmber : AppColors.surfaceMuted)
-          }
-          .width('100%')
-
+        Column({ space: AppMetrics.cardGap }) {
           this.InfoRow('状态', this.resolveAvailabilityText())
           this.InfoRow('SMB 地址', this.resolveHomeStorageAddress())
           this.InfoRow('共享目录', this.resolveShareName())
@@ -150,6 +178,18 @@ struct SyncCenterPage {
 
           if (this.lastCheckedAt > 0) {
             this.InfoRow('最近测试', formatReviewTime(this.lastCheckedAt))
+          }
+
+          if (this.lastTestMessage.length > 0) {
+            Text(this.lastTestMessage)
+              .fontSize(AppTypography.caption)
+              .fontColor(this.lastTestSucceeded ? AppColors.tagGreenText : AppColors.danger)
+              .lineHeight(AppTypography.captionLineHeight)
+              .width('100%')
+              .padding({ left: 12, right: 12, top: 8, bottom: 8 })
+              .borderRadius(12)
+              .backgroundColor(this.lastTestSucceeded ? AppColors.tagGreen : AppColors.surfaceTint)
+              .border({ width: 1, color: this.lastTestSucceeded ? AppColors.border : AppColors.danger })
           }
         }
         .padding(AppMetrics.cardPadding)
@@ -160,7 +200,7 @@ struct SyncCenterPage {
 
         Row({ space: AppMetrics.cardGap }) {
           SecondaryButton({
-            label: this.isTesting ? '测试中...' : '测试连接',
+            label: this.isTesting ? '测试中…' : '测试连接',
             isDisabled: this.isTesting,
             onTap: () => {
               this.testConnection();

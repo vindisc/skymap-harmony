@@ -1,8 +1,17 @@
+import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
-import { AppColors, AppMetrics, AppPageHeader, AppTypography } from '../components/AppDesign';
+import {
+  AppColors,
+  AppMetrics,
+  AppTypography,
+  SettingsEntryTone,
+  SettingsLinkRow,
+  SettingsPageHeader,
+  SettingsSectionHeader
+} from '../components/AppDesign';
 import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
 import {
   HomeStorageConfigStatus,
@@ -133,6 +142,10 @@ struct HomeStoragePage {
     this.isSettingsLoaded = true;
   }
 
+  private goBack(): void {
+    router.back();
+  }
+
   private currentHomeStorageSettings(): HomeStorageSettings {
     return {
       username: this.homeStorageUsername,
@@ -260,6 +273,27 @@ struct HomeStoragePage {
     return HomeStorageService.resolveConfigurationStatusLabel(this.resolveHomeStorageStatus());
   }
 
+  private resolveStatusTone(): SettingsEntryTone {
+    const status: HomeStorageConfigStatus = this.resolveHomeStorageStatus();
+    if (status === HomeStorageConfigStatus.COMPLETE) {
+      return SettingsEntryTone.SUCCESS;
+    }
+    if (status === HomeStorageConfigStatus.PARTIAL) {
+      return SettingsEntryTone.WARNING;
+    }
+    return SettingsEntryTone.MUTED;
+  }
+
+  private resolveStorageSummary(): string {
+    if (!this.isSettingsLoaded) {
+      return '正在读取家庭存储设置';
+    }
+    if (this.resolveHomeStorageStatus() === HomeStorageConfigStatus.EMPTY) {
+      return '填写 SMB 地址、共享目录和账号后即可测试连接。';
+    }
+    return `${this.homeStorageHost || '地址未填'} · ${this.homeStorageShareName || '共享目录未填'}`;
+  }
+
   private isActionDisabled(): boolean {
     return !this.isSettingsLoaded || this.isSaving || this.isTestingHomeStorage;
   }
@@ -292,26 +326,34 @@ struct HomeStoragePage {
 
   @Builder
   Header() {
-    Row({ space: AppMetrics.space16 }) {
-      Column({ space: 6 }) {
-        AppPageHeader({
-          title: '家庭存储',
-          subtitle: '管理家庭存储连接与保存位置。'
-        })
+    SettingsPageHeader({
+      title: '家庭存储',
+      subtitle: '管理家庭存储连接与保存位置。',
+      showBack: true,
+      onBack: () => {
+        this.goBack();
       }
-        .layoutWeight(1)
+    })
+  }
 
-      Text(this.resolveStatusTitle())
-        .fontSize(AppTypography.caption)
-        .fontColor(this.resolveHomeStorageStatus() === HomeStorageConfigStatus.COMPLETE ? AppColors.tagGreenText
-          : this.resolveHomeStorageStatus() === HomeStorageConfigStatus.PARTIAL ? AppColors.tagAmberText : AppColors.secondaryText)
-        .lineHeight(AppTypography.metaLineHeight)
-        .padding({ left: 10, right: 10, top: 4, bottom: 4 })
-        .borderRadius(10)
-        .backgroundColor(this.resolveHomeStorageStatus() === HomeStorageConfigStatus.COMPLETE ? AppColors.tagGreen
-          : this.resolveHomeStorageStatus() === HomeStorageConfigStatus.PARTIAL ? AppColors.tagAmber : AppColors.surfaceMuted)
+  @Builder
+  StatusSummary() {
+    Column({ space: AppMetrics.space8 }) {
+      SettingsSectionHeader({
+        title: '连接状态',
+        description: ''
+      })
+
+      SettingsLinkRow({
+        title: this.resolveStatusTitle(),
+        value: this.resolveStorageSummary(),
+        status: this.resolveStatusTitle(),
+        tone: this.resolveStatusTone(),
+        showChevron: false,
+        onTap: () => {
+        }
+      })
     }
-    .alignItems(VerticalAlign.Top)
     .width('100%')
   }
 
@@ -380,6 +422,11 @@ struct HomeStoragePage {
   @Builder
   ConfigurationForm() {
     Column({ space: AppMetrics.cardGap }) {
+      SettingsSectionHeader({
+        title: '连接信息',
+        description: '这些信息只保存在本机，用于导出后同步到家庭存储。'
+      })
+
       this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
         this.homeStorageHost = value;
         this.clearActionFeedback();
@@ -424,6 +471,8 @@ struct HomeStoragePage {
       Column({ space: AppMetrics.cardGap }) {
         this.Header()
 
+        this.StatusSummary()
+
         this.ActionFeedback()
 
         if (this.isSettingsLoaded) {
@@ -433,8 +482,8 @@ struct HomeStoragePage {
         }
 
         SettingsActionBar({
-          primaryLabel: this.isSaving ? '保存中...' : '保存',
-          secondaryLabel: this.isTestingHomeStorage ? '测试中...' : '测试',
+          primaryLabel: this.isSaving ? '保存中…' : '保存',
+          secondaryLabel: this.isTestingHomeStorage ? '测试中…' : '测试',
           isPrimaryDisabled: this.isActionDisabled(),
           isSecondaryDisabled: this.isActionDisabled(),
           onPrimaryTap: () => {

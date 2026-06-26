@@ -102,7 +102,7 @@ assert(!previewPageSource.includes('ReviewCardRdbService'), 'PreviewPage must no
 assert(!projectDetailSource.includes('ReviewCardRdbDiagnosticsService'), 'ProjectDetailPage must not expose diagnostics as a formal UI flow.');
 assert(!homePageSource.includes('ReviewCardRdbDiagnosticsService'), 'HomePage must not expose diagnostics as a formal UI flow.');
 assert(!previewPageSource.includes('ReviewCardRdbDiagnosticsService'), 'PreviewPage must not expose diagnostics as a formal UI flow.');
-assert(myPageSource.includes('RDB开发诊断'), 'MyPage should expose the temporary developer RDB diagnostics entry.');
+assert(myPageSource.includes('开发诊断'), 'MyPage should expose the temporary developer diagnostics entry.');
 assert(myPageSource.includes('runRdbDiagnostics(context)'), 'MyPage diagnostics should run RDB sidecar diagnostics.');
 assert(myPageSource.includes('runMigrationDiagnostics(context)'), 'MyPage diagnostics should run Preferences to RDB migration diagnostics.');
 assert(myPageSource.includes('console.info(`[RDB开发诊断]'), 'MyPage diagnostics should write full results to console.info.');

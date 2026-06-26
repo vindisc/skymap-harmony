@@ -1,6 +1,14 @@
+import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { AppColors, AppMetrics, AppPageHeader, AppTypography, PrimaryButton } from '../components/AppDesign';
+import {
+  AppColors,
+  AppMetrics,
+  AppTypography,
+  PrimaryButton,
+  SettingsPageHeader,
+  SettingsSectionHeader
+} from '../components/AppDesign';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
 @Entry
@@ -19,6 +27,21 @@ struct ReviewerProfilePage {
 
   private async loadReviewerName(): Promise<void> {
     this.reviewerName = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+  }
+
+  private goBack(): void {
+    router.back();
+  }
+
+  private resolvePreviewName(): string {
+    const name = this.reviewerName.trim();
+    return name.length > 0 ? name : '未设置';
+  }
+
+  private resolvePreviewDescription(): string {
+    return this.reviewerName.trim().length > 0
+      ? '之后新建复盘会使用这个名称。'
+      : '留空也可以继续复盘，之后可随时回来补充。';
   }
 
   private async saveReviewerName(): Promise<void> {
@@ -40,18 +63,49 @@ struct ReviewerProfilePage {
   build() {
     Scroll() {
       Column({ space: AppMetrics.sectionGap }) {
-        AppPageHeader({
+        SettingsPageHeader({
           title: '复盘人',
-          subtitle: '设置这台设备默认使用的复盘人名称。'
+          subtitle: '设置这台设备默认使用的复盘人名称。',
+          showBack: true,
+          onBack: () => {
+            this.goBack();
+          }
         })
 
+        Column({ space: AppMetrics.space8 }) {
+          SettingsSectionHeader({
+            title: '当前状态',
+            description: this.resolvePreviewDescription()
+          })
+
+          Column({ space: 4 }) {
+            Text(this.resolvePreviewName())
+              .fontSize(AppTypography.cardTitle)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(AppColors.text)
+              .lineHeight(AppTypography.cardTitleLineHeight)
+              .width('100%')
+
+            Text('复盘人只影响应用内展示和导出的复盘数据。')
+              .fontSize(AppTypography.caption)
+              .fontColor(AppColors.secondaryText)
+              .lineHeight(AppTypography.captionLineHeight)
+              .width('100%')
+          }
+          .alignItems(HorizontalAlign.Start)
+          .padding(AppMetrics.cardPadding)
+          .width('100%')
+          .borderRadius(AppMetrics.cardRadius)
+          .backgroundColor(AppColors.surface)
+          .border({ width: 1, color: AppColors.border })
+        }
+        .width('100%')
+
         Column({ space: AppMetrics.cardGap }) {
-          Text('复盘人')
-            .fontSize(AppTypography.inputLabel)
-            .fontWeight(600)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.inputLabelLineHeight)
-            .width('100%')
+          SettingsSectionHeader({
+            title: '编辑',
+            description: ''
+          })
 
           TextInput({ text: this.reviewerName, placeholder: '可留空' })
             .height(AppMetrics.controlHeight)
@@ -65,20 +119,20 @@ struct ReviewerProfilePage {
             .onChange((value: string) => {
               this.reviewerName = value;
             })
-
-          PrimaryButton({
-            label: this.isSaving ? '保存中...' : '保存',
-            isDisabled: this.isSaving,
-            onTap: () => {
-              this.saveReviewerName();
-            }
-          })
         }
         .padding(AppMetrics.cardPadding)
         .width('100%')
         .borderRadius(AppMetrics.cardRadius)
         .backgroundColor(AppColors.surface)
         .border({ width: 1, color: AppColors.border })
+
+        PrimaryButton({
+          label: this.isSaving ? '保存中…' : '保存',
+          isDisabled: this.isSaving,
+          onTap: () => {
+            this.saveReviewerName();
+          }
+        })
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')

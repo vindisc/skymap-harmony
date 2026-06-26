@@ -2,7 +2,15 @@ import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import { HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../app/AppRouter';
-import { AppColors, AppMetrics, AppPageHeader, AppTypography } from '../components/AppDesign';
+import {
+  AppColors,
+  AppMetrics,
+  AppTypography,
+  SettingsEntryTone,
+  SettingsLinkRow,
+  SettingsPageHeader,
+  SettingsSectionHeader
+} from '../components/AppDesign';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import {
@@ -16,6 +24,7 @@ import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
 const APP_BUILD_TEXT: string = 'Harmony Beta V1';
+const MY_PAGE_BOTTOM_PADDING: number = AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space16;
 
 @Component
 export struct MyPage {
@@ -105,6 +114,30 @@ export struct MyPage {
     return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
   }
 
+  private resolveStorageTone(): SettingsEntryTone {
+    const status: HomeStorageConfigStatus = this.resolveHomeStorageStatus();
+    if (status === HomeStorageConfigStatus.COMPLETE) {
+      return SettingsEntryTone.SUCCESS;
+    }
+    if (status === HomeStorageConfigStatus.PARTIAL) {
+      return SettingsEntryTone.WARNING;
+    }
+    return SettingsEntryTone.MUTED;
+  }
+
+  private resolveDeveloperTone(): SettingsEntryTone {
+    if (this.rdbDiagnosticsStatus === '通过') {
+      return SettingsEntryTone.SUCCESS;
+    }
+    if (this.rdbDiagnosticsStatus === '失败') {
+      return SettingsEntryTone.DANGER;
+    }
+    if (this.rdbDiagnosticsStatus === '运行中') {
+      return SettingsEntryTone.WARNING;
+    }
+    return SettingsEntryTone.MUTED;
+  }
+
   private resolveProfileName(): string {
     return this.resolveReviewerSummary();
   }
@@ -185,61 +218,11 @@ export struct MyPage {
   }
 
   @Builder
-  LinkRow(title: string, value: string, onTap: () => void, status: string = '') {
-    Row({ space: AppMetrics.cardGap }) {
-      Column({ space: AppMetrics.space8 }) {
-        Text(title)
-          .fontSize(16)
-          .fontWeight(600)
-          .fontColor(AppColors.text)
-          .lineHeight(AppTypography.cardTitleLineHeight)
-          .width('100%')
-
-        Text(value)
-          .fontSize(13)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.captionLineHeight)
-          .width('100%')
-      }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-
-      if (status.length > 0) {
-        Text(status)
-          .fontSize(12)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(status === '已配置' || status === '可用' ? AppColors.tagGreenText
-            : status === '待完善' ? AppColors.tagAmberText : AppColors.secondaryText)
-          .padding({ left: 10, right: 10, top: 4, bottom: 4 })
-          .borderRadius(10)
-          .backgroundColor(status === '已配置' || status === '可用' ? AppColors.tagGreen
-            : status === '待完善' ? AppColors.tagAmber : AppColors.surfaceMuted)
-      }
-
-      Text('›')
-        .fontSize(18)
-        .fontColor(AppColors.mutedText)
-        .opacity(0.42)
-    }
-    .alignItems(VerticalAlign.Center)
-    .padding(AppMetrics.cardPadding)
-    .width('100%')
-    .constraintSize({ minHeight: 74, maxHeight: 82 })
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: AppColors.border })
-
-    .onClick(() => {
-      onTap();
-    })
-  }
-
-  @Builder
   IdentityCard() {
-    Column({ space: AppMetrics.cardGap }) {
+    Column({ space: AppMetrics.space16 }) {
       Column({ space: 4 }) {
-        Text('个人复盘资料')
-          .fontSize(13)
+        Text('当前复盘人')
+          .fontSize(AppTypography.meta)
           .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.metaLineHeight)
@@ -262,32 +245,32 @@ export struct MyPage {
       .alignItems(HorizontalAlign.Start)
 
       Row({ space: AppMetrics.space16 }) {
-        Column({ space: 2 }) {
+        Column({ space: 4 }) {
           Text(`${this.reviewCount}`)
-            .fontSize(AppTypography.statNumber)
+            .fontSize(AppTypography.sectionTitle)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.primary)
-            .lineHeight(AppTypography.statNumberLineHeight)
+            .lineHeight(AppTypography.sectionTitleLineHeight)
 
           Text('累计复盘')
-            .fontSize(12)
+            .fontSize(AppTypography.meta)
             .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.statLabelLineHeight)
+            .lineHeight(AppTypography.metaLineHeight)
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
 
-        Column({ space: 2 }) {
+        Column({ space: 4 }) {
           Text(`${this.validReviewCount}`)
-            .fontSize(AppTypography.statNumber)
+            .fontSize(AppTypography.sectionTitle)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.primary)
-            .lineHeight(AppTypography.statNumberLineHeight)
+            .lineHeight(AppTypography.sectionTitleLineHeight)
 
           Text('成立记录')
-            .fontSize(12)
+            .fontSize(AppTypography.meta)
             .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.statLabelLineHeight)
+            .lineHeight(AppTypography.metaLineHeight)
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
@@ -303,44 +286,91 @@ export struct MyPage {
     .border({ width: 1, color: AppColors.border })
   }
 
+  @Builder
+  SettingsSection() {
+    Column({ space: AppMetrics.space8 }) {
+      SettingsSectionHeader({
+        title: '设置',
+        description: '影响新建复盘、导出和家庭存储同步。'
+      })
+
+      SettingsLinkRow({
+        title: '复盘人',
+        value: this.resolveReviewerSummary() === '未设置' ? '新建复盘会使用默认空名称' : this.resolveReviewerSummary(),
+        status: this.resolveReviewerSummary() === '未设置' ? '未设置' : '已设置',
+        tone: this.resolveReviewerSummary() === '未设置' ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
+        onTap: () => {
+          this.openReviewerProfile();
+        }
+      })
+
+      SettingsLinkRow({
+        title: '家庭存储',
+        value: this.resolveHomeStorageDetail(),
+        status: this.resolveHomeStorageBadge(),
+        tone: this.resolveStorageTone(),
+        onTap: () => {
+          this.openHomeStorage();
+        }
+      })
+
+      SettingsLinkRow({
+        title: '同步中心',
+        value: '查看家庭存储状态，测试连接。',
+        status: this.resolveSyncBadge(),
+        tone: this.resolveStorageTone(),
+        onTap: () => {
+          this.openSyncCenter();
+        }
+      })
+    }
+    .width('100%')
+  }
+
+  @Builder
+  AboutSection() {
+    Column({ space: AppMetrics.space8 }) {
+      SettingsSectionHeader({
+        title: '应用',
+        description: ''
+      })
+
+      SettingsLinkRow({
+        title: '版本',
+        value: `${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`,
+        status: '',
+        tone: SettingsEntryTone.MUTED,
+        showChevron: false,
+        onTap: () => {
+        }
+      })
+
+      SettingsLinkRow({
+        title: '开发诊断',
+        value: this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : `RDB 验证 · ${this.rdbDiagnosticsSummary}`,
+        status: this.rdbDiagnosticsStatus,
+        tone: this.resolveDeveloperTone(),
+        onTap: () => {
+          this.confirmRdbDeveloperDiagnostics();
+        }
+      })
+    }
+    .width('100%')
+  }
+
   build() {
     Scroll() {
-      Column({ space: AppMetrics.cardGap }) {
-        AppPageHeader({
+      Column({ space: AppMetrics.sectionGap }) {
+        SettingsPageHeader({
           title: '我的',
-          subtitle: '管理复盘身份、同步方式和应用信息。'
+          subtitle: '复盘身份、存储同步和应用状态。'
         })
 
         this.IdentityCard()
 
-        this.LinkRow('复盘人', this.resolveReviewerSummary(), () => {
-          this.openReviewerProfile();
-        })
+        this.SettingsSection()
 
-        this.LinkRow(
-          '家庭存储',
-          this.resolveHomeStorageDetail(),
-          () => {
-            this.openHomeStorage();
-          },
-          this.resolveHomeStorageBadge()
-        )
-
-        this.LinkRow('同步中心', this.resolveSyncSummary(), () => {
-          this.openSyncCenter();
-        }, this.resolveSyncBadge())
-
-        this.LinkRow('关于', `${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`, () => {
-        })
-
-        this.LinkRow(
-          '开发诊断',
-          this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : `RDB 验证 · ${this.rdbDiagnosticsSummary}`,
-          () => {
-            this.confirmRdbDeveloperDiagnostics();
-          },
-          this.rdbDiagnosticsStatus
-        )
+        this.AboutSection()
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
@@ -348,7 +378,7 @@ export struct MyPage {
         left: AppMetrics.pagePadding,
         right: AppMetrics.pagePadding,
         top: AppMetrics.pageTopPadding,
-        bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space16
+        bottom: MY_PAGE_BOTTOM_PADDING
       })
     }
     .width('100%')
