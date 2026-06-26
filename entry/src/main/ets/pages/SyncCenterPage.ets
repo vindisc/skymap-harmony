@@ -100,10 +100,6 @@ struct SyncCenterPage {
     router.pushUrl({ url: HOME_STORAGE_PAGE });
   }
 
-  private goBack(): void {
-    router.back();
-  }
-
   private async testConnection(): Promise<void> {
     if (this.isTesting) {
       return;
@@ -145,11 +141,7 @@ struct SyncCenterPage {
       Column({ space: AppMetrics.sectionGap }) {
         SettingsPageHeader({
           title: '同步中心',
-          subtitle: '查看家庭存储状态，测试连接。',
-          showBack: true,
-          onBack: () => {
-            this.goBack();
-          }
+          subtitle: '查看家庭存储状态，测试连接。'
         })
 
         Column({ space: AppMetrics.space8 }) {
@@ -225,7 +217,9 @@ struct SyncCenterPage {
         bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
       })
       .width('100%')
+      .height('100%')
       .alignItems(HorizontalAlign.Start)
+      .justifyContent(FlexAlign.Start)
     }
     .width('100%')
     .height('100%')

@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
@@ -140,10 +139,6 @@ struct HomeStoragePage {
     this.homeStoragePassword = homeStorageSettings.password;
     this.homeStorageDomain = homeStorageSettings.smbDomain;
     this.isSettingsLoaded = true;
-  }
-
-  private goBack(): void {
-    router.back();
   }
 
   private currentHomeStorageSettings(): HomeStorageSettings {
@@ -328,11 +323,7 @@ struct HomeStoragePage {
   Header() {
     SettingsPageHeader({
       title: '家庭存储',
-      subtitle: '管理家庭存储连接与保存位置。',
-      showBack: true,
-      onBack: () => {
-        this.goBack();
-      }
+      subtitle: '管理家庭存储连接与保存位置。'
     })
   }
 
@@ -502,6 +493,8 @@ struct HomeStoragePage {
         top: AppMetrics.pageTopPadding,
         bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding
       })
+      .height('100%')
+      .justifyContent(FlexAlign.Start)
     }
     .width('100%')
     .height('100%')

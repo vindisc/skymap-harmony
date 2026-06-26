@@ -195,30 +195,27 @@ function resolveSettingsToneBackground(tone: SettingsEntryTone): string {
 export struct SettingsPageHeader {
   @Prop title: string = '';
   @Prop subtitle: string = '';
-  @Prop showBack: boolean = false;
-  onBack: () => void = () => {};
 
   build() {
-    Column({ space: AppMetrics.space16 }) {
-      if (this.showBack) {
-        Button('‹')
-          .width(44)
-          .height(40)
-          .borderRadius(AppMetrics.buttonRadius)
-          .fontSize(24)
-          .fontColor(AppColors.text)
-          .backgroundColor(AppColors.surface)
-          .border({ width: 1, color: AppColors.border })
-          .stateEffect(true)
-          .onClick(() => {
-            this.onBack();
-          })
-      }
+    Column({ space: 4 }) {
+      Text(this.title)
+        .fontSize(AppTypography.sectionTitle)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.sectionTitleLineHeight)
+        .maxLines(2)
+        .wordBreak(WordBreak.BREAK_WORD)
+        .width('100%')
 
-      AppPageHeader({
-        title: this.title,
-        subtitle: this.subtitle
-      })
+      if (this.subtitle.length > 0) {
+        Text(this.subtitle)
+          .fontSize(AppTypography.body)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.bodyLineHeight)
+          .maxLines(2)
+          .wordBreak(WordBreak.BREAK_WORD)
+          .width('100%')
+      }
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')

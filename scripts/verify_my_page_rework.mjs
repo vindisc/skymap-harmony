@@ -5,6 +5,7 @@ const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf
 const reviewerProfileSource = fs.readFileSync('entry/src/main/ets/pages/ReviewerProfilePage.ets', 'utf8');
 const homeStorageSource = fs.readFileSync('entry/src/main/ets/pages/HomeStoragePage.ets', 'utf8');
 const syncCenterSource = fs.readFileSync('entry/src/main/ets/pages/SyncCenterPage.ets', 'utf8');
+const projectDetailSource = fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8');
 
 let failed = false;
 
@@ -15,9 +16,40 @@ function assert(condition, message) {
   }
 }
 
+function extractStructBody(source, structName) {
+  const signature = `export struct ${structName}`;
+  const start = source.indexOf(signature);
+  if (start < 0) {
+    return '';
+  }
+  const bodyStart = source.indexOf('{', start);
+  if (bodyStart < 0) {
+    return '';
+  }
+  let depth = 0;
+  for (let index = bodyStart; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === '{') {
+      depth += 1;
+    } else if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return source.slice(bodyStart, index + 1);
+      }
+    }
+  }
+  return '';
+}
+
+const settingsPageHeaderBody = extractStructBody(appDesignSource, 'SettingsPageHeader');
+
 assert(appDesignSource.includes('export struct SettingsPageHeader'), 'Shared settings page header must exist.');
 assert(appDesignSource.includes('export struct SettingsSectionHeader'), 'Shared settings section header must exist.');
 assert(appDesignSource.includes('export struct SettingsLinkRow'), 'Shared settings link row must exist.');
+assert(!appDesignSource.includes("Button('‹')"), 'SettingsPageHeader must not render a back arrow.');
+assert(!appDesignSource.includes('showBack'), 'SettingsPageHeader must not expose back-arrow controls.');
+assert(settingsPageHeaderBody.includes('.fontSize(AppTypography.sectionTitle)'), 'SettingsPageHeader title must use compact section title scale.');
+assert(!settingsPageHeaderBody.includes('.fontSize(AppTypography.pageTitle)'), 'SettingsPageHeader must not use full page title scale.');
 assert(!appDesignSource.includes('.stateEffect(true)\n    .onClick(() => {\n      this.onTap();'), 'SettingsLinkRow must not use unsupported Row stateEffect.');
 
 assert(myPageSource.includes('SettingsPageHeader({'), 'MyPage must use the shared settings header.');
@@ -37,8 +69,9 @@ for (const [name, source] of [
   ['SyncCenterPage', syncCenterSource]
 ]) {
   assert(source.includes('SettingsPageHeader({'), `${name} must use shared settings header.`);
-  assert(source.includes('showBack: true'), `${name} must show a back affordance.`);
-  assert(source.includes('router.back()'), `${name} must wire the back action.`);
+  assert(!source.includes('showBack: true'), `${name} must not show a back arrow.`);
+  assert(!source.includes('router.back()'), `${name} must not wire a custom back arrow.`);
+  assert(source.includes('.justifyContent(FlexAlign.Start)'), `${name} must pin content to the top.`);
   assert(!source.includes('.justifyContent(FlexAlign.Center)'), `${name} must not vertically center content.`);
 }
 
@@ -54,9 +87,11 @@ assert(homeStorageSource.includes("secondaryLabel: this.isTestingHomeStorage ? '
 assert(syncCenterSource.includes('lastTestMessage'), 'SyncCenterPage must keep visible test feedback.');
 assert(syncCenterSource.includes("label: this.isTesting ? '测试中…' : '测试连接'"), 'SyncCenterPage test button must show loading state.');
 assert(syncCenterSource.includes('SettingsLinkRow({'), 'SyncCenterPage must show a compact status row.');
+assert(projectDetailSource.includes("Button('清除')"), 'Review library search clear action must be explicit text.');
+assert(!projectDetailSource.includes("Button('×')"), 'Review library search must not use ambiguous glyph-only clear action.');
 
 if (failed) {
   process.exit(1);
 }
 
-console.log('my page rework: grouped entries, back affordances, top alignment, and deep feedback verified');
+console.log('my page rework: grouped entries, no back arrows, top alignment, compact titles, and deep feedback verified');

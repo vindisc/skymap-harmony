@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import {
@@ -27,10 +26,6 @@ struct ReviewerProfilePage {
 
   private async loadReviewerName(): Promise<void> {
     this.reviewerName = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
-  }
-
-  private goBack(): void {
-    router.back();
   }
 
   private resolvePreviewName(): string {
@@ -65,11 +60,7 @@ struct ReviewerProfilePage {
       Column({ space: AppMetrics.sectionGap }) {
         SettingsPageHeader({
           title: '复盘人',
-          subtitle: '设置这台设备默认使用的复盘人名称。',
-          showBack: true,
-          onBack: () => {
-            this.goBack();
-          }
+          subtitle: '设置这台设备默认使用的复盘人名称。'
         })
 
         Column({ space: AppMetrics.space8 }) {
@@ -142,6 +133,8 @@ struct ReviewerProfilePage {
         top: AppMetrics.pageTopPadding,
         bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
       })
+      .height('100%')
+      .justifyContent(FlexAlign.Start)
     }
     .width('100%')
     .height('100%')
