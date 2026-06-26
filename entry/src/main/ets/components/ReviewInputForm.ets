@@ -8,6 +8,8 @@ import {
 const REVIEW_TEXTAREA_LINE_HEIGHT: number = AppTypography.inputTextLineHeight;
 const REVIEW_TEXTAREA_VERTICAL_PADDING: number = 24;
 const REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE: number = 10;
+const REVIEW_FIELD_LABEL_GAP: number = AppMetrics.space8;
+const REVIEW_FORM_FIELD_GAP: number = AppMetrics.cardGap;
 const PRIMARY_FIELD_LABEL_SIZE: number = AppTypography.inputLabel;
 const PRIMARY_FIELD_INPUT_SIZE: number = AppTypography.inputText;
 const SECONDARY_FIELD_LABEL_SIZE: number = AppTypography.inputLabel;
@@ -45,6 +47,7 @@ export struct ReviewInputForm {
   @Link extendedUnderstanding: string;
   @Link currentBlocker: string;
   onFieldFocus: (field: string) => void = () => {};
+  onFieldChange: (field: string) => void = () => {};
   onFieldBlur: () => void = () => {};
 
   @Builder
@@ -67,7 +70,7 @@ export struct ReviewInputForm {
 
   @Builder
   JudgementSelect() {
-    Column({ space: AppMetrics.space16 }) {
+    Column({ space: REVIEW_FIELD_LABEL_GAP }) {
       this.FieldLabel('是否成立', SECONDARY_FIELD_LABEL_SIZE)
       Select([
         { value: ReviewJudgementStatus.VALID },
@@ -90,6 +93,7 @@ export struct ReviewInputForm {
         .border({ width: 1, color: AppColors.border })
         .onSelect((index: number, value: string) => {
           this.judgement = normalizeReviewJudgement(value);
+          this.onFieldChange('judgement');
         })
     }
     .width('100%')
@@ -106,17 +110,22 @@ export struct ReviewInputForm {
     inputSize: number,
     onChange: (value: string) => void
   ) {
-    Column({ space: AppMetrics.space16 }) {
+    Column({ space: REVIEW_FIELD_LABEL_GAP }) {
       this.FieldLabel(label, labelSize)
       TextArea({ text: value, placeholder: placeholder })
         .height(this.getTextAreaHeight(value, defaultLines))
+        .style(TextContentStyle.DEFAULT)
+        .barState(BarState.Off)
+        .enableKeyboardOnFocus(true)
         .borderRadius(AppMetrics.cardRadius)
         .fontSize(inputSize)
         .lineHeight(REVIEW_TEXTAREA_LINE_HEIGHT)
         .fontColor(AppColors.text)
         .placeholderColor(AppColors.placeholderText)
+        .caretColor(AppColors.primary)
+        .caretStyle({ width: 2, color: AppColors.primary })
         .backgroundColor(AppColors.surfaceTint)
-        .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space16, bottom: AppMetrics.space16 })
+        .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: 12, bottom: 12 })
         .border({ width: 1, color: AppColors.border })
         .onFocus(() => {
           this.onFieldFocus(fieldKey);
@@ -126,21 +135,24 @@ export struct ReviewInputForm {
         })
         .onChange((nextValue: string) => {
           onChange(nextValue);
+          this.onFieldChange(fieldKey);
         })
     }
     .width('100%')
   }
 
   build() {
-    Column({ space: AppMetrics.space16 }) {
-      Column({ space: AppMetrics.space16 }) {
+    Column({ space: REVIEW_FORM_FIELD_GAP }) {
+      Column({ space: REVIEW_FIELD_LABEL_GAP }) {
         this.FieldLabel('标题', PRIMARY_FIELD_LABEL_SIZE)
         TextInput({ text: this.title, placeholder: '这张照片是否成立' })
           .height(AppMetrics.controlHeight)
+          .enableKeyboardOnFocus(true)
           .borderRadius(AppMetrics.cardRadius)
           .fontSize(PRIMARY_FIELD_INPUT_SIZE)
           .fontColor(AppColors.text)
           .placeholderColor(AppColors.placeholderText)
+          .caretColor(AppColors.primary)
           .backgroundColor(AppColors.surfaceTint)
           .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
           .border({ width: 1, color: AppColors.border })
@@ -152,6 +164,7 @@ export struct ReviewInputForm {
           })
           .onChange((value: string) => {
             this.title = value;
+            this.onFieldChange('title');
           })
       }
       .width('100%')

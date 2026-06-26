@@ -21,28 +21,32 @@ const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
 const EDITOR_VIEWPORT_FALLBACK_HEIGHT: number = 720;
 const EDITOR_FORM_BOTTOM_PADDING: number = 34;
 const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 42;
-const EDITOR_FIELD_SAFE_TOP_GAP: number = 12;
-const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 26;
+const EDITOR_FIELD_SAFE_TOP_GAP: number = 6;
+const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 34;
+const EDITOR_KEYBOARD_VISIBLE_RESERVE: number = 54;
 const EDITOR_KEYBOARD_SCROLL_DELAY: number = 220;
 const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 80;
-const EDITOR_PHOTO_TITLE_HEIGHT: number = AppTypography.pageTitleLineHeight;
-const EDITOR_PHOTO_TITLE_GAP: number = 8;
-const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 10;
-const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 18;
-const EDITOR_PHOTO_MIN_HEIGHT: number = 188;
-const EDITOR_PHOTO_MAX_HEIGHT: number = 300;
-const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.32;
-const EDITOR_TITLE_FIELD_HEIGHT: number = 80;
+const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 4;
+const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 10;
+const EDITOR_PHOTO_MIN_HEIGHT: number = 172;
+const EDITOR_PHOTO_MAX_HEIGHT: number = 286;
+const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.30;
+const EDITOR_TITLE_FIELD_HEIGHT: number = AppTypography.inputLabelLineHeight + AppMetrics.space8 + AppMetrics.controlHeight;
 const EDITOR_FIELD_LABEL_HEIGHT: number = AppTypography.inputLabelLineHeight;
 const EDITOR_FIELD_LABEL_GAP: number = 8;
-const EDITOR_FIELD_GAP: number = 16;
+const EDITOR_FIELD_GAP: number = AppMetrics.cardGap;
 const EDITOR_TEXTAREA_LINE_HEIGHT: number = AppTypography.inputTextLineHeight;
-const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 26;
+const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 24;
 const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 10;
 
 interface EditorPhotoFrameSize {
   width: number;
   height: number;
+}
+
+enum EditorFieldScrollIntent {
+  START = 'start',
+  CARET = 'caret'
 }
 
 @Entry
@@ -122,7 +126,7 @@ struct EditorPage {
         return;
       }
 
-      this.scheduleFieldIntoView(this.focusedField, EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY);
+      this.scheduleFieldIntoView(this.focusedField, EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY, EditorFieldScrollIntent.START);
     };
 
     window.getLastWindow(this.getAbilityContext()).then((targetWindow: window.Window) => {
@@ -279,8 +283,6 @@ struct EditorPage {
 
   private getPhotoHeaderHeight(): number {
     return EDITOR_PHOTO_HEADER_TOP_PADDING +
-      EDITOR_PHOTO_TITLE_HEIGHT +
-      EDITOR_PHOTO_TITLE_GAP +
       this.getPhotoFrameHeight() +
       EDITOR_PHOTO_HEADER_BOTTOM_PADDING;
   }
@@ -372,19 +374,24 @@ struct EditorPage {
   }
 
   private getFormVisibleHeight(): number {
+    const keyboardReserve: number = this.isKeyboardActive() ? EDITOR_KEYBOARD_VISIBLE_RESERVE : 0;
     return Math.max(
       120,
-      this.viewportHeight - this.getPhotoHeaderHeight() - this.getKeyboardInset()
+      this.viewportHeight - this.getPhotoHeaderHeight() - this.getKeyboardInset() - keyboardReserve
     );
   }
 
-  private getFieldScrollOffset(field: string): number {
+  private getFieldScrollOffset(field: string, intent: EditorFieldScrollIntent): number {
     const fieldTop: number = this.getFieldTopOffset(field);
     const fieldBottom: number = fieldTop + this.getFocusedFieldHeight(field);
     const currentOffset: number = this.getCurrentScrollOffset();
     const visibleHeight: number = this.getFormVisibleHeight();
     const safeTop: number = currentOffset + EDITOR_FIELD_SAFE_TOP_GAP;
     const safeBottom: number = currentOffset + visibleHeight - EDITOR_FIELD_SAFE_BOTTOM_GAP;
+
+    if (intent === EditorFieldScrollIntent.START && this.isKeyboardActive()) {
+      return Math.max(0, fieldTop - EDITOR_FIELD_SAFE_TOP_GAP);
+    }
 
     if (fieldBottom > safeBottom) {
       return Math.max(0, fieldBottom - visibleHeight + EDITOR_FIELD_SAFE_BOTTOM_GAP);
@@ -397,8 +404,8 @@ struct EditorPage {
     return Math.max(0, currentOffset);
   }
 
-  private scrollFieldIntoView(field: string): void {
-    const targetOffset: number = this.getFieldScrollOffset(field);
+  private scrollFieldIntoView(field: string, intent: EditorFieldScrollIntent): void {
+    const targetOffset: number = this.getFieldScrollOffset(field, intent);
     this.editorScroller.scrollTo({
       xOffset: 0,
       yOffset: targetOffset,
@@ -411,10 +418,18 @@ struct EditorPage {
 
   private focusField(field: string): void {
     this.focusedField = field;
-    this.scheduleFieldIntoView(field, EDITOR_KEYBOARD_SCROLL_DELAY);
+    this.scheduleFieldIntoView(field, EDITOR_KEYBOARD_SCROLL_DELAY, EditorFieldScrollIntent.START);
   }
 
-  private scheduleFieldIntoView(field: string, delay: number): void {
+  private handleFieldChange(field: string): void {
+    if (this.focusedField !== field || !this.isKeyboardActive()) {
+      return;
+    }
+
+    this.scheduleFieldIntoView(field, EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY, EditorFieldScrollIntent.CARET);
+  }
+
+  private scheduleFieldIntoView(field: string, delay: number, intent: EditorFieldScrollIntent): void {
     if (field.length === 0) {
       return;
     }
@@ -426,7 +441,7 @@ struct EditorPage {
         return;
       }
 
-      this.scrollFieldIntoView(field);
+      this.scrollFieldIntoView(field, intent);
     }, delay);
   }
 
@@ -448,14 +463,7 @@ struct EditorPage {
 
   @Builder
   PhotoHeader() {
-    Column({ space: EDITOR_PHOTO_TITLE_GAP }) {
-      Text('写复盘')
-        .fontSize(AppTypography.pageTitle)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.pageTitleLineHeight)
-        .width('100%')
-
+    Column() {
       PhotoWritingHero({
         imageUri: this.imageUri,
         imageWidth: this.imageWidth,
@@ -498,6 +506,9 @@ struct EditorPage {
             currentBlocker: $currentBlocker,
             onFieldFocus: (field: string) => {
               this.focusField(field);
+            },
+            onFieldChange: (field: string) => {
+              this.handleFieldChange(field);
             },
             onFieldBlur: () => {
               this.focusedField = '';
