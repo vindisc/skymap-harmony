@@ -493,7 +493,6 @@ struct HomeStoragePage {
         top: AppMetrics.pageTopPadding,
         bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding
       })
-      .height('100%')
       .justifyContent(FlexAlign.Start)
     }
     .width('100%')

@@ -89,6 +89,9 @@ assert(syncCenterSource.includes("label: this.isTesting ? '测试中…' : '测�
 assert(syncCenterSource.includes('SettingsLinkRow({'), 'SyncCenterPage must show a compact status row.');
 assert(projectDetailSource.includes("Button('清除')"), 'Review library search clear action must be explicit text.');
 assert(!projectDetailSource.includes("Button('×')"), 'Review library search must not use ambiguous glyph-only clear action.');
+assert(projectDetailSource.includes('.fontSize(AppTypography.caption)'), 'Review library search input must use compact caption scale.');
+assert(!projectDetailSource.includes('.fontSize(AppTypography.inputText)\n        .fontColor(AppColors.text)'), 'Review library search input must not use oversized input text scale.');
+assert(!homeStorageSource.includes(".height('100%')\n      .justifyContent(FlexAlign.Start)"), 'HomeStoragePage scroll content must not be fixed to viewport height.');
 
 if (failed) {
   process.exit(1);
