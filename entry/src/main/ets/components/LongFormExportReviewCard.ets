@@ -34,12 +34,31 @@ const EXPORT_CARD_TEXT_WIDTH_RATIO: number = 0.92;
 const EXPORT_CARD_BOTTOM_SAFETY_PADDING: number = 120;
 const EXPORT_CARD_HORIZONTAL_BAR_TOP_MARGIN: number = 20;
 const EXPORT_CARD_HORIZONTAL_PANEL_TOP_MARGIN: number = 14;
-const EXPORT_CARD_HORIZONTAL_PANEL_PADDING: number = 30;
+const EXPORT_CARD_HORIZONTAL_PANEL_PADDING: number = 28;
 const EXPORT_CARD_HORIZONTAL_COLUMN_GAP: number = 34;
-const EXPORT_CARD_HORIZONTAL_SECTION_TITLE_HEIGHT: number = 28;
 const EXPORT_CARD_HORIZONTAL_PILL_HEIGHT: number = 40;
 const EXPORT_CARD_HORIZONTAL_TITLE_BAR_MIN_HEIGHT: number = 92;
 const EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT: number = 260;
+const EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP: number = 88;
+const EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING: number = 36;
+const EXPORT_CARD_HORIZONTAL_LINE_WIDTH_RATIO: number = 0.76;
+
+const EXPORT_GUIDANCE_TOKENS: Array<string> = [
+  '第一眼先看到哪里',
+  '为什么它会先被看到',
+  '视线接着从哪里走到哪里',
+  '画面里有哪些可见事实',
+  '最重要的 A ↔ B 关系是什么',
+  '这张照片为什么成立或不成立',
+  '当前最大问题是什么',
+  '第一眼落点',
+  '落点原因',
+  '视线路径',
+  '画面事实',
+  '核心关系',
+  '延伸理解',
+  '当前卡点'
+];
 
 interface ExportInfoItem {
   label: string;
@@ -50,6 +69,38 @@ function normalizeExportText(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+function stripExportDisplayNoise(value: string): string {
+  return value
+    .replace(/https?:\/\/[^\s，。；、]+/g, ' ')
+    .replace(/\d{12,}/g, ' ')
+    .replace(/[＿_—-]{6,}/g, ' ');
+}
+
+function isExportGuidanceText(value: string): boolean {
+  const normalizedValue: string = normalizeExportText(value);
+  if (normalizedValue.length === 0) {
+    return true;
+  }
+
+  let matchedCount: number = 0;
+  EXPORT_GUIDANCE_TOKENS.forEach((token: string): void => {
+    if (normalizedValue.includes(token)) {
+      matchedCount += 1;
+    }
+  });
+
+  return matchedCount >= 2;
+}
+
+function cleanExportDisplayText(value: string): string {
+  const withoutNoise: string = normalizeExportText(stripExportDisplayNoise(value));
+  if (isExportGuidanceText(withoutNoise)) {
+    return '';
+  }
+
+  return withoutNoise;
+}
+
 function countExportLines(value: string, textWidth: number, fontSize: number): number {
   const normalizedValue: string = normalizeExportText(value);
   if (normalizedValue.length === 0) {
@@ -57,6 +108,16 @@ function countExportLines(value: string, textWidth: number, fontSize: number): n
   }
 
   const charsPerLine: number = Math.max(10, Math.floor(textWidth / (fontSize * EXPORT_CARD_TEXT_WIDTH_RATIO)));
+  return Math.max(1, Math.ceil(normalizedValue.length / charsPerLine));
+}
+
+function countHorizontalExportLines(value: string, textWidth: number, fontSize: number): number {
+  const normalizedValue: string = cleanExportDisplayText(value);
+  if (normalizedValue.length === 0) {
+    return 0;
+  }
+
+  const charsPerLine: number = Math.max(8, Math.floor(textWidth / (fontSize * EXPORT_CARD_HORIZONTAL_LINE_WIDTH_RATIO)));
   return Math.max(1, Math.ceil(normalizedValue.length / charsPerLine));
 }
 
@@ -81,7 +142,7 @@ function isHorizontalExportPhoto(document: ReviewCardDocument): boolean {
 function createExportInfoItem(label: string, value: string): ExportInfoItem {
   return {
     label: label,
-    value: normalizeExportText(value)
+    value: cleanExportDisplayText(value)
   };
 }
 
@@ -97,7 +158,6 @@ function getHorizontalProcessItems(document: ReviewCardDocument): Array<ExportIn
 function getHorizontalSummaryItems(document: ReviewCardDocument): Array<ExportInfoItem> {
   const items: Array<ExportInfoItem> = [
     createExportInfoItem('最强关系', document.content.coreRelation),
-    createExportInfoItem('是否成立', getExportJudgementText(document.content.judgement)),
     createExportInfoItem('卡点', document.content.currentBlocker),
     createExportInfoItem('复盘信息', document.content.extendedUnderstanding)
   ];
@@ -107,7 +167,7 @@ function getHorizontalSummaryItems(document: ReviewCardDocument): Array<ExportIn
 function resolveExportInfoListHeight(items: Array<ExportInfoItem>, textWidth: number): number {
   let height: number = 0;
   items.forEach((item: ExportInfoItem): void => {
-    const bodyLines: number = countExportLines(item.value, textWidth, CompactReviewTextStyle.bodySize);
+    const bodyLines: number = countHorizontalExportLines(item.value, textWidth, CompactReviewTextStyle.bodySize);
     height += CompactReviewTextStyle.labelLineHeight
       + CompactReviewTextStyle.valueTopGap
       + Math.max(1, bodyLines) * CompactReviewTextStyle.bodyLineHeight
@@ -150,8 +210,8 @@ export function resolveLongFormExportCardHeight(document: ReviewCardDocument, ca
     const panelHeight: number = Math.max(
       EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT,
       EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2
-        + EXPORT_CARD_HORIZONTAL_SECTION_TITLE_HEIGHT
         + Math.max(processHeight, summaryHeight)
+        + EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING
     );
 
     return Math.max(
@@ -163,7 +223,7 @@ export function resolveLongFormExportCardHeight(document: ReviewCardDocument, ca
           + titleBarHeight
           + EXPORT_CARD_HORIZONTAL_PANEL_TOP_MARGIN
           + panelHeight
-          + 48
+          + EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP
       )
     );
   }
@@ -212,7 +272,7 @@ export struct LongFormExportReviewCard {
   }
 
   private hasValue(value: string): boolean {
-    return normalizeExportText(value).length > 0;
+    return cleanExportDisplayText(value).length > 0;
   }
 
   private getMetaText(): string {
@@ -286,7 +346,7 @@ export struct LongFormExportReviewCard {
           .maxLines(1)
           .width('100%')
 
-        Text(normalizeExportText(value))
+        Text(cleanExportDisplayText(value))
           .fontSize(CompactReviewTextStyle.bodySize)
           .lineHeight(CompactReviewTextStyle.bodyLineHeight)
           .fontColor('#343635')
@@ -304,23 +364,14 @@ export struct LongFormExportReviewCard {
   }
 
   @Builder
-  HorizontalInfoColumn(title: string, isProcessColumn: boolean) {
+  HorizontalInfoColumn(isProcessColumn: boolean) {
     Column() {
-      Text(title)
-        .fontSize(18)
-        .lineHeight(EXPORT_CARD_HORIZONTAL_SECTION_TITLE_HEIGHT)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#696B67')
-        .maxLines(1)
-        .width('100%')
-
       if (isProcessColumn) {
         this.HorizontalInfoItem('视觉落点', this.document.content.visualFocus)
         this.HorizontalInfoItem('视线路径', this.document.content.visualPath)
         this.HorizontalInfoItem('画面事实', this.document.content.visibleFacts)
       } else {
         this.HorizontalInfoItem('最强关系', this.document.content.coreRelation)
-        this.HorizontalInfoItem('是否成立', getExportJudgementText(this.document.content.judgement))
         this.HorizontalInfoItem('卡点', this.document.content.currentBlocker)
         this.HorizontalInfoItem('复盘信息', this.document.content.extendedUnderstanding)
       }
@@ -332,14 +383,14 @@ export struct LongFormExportReviewCard {
   @Builder
   HorizontalReviewPanel() {
     Row({ space: EXPORT_CARD_HORIZONTAL_COLUMN_GAP }) {
-      this.HorizontalInfoColumn('观看过程', true)
+      this.HorizontalInfoColumn(true)
 
       Column()
         .width(1)
         .height('100%')
         .backgroundColor('#E4DCCE')
 
-      this.HorizontalInfoColumn('判断摘要', false)
+      this.HorizontalInfoColumn(false)
     }
     .alignItems(VerticalAlign.Top)
     .padding(EXPORT_CARD_HORIZONTAL_PANEL_PADDING)
@@ -348,7 +399,7 @@ export struct LongFormExportReviewCard {
     .borderRadius(20)
     .backgroundColor('#F5F1E8')
     .border({ width: 1, color: '#E2D8C8' })
-    .margin({ top: EXPORT_CARD_HORIZONTAL_PANEL_TOP_MARGIN })
+    .margin({ top: EXPORT_CARD_HORIZONTAL_PANEL_TOP_MARGIN, bottom: EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP })
   }
 
   @Builder
