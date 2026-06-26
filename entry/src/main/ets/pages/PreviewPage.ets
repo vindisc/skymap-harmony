@@ -282,12 +282,12 @@ struct PreviewPage {
   ActionButton(label: string, emphasized: boolean, isDisabled: boolean, onTap: () => void) {
     Button(label)
       .height(AppMetrics.toolbarButtonHeight)
-      .width(AppMetrics.toolbarButtonWidth)
-      .borderRadius(AppMetrics.capsuleRadius)
+      .width('100%')
+      .borderRadius(AppMetrics.buttonRadius)
       .fontSize(AppTypography.smallButtonText)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.onPrimary : AppColors.text))
-      .backgroundColor(emphasized ? AppColors.primary : AppColors.surfaceTint)
+      .backgroundColor(emphasized ? AppColors.primary : AppColors.surface)
       .border({ width: 1, color: emphasized ? AppColors.primaryPressed : AppColors.border })
       .opacity(isDisabled ? 0.52 : 1)
       .stateEffect(!isDisabled)
@@ -295,6 +295,50 @@ struct PreviewPage {
       .onClick(() => {
         onTap();
       })
+  }
+
+  @Builder
+  FloatingActionBar() {
+    Column({ space: AppMetrics.space8 }) {
+      if (this.lastReviewJsonExportMessage.length > 0) {
+        Text(this.lastReviewJsonExportMessage)
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .width('100%')
+          .textAlign(TextAlign.Center)
+      }
+
+      Row({ space: AppMetrics.space8 }) {
+        Column() {
+          this.ActionButton('编辑', false, this.isActionBusy(), () => {
+            router.replaceUrl({ url: EDITOR_PAGE });
+          })
+        }
+        .layoutWeight(1)
+
+        Column() {
+          this.ActionButton(this.isExporting ? '导出中…' : '导出', true, this.isActionBusy(), () => {
+            this.openExportMenu();
+          })
+        }
+        .layoutWeight(1)
+      }
+      .alignItems(VerticalAlign.Center)
+      .width('100%')
+    }
+    .padding({ left: AppMetrics.space10, right: AppMetrics.space10, top: AppMetrics.space10, bottom: AppMetrics.space10 })
+    .width('100%')
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .shadow({
+      radius: 18,
+      color: '#1A000000',
+      offsetX: 0,
+      offsetY: 8
+    })
   }
 
   @Builder
@@ -332,60 +376,57 @@ struct PreviewPage {
 
   @Builder
   ReadingPage() {
-    Column() {
-      Column({ space: AppMetrics.space8 }) {
-        Column({ space: 4 }) {
-          Text('复盘记录')
-            .fontSize(AppTypography.level1)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.level1LineHeight)
-            .width('100%')
-
-          Text(this.saveStateLabel)
-            .fontSize(AppTypography.meta)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.metaLineHeight)
-            .width('100%')
+    Stack({ alignContent: Alignment.Bottom }) {
+      Column() {
+        Column({ space: AppMetrics.space8 }) {
+          Column() {
+            Text('复盘记录')
+              .fontSize(AppTypography.level1)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(AppColors.text)
+              .lineHeight(AppTypography.level1LineHeight)
+              .width('100%')
+          }
+          .alignItems(HorizontalAlign.Start)
+          .width('100%')
         }
         .alignItems(HorizontalAlign.Start)
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space10 })
         .width('100%')
 
-        Row({ space: AppMetrics.space8 }) {
-          this.ActionButton('编辑', false, this.isActionBusy(), () => {
-            router.replaceUrl({ url: EDITOR_PAGE });
+        Scroll() {
+          Column() {
+            ReadingReviewRecord({
+              document: this.document,
+              saveStateLabel: this.saveStateLabel
+            })
+          }
+          .alignItems(HorizontalAlign.Start)
+          .padding({
+            left: AppMetrics.pagePadding,
+            right: AppMetrics.pagePadding,
+            top: AppMetrics.space10,
+            bottom: AppMetrics.toolbarButtonHeight + AppMetrics.pageBottomPadding + AppMetrics.space32 + AppMetrics.space32
           })
-          this.ActionButton(this.isExporting ? '导出中…' : '导出', true, this.isActionBusy(), () => {
-            this.openExportMenu();
-          })
+          .width('100%')
         }
-        .width('100%')
-
-        if (this.lastReviewJsonExportMessage.length > 0) {
-          Text(this.lastReviewJsonExportMessage)
-            .fontSize(AppTypography.caption)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.captionLineHeight)
-            .maxLines(2)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .width('100%')
-        }
+        .layoutWeight(1)
+        .scrollBar(BarState.Off)
       }
       .alignItems(HorizontalAlign.Start)
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: AppMetrics.space10 })
+      .height('100%')
       .width('100%')
 
-      Scroll() {
-        Column() {
-          ReadingReviewRecord({ document: this.document })
-        }
-        .alignItems(HorizontalAlign.Start)
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space10, bottom: AppMetrics.space32 })
-        .width('100%')
+      Column() {
+        this.FloatingActionBar()
       }
-      .layoutWeight(1)
-      .scrollBar(BarState.Off)
+      .padding({
+        left: AppMetrics.pagePadding,
+        right: AppMetrics.pagePadding,
+        bottom: AppMetrics.pageBottomPadding
+      })
+      .width('100%')
+      .hitTestBehavior(HitTestMode.Transparent)
     }
     .width('100%')
     .height('100%')

@@ -10,6 +10,7 @@ import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 @Component
 export struct ReadingReviewRecord {
   @Prop document: ReviewCardDocument = createDefaultReviewCardDocument();
+  @Prop saveStateLabel: string = '';
 
   private hasValue(value: string): boolean {
     return value.trim().length > 0;
@@ -26,6 +27,26 @@ export struct ReadingReviewRecord {
     return '待判断';
   }
 
+  private getSaveStateTextColor(): string {
+    if (this.saveStateLabel === '已导出') {
+      return AppColors.tagBlueText;
+    }
+    if (this.saveStateLabel === '未保存') {
+      return AppColors.tagAmberText;
+    }
+    return AppColors.secondaryText;
+  }
+
+  private getSaveStateBackground(): string {
+    if (this.saveStateLabel === '已导出') {
+      return AppColors.tagBlue;
+    }
+    if (this.saveStateLabel === '未保存') {
+      return AppColors.tagAmber;
+    }
+    return AppColors.surfaceTint;
+  }
+
   @Builder
   MetaTag(label: string) {
     Text(label)
@@ -35,6 +56,20 @@ export struct ReadingReviewRecord {
       .padding({ left: 10, right: 10, top: 6, bottom: 6 })
       .borderRadius(AppMetrics.capsuleRadius)
       .backgroundColor(label === '成立' ? AppColors.tagGreen : (label === '不成立' ? AppColors.tagAmber : AppColors.primarySoft))
+  }
+
+  @Builder
+  SaveStateTag() {
+    if (this.saveStateLabel.length > 0) {
+      Text(this.saveStateLabel)
+        .fontSize(AppTypography.caption)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(this.getSaveStateTextColor())
+        .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+        .borderRadius(AppMetrics.capsuleRadius)
+        .backgroundColor(this.getSaveStateBackground())
+        .maxLines(1)
+    }
   }
 
   @Builder
@@ -97,10 +132,15 @@ export struct ReadingReviewRecord {
           Text(formatReviewTime(this.document.updatedAt))
             .fontSize(AppTypography.auxiliary)
             .fontColor(AppColors.secondaryText)
+            .layoutWeight(1)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-          Blank()
-
-          this.MetaTag(this.getJudgementLabel())
+          Row({ space: AppMetrics.space8 }) {
+            this.MetaTag(this.getJudgementLabel())
+            this.SaveStateTag()
+          }
+          .alignItems(VerticalAlign.Center)
         }
         .alignItems(VerticalAlign.Center)
         .width('100%')
