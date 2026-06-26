@@ -41,9 +41,10 @@
 
 当前 HarmonyOS 端需要明确：
 
-- 复盘库主数据源仍然是 `Preferences(review_card_history.items)`
-- `review_exchange/*.review.json` 会作为沙箱备份存在
-- 当前已经存在有限自动恢复逻辑，会在特定条件下扫描 `review_exchange` 并重建历史项
+- 复盘库主索引是 RDB，`load` 主读 RDB，保存、更新、删除和导出标记主写 RDB
+- `Preferences(review_card_history.items)` 只作为旧版本数据迁移来源，不再是复盘库主索引
+- `review_exchange/*.review.json` 会作为沙箱备份存在，也是交换和有限恢复来源
+- 当前已经存在有限自动恢复逻辑，会在特定条件下扫描 `review_exchange` 并把恢复结果写入 RDB
 - 详细存储、删除和恢复语义见 [`REVIEW_LIBRARY_STORAGE_AUDIT.md`](./REVIEW_LIBRARY_STORAGE_AUDIT.md)
 
 ## 字段语义矩阵

@@ -76,7 +76,7 @@
 
 ## 4. 本地记录
 
-当前版本使用 `@ohos.data.preferences` 保存最近复盘记录，最多保留 20 条。记录内容直接序列化 `ReviewCardDocument`，并额外记录导出文件路径。
+当前版本使用 RDB `reviews` 作为复盘库主索引，保存 `ReviewCardDocument` 快照、索引字段和导出结果引用。`Preferences.items` 只作为旧版本迁移来源。
 
 保存时机：
 
@@ -140,16 +140,16 @@ files/review_exports/skymap-review-card-{timestamp}.jpg
 
 ## 9. exportCard 导出模式
 
-`exportCard` 当前统一走 `LongFormExportReviewCard`，不再按照片方向选择不同成品布局。
+`exportCard` 当前统一路由到 `LongFormExportReviewCard`，组件内部按照片方向选择导出版式。
 
-- 所有照片统一导出竖向长图。
+- 横图使用专门的横向信息面板，竖图 / 方图使用默认单列长图结构。
 - 结构固定为：照片、标题、视觉落点、落点原因、视线路径、画面事实、核心关系、是否成立、延伸理解、当前卡点。
 - 图片保持原比例，不拉伸，不错误裁切。
 - 空字段不导出，避免空白。
 - 字段名弱化为小号浅灰，字段内容清晰但不过大。
 - 字段间距和行距紧凑但可读。
 
-导出图不是手机预览截图，不包含返回、编辑、导出、保存状态、手机状态栏、页面标题和底部按钮。横图 / 竖图 / 方图差异化导出保留为后续能力。
+导出图不是手机预览截图，不包含返回、编辑、导出、保存状态、手机状态栏、页面标题和底部按钮。横图导出需要保持底部圆角完整、右侧不重复显示是否成立，长内容不得被两三行截断。
 
 ## 10. 当前导出组件链路
 
@@ -160,19 +160,20 @@ files/review_exports/skymap-review-card-{timestamp}.jpg
 3. `ReviewCardRenderer` 根据 `renderMode` 选择组件：
    - `mobileReading`：渲染 `MobileReadingReviewCard`。
    - `exportCard`：渲染 `LongFormExportReviewCard`。
-4. `ReviewCardExportService.exportSnapshot(...)` 对指定 `exportComponentId` 截图并写出 JPG。
+4. `LongFormExportReviewCard` 内部按图片比例决定横图信息面板或默认单列长图。
+5. `ReviewCardExportService.exportSnapshot(...)` 对指定 `exportComponentId` 截图并写出 JPG。
 
 当前组件关系：
 
 | 场景 | 当前主链路组件 | 说明 |
 | --- | --- | --- |
 | 手机阅读预览 | `MobileReadingReviewCard` | 横图、竖图、方图都使用手机可读的纵向阅读结构。 |
-| 当前导出长图 | `LongFormExportReviewCard` | 横图、竖图、方图当前都统一导出竖向长图。 |
+| 当前导出长图 | `LongFormExportReviewCard` | 横图走专门横向信息面板，竖图 / 方图走默认单列长图。 |
 | 旧横图导出组件 | `ExportHorizontalReviewCard` | 组件仍存在，但当前 `ReviewCardRenderer` 的 `exportCard` 主链路不选择它。 |
 | 旧竖图导出组件 | `ExportVerticalReviewCard` | 组件仍存在，但当前 `ReviewCardRenderer` 的 `exportCard` 主链路不选择它。 |
 | 旧方图导出组件 | `ExportSquareReviewCard` | 组件仍存在，但当前 `ReviewCardRenderer` 的 `exportCard` 主链路不选择它。 |
 
-因此，当前截图中“横图导出样式”最可能由 `LongFormExportReviewCard` 负责，而不是 `ExportHorizontalReviewCard`。后续优化横图导出前，必须先确认实际导出路径、`renderMode`、`exportComponentId` 和截图节点，避免改错组件。
+因此，当前截图中“横图导出样式”由 `LongFormExportReviewCard` 负责，而不是 `ExportHorizontalReviewCard`。后续优化横图导出前，必须先确认实际导出路径、`renderMode`、`exportComponentId` 和截图节点，避免改错组件。
 
 如果未来恢复横图 / 竖图 / 方图差异化导出，应先更新 `ReviewCardRenderer` 的 `exportCard` 组件选择策略，再同步更新本文档和验证脚本。
 

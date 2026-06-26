@@ -64,7 +64,8 @@ HarmonyOS 端当前复盘库主存储详见 [`REVIEW_LIBRARY_STORAGE_AUDIT.md`](
 
 当前必须明确：
 
-- HarmonyOS 端复盘库主数据源是 `Preferences(review_card_history.items)`
+- HarmonyOS 端复盘库主索引是 RDB `reviews`
+- `Preferences(review_card_history.items)` 只作为旧版本数据迁移 / 诊断来源
 - 当前历史项结构为 `ReviewCardHistoryItem = document + exportedPath`
 - 原图二进制不进入复盘库，`imageUri` 只是原图引用
 - `exportedPath` 是导出结果引用，不是原图路径
