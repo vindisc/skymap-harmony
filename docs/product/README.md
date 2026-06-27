@@ -10,6 +10,7 @@
 - `REVIEW_JSON_SEMANTICS.md`：`review.json` v1 字段语义、空值策略和双端责任分工。
 - `HARMONYOS_V0_BASELINE.md`：HarmonyOS v0 发布基线、回归清单、存储边界、已知风险和下一阶段路线。
 - `REVIEW_BUNDLE_V1_DESIGN.md`：review bundle v1 的目录结构、manifest、家庭存储、双端导入导出、删除语义和 v1 不做范围。
+- `REVIEW_BUNDLE_V1_E2E_CHECKLIST.md`：Mac / HarmonyOS 单条 review bundle v1 端到端验收清单和发布前真实样本测试债。
 - `REVIEW_LIBRARY_V1_1.md`：Review Library v1.1 的可见入口、搜索界面和导入结果闭环。
 - `UI_INTERACTION_GUIDE.md`：Skymap UI 交互设计指导，定义按钮、色彩、字体、页面结构和评审清单。
 - `SYNC_V0_MANUAL_EXCHANGE.md`：Sync v0 手动文件交换闭环，说明 review.json 如何从 Harmony 落到 Mac Review Library。
@@ -22,6 +23,7 @@
 
 - HarmonyOS 已支持单条复盘导出 review bundle v1 到家庭存储。
 - Mac 已支持选择单个 review bundle 导入 Review Library。
+- Mac / HarmonyOS 单条 review bundle v1 已形成端到端验收清单。
 - Mac 当前不是批量导入、自动同步、双向同步或冲突合并。
 - Review JSON v1 字段继续冻结，bundleId、导出图、缩略图等 bundle 信息不写回 `review.json`。
 - 真实 HarmonyOS 真机 bundle 样本 fixture 回归仍后置为测试项，正式发布前必须补齐。

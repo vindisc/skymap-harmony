@@ -37,6 +37,13 @@
 - Mac 导入 bundle 不依赖 HarmonyOS RDB、`imageUri` 或原图是否存在。
 - 尚未使用 HarmonyOS 真机真实导出的 bundle 样本补 fixture 回归；正式发布前必须补齐真实样本回归。
 
+截至 2026-06-27，Mac / HarmonyOS 单条 review bundle v1 端到端验收清单已补充到 `REVIEW_BUNDLE_V1_E2E_CHECKLIST.md`：
+
+- 当前仍只收口单条导出、读取、校验、预览和导入体验。
+- 正式导入 Mac 复盘库已经支持单条 bundle，但不扩展为批量、自动或双向同步。
+- Review JSON v1 字段继续冻结，不把 manifest 字段写入 `review.json`。
+- 真实 HarmonyOS 真机 bundle 样本 fixture 回归仍为发布前测试项。
+
 阶段 1 用户入口语义：
 
 - 预览页底部弹层标题为“导出当前复盘”，避免把单条导出误解为完整同步。
