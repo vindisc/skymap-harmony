@@ -1,6 +1,7 @@
 import photoAccessHelper from '@ohos.file.photoAccessHelper';
 import image from '@ohos.multimedia.image';
 import fs from '@ohos.file.fs';
+import { REVIEW_FLOW_IMPORT_FAILED_TEXT } from './ReviewFlowFeedback';
 
 export interface PickedPhotoResult {
   success: boolean;
@@ -138,6 +139,6 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
       message: ''
     };
   } catch (error) {
-    return emptyResult(false, '照片导入失败，请重新选择');
+    return emptyResult(false, REVIEW_FLOW_IMPORT_FAILED_TEXT);
   }
 }

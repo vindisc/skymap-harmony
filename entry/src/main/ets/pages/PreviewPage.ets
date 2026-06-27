@@ -24,6 +24,13 @@ import { ReviewJsonExportResult, ReviewJsonExportService } from '../services/Rev
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { HomeStorageOperationResult, HomeStorageService } from '../services/HomeStorageService';
+import {
+  REVIEW_FLOW_EXPORT_FAILED_TEXT,
+  REVIEW_FLOW_EXPORT_PENDING_TEXT,
+  REVIEW_FLOW_EXPORT_SUCCESS_TEXT,
+  REVIEW_FLOW_SAVE_FAILED_TEXT,
+  REVIEW_FLOW_SAVE_SUCCESS_TEXT
+} from '../services/ReviewFlowFeedback';
 import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
@@ -38,12 +45,14 @@ enum PreviewSaveState {
 @Component
 struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
+  @State isSaving: boolean = false;
   @State isExporting: boolean = false;
+  @State isExportingReviewJson: boolean = false;
   @State isUploadingHomeStorage: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State isExportMenuVisible: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
-  @State lastReviewJsonExportMessage: string = '';
+  @State actionFeedbackText: string = '';
   @State reviewerText: string = '';
 
   private getAbilityContext(): common.UIAbilityContext {
@@ -142,13 +151,31 @@ struct PreviewPage {
   }
 
   private async saveDraft(): Promise<void> {
+    if (this.isSaving) {
+      return;
+    }
+
+    this.isSaving = true;
     try {
       this.document = ReviewCardStore.saveCurrentDocument(this.document);
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
       this.saveStateLabel = PreviewSaveState.SAVED;
-      promptAction.showToast({ message: '复盘已保存' });
+      this.actionFeedbackText = REVIEW_FLOW_SAVE_SUCCESS_TEXT;
+      promptAction.showToast({ message: REVIEW_FLOW_SAVE_SUCCESS_TEXT });
     } catch (error) {
-      promptAction.showToast({ message: '保存失败，请稍后重试' });
+      this.actionFeedbackText = REVIEW_FLOW_SAVE_FAILED_TEXT;
+      promptAction.showToast({ message: REVIEW_FLOW_SAVE_FAILED_TEXT });
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
+  private async markExportedQuietly(exportedPath: string): Promise<void> {
+    try {
+      await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, exportedPath);
+      this.saveStateLabel = PreviewSaveState.EXPORTED;
+    } catch (error) {
+      console.warn(`[PreviewPage] 导出成功但导出状态写回失败：${error}`);
     }
   }
 
@@ -156,8 +183,10 @@ struct PreviewPage {
     if (this.isExporting) {
       return;
     }
+
     this.isExporting = true;
     this.isExportSnapshotMode = true;
+    this.actionFeedbackText = REVIEW_FLOW_EXPORT_PENDING_TEXT;
     try {
       await this.waitForExportLayout();
       const result: ReviewCardExportResult = await ReviewCardExportService.exportSnapshot(
@@ -168,14 +197,18 @@ struct PreviewPage {
         }
       );
       if (result.savedToPhotoLibrary) {
-        await ReviewCardHistoryService.markExported(this.getAbilityContext(), this.document, result.path);
-        this.saveStateLabel = PreviewSaveState.EXPORTED;
-        promptAction.showToast({ message: '导出完成' });
+        await this.markExportedQuietly(result.path);
+        this.actionFeedbackText = REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
+        promptAction.showToast({ message: REVIEW_FLOW_EXPORT_SUCCESS_TEXT });
+      } else if (result.cancelled) {
+        this.actionFeedbackText = '';
       } else {
-        promptAction.showToast({ message: '导出失败，请重试' });
+        this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
+        promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
       }
     } catch (error) {
-      promptAction.showToast({ message: '导出失败，请重试' });
+      this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
+      promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
     } finally {
       this.isExportSnapshotMode = false;
       this.isExporting = false;
@@ -195,22 +228,38 @@ struct PreviewPage {
   }
 
   private async exportReviewJson(): Promise<void> {
-    const context = this.getAbilityContext();
-    const result: ReviewJsonExportResult = await ReviewJsonExportService.exportReviewJson(
-      context,
-      this.document
-    );
-    if (result.success) {
-      try {
-        await ReviewCardHistoryService.markExported(context, this.document, result.path);
-        this.saveStateLabel = PreviewSaveState.EXPORTED;
-      } catch (error) {
-      }
+    if (this.isExportingReviewJson) {
+      return;
     }
-    this.lastReviewJsonExportMessage = result.success
-      ? `已导出 ${result.fileName}`
-      : result.message;
-    promptAction.showToast({ message: result.message });
+
+    this.isExportingReviewJson = true;
+    this.actionFeedbackText = REVIEW_FLOW_EXPORT_PENDING_TEXT;
+    const context = this.getAbilityContext();
+    try {
+      const result: ReviewJsonExportResult = await ReviewJsonExportService.exportReviewJson(
+        context,
+        this.document
+      );
+      if (result.success) {
+        await this.markExportedQuietly(result.path);
+        this.actionFeedbackText = REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
+        promptAction.showToast({ message: REVIEW_FLOW_EXPORT_SUCCESS_TEXT });
+        return;
+      }
+
+      if (result.cancelled) {
+        this.actionFeedbackText = '';
+        return;
+      }
+
+      this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
+      promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
+    } catch (error) {
+      this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
+      promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
+    } finally {
+      this.isExportingReviewJson = false;
+    }
   }
 
   private async uploadReviewJsonToHomeStorage(): Promise<void> {
@@ -219,6 +268,7 @@ struct PreviewPage {
     }
 
     this.isUploadingHomeStorage = true;
+    this.actionFeedbackText = '上传中…';
     try {
       const context = this.getAbilityContext();
       const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
@@ -228,12 +278,9 @@ struct PreviewPage {
         reviewerName
       );
       if (result.success) {
-        try {
-          await ReviewCardHistoryService.markExported(context, this.document, result.remotePath);
-          this.saveStateLabel = PreviewSaveState.EXPORTED;
-        } catch (error) {
-        }
+        await this.markExportedQuietly(result.remotePath);
       }
+      this.actionFeedbackText = result.message;
       promptAction.showToast({ message: result.message });
     } finally {
       this.isUploadingHomeStorage = false;
@@ -264,7 +311,7 @@ struct PreviewPage {
   }
 
   private isActionBusy(): boolean {
-    return this.isExporting || this.isUploadingHomeStorage;
+    return this.isSaving || this.isExporting || this.isExportingReviewJson || this.isUploadingHomeStorage;
   }
 
   private openExportMenu(): void {
@@ -300,8 +347,8 @@ struct PreviewPage {
   @Builder
   FloatingActionBar() {
     Column({ space: AppMetrics.space8 }) {
-      if (this.lastReviewJsonExportMessage.length > 0) {
-        Text(this.lastReviewJsonExportMessage)
+      if (this.actionFeedbackText.length > 0) {
+        Text(this.actionFeedbackText)
           .fontSize(AppTypography.caption)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.captionLineHeight)
@@ -320,7 +367,7 @@ struct PreviewPage {
         .layoutWeight(1)
 
         Column() {
-          this.ActionButton(this.isExporting ? '导出中…' : '导出', true, this.isActionBusy(), () => {
+          this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出', true, this.isActionBusy(), () => {
             this.openExportMenu();
           })
         }
@@ -358,17 +405,23 @@ struct PreviewPage {
   }
 
   @Builder
-  ExportSheetAction(label: string, onTap: () => void) {
+  ExportSheetAction(label: string, isDisabled: boolean, onTap: () => void) {
     Button(label)
       .height(AppMetrics.controlHeight)
       .width('100%')
       .borderRadius(AppMetrics.cardRadius)
       .fontSize(AppTypography.body)
       .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.text)
+      .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
       .backgroundColor(AppColors.surface)
       .border({ width: 1, color: AppColors.border })
+      .opacity(isDisabled ? 0.56 : 1)
+      .enabled(!isDisabled)
+      .stateEffect(!isDisabled)
       .onClick(() => {
+        if (isDisabled) {
+          return;
+        }
         this.closeExportMenu();
         onTap();
       })
@@ -465,19 +518,19 @@ struct PreviewPage {
             .fontColor(AppColors.text)
             .width('100%')
 
-          this.ExportSheetAction('导出 JSON', () => {
+          this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 JSON', this.isActionBusy(), () => {
             this.exportReviewJson();
           })
 
-          this.ExportSheetAction(this.isUploadingHomeStorage ? '上传中...' : '上传家庭存储', () => {
+          this.ExportSheetAction(this.isUploadingHomeStorage ? '上传中…' : '上传家庭存储', this.isActionBusy(), () => {
             this.uploadReviewJsonToHomeStorage();
           })
 
-          this.ExportSheetAction(this.isExporting ? '导出中…' : '导出图片', () => {
+          this.ExportSheetAction(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', this.isActionBusy(), () => {
             this.exportImage();
           })
 
-          this.ExportSheetAction('复制数据', () => {
+          this.ExportSheetAction('复制数据', this.isActionBusy(), () => {
             this.copyReviewData();
           })
         }
@@ -487,7 +540,7 @@ struct PreviewPage {
         .backgroundColor(AppColors.pageBackground)
         .border({ width: 1, color: AppColors.border })
 
-        this.ExportSheetAction('取消', () => {
+        this.ExportSheetAction('取消', false, () => {
         })
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space24 })

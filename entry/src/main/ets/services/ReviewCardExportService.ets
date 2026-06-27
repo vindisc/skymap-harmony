@@ -7,6 +7,7 @@ import common from '@ohos.app.ability.common';
 
 export interface ReviewCardExportResult {
   success: boolean;
+  cancelled: boolean;
   savedToPhotoLibrary: boolean;
   path: string;
   backupPath: string;
@@ -89,6 +90,7 @@ export class ReviewCardExportService {
     if (ReviewCardExportService.isExporting) {
       return {
         success: false,
+        cancelled: false,
         savedToPhotoLibrary: false,
         path: '',
         backupPath: '',
@@ -117,6 +119,7 @@ export class ReviewCardExportService {
 
       return {
         success: mediaUri.length > 0,
+        cancelled: mediaUri.length === 0,
         savedToPhotoLibrary: mediaUri.length > 0,
         path: mediaUri,
         backupPath: backupPath,
@@ -128,6 +131,7 @@ export class ReviewCardExportService {
       if (backupPath.length > 0) {
         return {
           success: false,
+          cancelled: false,
           savedToPhotoLibrary: false,
           path: backupPath,
           backupPath: backupPath,
@@ -136,6 +140,7 @@ export class ReviewCardExportService {
       }
       return {
         success: false,
+        cancelled: false,
         savedToPhotoLibrary: false,
         path: '',
         backupPath: '',

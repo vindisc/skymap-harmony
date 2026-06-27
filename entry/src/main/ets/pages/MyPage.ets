@@ -18,6 +18,7 @@ import {
   RdbMigrationDiagnosticsResult,
   ReviewCardRdbDiagnosticsService
 } from '../services/ReviewCardRdbDiagnosticsService';
+import { ENABLE_RDB_DIAGNOSTICS_ENTRY } from '../services/ReviewFlowFeedback';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
@@ -345,15 +346,17 @@ export struct MyPage {
         }
       })
 
-      SettingsLinkRow({
-        title: '开发诊断',
-        value: this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : `RDB 验证 · ${this.rdbDiagnosticsSummary}`,
-        status: this.rdbDiagnosticsStatus,
-        tone: this.resolveDeveloperTone(),
-        onTap: () => {
-          this.confirmRdbDeveloperDiagnostics();
-        }
-      })
+      if (ENABLE_RDB_DIAGNOSTICS_ENTRY) {
+        SettingsLinkRow({
+          title: '开发诊断',
+          value: this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : `RDB 验证 · ${this.rdbDiagnosticsSummary}`,
+          status: this.rdbDiagnosticsStatus,
+          tone: this.resolveDeveloperTone(),
+          onTap: () => {
+            this.confirmRdbDeveloperDiagnostics();
+          }
+        })
+      }
     }
     .width('100%')
   }

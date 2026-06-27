@@ -14,6 +14,11 @@ import {
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import {
+  REVIEW_FLOW_SAVE_FAILED_TEXT,
+  REVIEW_FLOW_SAVE_PENDING_TEXT,
+  REVIEW_FLOW_SAVE_SUCCESS_TEXT
+} from '../services/ReviewFlowFeedback';
 import { AppColors, AppMetrics, AppTypography, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
@@ -194,10 +199,10 @@ struct EditorPage {
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
     try {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
-      promptAction.showToast({ message: '复盘已保存' });
+      promptAction.showToast({ message: REVIEW_FLOW_SAVE_SUCCESS_TEXT });
       router.replaceUrl({ url: PREVIEW_PAGE });
     } catch (error) {
-      promptAction.showToast({ message: '保存失败，请稍后重试' });
+      promptAction.showToast({ message: REVIEW_FLOW_SAVE_FAILED_TEXT });
     } finally {
       this.isSaving = false;
     }
@@ -450,7 +455,7 @@ struct EditorPage {
     Column() {
       if (!this.isKeyboardActive()) {
         PrimaryButton({
-          label: this.isSaving ? '保存中…' : '保存并进入阅读',
+          label: this.isSaving ? REVIEW_FLOW_SAVE_PENDING_TEXT : '保存并进入阅读',
           isDisabled: this.isSaving,
           onTap: () => {
             this.saveAndPreview();

@@ -8,6 +8,7 @@ const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 
 const historyServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardHistoryService.ets', 'utf8');
 const migrationServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardMigrationService.ets', 'utf8');
 const refreshServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewLibraryRefreshService.ets', 'utf8');
+const feedbackSource = fs.readFileSync('entry/src/main/ets/services/ReviewFlowFeedback.ets', 'utf8');
 
 let failed = false;
 
@@ -40,8 +41,10 @@ assert(
 assert(projectDetailSource.includes("@Prop @Watch('refreshReviewLibraryData') refreshToken"), 'ProjectDetailPage must watch refreshToken.');
 assert(projectDetailSource.includes('refreshReviewLibraryData()'), 'ProjectDetailPage must reload when token changes.');
 assert(projectDetailSource.includes('@State deletingReviewKey'), 'deleteHistory must keep a delete busy key.');
-assert(projectDetailSource.includes('复盘已删除'), 'deleteHistory must show success feedback.');
-assert(projectDetailSource.includes('删除失败，请重试'), 'deleteHistory must show failure feedback.');
+assert(projectDetailSource.includes('REVIEW_FLOW_DELETE_SUCCESS_TEXT'), 'deleteHistory must show success feedback.');
+assert(projectDetailSource.includes('REVIEW_FLOW_DELETE_FAILED_TEXT'), 'deleteHistory must show failure feedback.');
+assert(feedbackSource.includes("REVIEW_FLOW_DELETE_SUCCESS_TEXT: string = '复盘已删除'"), 'Delete success copy constant must stay aligned.');
+assert(feedbackSource.includes("REVIEW_FLOW_DELETE_FAILED_TEXT: string = '删除失败，请重试'"), 'Delete failure copy constant must stay aligned.');
 assert(projectDetailSource.includes('this.reloadData();'), 'deleteHistory should reload after optimistic update.');
 assert(statsPageSource.includes("@Prop @Watch('refreshStatsData') refreshToken"), 'StatsPage must watch refreshToken.');
 assert(statsPageSource.includes('ReviewCardHistoryService.load'), 'StatsPage must load latest review history.');

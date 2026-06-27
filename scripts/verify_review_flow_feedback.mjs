@@ -8,7 +8,8 @@ const files = {
   stats: fs.readFileSync('entry/src/main/ets/pages/StatsPage.ets', 'utf8'),
   my: fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8'),
   photoPicker: fs.readFileSync('entry/src/main/ets/services/PhotoPickerService.ets', 'utf8'),
-  photoBlock: fs.readFileSync('entry/src/main/ets/components/ReviewPhotoBlock.ets', 'utf8')
+  photoBlock: fs.readFileSync('entry/src/main/ets/components/ReviewPhotoBlock.ets', 'utf8'),
+  feedback: fs.readFileSync('entry/src/main/ets/services/ReviewFlowFeedback.ets', 'utf8')
 };
 
 let failed = false;
@@ -21,28 +22,32 @@ function assert(condition, message) {
 }
 
 assert(files.home.includes('isPickingPhoto'), 'Home import must keep a picking state.');
-assert(files.home.includes('打开相册中…'), 'Home import button should show lightweight loading copy.');
-assert(files.photoPicker.includes('照片导入失败，请重新选择'), 'Import failure copy must be understandable.');
+assert(files.home.includes('REVIEW_FLOW_IMPORT_PENDING_TEXT'), 'Home import button should show lightweight loading copy.');
+assert(files.photoPicker.includes('REVIEW_FLOW_IMPORT_FAILED_TEXT'), 'Import failure copy must be understandable.');
+assert(files.feedback.includes("REVIEW_FLOW_IMPORT_PENDING_TEXT: string = '正在打开照片…'"), 'Import pending copy constant must match UX baseline.');
+assert(files.feedback.includes("REVIEW_FLOW_IMPORT_FAILED_TEXT: string = '照片导入失败，请重新选择'"), 'Import failure copy constant must match UX baseline.');
 
 assert(files.editor.includes('@State isSaving'), 'Editor must keep a saving state.');
-assert(files.editor.includes('保存中…'), 'Editor save button should show loading copy.');
-assert(files.editor.includes('复盘已保存'), 'Editor save success toast must be present.');
-assert(files.editor.includes('保存失败，请稍后重试'), 'Editor save failure toast must be present.');
+assert(files.editor.includes('REVIEW_FLOW_SAVE_PENDING_TEXT'), 'Editor save button should show loading copy.');
+assert(files.editor.includes('REVIEW_FLOW_SAVE_SUCCESS_TEXT'), 'Editor save success toast must be present.');
+assert(files.editor.includes('REVIEW_FLOW_SAVE_FAILED_TEXT'), 'Editor save failure toast must be present.');
 assert(files.editor.includes('isDisabled: this.isSaving'), 'Editor save button must disable while saving.');
 
-assert(files.preview.includes('导出中…'), 'Preview export button should show loading copy.');
-assert(files.preview.includes('导出完成'), 'Preview export success toast must be present.');
-assert(files.preview.includes('导出失败，请重试'), 'Preview export failure toast must be present.');
+assert(files.preview.includes('REVIEW_FLOW_EXPORT_PENDING_TEXT'), 'Preview export button should show loading copy.');
+assert(files.preview.includes('REVIEW_FLOW_EXPORT_SUCCESS_TEXT'), 'Preview export success toast must be present.');
+assert(files.preview.includes('REVIEW_FLOW_EXPORT_FAILED_TEXT'), 'Preview export failure toast must be present.');
+assert(files.preview.includes('result.cancelled'), 'Preview export flow should distinguish cancellation from failure.');
+assert(files.preview.includes('isExportingReviewJson'), 'Preview JSON export should keep its own pending state.');
 assert(files.preview.includes('ReviewCardHistoryService.markExported'), 'Preview export must mark exported state.');
 
-assert(files.library.includes('删除这条复盘？'), 'Delete dialog title must match deletion scope.');
+assert(files.library.includes('REVIEW_FLOW_DELETE_CONFIRM_TITLE'), 'Delete dialog title must match deletion scope.');
 assert(
-  files.library.includes('只会删除复盘记录和应用内备份，不会删除原始照片或你已经导出的图片。'),
+  files.library.includes('REVIEW_FLOW_DELETE_CONFIRM_MESSAGE'),
   'Delete dialog must explain original photos and exported images are untouched.'
 );
 assert(files.library.includes('@State deletingReviewKey'), 'Library delete must keep a busy key.');
-assert(files.library.includes('复盘已删除'), 'Library delete success toast must be present.');
-assert(files.library.includes('删除失败，请重试'), 'Library delete failure toast must be present.');
+assert(files.library.includes('REVIEW_FLOW_DELETE_SUCCESS_TEXT'), 'Library delete success toast must be present.');
+assert(files.library.includes('REVIEW_FLOW_DELETE_FAILED_TEXT'), 'Library delete failure toast must be present.');
 assert(files.library.includes('没有找到匹配的复盘'), 'Search no-result empty state must remain present.');
 assert(files.library.includes("Button('×')"), 'Search field must expose a clear button.');
 assert(files.library.includes('复盘库暂时无法刷新'), 'Library load failure state must be visible.');
@@ -60,6 +65,7 @@ assert(!files.stats.includes("Text('当前记录')"), 'Stats must remove the old
 assert(files.my.includes("@Prop @Watch('refreshPageData') refreshToken"), 'My page must still refresh from shell token.');
 assert(files.my.includes('复盘统计暂时无法刷新'), 'My page should expose a load failure state.');
 assert(files.my.includes('运行开发诊断？'), 'Developer diagnostics must be protected by confirmation.');
+assert(files.my.includes('ENABLE_RDB_DIAGNOSTICS_ENTRY'), 'Developer diagnostics entry must be gated by a debug-only flag.');
 
 if (failed) {
   process.exit(1);

@@ -12,6 +12,7 @@ import { ReviewSettingsService } from './ReviewSettingsService';
 
 export interface ReviewJsonExportResult {
   success: boolean;
+  cancelled: boolean;
   path: string;
   directory: string;
   fileName: string;
@@ -174,6 +175,7 @@ export class ReviewJsonExportService {
       if (targetUri.length === 0) {
         return {
           success: false,
+          cancelled: true,
           path: '',
           directory: directory,
           fileName: fileName,
@@ -185,6 +187,7 @@ export class ReviewJsonExportService {
       }
       return {
         success: true,
+        cancelled: false,
         path: targetUri,
         directory: directory,
         fileName: fileName,
@@ -196,6 +199,7 @@ export class ReviewJsonExportService {
     } catch (error) {
       return {
         success: false,
+        cancelled: false,
         path: '',
         directory: '',
         fileName: '',

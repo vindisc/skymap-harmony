@@ -19,6 +19,13 @@ import {
   HomeDashboardReloadState
 } from '../services/HomeDashboardPresenter';
 import {
+  REVIEW_FLOW_HOME_COPY_ISSUE_FAILED_TEXT,
+  REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT,
+  REVIEW_FLOW_HOME_COPY_ISSUE_TEXT,
+  REVIEW_FLOW_HOME_RELOAD_FAILED_TEXT,
+  REVIEW_FLOW_IMPORT_PENDING_TEXT
+} from '../services/ReviewFlowFeedback';
+import {
   AppColors,
   AppMetrics,
   AppPageHeader,
@@ -145,9 +152,9 @@ export struct HomePage {
     try {
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, diagnosticsText);
       await pasteboard.getSystemPasteboard().setData(data);
-      promptAction.showToast({ message: '已复制恢复诊断' });
+      promptAction.showToast({ message: REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT });
     } catch (error) {
-      promptAction.showToast({ message: '复制诊断失败' });
+      promptAction.showToast({ message: REVIEW_FLOW_HOME_COPY_ISSUE_FAILED_TEXT });
     }
   }
 
@@ -229,14 +236,14 @@ export struct HomePage {
   @Builder
   DiagnosticsPanel() {
     Column({ space: 6 }) {
-      Text('历史记录读取失败，可复制诊断信息继续排查。')
+      Text(REVIEW_FLOW_HOME_RELOAD_FAILED_TEXT)
         .fontSize(AppTypography.meta)
         .fontColor(AppColors.tagAmberText)
         .lineHeight(AppTypography.metaLineHeight)
         .width('100%')
 
       SecondaryButton({
-        label: '复制恢复诊断',
+        label: REVIEW_FLOW_HOME_COPY_ISSUE_TEXT,
         onTap: () => {
           this.copyHistoryDiagnostics();
         }
@@ -266,7 +273,7 @@ export struct HomePage {
 
   @Builder
   StartReviewButton() {
-    Button(this.isPickingPhoto ? '打开相册中…' : '导入照片，开始复盘')
+    Button(this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘')
       .height(HOME_PRIMARY_BUTTON_HEIGHT)
       .width('100%')
       .borderRadius(AppMetrics.buttonRadius)

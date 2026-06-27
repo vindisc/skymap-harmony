@@ -6,6 +6,7 @@ const exportServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewJ
 const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
 const projectModelSource = fs.readFileSync('entry/src/main/ets/model/ProjectModel.ets', 'utf8');
 const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewProjectService.ets', 'utf8');
+const feedbackSource = fs.readFileSync('entry/src/main/ets/services/ReviewFlowFeedback.ets', 'utf8');
 
 let failed = false;
 
@@ -30,7 +31,7 @@ const requiredDetailTokens = [
   "this.FilterChip('成立', ReviewJudgementStatus.VALID)",
   "this.FilterChip('待判断', ReviewJudgementStatus.UNSURE)",
   "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)",
-  "label: this.isPickingPhoto ? '打开相册中…' : '创建第一条复盘'",
+  "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '创建第一条复盘'",
   'ReviewProjectService.filterItems('
 ];
 
@@ -41,19 +42,24 @@ for (const token of requiredDetailTokens) {
   }
 }
 
-const requiredExportTokens = [
-  "已导出 ${fileName}",
-  "已导出 ${result.fileName}"
-];
-
-if (!exportServiceSource.includes(requiredExportTokens[0])) {
+if (!exportServiceSource.includes("message: `已导出 ${fileName}`")) {
   failed = true;
-  console.error(`ReviewJsonExportService missing token: ${requiredExportTokens[0]}`);
+  console.error('ReviewJsonExportService must still generate the exported file name message.');
 }
 
-if (!previewPageSource.includes(requiredExportTokens[1])) {
+if (!previewPageSource.includes('REVIEW_FLOW_EXPORT_SUCCESS_TEXT')) {
   failed = true;
-  console.error(`PreviewPage missing token: ${requiredExportTokens[1]}`);
+  console.error('PreviewPage should use the shared export success copy.');
+}
+
+if (!previewPageSource.includes('result.cancelled')) {
+  failed = true;
+  console.error('PreviewPage should keep cancellation separate from export failure.');
+}
+
+if (!feedbackSource.includes("REVIEW_FLOW_IMPORT_PENDING_TEXT: string = '正在打开照片…'")) {
+  failed = true;
+  console.error('Shared import pending copy must match the current library entry UX.');
 }
 
 if (!projectModelSource.includes("export const DEFAULT_PROJECT_NAME: string = '复盘库';")) {

@@ -24,6 +24,14 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
+import {
+  REVIEW_FLOW_DELETE_CONFIRM_MESSAGE,
+  REVIEW_FLOW_DELETE_CONFIRM_TITLE,
+  REVIEW_FLOW_DELETE_FAILED_TEXT,
+  REVIEW_FLOW_DELETE_PENDING_TEXT,
+  REVIEW_FLOW_DELETE_SUCCESS_TEXT,
+  REVIEW_FLOW_IMPORT_PENDING_TEXT
+} from '../services/ReviewFlowFeedback';
 
 @Component
 export struct ProjectDetailPage {
@@ -136,9 +144,13 @@ export struct ProjectDetailPage {
   }
 
   private confirmDeleteHistory(document: ReviewCardDocument): void {
+    if (this.deletingReviewKey.length > 0) {
+      return;
+    }
+
     AlertDialog.show({
-      title: '删除这条复盘？',
-      message: '只会删除复盘记录和应用内备份，不会删除原始照片或你已经导出的图片。',
+      title: REVIEW_FLOW_DELETE_CONFIRM_TITLE,
+      message: REVIEW_FLOW_DELETE_CONFIRM_MESSAGE,
       autoCancel: true,
       primaryButton: {
         value: '取消',
@@ -178,12 +190,12 @@ export struct ProjectDetailPage {
           ? this.summary.items[0].document
           : createDefaultReviewCardDocument());
       }
-      promptAction.showToast({ message: '复盘已删除' });
+      promptAction.showToast({ message: REVIEW_FLOW_DELETE_SUCCESS_TEXT });
       this.reloadData();
     } catch (error) {
       this.summary = ReviewProjectService.buildDefaultProjectSummary(previousItems);
       this.applyFilters();
-      promptAction.showToast({ message: '删除失败，请重试' });
+      promptAction.showToast({ message: REVIEW_FLOW_DELETE_FAILED_TEXT });
       this.reloadData();
     } finally {
       this.deletingReviewKey = '';
@@ -192,7 +204,7 @@ export struct ProjectDetailPage {
 
   @Builder
   DeleteSwipeAction(document: ReviewCardDocument) {
-    Button(this.deletingReviewKey === getReviewDocumentKey(document) ? '删除中' : '删除')
+    Button(this.deletingReviewKey === getReviewDocumentKey(document) ? REVIEW_FLOW_DELETE_PENDING_TEXT : '删除')
       .height(AppMetrics.compactControlHeight)
       .width(72)
       .borderRadius(AppMetrics.cardRadius)
@@ -204,6 +216,9 @@ export struct ProjectDetailPage {
       .opacity(this.deletingReviewKey === getReviewDocumentKey(document) ? 0.52 : 1)
       .enabled(this.deletingReviewKey.length === 0)
       .onClick(() => {
+        if (this.deletingReviewKey.length > 0) {
+          return;
+        }
         this.confirmDeleteHistory(document);
       })
   }
@@ -358,7 +373,7 @@ export struct ProjectDetailPage {
 
           Row() {
             PrimaryButton({
-              label: this.isPickingPhoto ? '打开相册中…' : '创建第一条复盘',
+              label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '创建第一条复盘',
               isDisabled: this.isPickingPhoto,
               onTap: () => {
                 this.openCreateFirstReview();
