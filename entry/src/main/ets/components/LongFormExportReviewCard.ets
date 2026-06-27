@@ -36,11 +36,12 @@ const EXPORT_CARD_HORIZONTAL_BAR_TOP_MARGIN: number = 20;
 const EXPORT_CARD_HORIZONTAL_PANEL_TOP_MARGIN: number = 14;
 const EXPORT_CARD_HORIZONTAL_PANEL_PADDING: number = 28;
 const EXPORT_CARD_HORIZONTAL_COLUMN_GAP: number = 34;
+const EXPORT_CARD_HORIZONTAL_DIVIDER_WIDTH: number = 1;
 const EXPORT_CARD_HORIZONTAL_PILL_HEIGHT: number = 40;
 const EXPORT_CARD_HORIZONTAL_TITLE_BAR_MIN_HEIGHT: number = 92;
 const EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT: number = 0;
-const EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP: number = 32;
-const EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING: number = 14;
+const EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP: number = 8;
+const EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING: number = 6;
 const EXPORT_CARD_HORIZONTAL_LINE_WIDTH_RATIO: number = 0.76;
 
 const EXPORT_GUIDANCE_TOKENS: Array<string> = [
@@ -179,7 +180,10 @@ function resolveExportInfoListHeight(items: Array<ExportInfoItem>, textWidth: nu
 function resolveHorizontalExportColumnWidth(contentWidth: number): number {
   return Math.max(
     1,
-    (contentWidth - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2 - EXPORT_CARD_HORIZONTAL_COLUMN_GAP) / 2
+    (contentWidth
+      - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2
+      - EXPORT_CARD_HORIZONTAL_COLUMN_GAP * 2
+      - EXPORT_CARD_HORIZONTAL_DIVIDER_WIDTH) / 2
   );
 }
 
@@ -304,6 +308,10 @@ export struct LongFormExportReviewCard {
     return Math.max(1, this.getHorizontalPanelHeight() - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2);
   }
 
+  private getHorizontalColumnWidth(): number {
+    return resolveHorizontalExportColumnWidth(this.getContentWidth());
+  }
+
   @Builder
   JudgementPill() {
     Text(getExportJudgementText(this.document.content.judgement))
@@ -397,7 +405,7 @@ export struct LongFormExportReviewCard {
       }
     }
     .alignItems(HorizontalAlign.Start)
-    .layoutWeight(1)
+    .width(this.getHorizontalColumnWidth())
   }
 
   @Builder
@@ -406,7 +414,7 @@ export struct LongFormExportReviewCard {
       this.HorizontalInfoColumn(true)
 
       Column()
-        .width(1)
+        .width(EXPORT_CARD_HORIZONTAL_DIVIDER_WIDTH)
         .height(this.getHorizontalPanelDividerHeight())
         .backgroundColor('#E4DCCE')
 

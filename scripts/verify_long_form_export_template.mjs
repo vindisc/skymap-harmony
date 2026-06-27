@@ -30,11 +30,23 @@ assert(source.includes('resolveHorizontalExportPanelHeight'), 'Horizontal panel 
 assert(source.includes('.height(this.getHorizontalPanelHeight())'), 'Horizontal panel must use explicit content-based height.');
 assert(source.includes('.height(this.getHorizontalPanelDividerHeight())'), 'Horizontal divider must not stretch the panel with 100% height.');
 assert(!source.includes(".height('100%')\n        .backgroundColor('#E4DCCE')"), 'Horizontal divider must not use 100% height.');
+assert(source.includes('EXPORT_CARD_HORIZONTAL_DIVIDER_WIDTH'), 'Horizontal height estimate must account for the divider width.');
+assert(source.includes('- EXPORT_CARD_HORIZONTAL_COLUMN_GAP * 2'), 'Horizontal column width must account for both row gaps.');
+assert(source.includes('.width(this.getHorizontalColumnWidth())'), 'Horizontal columns must use measured width instead of layoutWeight.');
 assert(source.includes('cleanExportDisplayText(value)'), 'Horizontal export must clean display-only noise without changing data.');
 assert(source.includes('DefaultTextContent()'), 'Vertical and square exports must keep the default single-column path.');
 assert(source.includes('ReviewInfoGroup({'), 'Vertical and square exports must still use ReviewInfoGroup.');
 assert(!source.includes('.maxLines(2)'), 'Core export text must not be limited to two lines.');
 assert(!source.includes('.maxLines(3)'), 'Core export text must not be limited to three lines.');
+
+const horizontalPanelBuilder = source.slice(
+  source.indexOf('@Builder\n  HorizontalReviewPanel()'),
+  source.indexOf('@Builder\n  DefaultTextContent()')
+);
+assert(horizontalPanelBuilder.length > 0, 'Horizontal review panel builder must be present.');
+assert(!horizontalPanelBuilder.includes('Blank()'), 'Horizontal panel must not use Blank to create bottom space.');
+assert(!horizontalPanelBuilder.includes('Spacer'), 'Horizontal panel must not use Spacer to create bottom space.');
+assert(!horizontalPanelBuilder.includes('.layoutWeight('), 'Horizontal panel content must not use layoutWeight to fill remaining height.');
 
 const EXPORT_CARD_CANVAS_PADDING = 48;
 const EXPORT_CARD_TEXT_TOP_PADDING = 18;
@@ -47,10 +59,11 @@ const EXPORT_CARD_HORIZONTAL_BAR_TOP_MARGIN = 20;
 const EXPORT_CARD_HORIZONTAL_PANEL_TOP_MARGIN = 14;
 const EXPORT_CARD_HORIZONTAL_PANEL_PADDING = 28;
 const EXPORT_CARD_HORIZONTAL_COLUMN_GAP = 34;
+const EXPORT_CARD_HORIZONTAL_DIVIDER_WIDTH = 1;
 const EXPORT_CARD_HORIZONTAL_TITLE_BAR_MIN_HEIGHT = 92;
 const EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT = 0;
-const EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP = 32;
-const EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING = 14;
+const EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP = 8;
+const EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING = 6;
 const EXPORT_CARD_HORIZONTAL_LINE_WIDTH_RATIO = 0.76;
 
 const compact = {
@@ -160,7 +173,10 @@ function infoListHeight(items, textWidth) {
 function horizontalColumnWidth(contentWidth) {
   return Math.max(
     1,
-    (contentWidth - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2 - EXPORT_CARD_HORIZONTAL_COLUMN_GAP) / 2
+    (contentWidth
+      - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2
+      - EXPORT_CARD_HORIZONTAL_COLUMN_GAP * 2
+      - EXPORT_CARD_HORIZONTAL_DIVIDER_WIDTH) / 2
   );
 }
 
@@ -330,7 +346,7 @@ const squareHeight = resolveHeight(square, 1520);
 
 assert(longHeight > baseHeight + 900, `Long horizontal content must increase canvas height, got base=${baseHeight}, long=${longHeight}.`);
 assert(sparseHeight < baseHeight, `Short horizontal content must tighten canvas height, got short=${sparseHeight}, base=${baseHeight}.`);
-assert(sparsePanelHeight < 170, `Short horizontal panel must not keep a large blank fixed height, got panel=${sparsePanelHeight}.`);
+assert(sparsePanelHeight < 150, `Short horizontal panel must not keep a large blank fixed height, got panel=${sparsePanelHeight}.`);
 assert(baseHeight >= EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP + EXPORT_CARD_CANVAS_PADDING,
   'Horizontal height must leave bottom safety room beyond canvas padding.');
 assert(verticalHeight > 0, 'Vertical export height strategy must remain valid.');
