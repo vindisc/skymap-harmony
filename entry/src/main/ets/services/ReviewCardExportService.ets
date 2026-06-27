@@ -14,11 +14,20 @@ export interface ReviewCardExportResult {
   message: string;
 }
 
+export interface ReviewCardBundleSnapshotResult {
+  success: boolean;
+  reviewCardPath: string;
+  thumbnailPath: string;
+  message: string;
+}
+
 export const REVIEW_CARD_EXPORT_ID: string = 'review-card-export';
 const EXPORT_DIR_NAME: string = 'review_exports';
 const EXPORT_TITLE_PREFIX: string = 'skymap-review-card';
 const EXPORT_EXTENSION: string = 'jpg';
 const EXPORT_MIME_TYPE: string = 'image/jpeg';
+const BUNDLE_REVIEW_CARD_MIME_TYPE: string = 'image/png';
+const BUNDLE_THUMBNAIL_MIME_TYPE: string = 'image/jpeg';
 
 function createExportTitle(): string {
   return `${EXPORT_TITLE_PREFIX}-${Date.now()}`;
@@ -32,6 +41,28 @@ function saveJpgToSandbox(context: common.UIAbilityContext, data: ArrayBuffer, t
   }
 
   const outputPath = `${outputDir}/${title}.${EXPORT_EXTENSION}`;
+  const file = fs.openSync(outputPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+  try {
+    fs.writeSync(file.fd, data);
+  } finally {
+    fs.closeSync(file);
+  }
+  return outputPath;
+}
+
+function ensureParentDirectory(outputPath: string): void {
+  const slashIndex: number = outputPath.lastIndexOf('/');
+  if (slashIndex <= 0) {
+    return;
+  }
+  try {
+    fs.mkdirSync(outputPath.slice(0, slashIndex), true);
+  } catch (error) {
+  }
+}
+
+function writeImageToSandbox(outputPath: string, data: ArrayBuffer): string {
+  ensureParentDirectory(outputPath);
   const file = fs.openSync(outputPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
     fs.writeSync(file.fd, data);
@@ -145,6 +176,63 @@ export class ReviewCardExportService {
         path: '',
         backupPath: '',
         message: '导出失败，请稍后重试'
+      };
+    } finally {
+      if (pixelMap) {
+        await pixelMap.release();
+      }
+      ReviewCardExportService.isExporting = false;
+    }
+  }
+
+  static async exportBundleSnapshot(
+    componentId: string,
+    reviewCardPath: string,
+    thumbnailPath: string,
+    onSnapshotReady: () => void = () => {}
+  ): Promise<ReviewCardBundleSnapshotResult> {
+    if (ReviewCardExportService.isExporting) {
+      return {
+        success: false,
+        reviewCardPath: '',
+        thumbnailPath: '',
+        message: '正在导出，请稍候'
+      };
+    }
+
+    ReviewCardExportService.isExporting = true;
+    let pixelMap: image.PixelMap | undefined = undefined;
+    try {
+      pixelMap = await componentSnapshot.get(componentId);
+      const packer = image.createImagePacker();
+      const reviewCardData = await packer.packToData(pixelMap, {
+        format: BUNDLE_REVIEW_CARD_MIME_TYPE,
+        quality: 100
+      });
+      const thumbnailData = await packer.packToData(pixelMap, {
+        format: BUNDLE_THUMBNAIL_MIME_TYPE,
+        quality: 72
+      });
+
+      writeImageToSandbox(reviewCardPath, reviewCardData);
+      writeImageToSandbox(thumbnailPath, thumbnailData);
+      try {
+        onSnapshotReady();
+      } catch (error) {
+      }
+
+      return {
+        success: true,
+        reviewCardPath: reviewCardPath,
+        thumbnailPath: thumbnailPath,
+        message: '已生成复盘包图片'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        reviewCardPath: '',
+        thumbnailPath: '',
+        message: '复盘包图片生成失败'
       };
     } finally {
       if (pixelMap) {

@@ -1,12 +1,13 @@
 import common from '@ohos.app.ability.common';
 import preferences from '@ohos.data.preferences';
+import fs from '@ohos.file.fs';
 import { ReviewCardDocument } from '../model/ReviewCardModel';
 import {
   resolveReviewCardExchangeReviewJsonFileName,
   stringifyReviewCardExchangeSchemaV1
 } from './ReviewCardExchangeSchema';
 import { HomeStorageSecretService } from './HomeStorageSecretService';
-import { Smb2Client, Smb2UploadOptions } from './Smb2Client';
+import { Smb2Client, Smb2UploadBytesOptions, Smb2UploadOptions } from './Smb2Client';
 import { SettingsRefreshService } from './SettingsRefreshService';
 
 const PREFERENCES_NAME: string = 'home_storage_settings';
@@ -36,6 +37,11 @@ export interface HomeStorageOperationResult {
   success: boolean;
   remotePath: string;
   message: string;
+}
+
+export interface HomeStorageUploadFileEntry {
+  localPath: string;
+  remoteRelativePath: string;
 }
 
 export enum HomeStorageConfigStatus {
@@ -134,10 +140,66 @@ function createSmbUploadOptions(settings: HomeStorageSettings, fileName: string,
   };
 }
 
+function createSmbUploadBytesOptions(
+  settings: HomeStorageSettings,
+  remoteDirectory: string,
+  fileName: string,
+  contentBytes: Array<number>
+): Smb2UploadBytesOptions {
+  return {
+    host: settings.smbHost,
+    port: parsePort(settings.smbPort),
+    shareName: settings.smbShareName,
+    remoteDirectory: remoteDirectory,
+    username: settings.username,
+    password: settings.password,
+    domain: settings.smbDomain,
+    fileName: fileName,
+    contentBytes: contentBytes
+  };
+}
+
 function resolveRemotePathText(settings: HomeStorageSettings, remoteDirectory: string, fileName: string): string {
   const directory: string = normalizeRemoteDirectory(remoteDirectory).replace(/\//g, '\\');
   const basePath: string = `\\\\${settings.smbHost}\\${settings.smbShareName}`;
   return directory.length > 0 ? `${basePath}\\${directory}\\${fileName}` : `${basePath}\\${fileName}`;
+}
+
+function joinRemotePath(left: string, right: string): string {
+  const normalizedLeft: string = normalizeRemoteDirectory(left);
+  const normalizedRight: string = normalizeRemoteDirectory(right);
+  if (normalizedLeft.length === 0) {
+    return normalizedRight;
+  }
+  if (normalizedRight.length === 0) {
+    return normalizedLeft;
+  }
+  return `${normalizedLeft}/${normalizedRight}`;
+}
+
+function splitRemoteRelativePath(value: string): Array<string> {
+  return normalizeRemoteDirectory(value)
+    .split('/')
+    .map((part: string): string => part.trim())
+    .filter((part: string): boolean => part.length > 0);
+}
+
+function readLocalFileBytes(filePath: string): Array<number> {
+  const stat = fs.statSync(filePath);
+  const file = fs.openSync(filePath, fs.OpenMode.READ_ONLY);
+  const buffer = new ArrayBuffer(stat.size);
+  try {
+    fs.readSync(file.fd, buffer);
+  } finally {
+    fs.closeSync(file);
+  }
+
+  const view = new Uint8Array(buffer);
+  const result: Array<number> = [];
+  for (let index = 0; index < view.length; index += 1) {
+    result.push(view[index]);
+  }
+  return result;
 }
 
 function isMissingRemoteDirectoryError(message: string): boolean {
@@ -162,6 +224,37 @@ async function uploadReviewJsonBySmb(
       smbDomain: settings.smbDomain
     };
     const remotePath: string = await client.uploadText(createSmbUploadOptions(nextSettings, fileName, body));
+    return {
+      success: true,
+      remotePath: remotePath,
+      message: '已上传家庭存储'
+    };
+  } catch (error) {
+    const message: string = error instanceof Error ? error.message : '上传家庭存储失败，请检查网络、账号和目录';
+    return {
+      success: false,
+      remotePath: resolveRemotePathText(settings, remoteDirectory, fileName),
+      message: message
+    };
+  } finally {
+    await client.close();
+  }
+}
+
+async function uploadFileBySmb(
+  settings: HomeStorageSettings,
+  localPath: string,
+  remoteDirectory: string,
+  fileName: string
+): Promise<HomeStorageOperationResult> {
+  const client: Smb2Client = new Smb2Client();
+  try {
+    const remotePath: string = await client.uploadBytes(createSmbUploadBytesOptions(
+      settings,
+      remoteDirectory,
+      fileName,
+      readLocalFileBytes(localPath)
+    ));
     return {
       success: true,
       remotePath: remotePath,
@@ -539,5 +632,68 @@ export class HomeStorageService {
     }
 
     return primaryResult;
+  }
+
+  static async uploadFilesToDirectory(
+    context: common.UIAbilityContext,
+    remoteDirectory: string,
+    files: Array<HomeStorageUploadFileEntry>
+  ): Promise<HomeStorageOperationResult> {
+    const settings: HomeStorageSettings = await HomeStorageService.loadSettings(context);
+    const validationMessage: string = HomeStorageService.validateSettings(settings);
+    if (validationMessage.length > 0) {
+      return {
+        success: false,
+        remotePath: '',
+        message: validationMessage
+      };
+    }
+
+    if (files.length === 0) {
+      return {
+        success: false,
+        remotePath: '',
+        message: '没有可上传的复盘包文件'
+      };
+    }
+
+    const targetDirectory: string = joinRemotePath(settings.remoteDirectory, remoteDirectory);
+    let lastRemotePath: string = '';
+    for (let index = 0; index < files.length; index += 1) {
+      const entry: HomeStorageUploadFileEntry = files[index];
+      const parts: Array<string> = splitRemoteRelativePath(entry.remoteRelativePath);
+      if (parts.length === 0) {
+        return {
+          success: false,
+          remotePath: resolveRemotePathText(settings, targetDirectory, ''),
+          message: '复盘包文件路径无效'
+        };
+      }
+
+      const fileName: string = parts[parts.length - 1];
+      const subDirectory: string = parts.length > 1 ? parts.slice(0, parts.length - 1).join('/') : '';
+      const fileRemoteDirectory: string = joinRemotePath(targetDirectory, subDirectory);
+      const result: HomeStorageOperationResult = await uploadFileBySmb(
+        settings,
+        entry.localPath,
+        fileRemoteDirectory,
+        fileName
+      );
+      if (!result.success) {
+        return {
+          success: false,
+          remotePath: result.remotePath,
+          message: result.message
+        };
+      }
+      lastRemotePath = result.remotePath;
+    }
+
+    await HomeStorageService.markLastUploadedAt(context, Date.now());
+    return {
+      success: true,
+      remotePath: resolveRemotePathText(settings, targetDirectory, ''),
+      message: lastRemotePath.length > 0 ? '复盘包已写入家庭存储' : '已上传家庭存储'
+    };
   }
 }

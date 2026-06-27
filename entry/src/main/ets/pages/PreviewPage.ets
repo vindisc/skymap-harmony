@@ -21,6 +21,7 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
 import { ReviewJsonExportResult, ReviewJsonExportService } from '../services/ReviewJsonExportService';
+import { ReviewBundleExportResult, ReviewBundleExportService } from '../services/ReviewBundleExportService';
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { HomeStorageOperationResult, HomeStorageService } from '../services/HomeStorageService';
@@ -49,6 +50,7 @@ struct PreviewPage {
   @State isExporting: boolean = false;
   @State isExportingReviewJson: boolean = false;
   @State isUploadingHomeStorage: boolean = false;
+  @State isExportingReviewBundle: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State isExportMenuVisible: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
@@ -287,6 +289,43 @@ struct PreviewPage {
     }
   }
 
+  private async exportReviewBundleToHomeStorage(): Promise<void> {
+    if (this.isExportingReviewBundle) {
+      return;
+    }
+
+    this.isExportingReviewBundle = true;
+    this.isExportSnapshotMode = true;
+    this.actionFeedbackText = '复盘包导出中…';
+    try {
+      await this.waitForExportLayout();
+      const context = this.getAbilityContext();
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
+      const result: ReviewBundleExportResult = await ReviewBundleExportService.exportReviewBundleToHomeStorage(
+        context,
+        this.document,
+        reviewerName,
+        this.getExportComponentId(),
+        this.getExportCanvasWidth(),
+        this.getExportCanvasHeight(),
+        () => {
+          this.isExportSnapshotMode = false;
+        }
+      );
+      if (result.success) {
+        await this.markExportedQuietly(result.remotePath);
+      }
+      this.actionFeedbackText = result.message;
+      promptAction.showToast({ message: result.message });
+    } catch (error) {
+      this.actionFeedbackText = '复盘包导出失败';
+      promptAction.showToast({ message: '复盘包导出失败' });
+    } finally {
+      this.isExportSnapshotMode = false;
+      this.isExportingReviewBundle = false;
+    }
+  }
+
   private async waitForExportLayout(): Promise<void> {
     return new Promise<void>((resolve: () => void) => {
       setTimeout(() => {
@@ -311,7 +350,11 @@ struct PreviewPage {
   }
 
   private isActionBusy(): boolean {
-    return this.isSaving || this.isExporting || this.isExportingReviewJson || this.isUploadingHomeStorage;
+    return this.isSaving ||
+      this.isExporting ||
+      this.isExportingReviewJson ||
+      this.isUploadingHomeStorage ||
+      this.isExportingReviewBundle;
   }
 
   private openExportMenu(): void {
@@ -524,6 +567,10 @@ struct PreviewPage {
 
           this.ExportSheetAction(this.isUploadingHomeStorage ? '上传中…' : '上传家庭存储', this.isActionBusy(), () => {
             this.uploadReviewJsonToHomeStorage();
+          })
+
+          this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包', this.isActionBusy(), () => {
+            this.exportReviewBundleToHomeStorage();
           })
 
           this.ExportSheetAction(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', this.isActionBusy(), () => {

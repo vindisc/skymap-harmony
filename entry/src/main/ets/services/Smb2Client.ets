@@ -35,7 +35,7 @@ const NTLM_FLAGS: number =
   NTLMSSP_NEGOTIATE_128 |
   NTLMSSP_NEGOTIATE_56;
 
-export interface Smb2UploadOptions {
+export interface Smb2ConnectionOptions {
   host: string;
   port: number;
   shareName: string;
@@ -43,8 +43,16 @@ export interface Smb2UploadOptions {
   username: string;
   password: string;
   domain: string;
+}
+
+export interface Smb2UploadOptions extends Smb2ConnectionOptions {
   fileName: string;
   content: string;
+}
+
+export interface Smb2UploadBytesOptions extends Smb2ConnectionOptions {
+  fileName: string;
+  contentBytes: Array<number>;
 }
 
 interface NtlmChallenge {
@@ -800,13 +808,27 @@ export class Smb2Client {
   }
 
   async uploadText(options: Smb2UploadOptions): Promise<string> {
+    return this.uploadBytes({
+      host: options.host,
+      port: options.port,
+      shareName: options.shareName,
+      remoteDirectory: options.remoteDirectory,
+      username: options.username,
+      password: options.password,
+      domain: options.domain,
+      fileName: options.fileName,
+      contentBytes: utf8Bytes(options.content)
+    });
+  }
+
+  async uploadBytes(options: Smb2UploadBytesOptions): Promise<string> {
     await this.open(options);
     try {
       await this.ensureRemoteDirectory(options.remoteDirectory);
       const remotePath: string = normalizeRemoteFilePath(options.remoteDirectory, options.fileName);
       const fileId: Array<number> = await this.createFile(remotePath);
       try {
-        await this.writeFile(fileId, utf8Bytes(options.content));
+        await this.writeFile(fileId, options.contentBytes);
       } finally {
         await this.closeFile(fileId);
       }
@@ -820,7 +842,7 @@ export class Smb2Client {
     await this.transport.close();
   }
 
-  private async open(options: Smb2UploadOptions): Promise<void> {
+  private async open(options: Smb2ConnectionOptions): Promise<void> {
     await this.transport.connect(options.host, options.port > 0 ? options.port : SMB_PORT);
     await this.negotiate();
     await this.sessionSetup(options);
@@ -925,7 +947,7 @@ export class Smb2Client {
     return response.slice(securityOffset, securityOffset + securityLength);
   }
 
-  private async sessionSetup(options: Smb2UploadOptions): Promise<void> {
+  private async sessionSetup(options: Smb2ConnectionOptions): Promise<void> {
     const negotiateBlob: Array<number> = wrapSpnegoNegTokenInit(ntlmNegotiateMessage());
     const challengeResponse: Array<number> = await this.send(SMB2_SESSION_SETUP, this.sessionSetupBody(negotiateBlob), 0, false);
     this.ensureStatus(challengeResponse, [STATUS_MORE_PROCESSING_REQUIRED]);
