@@ -49,7 +49,8 @@ assertNotIncludes(previewSource, "'复制数据'", 'Preview export sheet');
 assertNotIncludes(previewSource, 'isUploadingHomeStorage', 'Preview export sheet');
 
 assertIncludes(syncCenterSource, "title: '同步中心'", 'SyncCenterPage');
-assertIncludes(syncCenterSource, '管理家庭存储连接。当前支持手动导出复盘包，自动同步将在后续版本提供。', 'SyncCenterPage');
+assertIncludes(syncCenterSource, '家庭存储通常需要连接家庭 Wi-Fi 或 VPN 后使用。离开家庭网络时，请先连接 VPN / Tailscale，再导出复盘包。', 'SyncCenterPage');
+assertIncludes(syncCenterSource, '当前家庭存储需要在同一网络或 VPN 下使用。', 'SyncCenterPage');
 assertIncludes(syncCenterSource, "label: this.isTesting ? '检查中…' : '检查家庭存储'", 'SyncCenterPage');
 assertIncludes(myPageSource, "value: '管理家庭存储连接，后续承接批量同步。'", 'MyPage');
 

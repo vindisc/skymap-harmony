@@ -37,6 +37,7 @@ export interface HomeStorageOperationResult {
   success: boolean;
   remotePath: string;
   message: string;
+  errorType: HomeStorageErrorType;
 }
 
 export interface HomeStorageUploadFileEntry {
@@ -48,6 +49,17 @@ export enum HomeStorageConfigStatus {
   EMPTY = 'empty',
   PARTIAL = 'partial',
   COMPLETE = 'complete'
+}
+
+export enum HomeStorageErrorType {
+  NONE = 'none',
+  NOT_CONFIGURED = 'notConfigured',
+  INCOMPLETE_CONFIG = 'incompleteConfig',
+  UNREACHABLE = 'unreachable',
+  AUTH_FAILED = 'authFailed',
+  DIRECTORY_CREATE_FAILED = 'directoryCreateFailed',
+  UPLOAD_FAILED = 'uploadFailed',
+  UNKNOWN = 'unknown'
 }
 
 interface ParsedSmbAddress {
@@ -206,23 +218,116 @@ function isMissingRemoteDirectoryError(message: string): boolean {
   return message.indexOf('SMB 目标路径不存在') >= 0;
 }
 
+function resolveHomeStorageErrorMessage(errorType: HomeStorageErrorType): string {
+  if (errorType === HomeStorageErrorType.NOT_CONFIGURED) {
+    return '请先配置家庭存储';
+  }
+  if (errorType === HomeStorageErrorType.INCOMPLETE_CONFIG) {
+    return '家庭存储配置不完整，请检查设置';
+  }
+  if (errorType === HomeStorageErrorType.UNREACHABLE) {
+    return '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。';
+  }
+  if (errorType === HomeStorageErrorType.AUTH_FAILED) {
+    return '家庭存储账号或密码不正确，请检查设置';
+  }
+  if (errorType === HomeStorageErrorType.DIRECTORY_CREATE_FAILED) {
+    return '家庭存储目录创建失败，请稍后重试';
+  }
+  if (errorType === HomeStorageErrorType.UPLOAD_FAILED) {
+    return '复盘包导出失败，请重试';
+  }
+  if (errorType === HomeStorageErrorType.UNKNOWN) {
+    return '家庭存储暂时不可用，请稍后重试';
+  }
+  return '';
+}
+
+function classifyHomeStorageError(message: string, fallback: HomeStorageErrorType): HomeStorageErrorType {
+  const normalized: string = message.toLowerCase();
+  if (message.indexOf('SMB 认证失败') >= 0 ||
+    message.indexOf('用户名和密码') >= 0 ||
+    message.indexOf('认证协商失败') >= 0 ||
+    message.indexOf('认证响应异常') >= 0 ||
+    normalized.indexOf('access denied') >= 0 ||
+    normalized.indexOf('logon failure') >= 0 ||
+    normalized.indexOf('0xc000006d') >= 0 ||
+    normalized.indexOf('0xc0000022') >= 0) {
+    return HomeStorageErrorType.AUTH_FAILED;
+  }
+  if (message.indexOf('响应超时') >= 0 ||
+    message.indexOf('连接异常') >= 0 ||
+    message.indexOf('连接失败') >= 0 ||
+    normalized.indexOf('timeout') >= 0 ||
+    normalized.indexOf('timed out') >= 0 ||
+    normalized.indexOf('network unreachable') >= 0 ||
+    normalized.indexOf('host unreachable') >= 0 ||
+    normalized.indexOf('no route to host') >= 0 ||
+    normalized.indexOf('enetunreach') >= 0 ||
+    normalized.indexOf('ehostunreach') >= 0 ||
+    normalized.indexOf('econnrefused') >= 0 ||
+    normalized.indexOf('econnreset') >= 0 ||
+    normalized.indexOf('socket') >= 0) {
+    return HomeStorageErrorType.UNREACHABLE;
+  }
+  if (message.indexOf('创建目录') >= 0 ||
+    message.indexOf('目标路径不存在') >= 0 ||
+    message.indexOf('共享目录不存在') >= 0 ||
+    normalized.indexOf('path not found') >= 0 ||
+    normalized.indexOf('object path not found') >= 0) {
+    return HomeStorageErrorType.DIRECTORY_CREATE_FAILED;
+  }
+  if (message.indexOf('文件正在被占用') >= 0 ||
+    message.indexOf('写入') >= 0 ||
+    message.indexOf('创建文件') >= 0 ||
+    normalized.indexOf('upload') >= 0 ||
+    normalized.indexOf('write') >= 0) {
+    return HomeStorageErrorType.UPLOAD_FAILED;
+  }
+  return fallback;
+}
+
 function normalizeHomeStorageErrorMessage(message: string): string {
-  if (message.indexOf('SMB 认证失败') >= 0) {
-    return '家庭存储认证失败，请检查用户名和密码';
+  const errorType: HomeStorageErrorType = classifyHomeStorageError(message, HomeStorageErrorType.UNKNOWN);
+  return resolveHomeStorageErrorMessage(errorType);
+}
+
+function createOperationResult(
+  success: boolean,
+  remotePath: string,
+  message: string,
+  errorType: HomeStorageErrorType = HomeStorageErrorType.NONE
+): HomeStorageOperationResult {
+  return {
+    success: success,
+    remotePath: remotePath,
+    message: message,
+    errorType: errorType
+  };
+}
+
+function createConfigurationFailureResult(settings: HomeStorageSettings): HomeStorageOperationResult {
+  const status: HomeStorageConfigStatus = HomeStorageService.getConfigurationStatus(settings);
+  if (status === HomeStorageConfigStatus.EMPTY) {
+    return createOperationResult(false, '', resolveHomeStorageErrorMessage(HomeStorageErrorType.NOT_CONFIGURED), HomeStorageErrorType.NOT_CONFIGURED);
   }
-  if (message.indexOf('SMB 共享目录不存在') >= 0) {
-    return '家庭存储共享目录不存在，请检查共享目录';
-  }
-  if (message.indexOf('SMB 目标路径不存在') >= 0) {
-    return '家庭存储目标路径不存在，请先创建目录';
-  }
-  if (message.indexOf('SMB 文件正在被占用') >= 0) {
-    return '家庭存储文件正在被占用，请稍后重试';
-  }
-  if (message.indexOf('SMB') >= 0) {
-    return message.replace(/SMB/g, '家庭存储');
-  }
-  return message;
+  return createOperationResult(false, '', resolveHomeStorageErrorMessage(HomeStorageErrorType.INCOMPLETE_CONFIG), HomeStorageErrorType.INCOMPLETE_CONFIG);
+}
+
+function createErrorResult(
+  settings: HomeStorageSettings,
+  remoteDirectory: string,
+  fileName: string,
+  rawMessage: string,
+  fallback: HomeStorageErrorType
+): HomeStorageOperationResult {
+  const errorType: HomeStorageErrorType = classifyHomeStorageError(rawMessage, fallback);
+  return createOperationResult(
+    false,
+    resolveRemotePathText(settings, remoteDirectory, fileName),
+    resolveHomeStorageErrorMessage(errorType),
+    errorType
+  );
 }
 
 function fileSizeText(localPath: string): string {
@@ -251,20 +356,10 @@ async function uploadReviewJsonBySmb(
       smbDomain: settings.smbDomain
     };
     const remotePath: string = await client.uploadText(createSmbUploadOptions(nextSettings, fileName, body));
-    return {
-      success: true,
-      remotePath: remotePath,
-      message: '已上传家庭存储'
-    };
+    return createOperationResult(true, remotePath, '已上传家庭存储');
   } catch (error) {
-    const message: string = error instanceof Error
-      ? normalizeHomeStorageErrorMessage(error.message)
-      : '上传家庭存储失败，请检查网络、账号和目录';
-    return {
-      success: false,
-      remotePath: resolveRemotePathText(settings, remoteDirectory, fileName),
-      message: message
-    };
+    const rawMessage: string = error instanceof Error ? error.message : `${error}`;
+    return createErrorResult(settings, remoteDirectory, fileName, rawMessage, HomeStorageErrorType.UPLOAD_FAILED);
   } finally {
     await client.close();
   }
@@ -287,22 +382,18 @@ async function uploadFileBySmb(
       readLocalFileBytes(localPath)
     ));
     console.info(`[HomeStorageService] file_upload_success remote=${remotePath} bytes=${byteSize}`);
-    return {
-      success: true,
-      remotePath: remotePath,
-      message: '已上传家庭存储'
-    };
+    return createOperationResult(true, remotePath, '已上传家庭存储');
   } catch (error) {
-    const message: string = error instanceof Error
-      ? normalizeHomeStorageErrorMessage(error.message)
-      : '上传家庭存储失败，请检查网络、账号和目录';
     const rawMessage: string = error instanceof Error ? error.message : `${error}`;
-    console.error(`[HomeStorageService] file_upload_failed local=${localPath} remoteDirectory=${remoteDirectory} file=${fileName} bytes=${byteSize} error=${rawMessage} normalized=${message}`);
-    return {
-      success: false,
-      remotePath: resolveRemotePathText(settings, remoteDirectory, fileName),
-      message: message
-    };
+    const result: HomeStorageOperationResult = createErrorResult(
+      settings,
+      remoteDirectory,
+      fileName,
+      rawMessage,
+      HomeStorageErrorType.UPLOAD_FAILED
+    );
+    console.error(`[HomeStorageService] file_upload_failed local=${localPath} remoteDirectory=${remoteDirectory} file=${fileName} bytes=${byteSize} error=${rawMessage} normalized=${result.message}`);
+    return result;
   } finally {
     await client.close();
   }
@@ -607,31 +698,39 @@ export class HomeStorageService {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
     const validationMessage: string = HomeStorageService.validateSettings(normalized);
     if (validationMessage.length > 0) {
-      return {
-        success: false,
-        remotePath: '',
-        message: validationMessage
-      };
+      return createConfigurationFailureResult(normalized);
     }
 
     const client: Smb2Client = new Smb2Client();
     try {
       await client.testConnection(createSmbUploadOptions(normalized, 'connection-test.review.json', '{}'));
-      return {
-        success: true,
-        remotePath: `\\\\${normalized.smbHost}\\${normalized.smbShareName}`,
-        message: '家庭存储连接成功'
-      };
+      return createOperationResult(true, `\\\\${normalized.smbHost}\\${normalized.smbShareName}`, '家庭存储连接成功');
     } catch (error) {
       await client.close();
-      return {
-        success: false,
-        remotePath: `\\\\${normalized.smbHost}\\${normalized.smbShareName}`,
-        message: error instanceof Error
-          ? normalizeHomeStorageErrorMessage(error.message)
-          : '家庭存储连接失败，请检查地址、账号和共享目录'
-      };
+      const rawMessage: string = error instanceof Error ? error.message : `${error}`;
+      const errorType: HomeStorageErrorType = classifyHomeStorageError(rawMessage, HomeStorageErrorType.UNREACHABLE);
+      return createOperationResult(
+        false,
+        `\\\\${normalized.smbHost}\\${normalized.smbShareName}`,
+        resolveHomeStorageErrorMessage(errorType),
+        errorType
+      );
     }
+  }
+
+  static async checkAvailability(context: common.UIAbilityContext): Promise<HomeStorageOperationResult> {
+    const settings: HomeStorageSettings = await HomeStorageService.loadSettings(context);
+    const validationMessage: string = HomeStorageService.validateSettings(settings);
+    console.info(`[HomeStorageService] availability_check status=${HomeStorageService.getConfigurationStatus(settings)} host=${settings.smbHost.length > 0 ? 'set' : 'empty'} share=${settings.smbShareName.length > 0 ? 'set' : 'empty'} remoteDirectory=${settings.remoteDirectory.length > 0 ? settings.remoteDirectory : 'empty'}`);
+    if (validationMessage.length > 0) {
+      const result: HomeStorageOperationResult = createConfigurationFailureResult(settings);
+      console.warn(`[HomeStorageService] availability_config_invalid raw=${validationMessage} message=${result.message}`);
+      return result;
+    }
+
+    const result: HomeStorageOperationResult = await HomeStorageService.testConnection(settings);
+    console.info(`[HomeStorageService] availability_check_finished success=${result.success} type=${result.errorType} message=${result.message}`);
+    return result;
   }
 
   static async uploadReviewJson(
@@ -642,11 +741,7 @@ export class HomeStorageService {
     const settings: HomeStorageSettings = await HomeStorageService.loadSettings(context);
     const validationMessage: string = HomeStorageService.validateSettings(settings);
     if (validationMessage.length > 0) {
-      return {
-        success: false,
-        remotePath: '',
-        message: validationMessage
-      };
+      return createConfigurationFailureResult(settings);
     }
 
     const fileName: string = resolveReviewCardExchangeReviewJsonFileName(document);
@@ -664,7 +759,8 @@ export class HomeStorageService {
         return {
           success: true,
           remotePath: fallbackResult.remotePath,
-          message: '已上传共享根目录'
+          message: '已上传共享根目录',
+          errorType: HomeStorageErrorType.NONE
         };
       }
     }
@@ -682,19 +778,11 @@ export class HomeStorageService {
     console.info(`[HomeStorageService] bundle_upload_config status=${HomeStorageService.getConfigurationStatus(settings)} host=${settings.smbHost.length > 0 ? 'set' : 'empty'} share=${settings.smbShareName.length > 0 ? 'set' : 'empty'} remoteDirectory=${settings.remoteDirectory.length > 0 ? settings.remoteDirectory : 'empty'} fileCount=${files.length}`);
     if (validationMessage.length > 0) {
       console.warn(`[HomeStorageService] bundle_upload_config_invalid message=${validationMessage}`);
-      return {
-        success: false,
-        remotePath: '',
-        message: validationMessage
-      };
+      return createConfigurationFailureResult(settings);
     }
 
     if (files.length === 0) {
-      return {
-        success: false,
-        remotePath: '',
-        message: '没有可上传的复盘包文件'
-      };
+      return createOperationResult(false, '', '复盘包导出失败，请重试', HomeStorageErrorType.UPLOAD_FAILED);
     }
 
     const targetDirectory: string = joinRemotePath(settings.remoteDirectory, remoteDirectory);
@@ -704,11 +792,12 @@ export class HomeStorageService {
       const entry: HomeStorageUploadFileEntry = files[index];
       const parts: Array<string> = splitRemoteRelativePath(entry.remoteRelativePath);
       if (parts.length === 0) {
-        return {
-          success: false,
-          remotePath: resolveRemotePathText(settings, targetDirectory, ''),
-          message: '复盘包文件路径无效'
-        };
+        return createOperationResult(
+          false,
+          resolveRemotePathText(settings, targetDirectory, ''),
+          '复盘包导出失败，请重试',
+          HomeStorageErrorType.UPLOAD_FAILED
+        );
       }
 
       const fileName: string = parts[parts.length - 1];
@@ -723,21 +812,17 @@ export class HomeStorageService {
       );
       if (!result.success) {
         console.error(`[HomeStorageService] bundle_upload_failed index=${index + 1}/${files.length} relative=${entry.remoteRelativePath} remote=${result.remotePath} message=${result.message}`);
-        return {
-          success: false,
-          remotePath: result.remotePath,
-          message: result.message
-        };
+        return result;
       }
       lastRemotePath = result.remotePath;
     }
 
     await HomeStorageService.markLastUploadedAt(context, Date.now());
     console.info(`[HomeStorageService] bundle_upload_success targetDirectory=${targetDirectory} lastRemotePath=${lastRemotePath}`);
-    return {
-      success: true,
-      remotePath: resolveRemotePathText(settings, targetDirectory, ''),
-      message: lastRemotePath.length > 0 ? '复盘包已写入家庭存储' : '已上传家庭存储'
-    };
+    return createOperationResult(
+      true,
+      resolveRemotePathText(settings, targetDirectory, ''),
+      lastRemotePath.length > 0 ? '复盘包已写入家庭存储' : '已上传家庭存储'
+    );
   }
 }

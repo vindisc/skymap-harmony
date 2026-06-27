@@ -7,7 +7,12 @@ import {
   stringifyReviewCardExchangeSchemaV1
 } from './ReviewCardExchangeSchema';
 import { ReviewCardExportService, ReviewCardBundleSnapshotResult } from './ReviewCardExportService';
-import { HomeStorageOperationResult, HomeStorageService, HomeStorageUploadFileEntry } from './HomeStorageService';
+import {
+  HomeStorageErrorType,
+  HomeStorageOperationResult,
+  HomeStorageService,
+  HomeStorageUploadFileEntry
+} from './HomeStorageService';
 
 export interface ReviewBundleExportResult {
   success: boolean;
@@ -16,6 +21,7 @@ export interface ReviewBundleExportResult {
   bundleId: string;
   bundleDirectoryName: string;
   message: string;
+  errorType: HomeStorageErrorType;
 }
 
 interface ReviewBundlePaths {
@@ -292,6 +298,20 @@ export class ReviewBundleExportService {
 
     try {
       console.info(`[ReviewBundleExport] start reviewId=${document.createdAt} bundleId=${bundleId} local=${paths.root} remote=${remoteDirectory}`);
+      const availabilityResult: HomeStorageOperationResult = await HomeStorageService.checkAvailability(context);
+      console.info(`[ReviewBundleExport] availability_checked success=${availabilityResult.success} type=${availabilityResult.errorType} message=${availabilityResult.message}`);
+      if (!availabilityResult.success) {
+        return {
+          success: false,
+          localBundlePath: '',
+          remotePath: availabilityResult.remotePath,
+          bundleId: bundleId,
+          bundleDirectoryName: bundleDirectoryName,
+          message: availabilityResult.message,
+          errorType: availabilityResult.errorType
+        };
+      }
+
       ensureDirectory(`${paths.root}/exports`);
       ensureDirectory(`${paths.root}/thumbnails`);
       ensureDirectory(`${paths.root}/assets`);
@@ -313,7 +333,8 @@ export class ReviewBundleExportService {
           remotePath: '',
           bundleId: bundleId,
           bundleDirectoryName: bundleDirectoryName,
-          message: snapshotResult.message
+          message: snapshotResult.message,
+          errorType: HomeStorageErrorType.UPLOAD_FAILED
         };
       }
       console.info(`[ReviewBundleExport] review_card_written path=${paths.reviewCardImage} bytes=${fileSize(paths.reviewCardImage)}`);
@@ -338,7 +359,8 @@ export class ReviewBundleExportService {
         remotePath: uploadResult.remotePath,
         bundleId: bundleId,
         bundleDirectoryName: bundleDirectoryName,
-        message: uploadResult.success ? '复盘包已写入家庭存储' : uploadResult.message
+        message: uploadResult.success ? '复盘包已写入家庭存储' : uploadResult.message,
+        errorType: uploadResult.errorType
       };
     } catch (error) {
       const message: string = error instanceof Error ? describeError(error) : `${error}`;
@@ -350,7 +372,8 @@ export class ReviewBundleExportService {
         remotePath: '',
         bundleId: bundleId,
         bundleDirectoryName: bundleDirectoryName,
-        message: message
+        message: '复盘包导出失败，请重试',
+        errorType: HomeStorageErrorType.UPLOAD_FAILED
       };
     }
   }

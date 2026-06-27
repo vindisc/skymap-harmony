@@ -252,7 +252,7 @@ struct ReviewSettingsPage {
           .lineHeight(AppTypography.cardTitleLineHeight)
           .width('100%')
 
-        Text('SMB 与凭据')
+        Text('连接与凭据')
           .fontSize(AppTypography.caption)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.captionLineHeight)

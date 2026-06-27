@@ -28,7 +28,6 @@ import {
   REVIEW_FLOW_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_EXPORT_PENDING_TEXT,
   REVIEW_FLOW_EXPORT_SUCCESS_TEXT,
-  REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_SAVE_FAILED_TEXT,
@@ -298,9 +297,7 @@ struct PreviewPage {
         return;
       }
       console.error(`[PreviewPage] 复盘包导出失败：${result.message}`);
-      const failedText: string = result.message.indexOf('请先填写') >= 0
-        ? REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT
-        : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
+      const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
       this.actionFeedbackText = failedText;
       promptAction.showToast({ message: failedText });
     } catch (error) {

@@ -13,6 +13,10 @@ export const REVIEW_FLOW_EXPORT_FAILED_TEXT: string = '导出失败，请重试'
 export const REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT: string = '复盘包已导出到家庭存储';
 export const REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT: string = '复盘包导出失败，请重试';
 export const REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT: string = '请先配置家庭存储';
+export const REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_INCOMPLETE_TEXT: string = '家庭存储配置不完整，请检查设置';
+export const REVIEW_FLOW_BUNDLE_EXPORT_UNREACHABLE_TEXT: string = '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。';
+export const REVIEW_FLOW_BUNDLE_EXPORT_AUTH_FAILED_TEXT: string = '家庭存储账号或密码不正确，请检查设置';
+export const REVIEW_FLOW_BUNDLE_EXPORT_DIRECTORY_FAILED_TEXT: string = '家庭存储目录创建失败，请稍后重试';
 
 export const REVIEW_FLOW_DELETE_PENDING_TEXT: string = '删除中…';
 export const REVIEW_FLOW_DELETE_SUCCESS_TEXT: string = '复盘已删除';

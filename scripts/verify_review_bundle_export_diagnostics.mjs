@@ -86,10 +86,10 @@ for (const relativePath of [
 
 assertIncludes(previewSource, 'REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT', 'PreviewPage user feedback');
 assertIncludes(previewSource, 'REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT', 'PreviewPage user feedback');
-assertIncludes(previewSource, 'REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT', 'PreviewPage user feedback');
-assertIncludes(previewSource, "result.message.indexOf('请先填写') >= 0", 'PreviewPage config failure mapping');
+assertIncludes(previewSource, 'result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT', 'PreviewPage user feedback');
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT: string = '复盘包导出失败，请重试'", 'ReviewFlowFeedback');
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT: string = '请先配置家庭存储'", 'ReviewFlowFeedback');
+assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_UNREACHABLE_TEXT: string = '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。'", 'ReviewFlowFeedback');
 
 const previewUserCopyStart = previewSource.indexOf('private async exportReviewBundleToHomeStorage()');
 const previewUserCopyEnd = previewSource.indexOf('private async waitForExportLayout()');
@@ -100,7 +100,11 @@ const previewBundleExportSource = previewUserCopyStart >= 0 && previewUserCopyEn
 const bundleFeedbackCopy = [
   "REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT: string = '复盘包已导出到家庭存储'",
   "REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT: string = '复盘包导出失败，请重试'",
-  "REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT: string = '请先配置家庭存储'"
+  "REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT: string = '请先配置家庭存储'",
+  "REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_INCOMPLETE_TEXT: string = '家庭存储配置不完整，请检查设置'",
+  "REVIEW_FLOW_BUNDLE_EXPORT_UNREACHABLE_TEXT: string = '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。'",
+  "REVIEW_FLOW_BUNDLE_EXPORT_AUTH_FAILED_TEXT: string = '家庭存储账号或密码不正确，请检查设置'",
+  "REVIEW_FLOW_BUNDLE_EXPORT_DIRECTORY_FAILED_TEXT: string = '家庭存储目录创建失败，请稍后重试'"
 ].join('\n');
 
 for (const forbidden of ['SMB', 'manifest', 'RDB', 'raw JSON']) {
