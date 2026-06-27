@@ -9,6 +9,7 @@
 - `DATA_MODEL.md`：Review、Photo、Template、Preset、Profile、ExportJob 等产品级领域模型。
 - `REVIEW_JSON_SEMANTICS.md`：`review.json` v1 字段语义、空值策略和双端责任分工。
 - `HARMONYOS_V0_BASELINE.md`：HarmonyOS v0 发布基线、回归清单、存储边界、已知风险和下一阶段路线。
+- `REVIEW_BUNDLE_V1_DESIGN.md`：review bundle v1 的目录结构、manifest、家庭存储、双端导入导出、删除语义和 v1 不做范围。
 - `REVIEW_LIBRARY_V1_1.md`：Review Library v1.1 的可见入口、搜索界面和导入结果闭环。
 - `UI_INTERACTION_GUIDE.md`：Skymap UI 交互设计指导，定义按钮、色彩、字体、页面结构和评审清单。
 - `SYNC_V0_MANUAL_EXCHANGE.md`：Sync v0 手动文件交换闭环，说明 review.json 如何从 Harmony 落到 Mac Review Library。

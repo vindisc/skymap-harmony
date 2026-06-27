@@ -47,6 +47,18 @@
 - 当前已经存在有限自动恢复逻辑，会在特定条件下扫描 `review_exchange` 并把恢复结果写入 RDB
 - 详细存储、删除和恢复语义见 [`REVIEW_LIBRARY_STORAGE_AUDIT.md`](./REVIEW_LIBRARY_STORAGE_AUDIT.md)
 
+## 与 review bundle 的关系
+
+review bundle v1 的设计见 [`REVIEW_BUNDLE_V1_DESIGN.md`](./REVIEW_BUNDLE_V1_DESIGN.md)。
+
+必须保持以下边界：
+
+- `review.json` 表达单次复盘内容，是双端字段兼容的核心边界。
+- `manifest.json` 表达 bundle 文件清单、来源、导出图、缩略图、原图是否包含和完整性信息。
+- 不把 bundle 路径、家庭存储路径、导出图片数组、缩略图路径或 checksum 写进 `review.json`。
+- 不让 `review.json` 变成远端同步协议。
+- Mac / Harmony 双端接力优先兼容 `review.json` v1 字段；bundle 只是承载 `review.json` 和相关文件的目录级外壳。
+
 ## 字段语义矩阵
 
 | 字段 | 用户含义 | 是否必填 | 空值策略 | Mac 展示责任 | Harmony 展示责任 | 导入导出责任 |

@@ -8,6 +8,7 @@
 
 - 产品字段模型见 [`DATA_MODEL.md`](./DATA_MODEL.md)
 - `review.json` 交换字段语义见 [`REVIEW_JSON_SEMANTICS.md`](./REVIEW_JSON_SEMANTICS.md)
+- review bundle v1 设计见 [`REVIEW_BUNDLE_V1_DESIGN.md`](./REVIEW_BUNDLE_V1_DESIGN.md)
 
 ## 一、当前存储架构
 
@@ -214,6 +215,18 @@ flowchart TD
 
 补充说明：
 - 当前实现虽然在特定条件下会扫描 `review_exchange` 并重建历史项，但恢复结果写入 RDB，因此长期主索引仍然是 RDB。
+
+### RDB / review_exchange / review bundle 边界
+
+review bundle v1 加入后，三者边界应保持如下：
+
+| 对象 | 角色 | 是否本地复盘库主索引 | 是否跨端接力格式 |
+| --- | --- | --- | --- |
+| RDB `reviews` | HarmonyOS 本地复盘库主读主写索引，负责列表、搜索、筛选、统计、更新和删除。 | 是 | 否 |
+| `review_exchange/*.review.json` | 应用沙箱内备份、交换和有限恢复来源。 | 否 | 有限支持 |
+| review bundle | 家庭存储中的目录级交换 / 备份 / 接力格式，包含 `review.json`、导出图、缩略图和 `manifest.json`。 | 否 | 是 |
+
+review bundle 不参与 HarmonyOS 本地复盘库主索引查询，也不替代 RDB。家庭存储中的 bundle 是用户已经导出的外部资产，删除 HarmonyOS 本地记录时不应自动删除它。
 
 ## 四、删除语义
 

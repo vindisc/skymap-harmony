@@ -196,18 +196,24 @@ SyncTarget 表示一个可被用户选择或配置的同步位置。
 
 ReviewBundle 表示一次复盘在家庭存储中的目录级同步单元。
 
+详细设计见 [`REVIEW_BUNDLE_V1_DESIGN.md`](./REVIEW_BUNDLE_V1_DESIGN.md)。当前 v1 是设计模型，不代表客户端已经实现，也不修改 `ReviewCardDocument`、Review JSON v1 字段或 RDB 表结构。
+
 推荐结构：
 
 ```text
 Skymap/
-└── Reviews/
+└── ReviewBundles/
     └── 2026/
         └── 06/
-            └── review-20260613-091530-a1b2c3/
-                ├── review.json
+            └── review_20260626_093700_a1b2c3/
                 ├── manifest.json
-                ├── photo.jpg
-                └── preview.jpg
+                ├── review.json
+                ├── exports/
+                │   └── review-card.png
+                ├── thumbnails/
+                │   └── thumb.jpg
+                └── assets/
+                    └── README.md
 ```
 
 | 字段 | 职责 | 归属 |
@@ -215,8 +221,9 @@ Skymap/
 | bundleId | 标识一个 review bundle。 | 产品模型 |
 | reviewRef | 指向 bundle 内的 `review.json`。 | 产品模型 |
 | manifestRef | 指向 bundle 内的 `manifest.json`。 | 产品模型 |
-| photoRef | 可选照片副本。 | 产品模型 |
-| previewRef | 可选预览图。 | 产品模型 |
+| exportedImageRefs | 指向 bundle 内用户可查看的导出成品图，v1 默认至少一张 `exports/review-card.png`。 | 产品模型 |
+| thumbnailRef | 指向 bundle 内快速浏览缩略图，缺失不应阻止导入。 | 产品模型 |
+| originalPhotoRef | 原图来源提示；v1 默认不包含原图二进制，只记录 `included=false` 和可选文件名、像素等提示。 | 产品模型 |
 | createdAt / updatedAt | 支持排序、扫描和冲突判断。 | 产品模型 |
 | sourceClient | 标记 Harmony、Mac 或手动导入来源。 | 产品模型 |
 
@@ -226,13 +233,16 @@ BundleManifest 表示 bundle 内的文件清单和完整性摘要，不替代 `r
 
 | 字段 | 职责 | 归属 |
 | --- | --- | --- |
-| manifestVersion | 清单版本。 | 产品模型 |
+| bundleVersion | 清单 / bundle 格式版本，v1 使用 `1`。 | 产品模型 |
 | bundleId | 对应 ReviewBundle。 | 产品模型 |
-| reviewFile | `review.json` 文件名、大小和可选哈希。 | 产品模型 |
-| photoFile | 可选照片文件名、大小、像素尺寸和可选哈希。 | 产品模型 |
-| previewFile | 可选预览文件名、大小和可选哈希。 | 产品模型 |
-| sourceClient | 首次创建 bundle 的客户端。 | 产品模型 |
-| createdAt | bundle 创建时间。 | 产品模型 |
+| createdAt / updatedAt | bundle 创建和清单更新时间。 | 产品模型 |
+| sourceApp / sourceAppVersion / platform | 首次创建 bundle 的应用、版本和平台。 | 产品模型 |
+| reviewJsonPath | `review.json` 在 bundle 内的相对路径。 | 产品模型 |
+| exportedImages | 导出图清单，包含路径、类型、尺寸和创建时间。 | 产品模型 |
+| thumbnailPath | 缩略图在 bundle 内的相对路径。 | 产品模型 |
+| originalPhoto | 原图是否包含以及来源提示；v1 默认 `included=false`。 | 产品模型 |
+| review | 少量复盘摘要字段，用于扫描预览和重复判断，不替代 `review.json`。 | 产品模型 |
+| checksum | `review.json` 和导出图的完整性摘要，v1 可 best-effort。 | 产品模型 |
 
 ### ImportRecord
 

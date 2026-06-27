@@ -49,6 +49,7 @@
 - Review JSON 不是复盘库主索引。
 - 当前不改 Review JSON 字段。
 - Mac 端和 HarmonyOS 后续接力要以 Review JSON / review bundle 为边界，而不是把某端内部存储结构当作跨端协议。
+- review bundle v1 的设计边界见 [`REVIEW_BUNDLE_V1_DESIGN.md`](./REVIEW_BUNDLE_V1_DESIGN.md)，它从家庭存储中的目录级 bundle 开始，而不是从同步 RDB 数据库开始。
 
 ## v0 真机回归清单
 
@@ -133,11 +134,13 @@
 
 ### 阶段 B：review bundle v1
 
+- 设计文档已建立：[`REVIEW_BUNDLE_V1_DESIGN.md`](./REVIEW_BUNDLE_V1_DESIGN.md)。
 - `review.json`。
 - 导出图片。
 - `manifest.json`。
 - 缩略图。
 - 家庭存储目录规范。
+- 家庭存储 v1 从 review bundle 输出开始，不从 RDB、Preferences 或 `review_exchange` 目录同步开始。
 
 ### 阶段 C：Mac / Harmony 接力
 
