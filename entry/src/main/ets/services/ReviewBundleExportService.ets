@@ -146,6 +146,22 @@ function writeTextFile(path: string, value: string): void {
   }
 }
 
+function describeError(error: Error): string {
+  return error.message;
+}
+
+function describeStack(error: Error): string {
+  return typeof error.stack === 'string' ? error.stack : '';
+}
+
+function fileSize(path: string): number {
+  try {
+    return fs.statSync(path).size;
+  } catch (error) {
+    return -1;
+  }
+}
+
 function assertFileExists(path: string, label: string): void {
   try {
     const stat = fs.statSync(path);
@@ -275,11 +291,14 @@ export class ReviewBundleExportService {
     const remoteDirectory: string = `Skymap/ReviewBundles/${dateParts.year}/${dateParts.month}/${bundleDirectoryName}`;
 
     try {
+      console.info(`[ReviewBundleExport] start reviewId=${document.createdAt} bundleId=${bundleId} local=${paths.root} remote=${remoteDirectory}`);
       ensureDirectory(`${paths.root}/exports`);
       ensureDirectory(`${paths.root}/thumbnails`);
       ensureDirectory(`${paths.root}/assets`);
+      console.info(`[ReviewBundleExport] local_directories_ready root=${paths.root}`);
 
       writeTextFile(paths.reviewJson, stringifyReviewCardExchangeSchemaV1(document, reviewerText));
+      console.info(`[ReviewBundleExport] review_json_written path=${paths.reviewJson} bytes=${fileSize(paths.reviewJson)}`);
       const snapshotResult: ReviewCardBundleSnapshotResult = await ReviewCardExportService.exportBundleSnapshot(
         componentId,
         paths.reviewCardImage,
@@ -287,6 +306,7 @@ export class ReviewBundleExportService {
         onSnapshotReady
       );
       if (!snapshotResult.success) {
+        console.error(`[ReviewBundleExport] snapshot_failed reviewId=${document.createdAt} bundleId=${bundleId} message=${snapshotResult.message}`);
         return {
           success: false,
           localBundlePath: paths.root,
@@ -296,16 +316,22 @@ export class ReviewBundleExportService {
           message: snapshotResult.message
         };
       }
+      console.info(`[ReviewBundleExport] review_card_written path=${paths.reviewCardImage} bytes=${fileSize(paths.reviewCardImage)}`);
+      console.info(`[ReviewBundleExport] thumbnail_written path=${paths.thumbnail} bytes=${fileSize(paths.thumbnail)}`);
 
       writeTextFile(paths.assetsReadme, buildAssetsReadme());
+      console.info(`[ReviewBundleExport] assets_readme_written path=${paths.assetsReadme} bytes=${fileSize(paths.assetsReadme)}`);
       writeTextFile(paths.manifest, buildManifest(document, reviewerText, bundleId, dateParts, exportWidth, exportHeight));
+      console.info(`[ReviewBundleExport] manifest_written path=${paths.manifest} bytes=${fileSize(paths.manifest)}`);
       verifyBundle(paths);
+      console.info(`[ReviewBundleExport] local_bundle_verified bundleId=${bundleId}`);
 
       const uploadResult: HomeStorageOperationResult = await HomeStorageService.uploadFilesToDirectory(
         context,
         remoteDirectory,
         buildUploadFiles(paths)
       );
+      console.info(`[ReviewBundleExport] upload_finished success=${uploadResult.success} remote=${uploadResult.remotePath} message=${uploadResult.message}`);
       return {
         success: uploadResult.success,
         localBundlePath: paths.root,
@@ -315,13 +341,16 @@ export class ReviewBundleExportService {
         message: uploadResult.success ? '复盘包已写入家庭存储' : uploadResult.message
       };
     } catch (error) {
+      const message: string = error instanceof Error ? describeError(error) : `${error}`;
+      const stack: string = error instanceof Error ? describeStack(error) : '';
+      console.error(`[ReviewBundleExport] failed reviewId=${document.createdAt} bundleId=${bundleId} local=${paths.root} remote=${remoteDirectory} error=${message} stack=${stack}`);
       return {
         success: false,
         localBundlePath: paths.root,
         remotePath: '',
         bundleId: bundleId,
         bundleDirectoryName: bundleDirectoryName,
-        message: error instanceof Error ? error.message : '复盘包导出失败'
+        message: message
       };
     }
   }

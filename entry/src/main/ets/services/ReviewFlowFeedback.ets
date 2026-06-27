@@ -10,6 +10,9 @@ export const REVIEW_FLOW_SAVE_FAILED_TEXT: string = '保存失败，请稍后重
 export const REVIEW_FLOW_EXPORT_PENDING_TEXT: string = '导出中…';
 export const REVIEW_FLOW_EXPORT_SUCCESS_TEXT: string = '导出完成';
 export const REVIEW_FLOW_EXPORT_FAILED_TEXT: string = '导出失败，请重试';
+export const REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT: string = '复盘包已导出到家庭存储';
+export const REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT: string = '复盘包导出失败，请重试';
+export const REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT: string = '请先配置家庭存储';
 
 export const REVIEW_FLOW_DELETE_PENDING_TEXT: string = '删除中…';
 export const REVIEW_FLOW_DELETE_SUCCESS_TEXT: string = '复盘已删除';

@@ -2,6 +2,7 @@ import socket from '@ohos.net.socket';
 
 const SMB_PORT: number = 445;
 const SOCKET_TIMEOUT_MS: number = 20000;
+const SMB2_WRITE_CHUNK_SIZE: number = 60 * 1024;
 const STATUS_SUCCESS: number = 0x00000000;
 const STATUS_MORE_PROCESSING_REQUIRED: number = 0xC0000016;
 const SMB2_FLAGS_SIGNED: number = 0x00000008;
@@ -693,6 +694,10 @@ function normalizeRemoteDirectoryPath(remoteDirectory: string): string {
   return normalizeRemoteDirectoryParts(remoteDirectory).join('\\');
 }
 
+function describeError(error: Error): string {
+  return error.message;
+}
+
 class Smb2Transport {
   private tcpSocket: socket.TCPSocket = socket.constructTCPSocketInstance();
   private incoming: Array<number> = [];
@@ -822,6 +827,7 @@ export class Smb2Client {
   }
 
   async uploadBytes(options: Smb2UploadBytesOptions): Promise<string> {
+    console.info(`[Smb2Client] upload_bytes_start host=${options.host} share=${options.shareName} directory=${normalizeRemoteDirectoryPath(options.remoteDirectory)} file=${options.fileName} bytes=${options.contentBytes.length}`);
     await this.open(options);
     try {
       await this.ensureRemoteDirectory(options.remoteDirectory);
@@ -832,7 +838,12 @@ export class Smb2Client {
       } finally {
         await this.closeFile(fileId);
       }
+      console.info(`[Smb2Client] upload_bytes_success path=${remotePath} bytes=${options.contentBytes.length}`);
       return `\\\\${options.host}\\${options.shareName}\\${remotePath}`;
+    } catch (error) {
+      const message: string = error instanceof Error ? describeError(error) : `${error}`;
+      console.error(`[Smb2Client] upload_bytes_failed file=${options.fileName} bytes=${options.contentBytes.length} error=${message}`);
+      throw new Error(message);
     } finally {
       await this.safeDisconnect();
     }
@@ -1012,8 +1023,16 @@ export class Smb2Client {
     let currentPath: string = '';
     for (let index = 0; index < parts.length; index += 1) {
       currentPath = currentPath.length > 0 ? `${currentPath}\\${parts[index]}` : parts[index];
-      const fileId: Array<number> = await this.createDirectory(currentPath);
-      await this.closeFile(fileId);
+      console.info(`[Smb2Client] mkdir_start level=${index + 1}/${parts.length} path=${currentPath}`);
+      try {
+        const fileId: Array<number> = await this.createDirectory(currentPath);
+        await this.closeFile(fileId);
+        console.info(`[Smb2Client] mkdir_success level=${index + 1}/${parts.length} path=${currentPath}`);
+      } catch (error) {
+        const message: string = error instanceof Error ? describeError(error) : `${error}`;
+        console.error(`[Smb2Client] mkdir_failed level=${index + 1}/${parts.length} path=${currentPath} error=${message}`);
+        throw new Error(message);
+      }
     }
   }
 
@@ -1043,11 +1062,33 @@ export class Smb2Client {
   }
 
   private async writeFile(fileId: Array<number>, data: Array<number>): Promise<void> {
+    let offset: number = 0;
+    let chunkIndex: number = 0;
+    const totalChunks: number = Math.max(1, Math.ceil(data.length / SMB2_WRITE_CHUNK_SIZE));
+    while (offset < data.length || (data.length === 0 && chunkIndex === 0)) {
+      const nextOffset: number = data.length === 0 ? 0 : Math.min(offset + SMB2_WRITE_CHUNK_SIZE, data.length);
+      const chunk: Array<number> = data.length === 0 ? [] : data.slice(offset, nextOffset);
+      await this.writeFileChunk(fileId, chunk, offset, chunkIndex + 1, totalChunks);
+      offset = nextOffset;
+      chunkIndex += 1;
+      if (data.length === 0) {
+        break;
+      }
+    }
+  }
+
+  private async writeFileChunk(
+    fileId: Array<number>,
+    data: Array<number>,
+    offset: number,
+    chunkIndex: number,
+    totalChunks: number
+  ): Promise<void> {
     const body: Array<number> = bytes(48 + data.length);
     writeUInt16LE(body, 0, 49);
     writeUInt16LE(body, 2, 64 + 48);
     writeUInt32LE(body, 4, data.length);
-    writeUInt64LEFromNumber(body, 8, 0);
+    writeUInt64LEFromNumber(body, 8, offset);
     for (let index = 0; index < 16; index += 1) {
       body[16 + index] = fileId[index] || 0;
     }
@@ -1055,8 +1096,16 @@ export class Smb2Client {
       body[48 + index] = data[index];
     }
 
-    const response: Array<number> = await this.send(SMB2_WRITE, body, this.treeId);
-    this.ensureStatus(response);
+    console.info(`[Smb2Client] write_chunk_start chunk=${chunkIndex}/${totalChunks} offset=${offset} bytes=${data.length}`);
+    try {
+      const response: Array<number> = await this.send(SMB2_WRITE, body, this.treeId);
+      this.ensureStatus(response);
+      console.info(`[Smb2Client] write_chunk_success chunk=${chunkIndex}/${totalChunks} offset=${offset} bytes=${data.length}`);
+    } catch (error) {
+      const message: string = error instanceof Error ? describeError(error) : `${error}`;
+      console.error(`[Smb2Client] write_chunk_failed chunk=${chunkIndex}/${totalChunks} offset=${offset} bytes=${data.length} error=${message}`);
+      throw new Error(message);
+    }
   }
 
   private async closeFile(fileId: Array<number>): Promise<void> {

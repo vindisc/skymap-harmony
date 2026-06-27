@@ -225,6 +225,14 @@ function normalizeHomeStorageErrorMessage(message: string): string {
   return message;
 }
 
+function fileSizeText(localPath: string): string {
+  try {
+    return `${fs.statSync(localPath).size}`;
+  } catch (error) {
+    return 'unknown';
+  }
+}
+
 async function uploadReviewJsonBySmb(
   settings: HomeStorageSettings,
   fileName: string,
@@ -269,6 +277,8 @@ async function uploadFileBySmb(
   fileName: string
 ): Promise<HomeStorageOperationResult> {
   const client: Smb2Client = new Smb2Client();
+  const byteSize: string = fileSizeText(localPath);
+  console.info(`[HomeStorageService] file_upload_start local=${localPath} remoteDirectory=${remoteDirectory} file=${fileName} bytes=${byteSize}`);
   try {
     const remotePath: string = await client.uploadBytes(createSmbUploadBytesOptions(
       settings,
@@ -276,6 +286,7 @@ async function uploadFileBySmb(
       fileName,
       readLocalFileBytes(localPath)
     ));
+    console.info(`[HomeStorageService] file_upload_success remote=${remotePath} bytes=${byteSize}`);
     return {
       success: true,
       remotePath: remotePath,
@@ -285,6 +296,8 @@ async function uploadFileBySmb(
     const message: string = error instanceof Error
       ? normalizeHomeStorageErrorMessage(error.message)
       : '上传家庭存储失败，请检查网络、账号和目录';
+    const rawMessage: string = error instanceof Error ? error.message : `${error}`;
+    console.error(`[HomeStorageService] file_upload_failed local=${localPath} remoteDirectory=${remoteDirectory} file=${fileName} bytes=${byteSize} error=${rawMessage} normalized=${message}`);
     return {
       success: false,
       remotePath: resolveRemotePathText(settings, remoteDirectory, fileName),
@@ -666,7 +679,9 @@ export class HomeStorageService {
   ): Promise<HomeStorageOperationResult> {
     const settings: HomeStorageSettings = await HomeStorageService.loadSettings(context);
     const validationMessage: string = HomeStorageService.validateSettings(settings);
+    console.info(`[HomeStorageService] bundle_upload_config status=${HomeStorageService.getConfigurationStatus(settings)} host=${settings.smbHost.length > 0 ? 'set' : 'empty'} share=${settings.smbShareName.length > 0 ? 'set' : 'empty'} remoteDirectory=${settings.remoteDirectory.length > 0 ? settings.remoteDirectory : 'empty'} fileCount=${files.length}`);
     if (validationMessage.length > 0) {
+      console.warn(`[HomeStorageService] bundle_upload_config_invalid message=${validationMessage}`);
       return {
         success: false,
         remotePath: '',
@@ -683,6 +698,7 @@ export class HomeStorageService {
     }
 
     const targetDirectory: string = joinRemotePath(settings.remoteDirectory, remoteDirectory);
+    console.info(`[HomeStorageService] bundle_upload_start targetDirectory=${targetDirectory} fileCount=${files.length}`);
     let lastRemotePath: string = '';
     for (let index = 0; index < files.length; index += 1) {
       const entry: HomeStorageUploadFileEntry = files[index];
@@ -698,6 +714,7 @@ export class HomeStorageService {
       const fileName: string = parts[parts.length - 1];
       const subDirectory: string = parts.length > 1 ? parts.slice(0, parts.length - 1).join('/') : '';
       const fileRemoteDirectory: string = joinRemotePath(targetDirectory, subDirectory);
+      console.info(`[HomeStorageService] bundle_upload_file index=${index + 1}/${files.length} relative=${entry.remoteRelativePath} directory=${fileRemoteDirectory} bytes=${fileSizeText(entry.localPath)}`);
       const result: HomeStorageOperationResult = await uploadFileBySmb(
         settings,
         entry.localPath,
@@ -705,6 +722,7 @@ export class HomeStorageService {
         fileName
       );
       if (!result.success) {
+        console.error(`[HomeStorageService] bundle_upload_failed index=${index + 1}/${files.length} relative=${entry.remoteRelativePath} remote=${result.remotePath} message=${result.message}`);
         return {
           success: false,
           remotePath: result.remotePath,
@@ -715,6 +733,7 @@ export class HomeStorageService {
     }
 
     await HomeStorageService.markLastUploadedAt(context, Date.now());
+    console.info(`[HomeStorageService] bundle_upload_success targetDirectory=${targetDirectory} lastRemotePath=${lastRemotePath}`);
     return {
       success: true,
       remotePath: resolveRemotePathText(settings, targetDirectory, ''),
