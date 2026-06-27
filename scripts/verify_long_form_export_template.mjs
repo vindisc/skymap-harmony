@@ -26,6 +26,10 @@ assert(source.includes('.margin({ top: EXPORT_CARD_HORIZONTAL_PANEL_TOP_MARGIN, 
 assert(source.includes('+ EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP'), 'Canvas height must include horizontal bottom safe gap.');
 assert(source.includes('EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING'), 'Height estimate must keep panel safety padding.');
 assert(source.includes('countHorizontalExportLines'), 'Horizontal height estimate must use dedicated long-content line counting.');
+assert(source.includes('resolveHorizontalExportPanelHeight'), 'Horizontal panel height must be content-based.');
+assert(source.includes('.height(this.getHorizontalPanelHeight())'), 'Horizontal panel must use explicit content-based height.');
+assert(source.includes('.height(this.getHorizontalPanelDividerHeight())'), 'Horizontal divider must not stretch the panel with 100% height.');
+assert(!source.includes(".height('100%')\n        .backgroundColor('#E4DCCE')"), 'Horizontal divider must not use 100% height.');
 assert(source.includes('cleanExportDisplayText(value)'), 'Horizontal export must clean display-only noise without changing data.');
 assert(source.includes('DefaultTextContent()'), 'Vertical and square exports must keep the default single-column path.');
 assert(source.includes('ReviewInfoGroup({'), 'Vertical and square exports must still use ReviewInfoGroup.');
@@ -44,9 +48,9 @@ const EXPORT_CARD_HORIZONTAL_PANEL_TOP_MARGIN = 14;
 const EXPORT_CARD_HORIZONTAL_PANEL_PADDING = 28;
 const EXPORT_CARD_HORIZONTAL_COLUMN_GAP = 34;
 const EXPORT_CARD_HORIZONTAL_TITLE_BAR_MIN_HEIGHT = 92;
-const EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT = 260;
-const EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP = 88;
-const EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING = 36;
+const EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT = 0;
+const EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP = 32;
+const EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING = 14;
 const EXPORT_CARD_HORIZONTAL_LINE_WIDTH_RATIO = 0.76;
 
 const compact = {
@@ -153,6 +157,25 @@ function infoListHeight(items, textWidth) {
   return height;
 }
 
+function horizontalColumnWidth(contentWidth) {
+  return Math.max(
+    1,
+    (contentWidth - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2 - EXPORT_CARD_HORIZONTAL_COLUMN_GAP) / 2
+  );
+}
+
+function horizontalPanelHeight(document, contentWidth) {
+  const columnWidth = horizontalColumnWidth(contentWidth);
+  const processHeight = infoListHeight(horizontalProcessItems(document), columnWidth);
+  const summaryHeight = infoListHeight(horizontalSummaryItems(document), columnWidth);
+  return Math.max(
+    EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT,
+    EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2
+      + Math.max(processHeight, summaryHeight)
+      + EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING
+  );
+}
+
 function resolveHeight(document, canvasWidth) {
   const contentWidth = Math.max(1, canvasWidth - EXPORT_CARD_CANVAS_PADDING * 2);
   const aspectRatio = document.imageWidth / document.imageHeight;
@@ -168,18 +191,7 @@ function resolveHeight(document, canvasWidth) {
         + EXPORT_CARD_META_LINE_HEIGHT
         + 18
     );
-    const columnWidth = Math.max(
-      1,
-      (contentWidth - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2 - EXPORT_CARD_HORIZONTAL_COLUMN_GAP) / 2
-    );
-    const processHeight = infoListHeight(horizontalProcessItems(document), columnWidth);
-    const summaryHeight = infoListHeight(horizontalSummaryItems(document), columnWidth);
-    const panelHeight = Math.max(
-      EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT,
-      EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2
-        + Math.max(processHeight, summaryHeight)
-        + EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING
-    );
+    const panelHeight = horizontalPanelHeight(document, contentWidth);
 
     return Math.max(
       EXPORT_CARD_MIN_HEIGHT,
@@ -254,6 +266,17 @@ const emptyOptional = {
   }
 };
 
+const sparseHorizontal = {
+  ...baseHorizontal,
+  content: {
+    ...baseHorizontal.content,
+    visualPath: '',
+    visibleFacts: '',
+    currentBlocker: '',
+    extendedUnderstanding: ''
+  }
+};
+
 const longHorizontal = {
   ...baseHorizontal,
   content: {
@@ -299,11 +322,15 @@ assert(horizontalProcessItems(noisyHorizontal).every((item) => !/\d{12,}/.test(i
   'Display-only long numeric noise must be removed before horizontal export rendering.');
 
 const baseHeight = resolveHeight(baseHorizontal, 1520);
+const sparseHeight = resolveHeight(sparseHorizontal, 1520);
+const sparsePanelHeight = horizontalPanelHeight(sparseHorizontal, 1520 - EXPORT_CARD_CANVAS_PADDING * 2);
 const longHeight = resolveHeight(longHorizontal, 1520);
 const verticalHeight = resolveHeight(vertical, 1520);
 const squareHeight = resolveHeight(square, 1520);
 
 assert(longHeight > baseHeight + 900, `Long horizontal content must increase canvas height, got base=${baseHeight}, long=${longHeight}.`);
+assert(sparseHeight < baseHeight, `Short horizontal content must tighten canvas height, got short=${sparseHeight}, base=${baseHeight}.`);
+assert(sparsePanelHeight < 170, `Short horizontal panel must not keep a large blank fixed height, got panel=${sparsePanelHeight}.`);
 assert(baseHeight >= EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP + EXPORT_CARD_CANVAS_PADDING,
   'Horizontal height must leave bottom safety room beyond canvas padding.');
 assert(verticalHeight > 0, 'Vertical export height strategy must remain valid.');
@@ -313,4 +340,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log(`long form export template: baseHorizontal=${baseHeight}, longHorizontal=${longHeight}, vertical=${verticalHeight}, square=${squareHeight}`);
+console.log(`long form export template: baseHorizontal=${baseHeight}, shortHorizontal=${sparseHeight}, longHorizontal=${longHeight}, vertical=${verticalHeight}, square=${squareHeight}`);

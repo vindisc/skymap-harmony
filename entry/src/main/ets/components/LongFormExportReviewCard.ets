@@ -38,9 +38,9 @@ const EXPORT_CARD_HORIZONTAL_PANEL_PADDING: number = 28;
 const EXPORT_CARD_HORIZONTAL_COLUMN_GAP: number = 34;
 const EXPORT_CARD_HORIZONTAL_PILL_HEIGHT: number = 40;
 const EXPORT_CARD_HORIZONTAL_TITLE_BAR_MIN_HEIGHT: number = 92;
-const EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT: number = 260;
-const EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP: number = 88;
-const EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING: number = 36;
+const EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT: number = 0;
+const EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP: number = 32;
+const EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING: number = 14;
 const EXPORT_CARD_HORIZONTAL_LINE_WIDTH_RATIO: number = 0.76;
 
 const EXPORT_GUIDANCE_TOKENS: Array<string> = [
@@ -176,6 +176,25 @@ function resolveExportInfoListHeight(items: Array<ExportInfoItem>, textWidth: nu
   return height;
 }
 
+function resolveHorizontalExportColumnWidth(contentWidth: number): number {
+  return Math.max(
+    1,
+    (contentWidth - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2 - EXPORT_CARD_HORIZONTAL_COLUMN_GAP) / 2
+  );
+}
+
+function resolveHorizontalExportPanelHeight(document: ReviewCardDocument, contentWidth: number): number {
+  const columnWidth: number = resolveHorizontalExportColumnWidth(contentWidth);
+  const processHeight: number = resolveExportInfoListHeight(getHorizontalProcessItems(document), columnWidth);
+  const summaryHeight: number = resolveExportInfoListHeight(getHorizontalSummaryItems(document), columnWidth);
+  return Math.max(
+    EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT,
+    EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2
+      + Math.max(processHeight, summaryHeight)
+      + EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING
+  );
+}
+
 function getExportJudgementText(value: string): string {
   const judgement = normalizeReviewJudgement(value);
   if (judgement === '成立') {
@@ -201,18 +220,7 @@ export function resolveLongFormExportCardHeight(document: ReviewCardDocument, ca
         + EXPORT_CARD_META_LINE_HEIGHT
         + 18
     );
-    const columnWidth: number = Math.max(
-      1,
-      (contentWidth - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2 - EXPORT_CARD_HORIZONTAL_COLUMN_GAP) / 2
-    );
-    const processHeight: number = resolveExportInfoListHeight(getHorizontalProcessItems(document), columnWidth);
-    const summaryHeight: number = resolveExportInfoListHeight(getHorizontalSummaryItems(document), columnWidth);
-    const panelHeight: number = Math.max(
-      EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT,
-      EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2
-        + Math.max(processHeight, summaryHeight)
-        + EXPORT_CARD_HORIZONTAL_HEIGHT_SAFETY_PADDING
-    );
+    const panelHeight: number = resolveHorizontalExportPanelHeight(document, contentWidth);
 
     return Math.max(
       EXPORT_CARD_MIN_HEIGHT,
@@ -282,6 +290,18 @@ export struct LongFormExportReviewCard {
       return `${timeText} / ${reviewerText}`;
     }
     return timeText;
+  }
+
+  private getContentWidth(): number {
+    return Math.max(1, this.canvasWidth - EXPORT_CARD_CANVAS_PADDING * 2);
+  }
+
+  private getHorizontalPanelHeight(): number {
+    return resolveHorizontalExportPanelHeight(this.document, this.getContentWidth());
+  }
+
+  private getHorizontalPanelDividerHeight(): number {
+    return Math.max(1, this.getHorizontalPanelHeight() - EXPORT_CARD_HORIZONTAL_PANEL_PADDING * 2);
   }
 
   @Builder
@@ -387,7 +407,7 @@ export struct LongFormExportReviewCard {
 
       Column()
         .width(1)
-        .height('100%')
+        .height(this.getHorizontalPanelDividerHeight())
         .backgroundColor('#E4DCCE')
 
       this.HorizontalInfoColumn(false)
@@ -395,7 +415,7 @@ export struct LongFormExportReviewCard {
     .alignItems(VerticalAlign.Top)
     .padding(EXPORT_CARD_HORIZONTAL_PANEL_PADDING)
     .width('100%')
-    .constraintSize({ minHeight: EXPORT_CARD_HORIZONTAL_PANEL_MIN_HEIGHT })
+    .height(this.getHorizontalPanelHeight())
     .borderRadius(20)
     .backgroundColor('#F5F1E8')
     .border({ width: 1, color: '#E2D8C8' })
