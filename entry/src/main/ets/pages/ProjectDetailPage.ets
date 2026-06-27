@@ -33,6 +33,9 @@ import {
   REVIEW_FLOW_IMPORT_PENDING_TEXT
 } from '../services/ReviewFlowFeedback';
 
+const DELETE_SWIPE_ACTION_WIDTH: number = 92;
+const DELETE_SWIPE_BUTTON_WIDTH: number = 68;
+
 @Component
 export struct ProjectDetailPage {
   private loadRequestId: number = 0;
@@ -204,23 +207,36 @@ export struct ProjectDetailPage {
 
   @Builder
   DeleteSwipeAction(document: ReviewCardDocument) {
-    Button(this.deletingReviewKey === getReviewDocumentKey(document) ? REVIEW_FLOW_DELETE_PENDING_TEXT : '删除')
-      .height(AppMetrics.compactControlHeight)
-      .width(72)
-      .borderRadius(AppMetrics.cardRadius)
-      .fontSize(AppTypography.smallButtonText)
-      .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.danger)
-      .backgroundColor(AppColors.surface)
-      .border({ width: 1, color: AppColors.danger })
-      .opacity(this.deletingReviewKey === getReviewDocumentKey(document) ? 0.52 : 1)
-      .enabled(this.deletingReviewKey.length === 0)
-      .onClick(() => {
-        if (this.deletingReviewKey.length > 0) {
-          return;
-        }
-        this.confirmDeleteHistory(document);
-      })
+    Row() {
+      Button(this.deletingReviewKey === getReviewDocumentKey(document) ? REVIEW_FLOW_DELETE_PENDING_TEXT : '删除')
+        .height(AppMetrics.compactControlHeight)
+        .width(DELETE_SWIPE_BUTTON_WIDTH)
+        .borderRadius(AppMetrics.buttonRadius)
+        .fontSize(AppTypography.smallButtonText)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.dangerPressed)
+        .backgroundColor(AppColors.dangerSoft)
+        .shadow({
+          radius: 10,
+          color: '#14000000',
+          offsetX: 0,
+          offsetY: 3
+        })
+        .opacity(this.deletingReviewKey === getReviewDocumentKey(document) ? 0.52 : 1)
+        .stateEffect(this.deletingReviewKey.length === 0)
+        .enabled(this.deletingReviewKey.length === 0)
+        .onClick(() => {
+          if (this.deletingReviewKey.length > 0) {
+            return;
+          }
+          this.confirmDeleteHistory(document);
+        })
+    }
+    .width(DELETE_SWIPE_ACTION_WIDTH)
+    .height('100%')
+    .justifyContent(FlexAlign.Center)
+    .alignItems(VerticalAlign.Center)
+    .padding({ left: AppMetrics.space8, right: 0 })
   }
 
   @Builder

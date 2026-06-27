@@ -30,6 +30,8 @@ export class AppColors {
   static readonly transparent: string = '#00000000';
   static readonly scrim: string = '#66000000';
   static readonly danger: string = '#B73A31';
+  static readonly dangerPressed: string = '#8F2B25';
+  static readonly dangerSoft: string = '#F6E8E5';
   static readonly tagBlue: string = '#ECF3F7';
   static readonly tagBlueText: string = '#426A7E';
   static readonly tagGreen: string = '#E7F1EA';

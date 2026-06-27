@@ -44,6 +44,9 @@ enum PreviewSaveState {
   EXPORTED = '已导出'
 }
 
+const FLOATING_DOCK_TOP_MASK_HEIGHT: number = 8;
+const FLOATING_DOCK_SCROLL_CLEARANCE: number = 24;
+
 @Entry
 @Component
 struct PreviewPage {
@@ -351,6 +354,20 @@ struct PreviewPage {
     this.isExportMenuVisible = false;
   }
 
+  private getFloatingActionBarHeight(): number {
+    const feedbackHeight: number = this.actionFeedbackText.length > 0
+      ? AppTypography.captionLineHeight + AppMetrics.space8
+      : 0;
+    return AppMetrics.toolbarButtonHeight + AppMetrics.space10 + AppMetrics.space10 + feedbackHeight;
+  }
+
+  private getReadingContentBottomPadding(): number {
+    return this.getFloatingActionBarHeight()
+      + FLOATING_DOCK_TOP_MASK_HEIGHT
+      + AppMetrics.pageBottomPadding
+      + FLOATING_DOCK_SCROLL_CLEARANCE;
+  }
+
   @Builder
   ActionButton(label: string, emphasized: boolean, isDisabled: boolean, onTap: () => void) {
     Button(label)
@@ -504,7 +521,7 @@ struct PreviewPage {
             left: AppMetrics.pagePadding,
             right: AppMetrics.pagePadding,
             top: AppMetrics.space10,
-            bottom: AppMetrics.toolbarButtonHeight + AppMetrics.pageBottomPadding + AppMetrics.space32 + AppMetrics.space32
+            bottom: this.getReadingContentBottomPadding()
           })
           .width('100%')
         }
@@ -521,9 +538,11 @@ struct PreviewPage {
       .padding({
         left: AppMetrics.pagePadding,
         right: AppMetrics.pagePadding,
+        top: FLOATING_DOCK_TOP_MASK_HEIGHT,
         bottom: AppMetrics.pageBottomPadding
       })
       .width('100%')
+      .backgroundColor(AppColors.pageBackground)
       .hitTestBehavior(HitTestMode.Transparent)
     }
     .width('100%')
