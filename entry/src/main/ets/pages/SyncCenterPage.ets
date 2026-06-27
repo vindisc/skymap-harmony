@@ -141,7 +141,7 @@ struct SyncCenterPage {
       Column({ space: AppMetrics.sectionGap }) {
         SettingsPageHeader({
           title: '同步中心',
-          subtitle: '查看家庭存储状态，测试连接。'
+          subtitle: '管理家庭存储连接。当前支持手动导出复盘包，自动同步将在后续版本提供。'
         })
 
         Column({ space: AppMetrics.space8 }) {
@@ -164,7 +164,7 @@ struct SyncCenterPage {
 
         Column({ space: AppMetrics.cardGap }) {
           this.InfoRow('状态', this.resolveAvailabilityText())
-          this.InfoRow('SMB 地址', this.resolveHomeStorageAddress())
+          this.InfoRow('连接地址', this.resolveHomeStorageAddress())
           this.InfoRow('共享目录', this.resolveShareName())
           this.InfoRow('保存位置', this.resolveRemoteDirectory())
 
@@ -192,7 +192,7 @@ struct SyncCenterPage {
 
         Row({ space: AppMetrics.cardGap }) {
           SecondaryButton({
-            label: this.isTesting ? '测试中…' : '测试连接',
+            label: this.isTesting ? '检查中…' : '检查家庭存储',
             isDisabled: this.isTesting,
             onTap: () => {
               this.testConnection();

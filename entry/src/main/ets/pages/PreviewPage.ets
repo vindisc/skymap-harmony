@@ -24,7 +24,6 @@ import { ReviewJsonExportResult, ReviewJsonExportService } from '../services/Rev
 import { ReviewBundleExportResult, ReviewBundleExportService } from '../services/ReviewBundleExportService';
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
-import { HomeStorageOperationResult, HomeStorageService } from '../services/HomeStorageService';
 import {
   REVIEW_FLOW_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_EXPORT_PENDING_TEXT,
@@ -49,7 +48,6 @@ struct PreviewPage {
   @State isSaving: boolean = false;
   @State isExporting: boolean = false;
   @State isExportingReviewJson: boolean = false;
-  @State isUploadingHomeStorage: boolean = false;
   @State isExportingReviewBundle: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State isExportMenuVisible: boolean = false;
@@ -223,7 +221,7 @@ struct PreviewPage {
       const exchangeJson: string = stringifyReviewCardExchangeSchemaV1(this.document, reviewerName);
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, exchangeJson);
       await pasteboard.getSystemPasteboard().setData(data);
-      promptAction.showToast({ message: '已复制' });
+      promptAction.showToast({ message: '已复制复盘数据' });
     } catch (error) {
       promptAction.showToast({ message: '复制失败，请稍后重试' });
     }
@@ -261,31 +259,6 @@ struct PreviewPage {
       promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
     } finally {
       this.isExportingReviewJson = false;
-    }
-  }
-
-  private async uploadReviewJsonToHomeStorage(): Promise<void> {
-    if (this.isUploadingHomeStorage) {
-      return;
-    }
-
-    this.isUploadingHomeStorage = true;
-    this.actionFeedbackText = '上传中…';
-    try {
-      const context = this.getAbilityContext();
-      const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
-      const result: HomeStorageOperationResult = await HomeStorageService.uploadReviewJson(
-        context,
-        this.document,
-        reviewerName
-      );
-      if (result.success) {
-        await this.markExportedQuietly(result.remotePath);
-      }
-      this.actionFeedbackText = result.message;
-      promptAction.showToast({ message: result.message });
-    } finally {
-      this.isUploadingHomeStorage = false;
     }
   }
 
@@ -353,7 +326,6 @@ struct PreviewPage {
     return this.isSaving ||
       this.isExporting ||
       this.isExportingReviewJson ||
-      this.isUploadingHomeStorage ||
       this.isExportingReviewBundle;
   }
 
@@ -448,19 +420,38 @@ struct PreviewPage {
   }
 
   @Builder
-  ExportSheetAction(label: string, isDisabled: boolean, onTap: () => void) {
-    Button(label)
-      .height(AppMetrics.controlHeight)
+  ExportSheetSectionTitle(label: string) {
+    Text(label)
+      .fontSize(AppTypography.caption)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(AppColors.secondaryText)
+      .width('100%')
+  }
+
+  @Builder
+  ExportSheetAction(label: string, description: string, isDisabled: boolean, onTap: () => void) {
+    Column({ space: 3 }) {
+      Text(label)
+        .fontSize(AppTypography.body)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
+        .width('100%')
+
+      Text(description)
+        .fontSize(AppTypography.caption)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.captionLineHeight)
+        .width('100%')
+    }
+      .justifyContent(FlexAlign.Center)
+      .alignItems(HorizontalAlign.Start)
+      .constraintSize({ minHeight: AppMetrics.controlHeight })
+      .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space8, bottom: AppMetrics.space8 })
       .width('100%')
       .borderRadius(AppMetrics.cardRadius)
-      .fontSize(AppTypography.body)
-      .fontWeight(FontWeight.Medium)
-      .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
       .backgroundColor(AppColors.surface)
       .border({ width: 1, color: AppColors.border })
       .opacity(isDisabled ? 0.56 : 1)
-      .enabled(!isDisabled)
-      .stateEffect(!isDisabled)
       .onClick(() => {
         if (isDisabled) {
           return;
@@ -555,29 +546,29 @@ struct PreviewPage {
 
       Column({ space: AppMetrics.space8 }) {
         Column({ space: AppMetrics.space8 }) {
-          Text('导出与同步')
+          Text('导出当前复盘')
             .fontSize(AppTypography.level2)
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.text)
             .width('100%')
 
-          this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 JSON', this.isActionBusy(), () => {
-            this.exportReviewJson();
-          })
+          this.ExportSheetSectionTitle('常用')
 
-          this.ExportSheetAction(this.isUploadingHomeStorage ? '上传中…' : '上传家庭存储', this.isActionBusy(), () => {
-            this.uploadReviewJsonToHomeStorage();
-          })
-
-          this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包', this.isActionBusy(), () => {
-            this.exportReviewBundleToHomeStorage();
-          })
-
-          this.ExportSheetAction(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', this.isActionBusy(), () => {
+          this.ExportSheetAction(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', '生成这张复盘卡片图片。', this.isActionBusy(), () => {
             this.exportImage();
           })
 
-          this.ExportSheetAction('复制数据', this.isActionBusy(), () => {
+          this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包', '包含复盘数据和导出图，用于家庭存储和 Mac 接力。', this.isActionBusy(), () => {
+            this.exportReviewBundleToHomeStorage();
+          })
+
+          this.ExportSheetSectionTitle('高级')
+
+          this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json', '只导出复盘数据文件，不包含图片。', this.isActionBusy(), () => {
+            this.exportReviewJson();
+          })
+
+          this.ExportSheetAction('复制复盘数据', '复制当前复盘的文本数据。', this.isActionBusy(), () => {
             this.copyReviewData();
           })
         }
@@ -587,7 +578,7 @@ struct PreviewPage {
         .backgroundColor(AppColors.pageBackground)
         .border({ width: 1, color: AppColors.border })
 
-        this.ExportSheetAction('取消', false, () => {
+        this.ExportSheetAction('取消', '返回当前复盘。', false, () => {
         })
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space24 })

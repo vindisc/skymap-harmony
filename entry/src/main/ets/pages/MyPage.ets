@@ -292,7 +292,7 @@ export struct MyPage {
     Column({ space: AppMetrics.space8 }) {
       SettingsSectionHeader({
         title: '设置',
-        description: '影响新建复盘、导出和家庭存储同步。'
+        description: '影响新建复盘、导出和家庭存储连接。'
       })
 
       SettingsLinkRow({
@@ -317,7 +317,7 @@ export struct MyPage {
 
       SettingsLinkRow({
         title: '同步中心',
-        value: '查看家庭存储状态，测试连接。',
+        value: '管理家庭存储连接，后续承接批量同步。',
         status: this.resolveSyncBadge(),
         tone: this.resolveStorageTone(),
         onTap: () => {

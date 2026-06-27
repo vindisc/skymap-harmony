@@ -68,6 +68,7 @@ requireIncludes(exportServiceSource, "format: BUNDLE_THUMBNAIL_MIME_TYPE", 'Revi
 
 requireIncludes(previewPageSource, 'ReviewBundleExportService.exportReviewBundleToHomeStorage(', 'PreviewPage');
 requireIncludes(previewPageSource, "this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包'", 'PreviewPage');
+requireIncludes(previewPageSource, "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'", 'PreviewPage');
 requireIncludes(previewPageSource, "@State isExportingReviewBundle: boolean = false;", 'PreviewPage');
 requireIncludes(previewPageSource, 'this.isExportSnapshotMode = true;', 'PreviewPage');
 requireIncludes(previewPageSource, 'await this.markExportedQuietly(result.remotePath);', 'PreviewPage');

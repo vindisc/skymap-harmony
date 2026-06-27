@@ -135,7 +135,7 @@
 ### 阶段 B：review bundle v1
 
 - 设计文档已建立：[`REVIEW_BUNDLE_V1_DESIGN.md`](./REVIEW_BUNDLE_V1_DESIGN.md)。
-- review bundle v1 阶段 1 已实现：单条复盘可生成标准 bundle，并通过已有 SMB / 家庭存储能力写入家庭存储目录。
+- review bundle v1 阶段 1 已实现：单条复盘可生成标准 bundle，并通过已有家庭存储能力写入家庭存储目录。
 - `review.json`。
 - 导出图片。
 - `manifest.json`。

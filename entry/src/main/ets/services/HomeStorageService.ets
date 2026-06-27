@@ -206,6 +206,25 @@ function isMissingRemoteDirectoryError(message: string): boolean {
   return message.indexOf('SMB 目标路径不存在') >= 0;
 }
 
+function normalizeHomeStorageErrorMessage(message: string): string {
+  if (message.indexOf('SMB 认证失败') >= 0) {
+    return '家庭存储认证失败，请检查用户名和密码';
+  }
+  if (message.indexOf('SMB 共享目录不存在') >= 0) {
+    return '家庭存储共享目录不存在，请检查共享目录';
+  }
+  if (message.indexOf('SMB 目标路径不存在') >= 0) {
+    return '家庭存储目标路径不存在，请先创建目录';
+  }
+  if (message.indexOf('SMB 文件正在被占用') >= 0) {
+    return '家庭存储文件正在被占用，请稍后重试';
+  }
+  if (message.indexOf('SMB') >= 0) {
+    return message.replace(/SMB/g, '家庭存储');
+  }
+  return message;
+}
+
 async function uploadReviewJsonBySmb(
   settings: HomeStorageSettings,
   fileName: string,
@@ -230,7 +249,9 @@ async function uploadReviewJsonBySmb(
       message: '已上传家庭存储'
     };
   } catch (error) {
-    const message: string = error instanceof Error ? error.message : '上传家庭存储失败，请检查网络、账号和目录';
+    const message: string = error instanceof Error
+      ? normalizeHomeStorageErrorMessage(error.message)
+      : '上传家庭存储失败，请检查网络、账号和目录';
     return {
       success: false,
       remotePath: resolveRemotePathText(settings, remoteDirectory, fileName),
@@ -261,7 +282,9 @@ async function uploadFileBySmb(
       message: '已上传家庭存储'
     };
   } catch (error) {
-    const message: string = error instanceof Error ? error.message : '上传家庭存储失败，请检查网络、账号和目录';
+    const message: string = error instanceof Error
+      ? normalizeHomeStorageErrorMessage(error.message)
+      : '上传家庭存储失败，请检查网络、账号和目录';
     return {
       success: false,
       remotePath: resolveRemotePathText(settings, remoteDirectory, fileName),
@@ -486,10 +509,10 @@ export class HomeStorageService {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
     const port: number = parsePort(normalized.smbPort);
     if (normalized.smbHost.length === 0) {
-      return '请先填写 SMB 地址或 IP';
+      return '请先填写家庭存储地址或 IP';
     }
     if (port <= 0 || port > 65535) {
-      return 'SMB 端口需要在 1-65535 之间';
+      return '连接端口需要在 1-65535 之间';
     }
     if (normalized.smbShareName.length === 0) {
       return '请先填写共享目录';
@@ -591,7 +614,9 @@ export class HomeStorageService {
       return {
         success: false,
         remotePath: `\\\\${normalized.smbHost}\\${normalized.smbShareName}`,
-        message: error instanceof Error ? error.message : '家庭存储连接失败，请检查地址、账号和共享目录'
+        message: error instanceof Error
+          ? normalizeHomeStorageErrorMessage(error.message)
+          : '家庭存储连接失败，请检查地址、账号和共享目录'
       };
     }
   }

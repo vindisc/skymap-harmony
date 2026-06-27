@@ -284,7 +284,7 @@ struct HomeStoragePage {
       return '正在读取家庭存储设置';
     }
     if (this.resolveHomeStorageStatus() === HomeStorageConfigStatus.EMPTY) {
-      return '填写 SMB 地址、共享目录和账号后即可测试连接。';
+      return '填写家庭存储地址、共享目录和账号后即可检查连接。';
     }
     return `${this.homeStorageHost || '地址未填'} · ${this.homeStorageShareName || '共享目录未填'}`;
   }
@@ -418,12 +418,12 @@ struct HomeStoragePage {
         description: '这些信息只保存在本机，用于导出后同步到家庭存储。'
       })
 
-      this.SettingsInput('SMB 地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
+      this.SettingsInput('家庭存储地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
         this.homeStorageHost = value;
         this.clearActionFeedback();
       }, false, 0)
 
-      this.SettingsInput('SMB 端口', this.homeStoragePort, '445', (value: string) => {
+      this.SettingsInput('连接端口', this.homeStoragePort, '445', (value: string) => {
         this.homeStoragePort = this.sanitizePort(value);
         this.clearActionFeedback();
       }, false, 1, InputType.Number)
@@ -474,7 +474,7 @@ struct HomeStoragePage {
 
         SettingsActionBar({
           primaryLabel: this.isSaving ? '保存中…' : '保存',
-          secondaryLabel: this.isTestingHomeStorage ? '测试中…' : '测试',
+          secondaryLabel: this.isTestingHomeStorage ? '检查中…' : '检查',
           isPrimaryDisabled: this.isActionDisabled(),
           isSecondaryDisabled: this.isActionDisabled(),
           onPrimaryTap: () => {
