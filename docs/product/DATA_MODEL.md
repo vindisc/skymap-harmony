@@ -196,7 +196,7 @@ SyncTarget 表示一个可被用户选择或配置的同步位置。
 
 ReviewBundle 表示一次复盘在家庭存储中的目录级同步单元。
 
-详细设计见 [`REVIEW_BUNDLE_V1_DESIGN.md`](./REVIEW_BUNDLE_V1_DESIGN.md)。当前 v1 仍不修改 `ReviewCardDocument`、Review JSON v1 字段或 RDB 表结构；HarmonyOS 已建立单条 bundle 导出闭环，Mac 已建立只读导入预研，正式写入 Mac 复盘库仍留到后续阶段。
+详细设计见 [`REVIEW_BUNDLE_V1_DESIGN.md`](./REVIEW_BUNDLE_V1_DESIGN.md)。当前 v1 仍不修改 `ReviewCardDocument`、Review JSON v1 字段或 RDB 表结构；HarmonyOS 已建立单条 bundle 导出闭环，Mac 已支持选择单个 bundle 写入 Review Library。当前不是批量导入、自动同步、双向同步或冲突合并。
 
 推荐结构：
 
@@ -248,7 +248,7 @@ BundleManifest 表示 bundle 内的文件清单和完整性摘要，不替代 `r
 
 ImportRecord 表示 Mac 已经处理过的同步对象。
 
-当前 Mac 导入预研只输出读取 / 校验 / 预览结果，不创建 ImportRecord，不写入正式复盘库。后续正式导入阶段再定义 ImportRecord 的持久化位置、重复判断和冲突提示。
+当前 Mac 单个 review bundle 导入会在 Review Library 索引中登记导入结果：复盘字段来自 `review.json`，bundleId、来源 bundle 名称、导出图资产路径和缩略图资产路径来自 bundle 文件清单和复制结果。相同 bundleId 默认跳过，不覆盖、不合并、不回写远端。真实 HarmonyOS 真机 bundle 样本 fixture 回归仍是发布前测试债。
 
 | 字段 | 职责 | 归属 |
 | --- | --- | --- |

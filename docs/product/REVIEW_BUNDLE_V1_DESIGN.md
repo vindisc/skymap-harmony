@@ -2,7 +2,7 @@
 
 日期：2026-06-27
 
-本文定义 review bundle v1 的产品与文件格式设计，用于后续 HarmonyOS 导出到家庭存储、Mac 导入复盘库和双端接力实现。本文只做设计，不实现同步代码，不修改业务代码，不修改 Review JSON v1 字段，不修改 RDB 表结构。
+本文定义 review bundle v1 的产品与文件格式设计，用于 HarmonyOS 导出到家庭存储、Mac 导入复盘库和双端接力实现。本文不修改 Review JSON v1 字段，不修改 RDB 表结构，不把 bundle 设计扩展成自动同步系统。
 
 ## 阶段 1 实现状态
 
@@ -21,18 +21,21 @@
 - 不做双向同步。
 - 不做远端删除同步。
 - 不做冲突自动合并。
-- 不做 Mac 导入实现。
 - 不上传 RDB、Preferences 或 `review_exchange` 目录。
 - 不打包原图。
 
-截至 2026-06-27，Mac 端 review bundle v1 导入预研已建立：
+截至 2026-06-27，Mac 端 review bundle v1 单个 bundle 导入能力已建立：
 
 - 可读取用户或开发者提供的单个 bundle 目录。
 - 可解析 `manifest.json` 并校验 `bundleVersion = 1`、`reviewJsonPath`、导出图和缩略图声明。
 - 可复用 Mac 现有 Review JSON v1 解析逻辑读取 `review.json`。
-- 可输出只读导入预览和校验结果，包含摘要、导出图路径、缩略图路径、warning 和 error。
-- 当前不写入 Mac Review Library 主库，不实现导入按钮，不做批量扫描、自动同步、双向同步或冲突合并。
-- Mac 读取 bundle 不依赖 HarmonyOS RDB、`imageUri` 或原图是否存在。
+- 可通过“导入复盘包”选择单个 bundle 目录，并写入 Mac Review Library。
+- 导入记录的复盘字段只来自 `review.json`，`manifest.json` 只提供 bundleId、文件清单和辅助摘要。
+- 导入时复制 `exports/review-card.png` 到 Mac Review Library 管理目录；`thumbnails/thumb.jpg` 缺失时允许导入并退回使用导出图作为缩略图资产。
+- 相同 `bundleId` 默认跳过并提示“该复盘包已导入”，不覆盖、不合并、不回写远端。
+- 当前不做批量扫描、自动同步、双向同步或冲突合并。
+- Mac 导入 bundle 不依赖 HarmonyOS RDB、`imageUri` 或原图是否存在。
+- 尚未使用 HarmonyOS 真机真实导出的 bundle 样本补 fixture 回归；正式发布前必须补齐真实样本回归。
 
 阶段 1 用户入口语义：
 
@@ -49,7 +52,7 @@ review bundle v1 要解决的是“一次摄影复盘如何完整、稳定、可
 
 - HarmonyOS 端把一次复盘打包成目录级 bundle。
 - bundle 可以写入家庭存储、NAS、共享目录或本地同步目录。
-- Mac 端后续可以从 bundle 导入复盘。
+- Mac 端可以从单个 bundle 目录导入复盘。
 - `review.json`、导出图片、缩略图、`manifest.json` 有清晰职责。
 - RDB 主索引、`review_exchange` 备份和 review bundle 三者边界清楚。
 - 删除语义不跨端误删用户资产。
@@ -289,18 +292,19 @@ v1 设计阶段不新增 RDB 字段。
 
 ## 十一、Mac 导入 bundle 流程
 
-当前预研阶段已实现读取、校验、解析和预览，不正式写入 Mac 复盘库。完整导入流程仍留到后续阶段：
+当前 Mac 端已支持单个 review bundle 正式导入 Review Library：
 
-1. Mac 用户选择 bundle 目录，或 Mac 扫描家庭存储 `ReviewBundles/`。
+1. Mac 用户在复盘库中点击“导入复盘包”，选择一个 bundle 目录。
 2. 读取 `manifest.json`。
 3. 校验 `bundleVersion` 是否支持。
 4. 读取 `review.json`。
 5. 校验 Review JSON v1 字段和 `decision` 枚举。
-6. 读取导出图和缩略图。
-7. 输出导入预览和校验结果。
-8. 后续正式导入阶段再在 Mac 端建立复盘记录。
-9. 如果 Mac 端已有同 `bundleId` 或同 `review.json` 内容，后续再提示跳过、覆盖或另存为；v1 默认跳过重复。
-10. 导入完成后展示在 Mac 端复盘库。
+6. 校验并复制 `exports/review-card.png` 到 Mac Review Library 管理目录。
+7. 如果 `thumbnails/thumb.jpg` 存在，复制为缩略图资产；如果缺失，记录 warning，并使用导出图作为缩略图资产。
+8. 将 `review.json` 规范化后写入 Mac Review Library 的导入记录目录。
+9. 在 Mac Review Library 索引中登记 `bundleId`、来源 bundle 名称、导出图资产路径、缩略图资产路径和复盘摘要。
+10. 如果已有相同 `bundleId`，默认跳过并提示“该复盘包已导入”，不新增第二条记录。
+11. 导入完成后可在 Mac 端复盘库中搜索、筛选和查看这条记录。
 
 Mac 导入边界：
 
@@ -309,7 +313,9 @@ Mac 导入边界：
 - Mac 不要求原图存在。
 - Mac 以 `review.json`、导出图片和 `manifest.json` 作为导入边界。
 - Mac 导入后由自己的 Review Library 数据结构接管记录。
-- 预研阶段只读 bundle，不写入 Mac 主库。
+- `manifest.json` 不替代 `review.json`，也不把 bundle 字段写回 `review.json`。
+- 当前只做单个 bundle 导入，不做批量导入、自动同步、双向同步或冲突自动合并。
+- 真实 HarmonyOS 真机 bundle 样本 fixture 回归仍后置为测试项，正式发布前必须完成。
 
 ## 十二、删除语义
 
@@ -382,8 +388,10 @@ Mac 导入不完整 bundle 时：
 
 - 缺 `manifest.json`：拒绝作为 bundle 导入，可提示用户选择 `review.json` 走手动导入。
 - 缺 `review.json`：拒绝导入。
-- 缺导出图：可导入文字，但提示视觉成品缺失；是否允许要由 Mac 导入阶段再定。
-- 缺缩略图：允许导入。
+- 缺导出图：拒绝导入，因为导出图是 bundle v1 的必要视觉资产。
+- 缺缩略图：允许导入，记录 warning，并使用导出图作为缩略图资产。
+- 缺 `assets/README.md`：允许导入，记录 warning。
+- 写入 Mac Review Library 失败或资产复制失败：拒绝导入，并清理已复制的本次资产和本次 `review.json`，不能留下半条记录。
 
 ## 十五、v1 不做范围
 
@@ -402,7 +410,9 @@ review bundle v1 不做：
 - 不做摄影边框完整模板系统。
 - 不改 Review JSON 字段。
 - 不改 RDB 表结构。
-- 不实现 Mac 导入。
+- 不做 Mac 批量导入。
+- 不做 Mac 自动同步。
+- 不做 Mac / Harmony 冲突自动合并。
 - 不实现家庭存储上传代码。
 
 ## 十六、后续实现入口建议
@@ -420,9 +430,10 @@ review bundle v1 不做：
 
 阶段 3：Mac 导入验证
 
-- Mac 端选择 bundle 目录。
-- 校验 manifest、读取 review.json、导入导出图。
-- 做重复导入跳过。
+- Mac 端已支持选择单个 bundle 目录。
+- 校验 manifest、读取 review.json、复制导出图和缩略图。
+- 相同 `bundleId` 默认重复跳过。
+- 后续需要补 HarmonyOS 真机真实 bundle 样本 fixture 回归。
 
 阶段 4：双端回归
 

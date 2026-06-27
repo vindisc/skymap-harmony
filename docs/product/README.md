@@ -18,6 +18,14 @@
 - `ROADMAP.md`：按用户价值组织的阶段路线图。
 - `CHANGE_RULES.md`：产品层变更和客户端实现顺序规则。
 
+当前实现备注：
+
+- HarmonyOS 已支持单条复盘导出 review bundle v1 到家庭存储。
+- Mac 已支持选择单个 review bundle 导入 Review Library。
+- Mac 当前不是批量导入、自动同步、双向同步或冲突合并。
+- Review JSON v1 字段继续冻结，bundleId、导出图、缩略图等 bundle 信息不写回 `review.json`。
+- 真实 HarmonyOS 真机 bundle 样本 fixture 回归仍后置为测试项，正式发布前必须补齐。
+
 ## 镜像副本规则
 
 当前 `docs/product/` 不是某一个客户端的私有文档。它是 Skymap Product Layer 在客户端仓库中的镜像副本。
