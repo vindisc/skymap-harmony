@@ -1,0 +1,179 @@
+import fs from 'node:fs';
+
+const sources = {
+  home: fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8'),
+  library: fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8'),
+  stats: fs.readFileSync('entry/src/main/ets/pages/StatsPage.ets', 'utf8'),
+  my: fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8'),
+  shell: fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8'),
+  design: fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8'),
+  tokens: fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8')
+};
+
+let failed = false;
+
+function fail(message) {
+  failed = true;
+  console.error(message);
+}
+
+function requireIncludes(source, marker, message) {
+  if (!source.includes(marker)) {
+    fail(`${message}: ${marker}`);
+  }
+}
+
+function forbidIncludes(source, marker, message) {
+  if (source.includes(marker)) {
+    fail(`${message}: ${marker}`);
+  }
+}
+
+function requireOrder(source, first, second, message) {
+  const firstIndex = source.indexOf(first);
+  const secondIndex = source.indexOf(second);
+  if (firstIndex < 0 || secondIndex < 0 || firstIndex >= secondIndex) {
+    fail(message);
+  }
+}
+
+[
+  'ScrollDirection.Vertical',
+  'Scroll() {\n        Column() {\n          this.HeroPanel()'
+].forEach((marker) => forbidIncludes(sources.home, marker, 'HomePage must keep the fixed first-screen baseline'));
+[
+  'HomeHeroImageService.getDisplayImages',
+  'this.heroImages.length > 1',
+  'setInterval(() =>',
+  '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
+  "Button(this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘')",
+  'bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding'
+].forEach((marker) => requireIncludes(sources.home, marker, 'HomePage must keep hero config, carousel and tab clearance'));
+
+[
+  '按照片、判断和卡点回看你的复盘记录。',
+  '完成复盘后，这里会展示你的判断变化。',
+  '复盘身份、存储同步和应用状态。',
+  '影响新建复盘、导出和家庭存储连接。',
+  "subtitle: ''",
+  "description: ''",
+  'Text(\'\')',
+  'Text("")',
+  'Blank()',
+  'Spacer()'
+].forEach((marker) => {
+  forbidIncludes(sources.library, marker, 'Review library must not keep title explanatory copy or placeholders');
+  forbidIncludes(sources.stats, marker, 'Stats page must not keep title explanatory copy or placeholders');
+  forbidIncludes(sources.my, marker, 'My page must not keep title explanatory copy or placeholders');
+});
+
+[
+  "AppPageHeader({\n            title: '复盘库'",
+  'this.SearchField()',
+  "this.FilterChip('全部', 'all')",
+  "this.FilterChip('成立', ReviewJudgementStatus.VALID)",
+  "this.FilterChip('待判断', ReviewJudgementStatus.UNSURE)",
+  "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)",
+  'LIBRARY_HEADER_CONTROL_GAP',
+  'LIBRARY_LIST_TOP_GAP',
+  'ProjectReviewCard({'
+].forEach((marker) => requireIncludes(sources.library, marker, 'Review library must keep compact search, filters and cards'));
+requireOrder(sources.library, 'this.SearchField()', "this.FilterChip('全部', 'all')", 'Review library search must appear before filters.');
+requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)", 'ProjectReviewCard({', 'Review library list should appear directly after filters.');
+
+[
+  "AppPageHeader({\n          title: '统计'",
+  'STATS_CONTENT_TOP_GAP',
+  'this.OverviewCard()',
+  'this.Recent30DaysCard()',
+  'this.DistributionCard()',
+  'this.BlockersCard()',
+  'this.RecentReviewsCard()',
+  "EmptyState({\n              title: '还没有复盘数据'",
+  '完成第一张照片复盘后，这里会显示你的判断变化。',
+  'top: STATS_CONTENT_TOP_GAP'
+].forEach((marker) => requireIncludes(sources.stats, marker, 'Stats page must keep compact stats cards and empty-state-only guidance'));
+
+[
+  "AppPageHeader({\n            title: '我的'",
+  'const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;',
+  'this.SettingsSection()',
+  'this.AboutSection()',
+  "title: '设置'",
+  "title: '复盘人'",
+  "title: '首页图片'",
+  "title: '家庭存储'",
+  "title: '同步中心'",
+  "title: '版本'",
+  'dense: true',
+  'bottom: MY_PAGE_BOTTOM_PADDING',
+  '.justifyContent(FlexAlign.Start)'
+].forEach((marker) => requireIncludes(sources.my, marker, 'My page must show settings first with compact rows and bottom clearance'));
+[
+  'this.IdentityCard()',
+  '@Builder\n  IdentityCard()',
+  "Text('当前复盘人')",
+  "Text('累计复盘')",
+  "Text('成立记录')",
+  'ReviewCardHistoryService.load(context)',
+  'ReviewProjectService.buildHomeSummary',
+  'top: AppMetrics.sectionGap'
+].forEach((marker) => forbidIncludes(sources.my, marker, 'My page must not restore the profile/stat card or title gap'));
+requireOrder(sources.my, 'AppPageHeader({\n            title: \'我的\'', 'this.SettingsSection()', 'My page settings must sit in the same scroll flow as the title.');
+requireOrder(sources.my, 'this.SettingsSection()', 'this.AboutSection()', 'My page settings should appear before app information.');
+
+[
+  "label: '首页', activeIcon:",
+  "label: '复盘库', activeIcon:",
+  "label: '统计', activeIcon:",
+  "label: '我的', activeIcon:",
+  '.fontSize(AppTypography.tabLabel)',
+  '.height(AppMetrics.tabBarHeight)',
+  '.backgroundColor(AppColors.tabBarBackground)',
+  '.expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])',
+  'Divider()'
+].forEach((marker) => requireIncludes(sources.shell, marker, 'Bottom tab must keep four tabs, selected styling and safe-area background'));
+
+[
+  'static readonly PageTitle: number = 26;',
+  'static readonly SectionTitle: number = 16;',
+  'static readonly CardTitle: number = 16;',
+  'static readonly CardBody: number = 14;',
+  'static readonly ButtonText: number = 14;',
+  'static readonly InputText: number = 14;',
+  'static readonly CardMeta: number = 12;',
+  'static readonly TabLabel: number = 11;'
+].forEach((marker) => requireIncludes(sources.tokens, marker, 'Typography baseline must remain unchanged'));
+[
+  'static readonly pageTitle: number = TypographyTokens.PageTitle;',
+  'static readonly sectionTitle: number = TypographyTokens.SectionTitle;',
+  'static readonly cardTitle: number = TypographyTokens.CardTitle;',
+  'static readonly body: number = TypographyTokens.CardBody;',
+  'static readonly inputText: number = TypographyTokens.InputText;',
+  'static readonly tabLabel: number = TypographyTokens.TabLabel;',
+  '@Prop dense: boolean = false;',
+  '.constraintSize({ minHeight: this.dense ? 60 : 68 })'
+].forEach((marker) => requireIncludes(sources.design, marker, 'Design component baseline must keep typography tokens and compact settings row support'));
+
+[
+  'Preferences',
+  'RDB',
+  'URI',
+  'manifest',
+  'raw JSON'
+].forEach((word) => {
+  [sources.home, sources.library, sources.stats].forEach((source) => {
+    forbidIncludes(source, `'${word}'`, `Main tabs must not expose technical word ${word} to ordinary users`);
+  });
+});
+forbidIncludes(sources.my, "title: 'Preferences'", 'My page must not expose Preferences to ordinary users');
+forbidIncludes(sources.my, "title: 'RDB'", 'My page must not expose RDB as a normal setting');
+forbidIncludes(sources.my, "title: 'URI'", 'My page must not expose URI to ordinary users');
+forbidIncludes(sources.my, "title: 'manifest'", 'My page must not expose manifest to ordinary users');
+forbidIncludes(sources.my, "title: 'raw JSON'", 'My page must not expose raw JSON to ordinary users');
+
+if (failed) {
+  process.exit(1);
+}
+
+console.log('main tabs UI baseline verified: compact headers, settings-first MyPage, stats/library density, fixed HomePage, tab safe area and typography baseline');

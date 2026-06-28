@@ -63,7 +63,9 @@ assert(files.stats.includes('最近卡点'), 'Stats should show recent blocker f
 assert(!files.stats.includes("Text('当前记录')"), 'Stats must remove the old 当前记录 placeholder section.');
 
 assert(files.my.includes("@Prop @Watch('refreshPageData') refreshToken"), 'My page must still refresh from shell token.');
-assert(files.my.includes('复盘统计暂时无法刷新'), 'My page should expose a load failure state.');
+assert(files.my.includes('HomeHeroImageService.listImages'), 'My page should refresh home image status.');
+assert(files.my.includes('HomeStorageService.loadSettings'), 'My page should refresh home storage status.');
+assert(files.my.includes("title: '同步中心'"), 'My page should expose the sync center entry.');
 assert(files.my.includes('运行开发诊断？'), 'Developer diagnostics must be protected by confirmation.');
 assert(files.my.includes('ENABLE_RDB_DIAGNOSTICS_ENTRY'), 'Developer diagnostics entry must be gated by a debug-only flag.');
 

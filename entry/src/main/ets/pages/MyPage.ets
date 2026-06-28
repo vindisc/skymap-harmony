@@ -212,7 +212,7 @@ export struct MyPage {
 
   @Builder
   SettingsSection() {
-    Column({ space: AppMetrics.space8 }) {
+    Column({ space: AppMetrics.cardGap }) {
       SettingsSectionHeader({
         title: '设置'
       })
@@ -222,6 +222,7 @@ export struct MyPage {
         value: this.resolveReviewerSummary() === '未设置' ? '新建复盘会使用默认空名称' : this.resolveReviewerSummary(),
         status: this.resolveReviewerSummary() === '未设置' ? '未设置' : '已设置',
         tone: this.resolveReviewerSummary() === '未设置' ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
+        dense: true,
         onTap: () => {
           this.openReviewerProfile();
         }
@@ -232,6 +233,7 @@ export struct MyPage {
         value: this.resolveHomeHeroSummary(),
         status: this.resolveHomeHeroBadge(),
         tone: this.homeHeroImageCount <= 0 ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
+        dense: true,
         onTap: () => {
           this.openHomeHeroImage();
         }
@@ -242,6 +244,7 @@ export struct MyPage {
         value: this.resolveHomeStorageDetail(),
         status: this.resolveHomeStorageBadge(),
         tone: this.resolveStorageTone(),
+        dense: true,
         onTap: () => {
           this.openHomeStorage();
         }
@@ -249,9 +252,10 @@ export struct MyPage {
 
       SettingsLinkRow({
         title: '同步中心',
-        value: '管理家庭存储连接，后续承接批量同步。',
+        value: '查看家庭存储连接状态。',
         status: this.resolveSyncBadge(),
         tone: this.resolveStorageTone(),
+        dense: true,
         onTap: () => {
           this.openSyncCenter();
         }
@@ -262,7 +266,7 @@ export struct MyPage {
 
   @Builder
   AboutSection() {
-    Column({ space: AppMetrics.space8 }) {
+    Column({ space: AppMetrics.cardGap }) {
       SettingsSectionHeader({
         title: '应用'
       })
@@ -273,6 +277,7 @@ export struct MyPage {
         status: '',
         tone: SettingsEntryTone.MUTED,
         showChevron: false,
+        dense: true,
         onTap: () => {
         }
       })
@@ -283,6 +288,7 @@ export struct MyPage {
           value: this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : `RDB 验证 · ${this.rdbDiagnosticsSummary}`,
           status: this.rdbDiagnosticsStatus,
           tone: this.resolveDeveloperTone(),
+          dense: true,
           onTap: () => {
             this.confirmRdbDeveloperDiagnostics();
           }

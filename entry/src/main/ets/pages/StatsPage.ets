@@ -12,9 +12,11 @@ import {
 } from '../services/ReviewProjectService';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
 
-const STATS_CARD_MIN_HEIGHT: number = 112;
+const STATS_OVERVIEW_MIN_HEIGHT: number = 120;
+const STATS_CARD_MIN_HEIGHT: number = 104;
 const STATS_PROGRESS_HEIGHT: number = 9;
 const STATS_PROGRESS_RADIUS: number = 5;
+const STATS_CONTENT_TOP_GAP: number = AppMetrics.space10;
 
 @Component
 export struct StatsPage {
@@ -145,7 +147,7 @@ export struct StatsPage {
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-    .constraintSize({ minHeight: 130 })
+    .constraintSize({ minHeight: STATS_OVERVIEW_MIN_HEIGHT })
     .padding(AppMetrics.cardPadding)
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
@@ -406,14 +408,13 @@ export struct StatsPage {
               this.RecentReviewsCard()
             }
             .width('100%')
-            .margin({ top: AppMetrics.space8 })
           }
         }
         .alignItems(HorizontalAlign.Start)
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: AppMetrics.sectionGap,
+          top: STATS_CONTENT_TOP_GAP,
           bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding
         })
         .width('100%')

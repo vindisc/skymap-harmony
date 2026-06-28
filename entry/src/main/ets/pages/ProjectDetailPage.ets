@@ -35,6 +35,9 @@ import {
 
 const DELETE_SWIPE_ACTION_WIDTH: number = 92;
 const DELETE_SWIPE_BUTTON_WIDTH: number = 68;
+const LIBRARY_HEADER_CONTROL_GAP: number = AppMetrics.space10;
+const LIBRARY_LIST_TOP_GAP: number = AppMetrics.space8;
+const LIBRARY_BOTTOM_CLEARANCE: number = AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space8;
 
 @Component
 export struct ProjectDetailPage {
@@ -246,7 +249,7 @@ export struct ProjectDetailPage {
       .constraintSize({ minWidth: value === 'all' ? 60 : 72 })
       .padding({ left: 14, right: 14 })
       .borderRadius(12)
-      .fontSize(13)
+      .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
@@ -267,7 +270,7 @@ export struct ProjectDetailPage {
       TextInput({ text: this.searchText, placeholder: '标题、关系、卡点、文件名' })
         .layoutWeight(1)
         .height(AppMetrics.searchHeight)
-        .fontSize(AppTypography.caption)
+        .fontSize(AppTypography.inputText)
         .fontColor(AppColors.text)
         .placeholderColor(AppColors.placeholderText)
         .backgroundColor(AppColors.transparent)
@@ -362,7 +365,7 @@ export struct ProjectDetailPage {
             .width('100%')
           }
         }
-        .margin({ top: AppMetrics.sectionGap })
+        .margin({ top: LIBRARY_HEADER_CONTROL_GAP })
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: 0 })
       .width('100%')
@@ -433,7 +436,7 @@ export struct ProjectDetailPage {
           }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
           ListItem() {
             Column()
-              .height(AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding)
+              .height(LIBRARY_BOTTOM_CLEARANCE)
               .width('100%')
           }
         }
@@ -441,7 +444,7 @@ export struct ProjectDetailPage {
         .width('100%')
         .edgeEffect(EdgeEffect.None)
         .scrollBar(BarState.Off)
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.cardGap })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: LIBRARY_LIST_TOP_GAP })
       }
     }
     .width('100%')

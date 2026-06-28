@@ -42,7 +42,7 @@ const requiredStatsPageTokens = [
   'ReviewProjectService.buildStatsFeedback(items)',
   "AppPageHeader({\n          title: '统计'",
   'Scroll() {\n        Column({ space: AppMetrics.cardGap }) {',
-  'top: AppMetrics.sectionGap',
+  'top: STATS_CONTENT_TOP_GAP',
   '还没有复盘数据',
   '完成第一张照片复盘后，这里会显示你的判断变化。',
   '最近 30 天',

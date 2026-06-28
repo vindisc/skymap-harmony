@@ -260,6 +260,7 @@ export struct SettingsLinkRow {
   @Prop status: string = '';
   @Prop tone: SettingsEntryTone = SettingsEntryTone.DEFAULT;
   @Prop showChevron: boolean = true;
+  @Prop dense: boolean = false;
   onTap: () => void = () => {};
 
   build() {
@@ -307,9 +308,14 @@ export struct SettingsLinkRow {
       }
     }
     .alignItems(VerticalAlign.Center)
-    .padding({ left: AppMetrics.cardPadding, right: AppMetrics.cardPadding, top: 14, bottom: 14 })
+    .padding({
+      left: AppMetrics.cardPadding,
+      right: AppMetrics.cardPadding,
+      top: this.dense ? AppMetrics.space10 : 14,
+      bottom: this.dense ? AppMetrics.space10 : 14
+    })
     .width('100%')
-    .constraintSize({ minHeight: 68 })
+    .constraintSize({ minHeight: this.dense ? 60 : 68 })
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
