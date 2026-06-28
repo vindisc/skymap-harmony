@@ -12,6 +12,8 @@
 - `REVIEW_BUNDLE_V1_DESIGN.md`：review bundle v1 的目录结构、manifest、家庭存储、双端导入导出、删除语义和 v1 不做范围。
 - `REVIEW_BUNDLE_V1_E2E_CHECKLIST.md`：Mac / HarmonyOS 单条 review bundle v1 端到端验收清单和发布前真实样本测试债。
 - `REVIEW_BUNDLE_V2_ORIGINAL_PHOTO.md`：review bundle v2 原图复盘包的 manifest、原图资产、双端识别边界和本轮不做范围。
+- `REVIEW_BUNDLE_V1_V2_CONTRACT.md`：review bundle v1/v2 双协议契约、Review JSON 冻结原则、manifest 职责和双端行为边界。
+- `REVIEW_BUNDLE_V1_V2_E2E_CHECKLIST.md`：HarmonyOS v1/v2 导出、Mac v1/v2 导入、v2 打开为复盘卡和错误场景的端到端回归清单。
 - `REVIEW_LIBRARY_V1_1.md`：Review Library v1.1 的可见入口、搜索界面和导入结果闭环。
 - `UI_INTERACTION_GUIDE.md`：Skymap UI 交互设计指导，定义按钮、色彩、字体、页面结构和评审清单。
 - `SYNC_V0_MANUAL_EXCHANGE.md`：Sync v0 手动文件交换闭环，说明 review.json 如何从 Harmony 落到 Mac Review Library。
@@ -27,7 +29,7 @@
 - Mac / HarmonyOS 单条 review bundle v1 已形成端到端验收清单。
 - Mac 当前不是批量导入、自动同步、双向同步或冲突合并。
 - Review JSON v1 字段继续冻结，bundleId、导出图、缩略图等 bundle 信息不写回 `review.json`。
-- 真实 HarmonyOS 真机 bundle 样本 fixture 回归仍后置为测试项，正式发布前必须补齐。
+- Mac 已固化脱敏 v1/v2 bundle fixture，覆盖 Reader、Import、只读预览和 v2 打开为复盘卡；真实隐私照片不得提交到仓库。
 
 ## 镜像副本规则
 

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 const v2Doc = fs.readFileSync('docs/product/REVIEW_BUNDLE_V2_ORIGINAL_PHOTO.md', 'utf8');
 const v1Doc = fs.readFileSync('docs/product/REVIEW_BUNDLE_V1_DESIGN.md', 'utf8');
 const bundleServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewBundleExportService.ets', 'utf8');
+const originalPhotoExportSource = fs.readFileSync('entry/src/main/ets/services/ReviewBundleOriginalPhotoExportService.ets', 'utf8');
 const exchangeSchemaSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardExchangeSchema.ets', 'utf8');
 const rdbModelSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardRdbModel.ets', 'utf8');
 
@@ -38,8 +39,9 @@ for (const token of [
   '`readonlyExportReview`',
   '`originalPhotoReview`',
   '因为 `exportedImages = []` 直接判定非法',
-  'HarmonyOS v2 真实导出',
-  'Mac v2 真实导入',
+  'Mac 端当前已支持 v2 导入和可编辑恢复入口',
+  'HarmonyOS 增加 v2 设计和导出验证脚本',
+  'Mac v2 原图复盘包可打开为复盘卡',
   'RDB 表结构变更',
   'Review JSON 字段变更',
   '废弃 v1'
@@ -64,7 +66,10 @@ assertIncludes(v1Doc, '原图默认不进入 bundle v1', 'REVIEW_BUNDLE_V1_DESIG
 assertIncludes(bundleServiceSource, 'bundleVersion: 1', 'ReviewBundleExportService v1 remains');
 assertIncludes(bundleServiceSource, 'included: false', 'ReviewBundleExportService v1 remains');
 assertIncludes(bundleServiceSource, 'remoteRelativePath: REVIEW_CARD_IMAGE_PATH', 'ReviewBundleExportService v1 exported image remains');
-assert(!bundleServiceSource.includes('bundleVersion: 2'), 'HarmonyOS v2 real export must not be half-implemented in this stage.');
+assertIncludes(originalPhotoExportSource, 'bundleVersion: 2', 'ReviewBundleOriginalPhotoExportService v2 export');
+assertIncludes(originalPhotoExportSource, "const BUNDLE_TYPE: string = 'original-photo-review'", 'ReviewBundleOriginalPhotoExportService v2 export');
+assertIncludes(originalPhotoExportSource, 'exportedImages: []', 'ReviewBundleOriginalPhotoExportService v2 export');
+assertIncludes(originalPhotoExportSource, 'verifyReviewJsonNotPolluted(paths.reviewJson)', 'ReviewBundleOriginalPhotoExportService v2 export');
 assert(!exchangeSchemaSource.includes('bundleId'), 'Review JSON schema must not gain bundleId.');
 assert(!exchangeSchemaSource.includes('bundleType'), 'Review JSON schema must not gain bundleType.');
 assert(!exchangeSchemaSource.includes('originalPhoto'), 'Review JSON schema must not gain originalPhoto.');

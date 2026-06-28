@@ -11,7 +11,7 @@ review bundle 现在分成两类：
 | 类型 | 定位 | 主要资产 | Mac 行为 |
 | --- | --- | --- | --- |
 | v1 成品图复盘包 | 归档、只读查看、跨端展示 | `review.json`、`exports/review-card.png`、`thumbnails/thumb.jpg` | 导入为 `readonlyExportReview`，展示导出的复盘成品图 |
-| v2 原图复盘包 | 跨端接力、后续可编辑恢复 | `review.json`、`assets/original/original.*`、可选缩略图 | 导入为 `originalPhotoReview`，保存原图和复盘内容，不当作 v1 只读成品图 |
+| v2 原图复盘包 | 跨端接力、Mac 继续处理 | `review.json`、`assets/original/original.*`、可选缩略图 | 导入为 `originalPhotoReview`，保存原图和复盘内容，可显式打开为复盘卡 |
 
 v1 继续保留当前结构和语义。v2 第一版可以不包含 `exports/review-card.png`，但必须把原图文件复制进 bundle。
 
@@ -189,7 +189,7 @@ Mac library 记录类型：
 | 类型 | 来源 | 资产 | 行为 |
 | --- | --- | --- | --- |
 | `readonlyExportReview` | v1 bundle | `review-card.png` | 只读预览成品图 |
-| `originalPhotoReview` | v2 bundle | original photo | 原图预览 + 复盘内容，后续恢复可编辑复盘 |
+| `originalPhotoReview` | v2 bundle | original photo | 原图预览 + 复盘内容，可点击“打开为复盘卡”恢复编辑 |
 
 v2 不能：
 
@@ -199,24 +199,21 @@ v2 不能：
 - 把 original photo 当成 `review-card.png`。
 - 污染普通照片导入流程。
 
-本阶段 Mac 端最低目标是 Reader 能正确识别和校验 v2 manifest，并保护 v1 只读预览行为。真实 v2 导入和可编辑恢复进入下一阶段。
+Mac 端当前已支持 v2 导入和可编辑恢复入口。导入时只进入复盘库查看态；只有用户点击“打开为复盘卡”后，才把原图和 `review.json` 复盘字段恢复到主编辑器。Mac 不写回原 bundle，不自动同步。
 
 ## 七、本轮交付边界
 
-已进入本轮范围：
+已进入当前范围：
 
 - 新增 v2 协议文档。
 - 双端产品文档保持同步。
-- HarmonyOS 增加 v2 设计验证脚本，保护 v1 不被替换。
-- Mac Reader 增加 v2 manifest 校验骨架和 fixture 测试。
+- HarmonyOS 增加 v2 设计和导出验证脚本，保护 v1 不被替换。
+- Mac Reader、Import、Readonly Preview 和 Original Photo Restore 使用 v2 fixture 回归。
+- Mac v2 原图复盘包可打开为复盘卡。
 
-未进入本轮范围：
+未进入当前范围：
 
-- HarmonyOS v2 真实导出。
-- Mac v2 真实导入。
-- Mac 原图可编辑恢复。
 - 云同步、自动同步、批量导入、双向同步、远端删除、冲突自动合并。
 - RDB 表结构变更。
 - Review JSON 字段变更。
 - 废弃 v1。
-
