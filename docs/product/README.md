@@ -14,6 +14,7 @@
 - `REVIEW_BUNDLE_V2_ORIGINAL_PHOTO.md`：review bundle v2 原图复盘包的 manifest、原图资产、双端识别边界和本轮不做范围。
 - `REVIEW_BUNDLE_V1_V2_CONTRACT.md`：review bundle v1/v2 双协议契约、Review JSON 冻结原则、manifest 职责和双端行为边界。
 - `REVIEW_BUNDLE_V1_V2_E2E_CHECKLIST.md`：HarmonyOS v1/v2 导出、Mac v1/v2 导入、v2 打开为复盘卡和错误场景的端到端回归清单。
+- `REVIEW_BUNDLE_STORAGE_BROWSER.md`：Mac 端浏览家庭存储 `ReviewBundles` 根目录、扫描 v1/v2 候选包、识别已导入状态并手动导入单个 bundle 的产品边界。
 - `REVIEW_LIBRARY_V1_1.md`：Review Library v1.1 的可见入口、搜索界面和导入结果闭环。
 - `UI_INTERACTION_GUIDE.md`：Skymap UI 交互设计指导，定义按钮、色彩、字体、页面结构和评审清单。
 - `SYNC_V0_MANUAL_EXCHANGE.md`：Sync v0 手动文件交换闭环，说明 review.json 如何从 Harmony 落到 Mac Review Library。
@@ -26,6 +27,7 @@
 
 - HarmonyOS 已支持单条复盘导出 review bundle v1 到家庭存储。
 - Mac 已支持选择单个 review bundle 导入 Review Library。
+- Mac 已支持选择家庭存储 `ReviewBundles` 根目录，浏览 v1/v2 候选包并手动导入单个 bundle。
 - Mac / HarmonyOS 单条 review bundle v1 已形成端到端验收清单。
 - Mac 当前不是批量导入、自动同步、双向同步或冲突合并。
 - Review JSON v1 字段继续冻结，bundleId、导出图、缩略图等 bundle 信息不写回 `review.json`。
