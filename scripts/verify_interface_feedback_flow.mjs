@@ -36,7 +36,7 @@ assert(previewSource.includes('@State isExportingReviewJson'), 'Preview should t
 assert(previewSource.includes('actionFeedbackText'), 'Preview should keep inline lightweight feedback text.');
 assert(previewSource.includes('markExportedQuietly'), 'Preview should separate export success from exported-state writeback.');
 assert(previewSource.includes('result.cancelled'), 'Preview should treat cancelled export separately from failed export.');
-assert(previewSource.includes('this.isSaving ||') && previewSource.includes('this.isExportingReviewBundle'), 'Preview busy gate should block repeated actions across save/export/bundle export.');
+assert(previewSource.includes('this.isSaving ||') && previewSource.includes('this.isExportingReviewJson'), 'Preview busy gate should block repeated actions across save/export/json export.');
 assert(previewSource.includes('ExportSheetAction(label: string, description: string, isDisabled: boolean'), 'Preview export sheet actions should support descriptions and disabled state.');
 assert(previewSource.includes('REVIEW_FLOW_EXPORT_SUCCESS_TEXT'), 'Preview should use shared export success copy.');
 assert(previewSource.includes('REVIEW_FLOW_EXPORT_FAILED_TEXT'), 'Preview should use shared export failure copy.');

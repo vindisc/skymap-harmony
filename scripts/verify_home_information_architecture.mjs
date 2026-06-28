@@ -96,10 +96,15 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
   "title: '首页图片'",
   'HOME_HERO_IMAGE_PAGE',
   'HomeHeroImageService.listImages',
-  'router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });',
-  "title: '同步中心'",
-  "title: '家庭存储'"
+  'router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });'
 ].forEach((marker) => requireIncludes(sources.myPage, marker, 'MyPage missing current personal-center marker'));
+
+[
+  "title: '同步中心'",
+  "title: '家庭存储'",
+  'HOME_STORAGE_PAGE',
+  'SYNC_CENTER_PAGE'
+].forEach((marker) => forbidIncludes(sources.myPage, marker, 'MyPage must hide non-Beta storage/sync entries'));
 
 [
   'this.IdentityCard()',
@@ -123,10 +128,15 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
   "this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出', true, this.isActionBusy(), () => {",
   '.height(AppMetrics.toolbarButtonHeight)',
   "this.ExportSheetAction(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片'",
-  "this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包'",
   "this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json'",
   "this.ExportSheetAction('复制复盘数据'"
 ].forEach((marker) => requireIncludes(sources.previewPage, marker, 'PreviewPage missing current export action marker'));
+
+[
+  "'导出复盘包'",
+  "'导出复盘包（含原图）'",
+  "'上传家庭存储'"
+].forEach((marker) => forbidIncludes(sources.previewPage, marker, 'PreviewPage must hide non-Beta export entry'));
 
 [
   "title: '同步中心'",

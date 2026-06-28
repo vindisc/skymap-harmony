@@ -1,7 +1,7 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { HOME_HERO_IMAGE_PAGE, HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../app/AppRouter';
+import { HOME_HERO_IMAGE_PAGE, REVIEWER_PROFILE_PAGE } from '../app/AppRouter';
 import {
   AppColors,
   AppMetrics,
@@ -16,12 +16,11 @@ import {
   ReviewCardRdbDiagnosticsService
 } from '../services/ReviewCardRdbDiagnosticsService';
 import { ENABLE_RDB_DIAGNOSTICS_ENTRY } from '../services/ReviewFlowFeedback';
-import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { HomeHeroImageService } from '../services/HomeHeroImageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
-const APP_VERSION_TEXT: string = '0.1.0 Beta';
-const APP_BUILD_TEXT: string = 'Harmony Beta V1';
+const APP_VERSION_TEXT: string = '0.2.0 Beta';
+const APP_BUILD_TEXT: string = 'Harmony Beta 0.2';
 const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;
 const MY_PAGE_BOTTOM_PADDING: number = AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space16;
 
@@ -30,7 +29,6 @@ export struct MyPage {
   private loadRequestId: number = 0;
   @Prop @Watch('refreshPageData') refreshToken: number = 0;
   @State reviewerName: string = '';
-  @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State homeHeroImageCount: number = 0;
   @State isRdbDiagnosticsRunning: boolean = false;
   @State rdbDiagnosticsSummary: string = '未运行';
@@ -62,34 +60,14 @@ export struct MyPage {
       return;
     }
 
-    this.homeStorageSettings = await HomeStorageService.loadSettings(context);
-    if (requestId !== this.loadRequestId) {
-      return;
-    }
-
     this.homeHeroImageCount = (await HomeHeroImageService.listImages(context)).length;
     if (requestId !== this.loadRequestId) {
       return;
     }
   }
 
-  private resolveHomeStorageStatus(): HomeStorageConfigStatus {
-    return HomeStorageService.getConfigurationStatus(this.homeStorageSettings);
-  }
-
   private resolveReviewerSummary(): string {
     return this.reviewerName.length > 0 ? this.reviewerName : '未设置';
-  }
-
-  private resolveHomeStorageDetail(): string {
-    if (this.resolveHomeStorageStatus() === HomeStorageConfigStatus.EMPTY) {
-      return '未配置';
-    }
-    return `${this.homeStorageSettings.smbHost} · ${this.homeStorageSettings.smbShareName || '共享目录未填'}`;
-  }
-
-  private resolveSyncSummary(): string {
-    return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
   }
 
   private resolveHomeHeroSummary(): string {
@@ -104,25 +82,6 @@ export struct MyPage {
 
   private resolveHomeHeroBadge(): string {
     return this.homeHeroImageCount <= 0 ? '默认' : `${this.homeHeroImageCount} 张`;
-  }
-
-  private resolveHomeStorageBadge(): string {
-    return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
-  }
-
-  private resolveSyncBadge(): string {
-    return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
-  }
-
-  private resolveStorageTone(): SettingsEntryTone {
-    const status: HomeStorageConfigStatus = this.resolveHomeStorageStatus();
-    if (status === HomeStorageConfigStatus.COMPLETE) {
-      return SettingsEntryTone.SUCCESS;
-    }
-    if (status === HomeStorageConfigStatus.PARTIAL) {
-      return SettingsEntryTone.WARNING;
-    }
-    return SettingsEntryTone.MUTED;
   }
 
   private resolveDeveloperTone(): SettingsEntryTone {
@@ -144,14 +103,6 @@ export struct MyPage {
 
   private openHomeHeroImage(): void {
     router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });
-  }
-
-  private openHomeStorage(): void {
-    router.pushUrl({ url: HOME_STORAGE_PAGE });
-  }
-
-  private openSyncCenter(): void {
-    router.pushUrl({ url: SYNC_CENTER_PAGE });
   }
 
   private confirmRdbDeveloperDiagnostics(): void {
@@ -239,27 +190,6 @@ export struct MyPage {
         }
       })
 
-      SettingsLinkRow({
-        title: '家庭存储',
-        value: this.resolveHomeStorageDetail(),
-        status: this.resolveHomeStorageBadge(),
-        tone: this.resolveStorageTone(),
-        dense: true,
-        onTap: () => {
-          this.openHomeStorage();
-        }
-      })
-
-      SettingsLinkRow({
-        title: '同步中心',
-        value: '查看家庭存储连接状态。',
-        status: this.resolveSyncBadge(),
-        tone: this.resolveStorageTone(),
-        dense: true,
-        onTap: () => {
-          this.openSyncCenter();
-        }
-      })
     }
     .width('100%')
   }

@@ -30,11 +30,15 @@ function forbidIncludes(source, marker, message) {
   "title: '设置'",
   "title: '复盘人'",
   "title: '首页图片'",
-  "title: '家庭存储'",
-  "title: '同步中心'",
   "title: '应用'",
   "title: '版本'"
 ].forEach((marker) => requireIncludes(myPageSource, marker, 'MyPage missing settings-first marker'));
+[
+  "title: '家庭存储'",
+  "title: '同步中心'",
+  'HOME_STORAGE_PAGE',
+  'SYNC_CENTER_PAGE'
+].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must hide non-Beta storage/sync entry'));
 
 [
   "subtitle: '复盘身份、存储同步和应用状态。'",
@@ -77,10 +81,8 @@ assert(myPageSource.includes(".height('100%')"), 'MyPage scroll region must fill
 assert(myPageSource.includes('.justifyContent(FlexAlign.Start)'), 'MyPage scroll content must stay pinned to the top.');
 assert(myPageSource.includes('router.pushUrl({ url: REVIEWER_PROFILE_PAGE });'), 'Reviewer profile entry navigation must remain.');
 assert(myPageSource.includes('router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });'), 'Home hero entry navigation must remain.');
-assert(myPageSource.includes('router.pushUrl({ url: HOME_STORAGE_PAGE });'), 'Home storage entry navigation must remain.');
-assert(myPageSource.includes('router.pushUrl({ url: SYNC_CENTER_PAGE });'), 'Sync center entry navigation must remain.');
 assert(myPageSource.includes('HomeHeroImageService.listImages'), 'Home hero image status must remain visible in MyPage.');
-assert(myPageSource.includes('HomeStorageService.resolveEntryStatusLabel'), 'Home storage status mapping must remain visible in MyPage.');
+assert(!myPageSource.includes('HomeStorageService.resolveEntryStatusLabel'), 'Home storage status mapping must stay out of Beta MyPage.');
 
 [
   "AppPageHeader({\n          title: '统计'",

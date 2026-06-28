@@ -141,7 +141,7 @@ struct SyncCenterPage {
       Column({ space: AppMetrics.sectionGap }) {
         SettingsPageHeader({
           title: '同步中心',
-          subtitle: '家庭存储通常需要连接家庭 Wi-Fi 或 VPN 后使用。离开家庭网络时，请先连接 VPN / Tailscale，再导出复盘包。'
+          subtitle: '家庭存储仍是 Beta 后实验能力。当前 Beta 请使用导出 review.json 完成手动交换。'
         })
 
         Column({ space: AppMetrics.space8 }) {

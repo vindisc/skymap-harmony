@@ -13,11 +13,9 @@ const moduleSource = fs.readFileSync('entry/src/main/module.json5', 'utf8');
 let failed = false;
 
 const requiredPreviewTokens = [
-  "this.ExportSheetAction(this.isUploadingHomeStorage ? '上传中...' : '上传家庭存储'",
-  'private async uploadReviewJsonToHomeStorage(): Promise<void>',
-  'HomeStorageService.uploadReviewJson(',
-  'ReviewCardHistoryService.markExported(context, this.document, result.remotePath)',
-  "this.ExportSheetAction('导出 JSON'"
+  "this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json'",
+  "'导出图片'",
+  "'复制复盘数据'"
 ];
 
 for (const token of requiredPreviewTokens) {
@@ -27,16 +25,35 @@ for (const token of requiredPreviewTokens) {
   }
 }
 
+for (const token of [
+  "'上传家庭存储'",
+  "'导出复盘包'",
+  "'导出复盘包（含原图）'",
+  'uploadReviewJsonToHomeStorage',
+  'isUploadingHomeStorage'
+]) {
+  if (previewPageSource.includes(token)) {
+    failed = true;
+    console.error(`PreviewPage must hide non-Beta SMB/bundle entry: ${token}`);
+  }
+}
+
 const requiredSettingsTokens = [
-  "Text('家庭存储')",
-  "router.pushUrl({ url: HOME_STORAGE_PAGE });",
-  "Text('SMB 与凭据')"
+  "Text('设置')",
+  "this.SettingsInput('复盘人'"
 ];
 
 for (const token of requiredSettingsTokens) {
   if (!settingsPageSource.includes(token)) {
     failed = true;
-    console.error(`ReviewSettingsPage missing home-storage link token: ${token}`);
+    console.error(`ReviewSettingsPage missing Beta settings token: ${token}`);
+  }
+}
+
+for (const token of ["Text('家庭存储')", "router.pushUrl({ url: HOME_STORAGE_PAGE });", "Text('连接与凭据')"]) {
+  if (settingsPageSource.includes(token)) {
+    failed = true;
+    console.error(`ReviewSettingsPage must hide non-Beta home-storage link token: ${token}`);
   }
 }
 
@@ -59,12 +76,12 @@ for (const token of forbiddenSettingsTokens) {
 }
 
 const requiredHomeStoragePageTokens = [
-  "SettingsInput('SMB 地址或 IP'",
+  "SettingsInput('家庭存储地址或 IP'",
   "SettingsInput('共享目录'",
   "SettingsInput('目标路径'",
   "SettingsInput('用户名'",
   "SettingsInput('密码或凭据'",
-  '测试'
+  '检查'
 ];
 
 for (const token of requiredHomeStoragePageTokens) {
@@ -131,10 +148,10 @@ if (!syncCenterPageSource.includes("this.InfoRow('保存位置'") || !syncCenter
 const requiredHomeStorageTokens = [
   "const DEFAULT_REMOTE_DIRECTORY: string = '';",
   'HomeStorageSecretService.savePassword(normalized.password)',
-  "return '请先填写 SMB 地址或 IP';",
+  "return '请先填写家庭存储地址或 IP';",
   "return '请先填写共享目录';",
-  "message: '家庭存储连接成功'",
-  "message: '已上传家庭存储'",
+  "'家庭存储连接成功'",
+  "'已上传家庭存储'",
   "message: '已上传共享根目录'",
   'let passwordSavedSecurely: boolean = false;',
   'await store.put(LEGACY_PASSWORD_KEY, normalized.password);',
@@ -189,4 +206,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('smb storage: settings, upload entry, secret storage, smb client, and permission present');
+console.log('smb storage: dormant settings/storage services verified, non-Beta preview entries hidden');

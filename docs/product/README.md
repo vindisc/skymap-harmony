@@ -23,13 +23,11 @@
 - `ROADMAP.md`：按用户价值组织的阶段路线图。
 - `CHANGE_RULES.md`：产品层变更和客户端实现顺序规则。
 
-当前实现备注：
+当前 Harmony Beta 0.2 备注：
 
-- HarmonyOS 已支持单条复盘导出 review bundle v1 到家庭存储。
-- Mac 已支持选择单个 review bundle 导入 Review Library。
-- Mac 已支持选择家庭存储 `ReviewBundles` 根目录，浏览 v1/v2 候选包并手动导入单个 bundle。
-- Mac / HarmonyOS 单条 review bundle v1 已形成端到端验收清单。
-- Mac 当前不是批量导入、自动同步、双向同步或冲突合并。
+- HarmonyOS 当前 Beta 对外承诺创建复盘、本地历史、复盘库查看/搜索/筛选/删除、轻量统计、导出复盘长图、导出 `review.json`、复制复盘数据、复盘人设置和首页图片设置。
+- Review Bundle、含原图复盘包、SMB 自动同步、WebDAV、Sync v1、成长统计和 AI 分析不进入当前 Beta 对外承诺。
+- Mac / HarmonyOS 的 review bundle 文档保留为 Beta 后设计和验证资产，不作为 Harmony Beta 0.2 主入口。
 - Review JSON v1 字段继续冻结，bundleId、导出图、缩略图等 bundle 信息不写回 `review.json`。
 - Mac 已固化脱敏 v1/v2 bundle fixture，覆盖 Reader、Import、只读预览和 v2 打开为复盘卡；真实隐私照片不得提交到仓库。
 

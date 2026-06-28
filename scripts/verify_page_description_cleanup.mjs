@@ -68,8 +68,6 @@ function forbidRegex(source, pattern, message) {
   "title: '设置'",
   "title: '复盘人'",
   "title: '首页图片'",
-  "title: '家庭存储'",
-  "title: '同步中心'",
   'bottom: MY_PAGE_BOTTOM_PADDING',
   ".height('100%')",
   '.justifyContent(FlexAlign.Start)'

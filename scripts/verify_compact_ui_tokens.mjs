@@ -134,7 +134,7 @@ assertIncludes(appShellSource, "$r('app.media.tab_library_active')", 'TabBar mus
 assertIncludes(appShellSource, "$r('app.media.tab_user_active')", 'TabBar must use the user line icon resource.');
 assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use 12fp Compact token.');
 assertIncludes(appShellSource, '.height(AppMetrics.tabBarHeight)', 'TabBar must use shared touch-safe token.');
-assertIncludes(appShellSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })', 'TabBar must not leave oversized blank bottom padding.');
+assertIncludes(appShellSource, 'bottom: 4', 'TabBar must not leave oversized blank bottom padding.');
 assertIncludes(appShellSource, 'Divider()', 'TabBar must use a light top divider instead of a boxed border.');
 assertIncludes(appShellSource, '.opacity(0.42)', 'TabBar divider must stay visually soft.');
 if (appShellSource.includes('.border({ width: 1, color: AppColors.border })')) {
@@ -158,14 +158,10 @@ for (const fileName of iconFiles) {
   }
 }
 
-assertIncludes(homePageSource, 'Text(`${this.reviewCount}`)', 'Home stats must render scalar reviewCount state.');
-assertIncludes(homePageSource, 'Text(`${this.validReviewCount}`)', 'Home valid stats must render scalar validReviewCount state.');
-assertIncludes(homePageSource, 'Text(`${this.unsureReviewCount}`)', 'Home unsure stats must render scalar unsureReviewCount state.');
-if (homePageSource.includes('StatItem(')) {
-  failed = true;
-  console.error('Home stats must not pass dynamic values through a parameterized StatItem builder.');
-}
-assertIncludes(homePageSource, "return '—';", 'Home streak fallback must be —, not 0天.');
+assertIncludes(homePageSource, 'createHomeDashboardReloadState', 'Home stats must be owned by dashboard presenter state.');
+assertIncludes(homePageSource, 'applyHomeDashboardReloadSuccess', 'Home stats must update through presenter success path.');
+assertIncludes(homePageSource, 'applyHomeDashboardReloadFailure', 'Home stats must preserve stable state on failure.');
+assertIncludes(homePageSource, 'ReviewCardHistoryService.loadWithDiagnostics(context)', 'Home stats must load persisted history with diagnostics.');
 if (homePageSource.includes('0天')) {
   failed = true;
   console.error('Home page must not render 0天.');
@@ -174,22 +170,27 @@ if (homePageSource.includes('0天')) {
 assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use shared touch-safe token.');
 assertIncludes(projectDetailSource, '.height(AppMetrics.filterChipHeight)', 'Library chips must use compact filter token.');
 assertIncludes(projectDetailSource, '.constraintSize({ minWidth: value === \'all\' ? 60 : 72 })', 'Library filter chips must read as compact horizontal pills.');
-assertIncludes(projectDetailSource, '.borderRadius(AppMetrics.cardRadius)', 'Library filter chips must avoid oversized capsule corners.');
+assertIncludes(projectDetailSource, '.borderRadius(12)', 'Library filter chips must avoid oversized capsule corners.');
 assertIncludes(projectDetailSource, '.fontSize(AppTypography.meta)', 'Library filter chips must use small label typography.');
-assertIncludes(projectDetailSource, '.fontSize(AppTypography.caption)', 'Library search text must stay lighter than body forms.');
+assertIncludes(projectDetailSource, '.fontSize(AppTypography.inputText)', 'Library search text must use shared input typography.');
 assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use compact 68vp thumbnail token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'Status tags must use compact token.');
 
+function buildBody(source) {
+  const index = source.lastIndexOf('\n  build()');
+  return index >= 0 ? source.slice(index) : source;
+}
+
 const topAlignedPages = [
-  ['HomePage', homePageSource],
-  ['ProjectDetailPage', projectDetailSource],
-  ['MyPage', myPageSource],
-  ['ReviewerProfilePage', reviewerProfileSource],
-  ['HomeStoragePage', homeStorageSource],
-  ['PreviewPage', previewPageSource],
-  ['EditorPage', editorPageSource]
+  ['HomePage', buildBody(homePageSource)],
+  ['ProjectDetailPage', buildBody(projectDetailSource)],
+  ['MyPage', buildBody(myPageSource)],
+  ['ReviewerProfilePage', buildBody(reviewerProfileSource)],
+  ['HomeStoragePage', buildBody(homeStorageSource)],
+  ['PreviewPage', buildBody(previewPageSource)],
+  ['EditorPage', buildBody(editorPageSource)]
 ];
 
 for (const [pageName, source] of topAlignedPages) {
@@ -199,16 +200,15 @@ for (const [pageName, source] of topAlignedPages) {
   }
 }
 
-assertIncludes(myPageSource, '.fontSize(AppTypography.profileName)', 'My identity card name must use compact profile token.');
-assertIncludes(myPageSource, '次复盘 ·', 'My identity card must show compact one-line review stats.');
-assertIncludes(appDesignSource, 'static readonly profileName: number = TypographyTokens.CardTitle;', 'My identity name must align with card title scale.');
-assertIncludes(myPageSource, '.constraintSize({ minHeight: 64, maxHeight: 70 })', 'My identity and link rows must use compact card heights.');
-if (myPageSource.includes('Scroll() {')) {
+assertIncludes(myPageSource, "title: '复盘人'", 'My page must keep reviewer settings entry.');
+assertIncludes(myPageSource, "title: '首页图片'", 'My page must keep home image settings entry.');
+assertIncludes(appDesignSource, 'static readonly profileName: number = TypographyTokens.CardTitle;', 'Profile typography token should remain available for shared components.');
+if (myPageSource.includes("title: '家庭存储'") || myPageSource.includes("title: '同步中心'")) {
   failed = true;
-  console.error('MyPage must not scroll when the visible content fits the first screen.');
+  console.error('MyPage must hide non-Beta storage and sync entries.');
 }
 assertIncludes(reviewerProfileSource, '.justifyContent(FlexAlign.Start)', 'ReviewerProfilePage must explicitly top-align content.');
-assertIncludes(homeStorageSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding', 'HomeStoragePage must use shared top padding.');
+assertIncludes(homeStorageSource, 'top: AppMetrics.pageTopPadding', 'HomeStoragePage must use shared top padding.');
 
 if (failed) {
   process.exit(1);

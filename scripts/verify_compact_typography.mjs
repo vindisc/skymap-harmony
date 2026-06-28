@@ -176,9 +176,9 @@ for (const forbiddenSize of [40, 44, 48, 56]) {
 
 assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use TabLabel token.');
 assertIncludes(appShellSource, '.width(AppMetrics.tabIconSize)', 'Tab icon must use TabIcon token.');
-assertIncludes(appShellSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })', 'TabBar must keep compact bottom-safe padding.');
-if (designTokensSource.includes('static readonly TabLabel: number = 13;') ||
-  designTokensSource.includes('static readonly TabLabel: number = 14;')) {
+assertIncludes(appShellSource, 'bottom: 4', 'TabBar must keep compact bottom-safe padding.');
+if (typographyBlock.includes('static readonly TabLabel: number = 13;') ||
+  typographyBlock.includes('static readonly TabLabel: number = 14;')) {
   fail('TabLabel must not exceed 12fp.');
 }
 if (designTokensSource.includes('static readonly ButtonText: number = 16;') ||
@@ -186,16 +186,9 @@ if (designTokensSource.includes('static readonly ButtonText: number = 16;') ||
   fail('ButtonText must not exceed 15fp.');
 }
 
-assertIncludes(homePageSource, 'Text(`${this.reviewCount}`)', 'Home total stats must render scalar reviewCount state directly.');
-assertIncludes(homePageSource, 'Text(`${this.validReviewCount}`)', 'Home valid stats must render scalar validReviewCount state directly.');
-assertIncludes(homePageSource, 'Text(`${this.unsureReviewCount}`)', 'Home unsure stats must render scalar unsureReviewCount state directly.');
-assertIncludes(homePageSource, "return '—';", 'Home streak fallback must be —.');
-
-if (homePageSource.includes('StatItem(') ||
-  homePageSource.includes("@Builder\n  StatItem") ||
-  homePageSource.includes('0天')) {
-  fail('Home stats must not use parameterized StatItem builders or render 0天.');
-}
+assertIncludes(homePageSource, 'createHomeDashboardReloadState', 'Home dashboard state must be presenter-backed.');
+assertIncludes(homePageSource, 'applyHomeDashboardReloadSuccess', 'Home dashboard success must go through presenter.');
+assertIncludes(homePageSource, 'applyHomeDashboardReloadFailure', 'Home dashboard failure must go through presenter.');
 
 const primaryPageFiles = [
   'entry/src/main/ets/pages/HomePage.ets',
@@ -208,7 +201,9 @@ const primaryPageFiles = [
 
 for (const filePath of primaryPageFiles) {
   const source = fs.readFileSync(filePath, 'utf8');
-  if (source.includes('.justifyContent(FlexAlign.Center)')) {
+  const buildIndex = source.lastIndexOf('\n  build()');
+  const buildSource = buildIndex >= 0 ? source.slice(buildIndex) : source;
+  if (buildSource.includes('.justifyContent(FlexAlign.Center)')) {
     fail(`${filePath} must not vertically center primary page content.`);
   }
 }

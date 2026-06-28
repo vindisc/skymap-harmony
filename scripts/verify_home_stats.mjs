@@ -82,12 +82,14 @@ assert(!homePageSource.includes('@State dashboardStats'),
 
 [
   'await this.markExportedQuietly(result.path)',
-  'await this.markExportedQuietly(result.remotePath)',
   'private async ensureCurrentDocumentPersisted(): Promise<void>',
   'await this.ensureCurrentDocumentPersisted();',
   'await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);',
   'private hasMeaningfulDocument(document: ReviewCardDocument): boolean'
 ].forEach((marker) => requireIncludes(previewPageSource, marker, 'PreviewPage missing persistence/export marker'));
+
+assert(!previewPageSource.includes('await this.markExportedQuietly(result.remotePath)'),
+  'PreviewPage must not expose non-Beta remote bundle export marking.');
 
 [
   "ReviewJsonExportService } from './ReviewJsonExportService';",

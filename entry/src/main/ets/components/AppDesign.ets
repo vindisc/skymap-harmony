@@ -47,7 +47,7 @@ export class AppMetrics {
   static readonly space24: number = 24;
   static readonly space32: number = 32;
   static readonly pagePadding: number = 16;
-  static readonly pageTopPadding: number = 16;
+  static readonly pageTopPadding: number = 28;
   static readonly pageBottomPadding: number = 20;
   static readonly sectionGap: number = 20;
   static readonly cardGap: number = 12;

@@ -64,15 +64,27 @@ function sanitizeFileStem(value: string): string {
   return normalized.length > 0 ? normalized.slice(0, 48) : 'review';
 }
 
-function resolveExportFileName(document: ReviewCardDocument): string {
+function resolveStableFileStem(document: ReviewCardDocument): string {
   const sourceFileName: string = resolveReviewCardExchangeFileName(document).trim();
-  const stem: string = sourceFileName.length > 0 ? sanitizeFileStem(sourceFileName) : 'review';
+  if (sourceFileName.length > 0) {
+    return sanitizeFileStem(sourceFileName);
+  }
+
+  const titleStem: string = sanitizeFileStem(document.content.title.trim());
+  if (titleStem !== 'review') {
+    return titleStem;
+  }
+
+  return `review-${document.createdAt}`;
+}
+
+function resolveExportFileName(document: ReviewCardDocument): string {
+  const stem: string = resolveStableFileStem(document);
   return `${formatTimestamp(document.updatedAt)}-${stem}.${REVIEW_JSON_EXTENSION}`;
 }
 
 function resolveBackupFileName(document: ReviewCardDocument): string {
-  const sourceFileName: string = resolveReviewCardExchangeFileName(document).trim();
-  const stem: string = sourceFileName.length > 0 ? sanitizeFileStem(sourceFileName) : 'review';
+  const stem: string = resolveStableFileStem(document);
   return `${formatTimestamp(document.createdAt)}-${document.createdAt}-${stem}.${REVIEW_JSON_EXTENSION}`;
 }
 

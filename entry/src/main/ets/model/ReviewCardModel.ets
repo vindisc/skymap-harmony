@@ -165,7 +165,7 @@ export function createDefaultReviewContent(): ReviewContent {
 export function createDefaultReviewCardDocument(): ReviewCardDocument {
   const now: number = Date.now();
   return {
-    version: '0.1.0',
+    version: '0.2.0 Beta',
     projectId: DEFAULT_PROJECT_ID,
     imageUri: '',
     imageWidth: 1600,

@@ -238,7 +238,7 @@ function resolveHomeStorageErrorMessage(errorType: HomeStorageErrorType): string
     return '家庭存储目录创建失败，请稍后重试';
   }
   if (errorType === HomeStorageErrorType.ORIGINAL_READ_FAILED) {
-    return '原始照片无法读取，请重新选择照片。';
+    return '原始照片无法读取，请重试。';
   }
   if (errorType === HomeStorageErrorType.ORIGINAL_COPY_FAILED) {
     return '原始照片保存失败，请重试。';

@@ -31,7 +31,7 @@ for (const token of [
   '"path": "assets/original/original.jpg"',
   'originalPhoto.path',
   'assets/original/original.*',
-  '导出复盘包（含原图）',
+  '含原图复盘包',
   'original_read_failed',
   'original_copy_failed',
   'original_upload_failed',

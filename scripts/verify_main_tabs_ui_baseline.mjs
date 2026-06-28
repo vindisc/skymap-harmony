@@ -131,13 +131,15 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   "title: '设置'",
   "title: '复盘人'",
   "title: '首页图片'",
-  "title: '家庭存储'",
-  "title: '同步中心'",
   "title: '版本'",
   'dense: true',
   'bottom: MY_PAGE_BOTTOM_PADDING',
   '.justifyContent(FlexAlign.Start)'
 ].forEach((marker) => requireIncludes(sources.my, marker, 'My page must show settings first with compact rows and bottom clearance'));
+[
+  "title: '家庭存储'",
+  "title: '同步中心'"
+].forEach((marker) => forbidIncludes(sources.my, marker, 'My page must hide non-Beta storage and sync rows'));
 [
   'this.IdentityCard()',
   '@Builder\n  IdentityCard()',
@@ -164,14 +166,14 @@ requireOrder(sources.my, 'this.SettingsSection()', 'this.AboutSection()', 'My pa
 ].forEach((marker) => requireIncludes(sources.shell, marker, 'Bottom tab must keep four tabs, selected styling and safe-area background'));
 
 [
-  'static readonly PageTitle: number = 26;',
-  'static readonly SectionTitle: number = 16;',
+  'static readonly PageTitle: number = 24;',
+  'static readonly SectionTitle: number = 17;',
   'static readonly CardTitle: number = 16;',
-  'static readonly CardBody: number = 14;',
-  'static readonly ButtonText: number = 14;',
-  'static readonly InputText: number = 14;',
+  'static readonly CardBody: number = 15;',
+  'static readonly ButtonText: number = 15;',
+  'static readonly InputText: number = 15;',
   'static readonly CardMeta: number = 12;',
-  'static readonly TabLabel: number = 11;'
+  'static readonly TabLabel: number = 12;'
 ].forEach((marker) => requireIncludes(sources.tokens, marker, 'Typography baseline must remain unchanged'));
 [
   'static readonly pageTitle: number = TypographyTokens.PageTitle;',

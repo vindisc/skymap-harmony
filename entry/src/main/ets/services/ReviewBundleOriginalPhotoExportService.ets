@@ -86,12 +86,12 @@ interface ReviewBundleManifestV2 {
 
 const LOCAL_BUNDLE_DIR_NAME: string = 'review_bundles';
 const SOURCE_APP: string = 'skymap-harmonyos';
-const SOURCE_APP_VERSION: string = '0.1.0';
+const SOURCE_APP_VERSION: string = '0.2.0 Beta';
 const PLATFORM: string = 'HarmonyOS';
 const BUNDLE_TYPE: string = 'original-photo-review';
 const ORIGINAL_PHOTO_ROOT: string = 'assets/original';
 const ASSETS_README_PATH: string = 'assets/README.md';
-const ORIGINAL_READ_FAILED_TEXT: string = '原始照片无法读取，请重新选择照片。';
+const ORIGINAL_READ_FAILED_TEXT: string = '原始照片无法读取，请重试。';
 const ORIGINAL_COPY_FAILED_TEXT: string = '原始照片保存失败，请重试。';
 const ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT: string = '含原图复盘包导出失败，请重试。';
 const ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT: string = '含原图复盘包已导出到家庭存储';

@@ -33,7 +33,7 @@ assert(
 );
 assert(myPageSource.includes("@Prop @Watch('refreshPageData') refreshToken: number = 0;"), 'MyPage must watch refreshToken.');
 assert(myPageSource.includes('this.reviewerName = await ReviewSettingsService.loadReviewerName(context);'), 'MyPage reload must read reviewer name.');
-assert(myPageSource.includes('this.homeStorageSettings = await HomeStorageService.loadSettings(context);'), 'MyPage reload must read home storage settings.');
+assert(!myPageSource.includes('this.homeStorageSettings = await HomeStorageService.loadSettings(context);'), 'MyPage must not surface non-Beta home storage state.');
 assert(syncCenterPageSource.includes('SettingsRefreshService.getRefreshToken()'), 'SyncCenterPage must observe settings refresh token.');
 assert(syncCenterPageSource.includes('this.loadSettings();'), 'SyncCenterPage must reload home storage settings.');
 
