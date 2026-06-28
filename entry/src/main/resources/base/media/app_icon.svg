@@ -1,60 +1,61 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="base" x1="198" y1="118" x2="844" y2="902" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFDF8"/>
-      <stop offset="0.58" stop-color="#F8F6F0"/>
-      <stop offset="1" stop-color="#ECEFF3"/>
+    <linearGradient id="base" x1="134" y1="84" x2="884" y2="924" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFDF7"/>
+      <stop offset="0.52" stop-color="#F4F0E6"/>
+      <stop offset="1" stop-color="#E8EDF1"/>
     </linearGradient>
-    <linearGradient id="paper" x1="308" y1="263" x2="718" y2="671" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF"/>
-      <stop offset="0.72" stop-color="#FFFDF8"/>
-      <stop offset="1" stop-color="#F3F0E8"/>
+    <linearGradient id="outerFrame" x1="198" y1="234" x2="812" y2="742" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4D6174"/>
+      <stop offset="0.62" stop-color="#324353"/>
+      <stop offset="1" stop-color="#243241"/>
     </linearGradient>
-    <linearGradient id="ink" x1="323" y1="268" x2="698" y2="682" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#405061"/>
-      <stop offset="1" stop-color="#263341"/>
+    <linearGradient id="paper" x1="236" y1="276" x2="792" y2="692" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.68" stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#EEE8DD"/>
     </linearGradient>
-    <linearGradient id="blue" x1="398" y1="696" x2="462" y2="758" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#6BA9F0"/>
-      <stop offset="0.58" stop-color="#438DE1"/>
-      <stop offset="1" stop-color="#2F73C7"/>
+    <linearGradient id="photo" x1="334" y1="384" x2="700" y2="558" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFDF8"/>
+      <stop offset="0.58" stop-color="#F6F0E6"/>
+      <stop offset="1" stop-color="#E8EEF2"/>
     </linearGradient>
-    <filter id="baseShadow" x="-80" y="-40" width="1184" height="1120" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#182231" flood-opacity="0.18"/>
-      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#FFFFFF" flood-opacity="0.9"/>
+    <linearGradient id="blue" x1="336" y1="724" x2="434" y2="828" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7DBAF4"/>
+      <stop offset="0.52" stop-color="#3F93E5"/>
+      <stop offset="1" stop-color="#1F6FC8"/>
+    </linearGradient>
+    <filter id="baseShadow" x="-60" y="-40" width="1144" height="1144" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="30" stdDeviation="42" flood-color="#1F2937" flood-opacity="0.26"/>
     </filter>
-    <filter id="frameShadow" x="246" y="226" width="546" height="490" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="13" stdDeviation="16" flood-color="#1A2530" flood-opacity="0.18"/>
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#FFFFFF" flood-opacity="0.65"/>
+    <filter id="frameShadow" x="112" y="184" width="800" height="612" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#142033" flood-opacity="0.24"/>
     </filter>
-    <filter id="softLineShadow" x="456" y="700" width="190" height="56" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#1A2530" flood-opacity="0.16"/>
-    </filter>
-    <filter id="blueShadow" x="360" y="665" width="130" height="128" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1E5DA8" flood-opacity="0.18"/>
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#FFFFFF" flood-opacity="0.55"/>
+    <filter id="blueShadow" x="298" y="686" width="168" height="168" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="7" stdDeviation="11" flood-color="#176BC1" flood-opacity="0.28"/>
     </filter>
   </defs>
 
-  <rect x="72" y="56" width="880" height="856" rx="198" fill="url(#base)" filter="url(#baseShadow)"/>
-  <rect x="76" y="60" width="872" height="848" rx="194" stroke="#FFFFFF" stroke-opacity="0.74" stroke-width="18"/>
-  <rect x="92" y="82" width="840" height="820" rx="174" stroke="#D8D5CC" stroke-opacity="0.34" stroke-width="10"/>
+  <rect x="42" y="42" width="940" height="940" rx="220" fill="#F6F3EA" filter="url(#baseShadow)"/>
+  <rect x="42" y="42" width="940" height="940" rx="220" fill="url(#base)"/>
+  <rect x="52" y="52" width="920" height="920" rx="210" stroke="#FFFFFF" stroke-opacity="0.82" stroke-width="16"/>
+  <rect x="72" y="74" width="880" height="876" rx="190" stroke="#CFC7BA" stroke-opacity="0.36" stroke-width="6"/>
 
   <g filter="url(#frameShadow)">
-    <rect x="282" y="266" width="460" height="360" rx="52" fill="url(#ink)"/>
-    <rect x="318" y="306" width="388" height="282" rx="34" fill="url(#paper)"/>
-    <rect x="367" y="356" width="290" height="190" rx="24" stroke="#2F4051" stroke-width="27"/>
-    <rect x="397" y="385" width="230" height="131" rx="11" fill="#FFFDF8"/>
-    <rect x="426" y="482" width="170" height="18" rx="9" fill="#2D3D4D"/>
-  </g>
-
-  <g filter="url(#softLineShadow)">
-    <rect x="480" y="707.5" width="142" height="21" rx="10.5" fill="#2D3D4D"/>
+    <rect x="160" y="220" width="704" height="508" rx="88" fill="url(#outerFrame)"/>
+    <rect x="218" y="276" width="588" height="392" rx="62" fill="url(#paper)"/>
+    <rect x="288" y="344" width="448" height="250" rx="40" stroke="#2B3B4D" stroke-width="35"/>
+    <rect x="326" y="382" width="372" height="174" rx="20" fill="url(#photo)"/>
+    <rect x="358" y="514" width="184" height="22" rx="11" fill="#2B3B4D" fill-opacity="0.92"/>
+    <rect x="568" y="514" width="92" height="22" rx="11" fill="#D59A3A" fill-opacity="0.82"/>
   </g>
 
   <g filter="url(#blueShadow)">
-    <circle cx="424" cy="718" r="42" fill="url(#blue)"/>
-    <circle cx="424" cy="718" r="37" stroke="#2D72CC" stroke-width="7" stroke-opacity="0.38"/>
-    <ellipse cx="424" cy="706" rx="14" ry="11" fill="#FFFFFF" fill-opacity="0.28"/>
+    <circle cx="382" cy="774" r="54" fill="url(#blue)"/>
+    <circle cx="382" cy="774" r="46" stroke="#FFFFFF" stroke-opacity="0.40" stroke-width="8"/>
+    <ellipse cx="379" cy="754" rx="19" ry="14" fill="#FFFFFF" fill-opacity="0.30"/>
   </g>
+
+  <rect x="486" y="754" width="206" height="26" rx="13" fill="#2B3B4D" fill-opacity="0.90"/>
+  <rect x="486" y="800" width="122" height="18" rx="9" fill="#D59A3A" fill-opacity="0.76"/>
 </svg>
