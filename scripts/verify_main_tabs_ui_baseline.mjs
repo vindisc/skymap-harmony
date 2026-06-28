@@ -1,5 +1,13 @@
 import fs from 'node:fs';
 
+const baselineDocPath = 'docs/harmony/main-tabs-ui-baseline-20260628.md';
+const baselineImagePaths = [
+  'docs/assets/main-tabs-ui-baseline-20260628/home.jpg',
+  'docs/assets/main-tabs-ui-baseline-20260628/library.jpg',
+  'docs/assets/main-tabs-ui-baseline-20260628/stats.jpg',
+  'docs/assets/main-tabs-ui-baseline-20260628/my.jpg'
+];
+
 const sources = {
   home: fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8'),
   library: fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8'),
@@ -7,7 +15,8 @@ const sources = {
   my: fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8'),
   shell: fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8'),
   design: fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8'),
-  tokens: fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8')
+  tokens: fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8'),
+  baselineDoc: fs.readFileSync(baselineDocPath, 'utf8')
 };
 
 let failed = false;
@@ -36,6 +45,26 @@ function requireOrder(source, first, second, message) {
     fail(message);
   }
 }
+
+requireIncludes(sources.baselineDoc, 'HarmonyOS 四个主 Tab UI 基线（2026-06-28）', 'Main tabs UI baseline doc must exist');
+requireIncludes(sources.baselineDoc, '不建议继续开启 HarmonyOS UI 小修', 'Baseline doc must freeze further UI-only churn');
+[
+  'docs/assets/main-tabs-ui-baseline-20260628/home.jpg',
+  'docs/assets/main-tabs-ui-baseline-20260628/library.jpg',
+  'docs/assets/main-tabs-ui-baseline-20260628/stats.jpg',
+  'docs/assets/main-tabs-ui-baseline-20260628/my.jpg',
+  'node scripts/verify_main_tabs_ui_baseline.mjs'
+].forEach((marker) => requireIncludes(sources.baselineDoc, marker, 'Baseline doc must list screenshots and regression command'));
+baselineImagePaths.forEach((imagePath) => {
+  if (!fs.existsSync(imagePath)) {
+    fail(`Baseline screenshot is missing: ${imagePath}`);
+    return;
+  }
+  const size = fs.statSync(imagePath).size;
+  if (size <= 0) {
+    fail(`Baseline screenshot is empty: ${imagePath}`);
+  }
+});
 
 [
   'ScrollDirection.Vertical',
