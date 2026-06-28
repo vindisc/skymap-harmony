@@ -38,7 +38,15 @@ function forbidIncludes(source, marker, message) {
 
 [
   "subtitle: '复盘身份、存储同步和应用状态。'",
-  "description: '影响新建复盘、导出和家庭存储连接。'"
+  "description: '影响新建复盘、导出和家庭存储连接。'",
+  "subtitle: ''",
+  "description: ''",
+  'Text(\'\')',
+  'Text("")',
+  'Blank()',
+  'Spacer()',
+  'minHeight',
+  'top: AppMetrics.sectionGap'
 ].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must not keep explanatory page or section copy'));
 
 [
@@ -60,6 +68,8 @@ function forbidIncludes(source, marker, message) {
 assert(myPageSource.indexOf('this.SettingsSection()') < myPageSource.indexOf('this.AboutSection()'),
   'MyPage should show settings before app section.');
 assert(myPageSource.includes('Scroll() {'), 'MyPage must keep scroll ability.');
+assert(myPageSource.includes('const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;'), 'MyPage title-to-settings gap must be compact.');
+assert(myPageSource.includes('top: MY_PAGE_TITLE_CONTENT_GAP'), 'MyPage scroll content must not keep a large title-bottom gap.');
 assert(myPageSource.includes('bottom: MY_PAGE_BOTTOM_PADDING'), 'MyPage content must keep bottom padding for tab bar.');
 assert(myPageSource.includes('.layoutWeight(1)'), 'MyPage scroll region must not overlap bottom tab.');
 assert(myPageSource.includes('router.pushUrl({ url: REVIEWER_PROFILE_PAGE });'), 'Reviewer profile entry navigation must remain.');

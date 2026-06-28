@@ -23,6 +23,10 @@ function forbidIncludes(source, marker, message) {
   assert(!source.includes(marker), `${message}: ${marker}`);
 }
 
+function forbidRegex(source, pattern, message) {
+  assert(!pattern.test(source), message);
+}
+
 [
   '按照片、判断和卡点回看你的复盘记录。',
   '完成复盘后，这里会展示你的判断变化。',
@@ -57,6 +61,7 @@ function forbidIncludes(source, marker, message) {
 
 [
   "AppPageHeader({\n          title: '我的'",
+  'const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;',
   "title: '设置'",
   "title: '复盘人'",
   "title: '首页图片'",
@@ -65,6 +70,24 @@ function forbidIncludes(source, marker, message) {
   'bottom: MY_PAGE_BOTTOM_PADDING',
   '.layoutWeight(1)'
 ].forEach((marker) => requireIncludes(myPageSource, marker, 'MyPage must keep settings entries and tab clearance'));
+
+[
+  "subtitle: ''",
+  "description: ''",
+  'Text(\'\')',
+  'Text("")',
+  'Blank()',
+  'Spacer()',
+  'minHeight',
+  'top: AppMetrics.sectionGap'
+].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must not keep empty subtitle placeholders or large fixed top gaps'));
+
+forbidRegex(
+  myPageSource,
+  /AppPageHeader\(\{[\s\S]*?title: '我的'[\s\S]*?subtitle:/,
+  'MyPage title header must not pass an empty or hidden subtitle prop'
+);
+requireIncludes(myPageSource, 'top: MY_PAGE_TITLE_CONTENT_GAP', 'MyPage title-to-settings gap must use the compact top gap');
 
 [
   "label: '首页', activeIcon:",

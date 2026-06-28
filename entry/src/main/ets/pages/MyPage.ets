@@ -22,6 +22,7 @@ import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
 const APP_BUILD_TEXT: string = 'Harmony Beta V1';
+const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;
 const MY_PAGE_BOTTOM_PADDING: number = AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space16;
 
 @Component
@@ -263,8 +264,7 @@ export struct MyPage {
   AboutSection() {
     Column({ space: AppMetrics.space8 }) {
       SettingsSectionHeader({
-        title: '应用',
-        description: ''
+        title: '应用'
       })
 
       SettingsLinkRow({
@@ -320,7 +320,7 @@ export struct MyPage {
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: AppMetrics.sectionGap,
+          top: MY_PAGE_TITLE_CONTENT_GAP,
           bottom: MY_PAGE_BOTTOM_PADDING
         })
       }
