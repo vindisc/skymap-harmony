@@ -163,7 +163,14 @@ function encodeUtf8(value: string): ArrayBuffer {
 }
 
 function ensureDirectory(path: string): void {
-  fs.mkdirSync(path, true);
+  try {
+    fs.mkdirSync(path, true);
+  } catch (error) {
+    const message: string = describeUnknownError(error);
+    if (message.indexOf('File exists') < 0) {
+      throw new Error(message);
+    }
+  }
 }
 
 function writeTextFile(path: string, value: string): void {
@@ -514,8 +521,9 @@ export class ReviewBundleOriginalPhotoExportService {
         };
       }
 
-      ensureDirectory(paths.originalDirectory);
+      ensureDirectory(paths.root);
       ensureDirectory(`${paths.root}/assets`);
+      ensureDirectory(paths.originalDirectory);
       console.info(`[ReviewBundleOriginalPhotoExport] local_directories_ready root=${paths.root}`);
 
       console.info(`[ReviewBundleOriginalPhotoExport] original_copy_start review_id=${reviewId} bundleId=${bundleId} target=${originalRelativePath} read_method=fs.openSync_read_only uri_scheme=${sourceUriScheme} uri_digest=${sourceUriDigest}`);

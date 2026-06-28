@@ -69,6 +69,8 @@ for (const token of [
 }
 
 const missingSourceIndex = v2ServiceSource.indexOf('if (!hasOriginalSource)');
+const rootDirectoryIndex = v2ServiceSource.indexOf('ensureDirectory(paths.root)');
+const assetsDirectoryIndex = v2ServiceSource.indexOf('ensureDirectory(`${paths.root}/assets`)');
 const ensureDirectoryIndex = v2ServiceSource.indexOf('ensureDirectory(paths.originalDirectory)');
 const reviewJsonWriteIndex = v2ServiceSource.indexOf('writeTextFile(paths.reviewJson');
 const copyStartIndex = v2ServiceSource.indexOf('original_copy_start');
@@ -77,6 +79,8 @@ const reachabilityIndex = v2ServiceSource.indexOf('HomeStorageService.checkAvail
 const uploadIndex = v2ServiceSource.indexOf('HomeStorageService.uploadFilesToDirectory(');
 
 assert(missingSourceIndex >= 0 && missingSourceIndex < ensureDirectoryIndex, 'missing imageUri must stop before local bundle files are created.');
+assert(rootDirectoryIndex >= 0 && rootDirectoryIndex < assetsDirectoryIndex, 'v2 must create bundle root before assets directory.');
+assert(assetsDirectoryIndex >= 0 && assetsDirectoryIndex < ensureDirectoryIndex, 'v2 must create assets directory before assets/original.');
 assert(copyStartIndex >= 0 && copyStartIndex < reviewJsonWriteIndex, 'original photo must be copied before review.json/manifest writes.');
 assert(validationStartIndex >= 0 && validationStartIndex < reachabilityIndex, 'local bundle validation must run before home storage reachability.');
 assert(reachabilityIndex >= 0 && reachabilityIndex < uploadIndex, 'home storage reachability must run before upload.');
