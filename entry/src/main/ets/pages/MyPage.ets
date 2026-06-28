@@ -316,9 +316,11 @@ export struct MyPage {
           top: AppMetrics.pageTopPadding,
           bottom: MY_PAGE_BOTTOM_PADDING
         })
+        .height('100%')
+        .justifyContent(FlexAlign.Start)
       }
       .width('100%')
-      .layoutWeight(1)
+      .height('100%')
       .scrollBar(BarState.Off)
     }
     .width('100%')

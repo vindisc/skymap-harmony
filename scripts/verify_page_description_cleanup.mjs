@@ -71,7 +71,8 @@ function forbidRegex(source, pattern, message) {
   "title: '家庭存储'",
   "title: '同步中心'",
   'bottom: MY_PAGE_BOTTOM_PADDING',
-  '.layoutWeight(1)'
+  ".height('100%')",
+  '.justifyContent(FlexAlign.Start)'
 ].forEach((marker) => requireIncludes(myPageSource, marker, 'MyPage must keep settings entries and tab clearance'));
 
 [
@@ -95,7 +96,7 @@ forbidRegex(
   /AppPageHeader\(\{[\s\S]*?title: '我的'[\s\S]*?subtitle:/,
   'MyPage title header must not pass an empty or hidden subtitle prop'
 );
-requireIncludes(myPageSource, 'top: MY_PAGE_TITLE_CONTENT_GAP', 'MyPage title-to-settings gap must use the compact top gap');
+requireIncludes(myPageSource, '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })', 'MyPage title-to-settings gap must use the compact top gap');
 
 [
   "label: '首页', activeIcon:",

@@ -73,7 +73,8 @@ assert(myPageSource.includes('Scroll() {\n        Column() {\n          AppPageH
 assert(myPageSource.includes('.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })'), 'MyPage settings content must sit directly below the title with compact spacing.');
 assert(myPageSource.includes('top: AppMetrics.pageTopPadding'), 'MyPage scroll content must keep the normal page top padding.');
 assert(myPageSource.includes('bottom: MY_PAGE_BOTTOM_PADDING'), 'MyPage content must keep bottom padding for tab bar.');
-assert(myPageSource.includes('.layoutWeight(1)'), 'MyPage scroll region must not overlap bottom tab.');
+assert(myPageSource.includes(".height('100%')"), 'MyPage scroll region must fill the page content height.');
+assert(myPageSource.includes('.justifyContent(FlexAlign.Start)'), 'MyPage scroll content must stay pinned to the top.');
 assert(myPageSource.includes('router.pushUrl({ url: REVIEWER_PROFILE_PAGE });'), 'Reviewer profile entry navigation must remain.');
 assert(myPageSource.includes('router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });'), 'Home hero entry navigation must remain.');
 assert(myPageSource.includes('router.pushUrl({ url: HOME_STORAGE_PAGE });'), 'Home storage entry navigation must remain.');

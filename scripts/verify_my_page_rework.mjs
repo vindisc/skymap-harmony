@@ -88,7 +88,8 @@ assert(myPageSource.includes("title: '开发诊断'"), 'MyPage must keep diagnos
 assert(myPageSource.includes('运行开发诊断？'), 'Developer diagnostics must require confirmation.');
 assert(!myPageSource.includes('this.LinkRow('), 'MyPage should use SettingsLinkRow instead of the old local row.');
 assert(myPageSource.includes('bottom: MY_PAGE_BOTTOM_PADDING'), 'MyPage scroll content must keep bottom padding for the tab bar.');
-assert(myPageSource.includes('.layoutWeight(1)'), 'MyPage scroll region must keep flexible height above bottom tab.');
+assert(myPageSource.includes(".height('100%')"), 'MyPage scroll region must fill the page content height.');
+assert(myPageSource.includes('.justifyContent(FlexAlign.Start)'), 'MyPage scroll content must stay pinned to the top.');
 
 for (const [name, source] of [
   ['ReviewerProfilePage', reviewerProfileSource],
