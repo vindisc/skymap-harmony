@@ -82,7 +82,7 @@ interface ReviewBundleManifestV1 {
 
 const LOCAL_BUNDLE_DIR_NAME: string = 'review_bundles';
 const SOURCE_APP: string = 'skymap-harmonyos';
-const SOURCE_APP_VERSION: string = '0.2.0 Beta';
+const SOURCE_APP_VERSION: string = '0.1.0';
 const PLATFORM: string = 'HarmonyOS';
 const REVIEW_CARD_IMAGE_PATH: string = 'exports/review-card.png';
 const THUMBNAIL_PATH: string = 'thumbnails/thumb.jpg';

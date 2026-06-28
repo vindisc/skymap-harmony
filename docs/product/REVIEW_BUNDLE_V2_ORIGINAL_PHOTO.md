@@ -4,8 +4,6 @@
 
 本文定义 review bundle v2 的产品边界、文件结构和双端接力规则。v2 是新增的“原图复盘包”，用于把 HarmonyOS 端的原始照片和 `review.json` 一起交给 Mac 端，为后续 Mac 可编辑复盘恢复打基础。v2 不替代 v1，不修改 Review JSON v1 字段，不引入云同步、自动同步、批量导入、双向同步、远端删除或冲突自动合并。
 
-截至 Harmony Beta 0.2，含原图复盘包属于 Beta 后实验能力，不在普通导出菜单中展示。
-
 ## 一、产品定位
 
 review bundle 现在分成两类：

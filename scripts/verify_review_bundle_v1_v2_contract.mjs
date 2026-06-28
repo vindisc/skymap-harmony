@@ -66,11 +66,11 @@ for (const token of [
   "'导出复盘包（含原图）'",
   "'包含原始照片和复盘数据，适合在 Mac 端继续处理。'"
 ]) {
-  excludes(previewPage, token, 'PreviewPage Beta export copy');
+  includes(previewPage, token, 'PreviewPage v1/v2 export copy');
 }
 
 for (const token of [
-  '原始照片无法读取，请重试。',
+  '原始照片无法读取，请重新选择照片。',
   '原始照片保存失败，请重试。',
   '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。'
 ]) {
@@ -118,4 +118,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('review bundle v1/v2 contract verified: dormant services, Review JSON boundary, docs, and hidden Beta entries');
+console.log('review bundle v1/v2 contract verified: v1 export, v2 original-photo export, Review JSON boundary, user copy, and docs');

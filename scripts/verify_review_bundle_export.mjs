@@ -66,17 +66,12 @@ requireIncludes(exportServiceSource, 'static async exportBundleSnapshot(', 'Revi
 requireIncludes(exportServiceSource, "format: BUNDLE_REVIEW_CARD_MIME_TYPE", 'ReviewCardExportService');
 requireIncludes(exportServiceSource, "format: BUNDLE_THUMBNAIL_MIME_TYPE", 'ReviewCardExportService');
 
-for (const token of [
-  'ReviewBundleExportService.exportReviewBundleToHomeStorage(',
-  "this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包'",
-  "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'",
-  "@State isExportingReviewBundle: boolean = false;"
-]) {
-  if (previewPageSource.includes(token)) {
-    failed = true;
-    console.error(`PreviewPage must hide dormant review bundle entry for Beta: ${token}`);
-  }
-}
+requireIncludes(previewPageSource, 'ReviewBundleExportService.exportReviewBundleToHomeStorage(', 'PreviewPage');
+requireIncludes(previewPageSource, "this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包'", 'PreviewPage');
+requireIncludes(previewPageSource, "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'", 'PreviewPage');
+requireIncludes(previewPageSource, "@State isExportingReviewBundle: boolean = false;", 'PreviewPage');
+requireIncludes(previewPageSource, 'this.isExportSnapshotMode = true;', 'PreviewPage');
+requireIncludes(previewPageSource, 'await this.markExportedQuietly(result.remotePath);', 'PreviewPage');
 
 requireIncludes(designDocSource, '阶段 1 已实现', 'REVIEW_BUNDLE_V1_DESIGN.md');
 requireIncludes(designDocSource, '阶段 1 先由导出截图重新打包为 JPEG', 'REVIEW_BUNDLE_V1_DESIGN.md');
@@ -87,4 +82,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('review bundle export: dormant service and docs verified, Beta preview entry hidden');
+console.log('review bundle export: service, manifest, SMB upload, preview entry, and docs verified');

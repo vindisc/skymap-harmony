@@ -82,8 +82,8 @@ assert(myPageSource.includes("title: '复盘人'"), 'MyPage must expose reviewer
 assert(myPageSource.includes("title: '首页图片'"), 'MyPage must expose home hero image entry.');
 assert(myPageSource.includes('router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });'), 'MyPage home hero entry must keep navigation.');
 assert(myPageSource.includes('HomeHeroImageService.listImages'), 'MyPage must keep home hero status display.');
-assert(!myPageSource.includes("title: '家庭存储'"), 'MyPage must hide non-Beta home storage entry.');
-assert(!myPageSource.includes("title: '同步中心'"), 'MyPage must hide non-Beta sync center entry.');
+assert(myPageSource.includes("title: '家庭存储'"), 'MyPage must expose home storage entry.');
+assert(myPageSource.includes("title: '同步中心'"), 'MyPage must expose sync center entry.');
 assert(myPageSource.includes("title: '开发诊断'"), 'MyPage must keep diagnostics as a weak developer entry.');
 assert(myPageSource.includes('运行开发诊断？'), 'Developer diagnostics must require confirmation.');
 assert(!myPageSource.includes('this.LinkRow('), 'MyPage should use SettingsLinkRow instead of the old local row.');

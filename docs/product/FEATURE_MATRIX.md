@@ -20,8 +20,8 @@
 | 模板系统 | ✅ 已支持 | 🚧 规划中 | Mac 有完整模板体系；Harmony 当前主要围绕摄影复盘卡和阅读/导出模式。 |
 | 边框导出 | ✅ 已支持 | ❌ 不支持 | Mac 是主要边框与发布图导出端；Harmony 只导出复盘长图。 |
 | 批量导出 | ✅ 已支持 | ❌ 不支持 | Mac 支持多图批量导出和批量 ZIP；Harmony 当前是单次复盘图导出。 |
-| SyncSystem | 🚧 规划中 | 🚧 规划中 | 当前 Beta 只承诺 `review.json` 手动交换；review bundle、manifest、扫描、自动导入和自动同步不进入 Beta 基线。 |
-| SMB | ❌ 不支持 | 🚧 规划中 | Harmony 保留家庭存储实验代码和验证脚本，但普通用户入口已从 Beta 主路径隐藏，不能按稳定 Beta 能力对外承诺。 |
+| SyncSystem | 🚧 规划中 | 🚧 规划中 | 当前只完成 Sync v0.5 手动文件交换 + Harmony 最小 SMB 上传能力，不等于同步系统完成；review bundle、manifest、扫描、自动导入和自动同步仍未进入 Beta 基线。 |
+| SMB | ❌ 不支持 | 🚧 规划中 | Harmony 当前代码基线已恢复 SMB 家庭存储最小能力：家庭存储页配置、连接测试、从阅读页上传 `review.json`。但仍未完成当前轮次真机回归，暂不能按稳定 Beta 能力对外承诺。 |
 | WebDAV | ❌ 不支持 | ❌ 不支持 | WebDAV 不在当前恢复范围内；历史上做过实现探索，但本轮未恢复到当前主线。 |
 | 导出归档 | ✅ 已支持 | 🚧 规划中 | Mac 已具备导出文件和复盘 sidecar 归档基础；Harmony 有本地历史和导出备份，但缺统一归档模型。 |
 | 数据统计 | 🚧 规划中 | ✅ 已支持 | Harmony 首页已有复盘总数和状态统计；Mac 需要面向复盘库和成长系统建立统计口径。 |
@@ -34,9 +34,9 @@
 
 - Mac Client 是模板、资料、预设、边框、批量导出和交付中心。
 - Harmony Client 是快速复盘、移动阅读、复盘库查看和 `review.json` 手动导出中心。
-- SyncSystem 是连接 Harmony、家庭存储、Mac 和 Review Library 的产品能力，不包含云服务器、账号体系或第三方后端；当前 Beta 基线只覆盖 `review.json` 手动文件交换。
-- 统一缺口集中在家庭存储同步、review bundle、扫描增强和成长统计，这些不作为 Harmony Beta 0.2 对外承诺。
-- SMB 保留为 Beta 后实验方向，当前不进入普通用户主路径。
+- SyncSystem 是连接 Harmony、家庭存储、Mac 和 Review Library 的产品能力，不包含云服务器、账号体系或第三方后端；当前 Beta 基线只覆盖手动文件交换。
+- 统一缺口集中在家庭存储同步、review bundle、扫描增强和成长统计。
+- SMB 已恢复到当前 Harmony 代码基线，但仍需真机回归后才能决定是否进入 Beta 对外承诺。
 - WebDAV 仍停留在历史探索状态，不在当前主线恢复范围内。
 
 后续新增能力必须先更新本矩阵，再进入客户端实现。

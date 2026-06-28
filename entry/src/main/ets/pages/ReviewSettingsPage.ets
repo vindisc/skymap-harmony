@@ -1,7 +1,9 @@
+import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
+import { HOME_STORAGE_PAGE } from '../app/AppRouter';
 import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
@@ -127,6 +129,10 @@ struct ReviewSettingsPage {
     }
   }
 
+  private openHomeStorageSettings(): void {
+    router.pushUrl({ url: HOME_STORAGE_PAGE });
+  }
+
   private isKeyboardActive(): boolean {
     return this.keyboardHeight > 0;
   }
@@ -235,6 +241,43 @@ struct ReviewSettingsPage {
     .height(SETTINGS_ACTION_BAR_HEIGHT)
   }
 
+  @Builder
+  HomeStorageLink() {
+    Row({ space: AppMetrics.cardGap }) {
+      Column({ space: AppMetrics.space8 }) {
+        Text('家庭存储')
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .width('100%')
+
+        Text('连接与凭据')
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      Text('›')
+        .fontSize(AppTypography.cardTitle)
+        .fontColor(AppColors.mutedText)
+        .opacity(0.56)
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.cardPadding)
+    .width('100%')
+    .constraintSize({ minHeight: 68, maxHeight: 76 })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+    .onClick(() => {
+      this.openHomeStorageSettings();
+    })
+  }
+
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
       Column() {
@@ -250,6 +293,7 @@ struct ReviewSettingsPage {
               this.LoadingSettings()
             }
 
+            this.HomeStorageLink()
           }
           .alignItems(HorizontalAlign.Start)
           .width('100%')

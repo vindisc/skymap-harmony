@@ -34,11 +34,12 @@ expectIncludes(
   'MyPage'
 );
 expectIncludes(myPageSource, 'refreshPageData(): void {', 'MyPage');
-expectIncludes(myPageSource, 'private resolveReviewerSummary(): string {', 'MyPage');
-expectIncludes(myPageSource, 'HomeHeroImageService.listImages', 'MyPage');
-if (myPageSource.includes("title: '家庭存储'") || myPageSource.includes("title: '同步中心'")) {
-  fail('MyPage must hide non-Beta storage and sync settings entries.');
-}
+expectIncludes(
+  myPageSource,
+  'return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());',
+  'MyPage'
+);
+expectIncludes(myPageSource, 'return this.resolveReviewerSummary();', 'MyPage');
 
 expectIncludes(appShellSource, '@State myRefreshToken: number = 0;', 'AppShellPage');
 expectIncludes(appShellSource, 'this.myRefreshToken += 1;', 'AppShellPage');

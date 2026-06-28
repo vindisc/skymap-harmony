@@ -124,25 +124,21 @@ assert(copyStartIndex >= 0 && copyStartIndex < availabilityIndex, 'v2 must copy 
 assert(validationStartIndex >= 0 && validationStartIndex < availabilityIndex, 'v2 must validate local bundle before home storage reachability.');
 assert(availabilityIndex >= 0 && availabilityIndex < uploadStartIndex, 'v2 must check reachability before upload.');
 
+assertIncludes(previewSource, 'ReviewBundleOriginalPhotoExportService', 'PreviewPage');
+assertIncludes(previewSource, '@State isExportingOriginalPhotoBundle: boolean = false;', 'PreviewPage');
+assertIncludes(previewSource, 'exportOriginalPhotoReviewBundleToHomeStorage()', 'PreviewPage');
+assertIncludes(previewSource, "'导出复盘包（含原图）'", 'PreviewPage');
+assertIncludes(previewSource, "'包含原始照片和复盘数据，适合在 Mac 端继续处理。'", 'PreviewPage');
+assertIncludes(previewSource, "'导出复盘包'", 'PreviewPage');
+assertIncludes(previewSource, "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'", 'PreviewPage');
 assertIncludes(previewSource, "'导出 review.json'", 'PreviewPage');
 assertIncludes(previewSource, "'复制复盘数据'", 'PreviewPage');
-for (const token of [
-  'ReviewBundleOriginalPhotoExportService',
-  '@State isExportingOriginalPhotoBundle: boolean = false;',
-  'exportOriginalPhotoReviewBundleToHomeStorage()',
-  "'导出复盘包（含原图）'",
-  "'包含原始照片和复盘数据，适合在 Mac 端继续处理。'",
-  "'导出复盘包'",
-  "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'"
-]) {
-  assertNotIncludes(previewSource, token, 'PreviewPage Beta export entry');
-}
 
 for (const token of [
   "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT: string = '正在导出含原图复盘包…'",
   "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT: string = '含原图复盘包已导出到家庭存储'",
   "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT: string = '含原图复盘包导出失败，请重试。'",
-  "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_READ_FAILED_TEXT: string = '原始照片无法读取，请重试。'",
+  "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_READ_FAILED_TEXT: string = '原始照片无法读取，请重新选择照片。'",
   "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_COPY_FAILED_TEXT: string = '原始照片保存失败，请重试。'",
   "REVIEW_FLOW_BUNDLE_EXPORT_AUTH_FAILED_TEXT: string = '家庭存储账号或密码不正确，请检查设置'",
   "REVIEW_FLOW_BUNDLE_EXPORT_UNREACHABLE_TEXT: string = '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。'"
@@ -159,7 +155,7 @@ const feedbackUserCopy = [
   "正在导出含原图复盘包…",
   "含原图复盘包已导出到家庭存储",
   "含原图复盘包导出失败，请重试。",
-  "原始照片无法读取，请重试。",
+  "原始照片无法读取，请重新选择照片。",
   "原始照片保存失败，请重试。",
   "请先配置家庭存储",
   "无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。",
@@ -187,4 +183,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('review bundle v2 original photo export: dormant service, manifest, original copy, validation, upload, copy, and hidden Beta entry verified');
+console.log('review bundle v2 original photo export: entry, service, manifest, original copy, validation, upload, copy, and v1 boundary verified');

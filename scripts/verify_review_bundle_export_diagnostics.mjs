@@ -84,9 +84,9 @@ for (const relativePath of [
   assertIncludes(bundleServiceSource, relativePath, 'Review bundle upload file list');
 }
 
-assertNotIncludes(previewSource, 'REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT', 'PreviewPage Beta user feedback');
-assertNotIncludes(previewSource, 'REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT', 'PreviewPage Beta user feedback');
-assertNotIncludes(previewSource, 'result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT', 'PreviewPage Beta user feedback');
+assertIncludes(previewSource, 'REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT', 'PreviewPage user feedback');
+assertIncludes(previewSource, 'REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT', 'PreviewPage user feedback');
+assertIncludes(previewSource, 'result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT', 'PreviewPage user feedback');
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT: string = '复盘包导出失败，请重试'", 'ReviewFlowFeedback');
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT: string = '请先配置家庭存储'", 'ReviewFlowFeedback');
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_UNREACHABLE_TEXT: string = '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。'", 'ReviewFlowFeedback');
@@ -95,7 +95,7 @@ const previewUserCopyStart = previewSource.indexOf('private async exportReviewBu
 const previewUserCopyEnd = previewSource.indexOf('private async waitForExportLayout()');
 const previewBundleExportSource = previewUserCopyStart >= 0 && previewUserCopyEnd > previewUserCopyStart
   ? previewSource.slice(previewUserCopyStart, previewUserCopyEnd)
-  : '';
+  : previewSource;
 
 const bundleFeedbackCopy = [
   "REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT: string = '复盘包已导出到家庭存储'",
@@ -121,4 +121,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('review bundle export diagnostics: logs, chunked SMB write, fallback thumbnail, upload list, safe copy, and hidden Beta entry verified');
+console.log('review bundle export diagnostics: logs, chunked SMB write, fallback thumbnail, upload list, and safe user copy verified');

@@ -6,12 +6,11 @@ const exportServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewJ
 let failed = false;
 
 const requiredPreviewStrings = [
-  "this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json'",
+  "this.ExportSheetAction('导出 JSON'",
   'private async exportReviewJson(): Promise<void>',
-  'await this.markExportedQuietly(result.path)',
-  'this.actionFeedbackText = result.message.length > 0 ? result.message : REVIEW_FLOW_EXPORT_SUCCESS_TEXT;',
-  'this.actionFeedbackText = result.message;',
-  'this.actionFeedbackText = result.message.length > 0 ? result.message : REVIEW_FLOW_EXPORT_FAILED_TEXT;'
+  'ReviewCardHistoryService.markExported(context, this.document, result.path)',
+  "已导出 ${result.fileName}",
+  'Text(this.lastReviewJsonExportMessage)'
 ];
 
 for (const token of requiredPreviewStrings) {
@@ -40,12 +39,12 @@ for (const token of requiredServiceStrings) {
 }
 
 function resolveExportFileName(sourceFileName, updatedAt) {
-  const stem = (sourceFileName
+  const stem = sourceFileName
     .replace(/\.[^.]+$/, '')
     .replace(/[^0-9A-Za-z\u4E00-\u9FFF._-]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^[-._]+|[-._]+$/g, '')
-    .slice(0, 48) || 'review-1718260000000');
+    .slice(0, 48) || 'review';
   const date = new Date(updatedAt);
   const pad = (value) => `${value}`.padStart(2, '0');
   const timestamp = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
@@ -59,14 +58,9 @@ if (namedFile !== '20260613-203045-IMG_2048.review.json') {
 }
 
 const fallbackFile = resolveExportFileName('', Date.UTC(2026, 5, 13, 12, 30, 45));
-if (fallbackFile !== '20260613-203045-review-1718260000000.review.json') {
+if (fallbackFile !== '20260613-203045-review.review.json') {
   failed = true;
   console.error(`Unexpected fallback review.json file: ${fallbackFile}`);
-}
-
-if (exportServiceSource.includes("sourceFileName.length > 0 ? sanitizeFileStem(sourceFileName) : 'review'")) {
-  failed = true;
-  console.error('ReviewJsonExportService must not generate the generic review.review.json fallback name.');
 }
 
 if (failed) {

@@ -36,24 +36,23 @@ assertIncludes(previewSource, "this.ExportSheetSectionTitle('常用')", 'Preview
 assertIncludes(previewSource, "this.ExportSheetSectionTitle('高级')", 'Preview export sheet');
 assertIncludes(previewSource, "'导出图片'", 'Preview export sheet');
 assertIncludes(previewSource, "'生成这张复盘卡片图片。'", 'Preview export sheet');
+assertIncludes(previewSource, "'导出复盘包'", 'Preview export sheet');
+assertIncludes(previewSource, "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'", 'Preview export sheet');
 assertIncludes(previewSource, "'导出 review.json'", 'Preview export sheet');
 assertIncludes(previewSource, "'只导出复盘数据文件，不包含图片。'", 'Preview export sheet');
 assertIncludes(previewSource, "'复制复盘数据'", 'Preview export sheet');
 assertIncludes(previewSource, "'复制当前复盘的文本数据。'", 'Preview export sheet');
 
 assertNotIncludes(previewSource, "'上传家庭存储'", 'Preview export sheet');
-assertNotIncludes(previewSource, "'导出复盘包'", 'Preview export sheet');
-assertNotIncludes(previewSource, "'导出复盘包（含原图）'", 'Preview export sheet');
 assertNotIncludes(previewSource, 'uploadReviewJsonToHomeStorage', 'Preview export sheet');
 assertNotIncludes(previewSource, "'复制数据'", 'Preview export sheet');
 assertNotIncludes(previewSource, 'isUploadingHomeStorage', 'Preview export sheet');
 
 assertIncludes(syncCenterSource, "title: '同步中心'", 'SyncCenterPage');
-assertIncludes(syncCenterSource, '家庭存储仍是 Beta 后实验能力。当前 Beta 请使用导出 review.json 完成手动交换。', 'SyncCenterPage');
+assertIncludes(syncCenterSource, '家庭存储通常需要连接家庭 Wi-Fi 或 VPN 后使用。离开家庭网络时，请先连接 VPN / Tailscale，再导出复盘包。', 'SyncCenterPage');
 assertIncludes(syncCenterSource, '当前家庭存储需要在同一网络或 VPN 下使用。', 'SyncCenterPage');
 assertIncludes(syncCenterSource, "label: this.isTesting ? '检查中…' : '检查家庭存储'", 'SyncCenterPage');
-assertNotIncludes(myPageSource, "title: '同步中心'", 'MyPage');
-assertNotIncludes(myPageSource, "title: '家庭存储'", 'MyPage');
+assertIncludes(myPageSource, "value: '查看家庭存储连接状态。'", 'MyPage');
 
 const ordinaryCopySources = [
   ['PreviewPage', previewSource],

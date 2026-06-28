@@ -21,12 +21,22 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
 import { ReviewJsonExportResult, ReviewJsonExportService } from '../services/ReviewJsonExportService';
+import { ReviewBundleExportResult, ReviewBundleExportService } from '../services/ReviewBundleExportService';
+import {
+  ReviewBundleOriginalPhotoExportResult,
+  ReviewBundleOriginalPhotoExportService
+} from '../services/ReviewBundleOriginalPhotoExportService';
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
   REVIEW_FLOW_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_EXPORT_PENDING_TEXT,
   REVIEW_FLOW_EXPORT_SUCCESS_TEXT,
+  REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT,
+  REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT,
+  REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT,
+  REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT,
+  REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
@@ -50,6 +60,8 @@ struct PreviewPage {
   @State isSaving: boolean = false;
   @State isExporting: boolean = false;
   @State isExportingReviewJson: boolean = false;
+  @State isExportingReviewBundle: boolean = false;
+  @State isExportingOriginalPhotoBundle: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State isExportMenuVisible: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
@@ -243,26 +255,100 @@ struct PreviewPage {
       );
       if (result.success) {
         await this.markExportedQuietly(result.path);
-        this.actionFeedbackText = result.message.length > 0 ? result.message : REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
-        promptAction.showToast({ message: this.actionFeedbackText });
+        this.actionFeedbackText = REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
+        promptAction.showToast({ message: REVIEW_FLOW_EXPORT_SUCCESS_TEXT });
         return;
       }
 
       if (result.cancelled) {
-        this.actionFeedbackText = result.message;
-        if (result.message.length > 0) {
-          promptAction.showToast({ message: result.message });
-        }
+        this.actionFeedbackText = '';
         return;
       }
 
-      this.actionFeedbackText = result.message.length > 0 ? result.message : REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      promptAction.showToast({ message: this.actionFeedbackText });
+      this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
+      promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
     } catch (error) {
       this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
       promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
     } finally {
       this.isExportingReviewJson = false;
+    }
+  }
+
+  private async exportReviewBundleToHomeStorage(): Promise<void> {
+    if (this.isExportingReviewBundle) {
+      return;
+    }
+
+    this.isExportingReviewBundle = true;
+    this.isExportSnapshotMode = true;
+    this.actionFeedbackText = '复盘包导出中…';
+    try {
+      await this.waitForExportLayout();
+      const context = this.getAbilityContext();
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
+      const result: ReviewBundleExportResult = await ReviewBundleExportService.exportReviewBundleToHomeStorage(
+        context,
+        this.document,
+        reviewerName,
+        this.getExportComponentId(),
+        this.getExportCanvasWidth(),
+        this.getExportCanvasHeight(),
+        () => {
+          this.isExportSnapshotMode = false;
+        }
+      );
+      if (result.success) {
+        await this.markExportedQuietly(result.remotePath);
+        this.actionFeedbackText = REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT;
+        promptAction.showToast({ message: REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT });
+        return;
+      }
+      console.error(`[PreviewPage] 复盘包导出失败：${result.message}`);
+      const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
+      this.actionFeedbackText = failedText;
+      promptAction.showToast({ message: failedText });
+    } catch (error) {
+      console.error(`[PreviewPage] 复盘包导出异常：${error}`);
+      this.actionFeedbackText = REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
+      promptAction.showToast({ message: REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT });
+    } finally {
+      this.isExportSnapshotMode = false;
+      this.isExportingReviewBundle = false;
+    }
+  }
+
+  private async exportOriginalPhotoReviewBundleToHomeStorage(): Promise<void> {
+    if (this.isExportingOriginalPhotoBundle) {
+      return;
+    }
+
+    this.isExportingOriginalPhotoBundle = true;
+    this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT;
+    try {
+      const context = this.getAbilityContext();
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
+      const result: ReviewBundleOriginalPhotoExportResult = await ReviewBundleOriginalPhotoExportService.exportOriginalPhotoReviewBundleToHomeStorage(
+        context,
+        this.document,
+        reviewerName
+      );
+      if (result.success) {
+        await this.markExportedQuietly(result.remotePath);
+        this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT;
+        promptAction.showToast({ message: REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT });
+        return;
+      }
+      console.error(`[PreviewPage] 含原图复盘包导出失败：${result.message}`);
+      const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
+      this.actionFeedbackText = failedText;
+      promptAction.showToast({ message: failedText });
+    } catch (error) {
+      console.error(`[PreviewPage] 含原图复盘包导出异常：${error}`);
+      this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
+      promptAction.showToast({ message: REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT });
+    } finally {
+      this.isExportingOriginalPhotoBundle = false;
     }
   }
 
@@ -292,7 +378,9 @@ struct PreviewPage {
   private isActionBusy(): boolean {
     return this.isSaving ||
       this.isExporting ||
-      this.isExportingReviewJson;
+      this.isExportingReviewJson ||
+      this.isExportingReviewBundle ||
+      this.isExportingOriginalPhotoBundle;
   }
 
   private openExportMenu(): void {
@@ -540,7 +628,15 @@ struct PreviewPage {
             this.exportImage();
           })
 
+          this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包', '包含复盘数据和导出图，用于家庭存储和 Mac 接力。', this.isActionBusy(), () => {
+            this.exportReviewBundleToHomeStorage();
+          })
+
           this.ExportSheetSectionTitle('高级')
+
+          this.ExportSheetAction(this.isExportingOriginalPhotoBundle ? '导出中…' : '导出复盘包（含原图）', '包含原始照片和复盘数据，适合在 Mac 端继续处理。', this.isActionBusy(), () => {
+            this.exportOriginalPhotoReviewBundleToHomeStorage();
+          })
 
           this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json', '只导出复盘数据文件，不包含图片。', this.isActionBusy(), () => {
             this.exportReviewJson();

@@ -64,14 +64,14 @@ assertIncludes(bundleServiceSource, 'message: availabilityResult.message', 'Revi
 assertIncludes(bundleServiceSource, 'errorType: availabilityResult.errorType', 'ReviewBundleExportService preflight error type');
 assertIncludes(bundleServiceSource, "message: '复盘包导出失败，请重试'", 'ReviewBundleExportService generic upload failure');
 
-assertNotIncludes(previewSource, 'result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT', 'PreviewPage must hide non-Beta bundle failure copy');
+assertIncludes(previewSource, 'result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT', 'PreviewPage failure copy');
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_UNREACHABLE_TEXT: string = '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。'", 'ReviewFlowFeedback');
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_AUTH_FAILED_TEXT: string = '家庭存储账号或密码不正确，请检查设置'", 'ReviewFlowFeedback');
 
 assertIncludes(syncCenterSource, '当前家庭存储需要在同一网络或 VPN 下使用。', 'SyncCenterPage');
-assertIncludes(syncCenterSource, '家庭存储仍是 Beta 后实验能力。当前 Beta 请使用导出 review.json 完成手动交换。', 'SyncCenterPage');
+assertIncludes(syncCenterSource, '家庭存储通常需要连接家庭 Wi-Fi 或 VPN 后使用。离开家庭网络时，请先连接 VPN / Tailscale，再导出复盘包。', 'SyncCenterPage');
 assertIncludes(homeStoragePageSource, '适合在家庭 Wi-Fi 内使用。外出时需要先连接 VPN / Tailscale 等安全网络，再访问家庭存储。', 'HomeStoragePage');
-assertNotIncludes(reviewSettingsSource, "Text('连接与凭据')", 'ReviewSettingsPage must hide non-Beta storage entry');
+assertIncludes(reviewSettingsSource, "Text('连接与凭据')", 'ReviewSettingsPage');
 
 const ordinaryUserCopy = [
   previewSource,
@@ -96,6 +96,7 @@ for (const forbiddenFile of [
   'entry/src/main/ets/services/ReviewCardExchangeSchema.ets',
   'entry/src/main/ets/services/ReviewCardRdbModel.ets',
   'entry/src/main/module.json5',
+  'AppScope/app.json5',
   'build-profile.json5',
   'entry/build-profile.json5'
 ]) {
