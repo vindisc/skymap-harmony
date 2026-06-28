@@ -6,20 +6,16 @@ import {
   AppColors,
   AppMetrics,
   AppPageHeader,
-  AppTypography,
   SettingsEntryTone,
   SettingsLinkRow,
   SettingsSectionHeader
 } from '../components/AppDesign';
-import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import {
   RdbDiagnosticsResult,
   RdbMigrationDiagnosticsResult,
   ReviewCardRdbDiagnosticsService
 } from '../services/ReviewCardRdbDiagnosticsService';
 import { ENABLE_RDB_DIAGNOSTICS_ENTRY } from '../services/ReviewFlowFeedback';
-import { ReviewProjectService } from '../services/ReviewProjectService';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { HomeHeroImageService } from '../services/HomeHeroImageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
@@ -34,13 +30,10 @@ export struct MyPage {
   @Prop @Watch('refreshPageData') refreshToken: number = 0;
   @State reviewerName: string = '';
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
-  @State reviewCount: number = 0;
-  @State validReviewCount: number = 0;
   @State homeHeroImageCount: number = 0;
   @State isRdbDiagnosticsRunning: boolean = false;
   @State rdbDiagnosticsSummary: string = '未运行';
   @State rdbDiagnosticsStatus: string = '开发';
-  @State dataLoadFailed: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -62,22 +55,6 @@ export struct MyPage {
     const requestId: number = this.loadRequestId + 1;
     this.loadRequestId = requestId;
     const context = this.getAbilityContext();
-
-    try {
-      const historyItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      if (requestId !== this.loadRequestId) {
-        return;
-      }
-      const summary = ReviewProjectService.buildHomeSummary(historyItems);
-      this.reviewCount = summary.recordCount;
-      this.validReviewCount = summary.stats.validCount;
-      this.dataLoadFailed = false;
-    } catch (error) {
-      if (requestId !== this.loadRequestId) {
-        return;
-      }
-      this.dataLoadFailed = true;
-    }
 
     this.reviewerName = await ReviewSettingsService.loadReviewerName(context);
     if (requestId !== this.loadRequestId) {
@@ -160,17 +137,6 @@ export struct MyPage {
     return SettingsEntryTone.MUTED;
   }
 
-  private resolveProfileName(): string {
-    return this.resolveReviewerSummary();
-  }
-
-  private resolveReviewCountSummary(): string {
-    if (this.dataLoadFailed) {
-      return '复盘统计暂时无法刷新';
-    }
-    return `${this.reviewCount} 次复盘 · ${this.validReviewCount} 次成立`;
-  }
-
   private openReviewerProfile(): void {
     router.pushUrl({ url: REVIEWER_PROFILE_PAGE });
   }
@@ -241,75 +207,6 @@ export struct MyPage {
     } finally {
       this.isRdbDiagnosticsRunning = false;
     }
-  }
-
-  @Builder
-  IdentityCard() {
-    Column({ space: AppMetrics.space16 }) {
-      Column({ space: 4 }) {
-        Text('当前复盘人')
-          .fontSize(AppTypography.meta)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.metaLineHeight)
-          .width('100%')
-
-        Text(this.resolveProfileName())
-          .fontSize(AppTypography.profileName)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.text)
-          .lineHeight(AppTypography.profileNameLineHeight)
-          .width('100%')
-
-        Text(this.resolveReviewCountSummary())
-          .fontSize(13)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.captionLineHeight)
-          .width('100%')
-      }
-      .alignItems(HorizontalAlign.Start)
-
-      Row({ space: AppMetrics.space16 }) {
-        Column({ space: 4 }) {
-          Text(`${this.reviewCount}`)
-            .fontSize(AppTypography.sectionTitle)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.primary)
-            .lineHeight(AppTypography.sectionTitleLineHeight)
-
-          Text('累计复盘')
-            .fontSize(AppTypography.meta)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.metaLineHeight)
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-
-        Column({ space: 4 }) {
-          Text(`${this.validReviewCount}`)
-            .fontSize(AppTypography.sectionTitle)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.primary)
-            .lineHeight(AppTypography.sectionTitleLineHeight)
-
-          Text('成立记录')
-            .fontSize(AppTypography.meta)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.metaLineHeight)
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-      }
-      .width('100%')
-    }
-    .alignItems(HorizontalAlign.Start)
-    .padding(AppMetrics.cardPadding)
-    .width('100%')
-    .constraintSize({ minHeight: 148 })
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: AppColors.border })
   }
 
   @Builder
@@ -416,8 +313,6 @@ export struct MyPage {
 
       Scroll() {
         Column({ space: AppMetrics.sectionGap }) {
-          this.IdentityCard()
-
           this.SettingsSection()
 
           this.AboutSection()

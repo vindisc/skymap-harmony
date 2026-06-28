@@ -91,7 +91,6 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
 
 [
   "title: '我的'",
-  'this.IdentityCard()',
   'this.SettingsSection()',
   'this.AboutSection()',
   "title: '首页图片'",
@@ -101,6 +100,15 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
   "title: '同步中心'",
   "title: '家庭存储'"
 ].forEach((marker) => requireIncludes(sources.myPage, marker, 'MyPage missing current personal-center marker'));
+
+[
+  'this.IdentityCard()',
+  "Text('当前复盘人')",
+  "Text('累计复盘')",
+  "Text('成立记录')",
+  'ReviewCardHistoryService.load(context)',
+  'ReviewProjectService.buildHomeSummary'
+].forEach((marker) => forbidIncludes(sources.myPage, marker, 'MyPage must stay focused on settings instead of profile/stat cards'));
 
 [
   'this.HeaderRow()',

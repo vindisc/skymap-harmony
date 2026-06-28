@@ -5,7 +5,6 @@ const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.et
 const historyServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardHistoryService.ets', 'utf8');
 const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
 const reviewJsonExportServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewJsonExportService.ets', 'utf8');
-const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
 const projectServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewProjectService.ets', 'utf8');
 const homeDashboardPresenterSource = fs.readFileSync('entry/src/main/ets/services/HomeDashboardPresenter.ets', 'utf8');
 
@@ -51,9 +50,6 @@ assert(!homePageSource.includes('@State dashboardStats'),
   'return ReviewProjectService.buildDashboardStats(items).streakDays;',
   'state.historyLoadFailed = true;'
 ].forEach((marker) => requireIncludes(homeDashboardPresenterSource, marker, 'HomeDashboardPresenter missing summary marker'));
-
-requireIncludes(myPageSource, 'ReviewProjectService.buildHomeSummary(historyItems)', 'MyPage identity stats must use the same all-history summary as HomePage.');
-requireIncludes(myPageSource, 'this.homeHeroImageCount = (await HomeHeroImageService.listImages(context)).length;', 'MyPage must refresh home hero status with settings data.');
 
 [
   "@Prop @Watch('refreshHomeData') refreshToken",
