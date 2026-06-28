@@ -60,8 +60,11 @@ function forbidRegex(source, pattern, message) {
 ].forEach((marker) => requireIncludes(statsPageSource, marker, 'StatsPage must keep stats cards and empty-state guidance'));
 
 [
-  "AppPageHeader({\n          title: '我的'",
+  "AppPageHeader({\n            title: '我的'",
   'const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;',
+  'Scroll() {\n        Column() {\n          AppPageHeader({',
+  '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })',
+  'top: AppMetrics.pageTopPadding',
   "title: '设置'",
   "title: '复盘人'",
   "title: '首页图片'",
@@ -82,6 +85,11 @@ function forbidRegex(source, pattern, message) {
   'top: AppMetrics.sectionGap'
 ].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must not keep empty subtitle placeholders or large fixed top gaps'));
 
+forbidRegex(
+  myPageSource,
+  /Column\(\) \{\s*Column\(\) \{\s*AppPageHeader\(\{[\s\S]*?title: '我的'/,
+  'MyPage must not split the title and settings content into separate vertical containers'
+);
 forbidRegex(
   myPageSource,
   /AppPageHeader\(\{[\s\S]*?title: '我的'[\s\S]*?subtitle:/,

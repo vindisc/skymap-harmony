@@ -61,9 +61,10 @@ assert(!myPageSource.includes('Blank()'), 'MyPage must not use Blank as a hidden
 assert(!myPageSource.includes('Spacer()'), 'MyPage must not use Spacer as a hidden subtitle placeholder.');
 assert(!myPageSource.includes('minHeight'), 'MyPage must not reserve fixed top header height.');
 assert(!myPageSource.includes('SettingsPageHeader({\n          title: \'我的\''), 'MyPage root title must not use compact settings header.');
-assert(myPageSource.includes('Scroll() {\n        Column({ space: AppMetrics.sectionGap }) {'), 'MyPage settings content must scroll below a fixed title header.');
+assert(myPageSource.includes('Scroll() {\n        Column() {\n          AppPageHeader({'), 'MyPage title and settings content must share the same scroll flow.');
+assert(myPageSource.includes('Column({ space: AppMetrics.sectionGap }) {\n            this.SettingsSection()'), 'MyPage settings and app sections must keep section spacing.');
 assert(myPageSource.includes('const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;'), 'MyPage should define a compact title-to-content gap.');
-assert(myPageSource.includes('top: MY_PAGE_TITLE_CONTENT_GAP'), 'MyPage scroll content should start below the fixed title with compact spacing.');
+assert(myPageSource.includes('.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })'), 'MyPage settings content should sit below the title with compact spacing.');
 assert(!myPageSource.includes('top: AppMetrics.sectionGap'), 'MyPage must not keep the old large title-to-content gap.');
 assert(myPageSource.indexOf('this.SettingsSection()') < myPageSource.indexOf('this.AboutSection()'), 'MyPage settings section must appear before app section.');
 assert(!myPageSource.includes('this.IdentityCard()'), 'MyPage must not render the old identity card.');

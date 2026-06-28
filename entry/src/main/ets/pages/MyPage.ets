@@ -294,33 +294,26 @@ export struct MyPage {
 
   build() {
     Column() {
-      Column() {
-        AppPageHeader({
-          title: '我的'
-        })
-      }
-      .padding({
-        left: AppMetrics.pagePadding,
-        right: AppMetrics.pagePadding,
-        top: AppMetrics.pageTopPadding,
-        bottom: 0
-      })
-      .width('100%')
-      .alignItems(HorizontalAlign.Start)
-      .backgroundColor(AppColors.pageBackground)
-
       Scroll() {
-        Column({ space: AppMetrics.sectionGap }) {
-          this.SettingsSection()
+        Column() {
+          AppPageHeader({
+            title: '我的'
+          })
 
-          this.AboutSection()
+          Column({ space: AppMetrics.sectionGap }) {
+            this.SettingsSection()
+
+            this.AboutSection()
+          }
+          .width('100%')
+          .margin({ top: MY_PAGE_TITLE_CONTENT_GAP })
         }
         .alignItems(HorizontalAlign.Start)
         .width('100%')
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: MY_PAGE_TITLE_CONTENT_GAP,
+          top: AppMetrics.pageTopPadding,
           bottom: MY_PAGE_BOTTOM_PADDING
         })
       }

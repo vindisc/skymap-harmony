@@ -69,7 +69,9 @@ assert(myPageSource.indexOf('this.SettingsSection()') < myPageSource.indexOf('th
   'MyPage should show settings before app section.');
 assert(myPageSource.includes('Scroll() {'), 'MyPage must keep scroll ability.');
 assert(myPageSource.includes('const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;'), 'MyPage title-to-settings gap must be compact.');
-assert(myPageSource.includes('top: MY_PAGE_TITLE_CONTENT_GAP'), 'MyPage scroll content must not keep a large title-bottom gap.');
+assert(myPageSource.includes('Scroll() {\n        Column() {\n          AppPageHeader({'), 'MyPage title must live in the same scroll content flow as settings.');
+assert(myPageSource.includes('.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })'), 'MyPage settings content must sit directly below the title with compact spacing.');
+assert(myPageSource.includes('top: AppMetrics.pageTopPadding'), 'MyPage scroll content must keep the normal page top padding.');
 assert(myPageSource.includes('bottom: MY_PAGE_BOTTOM_PADDING'), 'MyPage content must keep bottom padding for tab bar.');
 assert(myPageSource.includes('.layoutWeight(1)'), 'MyPage scroll region must not overlap bottom tab.');
 assert(myPageSource.includes('router.pushUrl({ url: REVIEWER_PROFILE_PAGE });'), 'Reviewer profile entry navigation must remain.');
