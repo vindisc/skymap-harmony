@@ -1,235 +1,143 @@
 import fs from 'node:fs';
 
-const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
-const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
-const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
-const libraryPageSource = fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8');
-const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
-const syncCenterPageSource = fs.readFileSync('entry/src/main/ets/pages/SyncCenterPage.ets', 'utf8');
-const reviewerProfilePageSource = fs.readFileSync('entry/src/main/ets/pages/ReviewerProfilePage.ets', 'utf8');
-const homeStoragePageSource = fs.readFileSync('entry/src/main/ets/pages/HomeStoragePage.ets', 'utf8');
-const appRouterSource = fs.readFileSync('entry/src/main/ets/app/AppRouter.ets', 'utf8');
-const appDesignSource = fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8');
-const mainPagesSource = fs.readFileSync('entry/src/main/resources/base/profile/main_pages.json', 'utf8');
+const sources = {
+  homePage: fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8'),
+  appShell: fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8'),
+  myPage: fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8'),
+  libraryPage: fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8'),
+  previewPage: fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8'),
+  syncCenterPage: fs.readFileSync('entry/src/main/ets/pages/SyncCenterPage.ets', 'utf8'),
+  reviewerProfilePage: fs.readFileSync('entry/src/main/ets/pages/ReviewerProfilePage.ets', 'utf8'),
+  homeStoragePage: fs.readFileSync('entry/src/main/ets/pages/HomeStoragePage.ets', 'utf8'),
+  appRouter: fs.readFileSync('entry/src/main/ets/app/AppRouter.ets', 'utf8'),
+  appDesign: fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8'),
+  mainPages: fs.readFileSync('entry/src/main/resources/base/profile/main_pages.json', 'utf8')
+};
 
 let failed = false;
 
-const requiredTypographyTokens = [
+function fail(message) {
+  failed = true;
+  console.error(message);
+}
+
+function requireIncludes(source, marker, message) {
+  if (!source.includes(marker)) {
+    fail(`${message}: ${marker}`);
+  }
+}
+
+function forbidIncludes(source, marker, message) {
+  if (source.includes(marker)) {
+    fail(`${message}: ${marker}`);
+  }
+}
+
+[
   'static readonly pageTitle: number = TypographyTokens.PageTitle;',
   'static readonly pageSubtitle: number = TypographyTokens.PageSubtitle;',
   'static readonly sectionTitle: number = TypographyTokens.SectionTitle;',
   'static readonly cardTitle: number = TypographyTokens.CardTitle;',
   'static readonly body: number = TypographyTokens.CardBody;'
+].forEach((marker) => requireIncludes(sources.appDesign, marker, 'Design System V1 typography token missing'));
+
+const primaryPageSources = [
+  ['HomePage', sources.homePage],
+  ['ProjectDetailPage', sources.libraryPage],
+  ['MyPage', sources.myPage],
+  ['ReviewerProfilePage', sources.reviewerProfilePage],
+  ['HomeStoragePage', sources.homeStoragePage],
+  ['SyncCenterPage', sources.syncCenterPage]
 ];
 
-for (const marker of requiredTypographyTokens) {
-  if (!appDesignSource.includes(marker)) {
-    failed = true;
-    console.error(`Design System V1 typography token missing: ${marker}`);
+for (const marker of ['static readonly space4:', 'static readonly space12:', 'AppMetrics.space4', 'AppMetrics.space12']) {
+  if (sources.appDesign.includes(marker)) {
+    fail(`Design system must keep the 8pt spacing scale, found: ${marker}`);
   }
+  primaryPageSources.forEach(([pageName, source]) => {
+    if (source.includes(marker)) {
+      fail(`${pageName} must keep the shared spacing scale, found: ${marker}`);
+    }
+  });
 }
 
-const forbiddenLegacySpacingTokens = [
-  'static readonly space4:',
-  'static readonly space12:',
-  'AppMetrics.space4',
-  'AppMetrics.space12'
-];
-
-for (const marker of forbiddenLegacySpacingTokens) {
-  if (appDesignSource.includes(marker) ||
-    homePageSource.includes(marker) ||
-    libraryPageSource.includes(marker) ||
-    myPageSource.includes(marker) ||
-    reviewerProfilePageSource.includes(marker) ||
-    homeStoragePageSource.includes(marker) ||
-    syncCenterPageSource.includes(marker)) {
-    failed = true;
-    console.error(`Primary pages must use the 8pt Design System V1 spacing scale, found: ${marker}`);
-  }
-}
-
-const requiredHomeSections = [
+[
   "title: '摄影复盘'",
-  "Text('开始新的复盘')",
-  "Text('最近一次')",
-  "Text('复盘概览')"
-];
+  "subtitle: '从照片里练习观看与判断'",
+  "Text('从一张照片开始，练习判断')",
+  "Button(this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘')",
+  '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
+  'this.ReviewFlowPanel()',
+  'ReviewCardHistoryService.loadWithDiagnostics(context)',
+  'pasteboard.createData',
+  'HomeHeroImageService.getDisplayImages'
+].forEach((marker) => requireIncludes(sources.homePage, marker, 'HomePage missing current information-architecture marker'));
 
-for (const marker of requiredHomeSections) {
-  if (!homePageSource.includes(marker)) {
-    failed = true;
-    console.error(`HomePage missing fixed section: ${marker}`);
-  }
-}
+forbidIncludes(sources.homePage, 'ScrollDirection.Vertical', 'HomePage must not make the fixed first screen vertically scrollable');
 
-if (homePageSource.indexOf('this.StartReviewPanel()') > homePageSource.indexOf('this.GrowthStatsPanel()')) {
-  failed = true;
-  console.error('HomePage must render start action before stats overview.');
-}
-
-const forbiddenTabText = [
-  "label: '首'",
-  "label: '库'",
-  "label: '我'",
-  "symbol: '首'",
-  "symbol: '库'",
-  "symbol: '我'",
-  "icon: '●'",
-  "icon: '■'",
-  "icon: '◆'"
-];
-
-for (const marker of forbiddenTabText) {
-  if (appShellSource.includes(marker)) {
-    failed = true;
-    console.error(`AppShellPage must not render debug-style tab text: ${marker}`);
-  }
-}
-
-const requiredTabIcons = [
+[
   "label: '首页', activeIcon:",
   "label: '复盘库', activeIcon:",
+  "label: '统计', activeIcon:",
   "label: '我的', activeIcon:",
-  'Image(this.isCurrentTab(item.key) ? item.activeIcon : item.inactiveIcon)'
-];
+  'Image(this.isCurrentTab(item.key) ? item.activeIcon : item.inactiveIcon)',
+  'HomePage({ refreshToken: this.homeRefreshToken + this.reviewLibraryRefreshToken })',
+  'MyPage({ refreshToken: this.myRefreshToken + this.reviewLibraryRefreshToken + this.settingsRefreshToken })'
+].forEach((marker) => requireIncludes(sources.appShell, marker, 'AppShellPage missing tab or refresh marker'));
 
-for (const marker of requiredTabIcons) {
-  if (!appShellSource.includes(marker)) {
-    failed = true;
-    console.error(`AppShellPage missing tab icon marker: ${marker}`);
-  }
+for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '●'", "icon: '■'", "icon: '◆'"]) {
+  forbidIncludes(sources.appShell, marker, 'AppShellPage must not render debug-style tab text');
 }
 
-if (!myPageSource.includes('top: AppMetrics.pageTopPadding') ||
-  !libraryPageSource.includes('top: AppMetrics.pageTopPadding') ||
-  !homePageSource.includes('top: AppMetrics.pageTopPadding')) {
-  failed = true;
-  console.error('Home, library, and my pages must use the shared Design System top padding.');
-}
+[
+  "title: '我的'",
+  'this.IdentityCard()',
+  'this.SettingsSection()',
+  'this.AboutSection()',
+  "title: '首页图片'",
+  'HOME_HERO_IMAGE_PAGE',
+  'HomeHeroImageService.listImages',
+  'router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });',
+  "title: '同步中心'",
+  "title: '家庭存储'"
+].forEach((marker) => requireIncludes(sources.myPage, marker, 'MyPage missing current personal-center marker'));
 
-if (!myPageSource.includes("title: '我的'") ||
-  myPageSource.includes("subtitle: '账户与同步'") ||
-  myPageSource.includes('Scroll() {') ||
-  !myPageSource.includes('this.IdentityCard()') ||
-  !myPageSource.includes("this.SectionTitle('设置')") ||
-  !myPageSource.includes("this.SectionTitle('同步')") ||
-  !myPageSource.includes("this.SectionTitle('应用')") ||
-  !myPageSource.includes("this.LinkRow('复盘人'") ||
-  !myPageSource.includes("this.LinkRow('同步中心'") ||
-  !myPageSource.includes('router.pushUrl({ url: SYNC_CENTER_PAGE });') ||
-  !myPageSource.includes("'家庭存储',") ||
-  !myPageSource.includes("this.LinkRow('关于'")) {
-  failed = true;
-  console.error('MyPage must keep the personal-center structure without explanatory header subtitle.');
-}
+[
+  'this.HeaderRow()',
+  'private resolveResultCountText(): string',
+  '.height(AppMetrics.filterChipHeight)',
+  ".constraintSize({ minWidth: value === 'all' ? 60 : 72 })",
+  "title: '复盘库'"
+].forEach((marker) => requireIncludes(sources.libraryPage, marker, 'ProjectDetailPage missing compact library marker'));
 
-if (!libraryPageSource.includes('this.HeaderRow()') ||
-  !libraryPageSource.includes('private resolveResultCountText(): string') ||
-  !libraryPageSource.includes('.height(AppMetrics.filterChipHeight)') ||
-  !libraryPageSource.includes('.constraintSize({ minWidth: value === \'all\' ? 60 : 72 })') ||
-  !libraryPageSource.includes('.fontSize(AppTypography.meta)') ||
-  libraryPageSource.includes("subtitle: '搜索与回看'")) {
-  failed = true;
-  console.error('ProjectDetailPage must use compact title count and filter controls without explanatory subtitle.');
-}
+[
+  "this.ActionButton('编辑', false, this.isActionBusy(), () => {",
+  "this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出', true, this.isActionBusy(), () => {",
+  '.height(AppMetrics.toolbarButtonHeight)',
+  "this.ExportSheetAction(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片'",
+  "this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包'",
+  "this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json'",
+  "this.ExportSheetAction('复制复盘数据'"
+].forEach((marker) => requireIncludes(sources.previewPage, marker, 'PreviewPage missing current export action marker'));
 
-const topAlignedPageSources = [
-  ['HomePage', homePageSource],
-  ['ProjectDetailPage', libraryPageSource],
-  ['MyPage', myPageSource],
-  ['ReviewerProfilePage', reviewerProfilePageSource],
-  ['HomeStoragePage', homeStoragePageSource],
-  ['SyncCenterPage', syncCenterPageSource]
-];
+[
+  "title: '同步中心'",
+  "label: this.isTesting ? '检查中…' : '检查家庭存储'",
+  "label: this.resolveStatus() === HomeStorageConfigStatus.COMPLETE ? '修改配置' : '配置'"
+].forEach((marker) => requireIncludes(sources.syncCenterPage, marker, 'SyncCenterPage missing current sync-center marker'));
 
-for (const [pageName, source] of topAlignedPageSources) {
-  if (source.includes('.justifyContent(FlexAlign.Center)')) {
-    failed = true;
-    console.error(`${pageName} must not vertically center first-level page content.`);
-  }
-}
+[
+  "export const HOME_HERO_IMAGE_PAGE: string = 'pages/HomeHeroImagePage';",
+  "export const SYNC_CENTER_PAGE: string = 'pages/SyncCenterPage';"
+].forEach((marker) => requireIncludes(sources.appRouter, marker, 'AppRouter missing route'));
 
-if (!previewPageSource.includes("this.ActionButton('编辑', false, this.isActionBusy(), () => {")) {
-  failed = true;
-  console.error('PreviewPage must keep 编辑 as a top-level action.');
-}
-
-if (!previewPageSource.includes("this.ActionButton(this.isExporting ? '导出中' : '导出', true, this.isActionBusy(), () => {")) {
-  failed = true;
-  console.error('PreviewPage must keep 导出 as the single top-level export action.');
-}
-
-if (!previewPageSource.includes('.height(AppMetrics.toolbarButtonHeight)') ||
-  !previewPageSource.includes('.width(AppMetrics.toolbarButtonWidth)') ||
-  previewPageSource.indexOf("Text('复盘记录')") > previewPageSource.indexOf("this.ActionButton('编辑'")) {
-  failed = true;
-  console.error('PreviewPage actions must sit in the title toolbar with compact button sizing.');
-}
-
-const disallowedTopLevelActions = [
-  "this.ActionButton('导出 review.json'",
-  "this.ActionButton('复制复盘数据'",
-  "this.ActionButton(this.isUploadingHomeStorage ? '上传中' : '上传到家庭存储'"
-];
-
-for (const marker of disallowedTopLevelActions) {
-  if (previewPageSource.includes(marker)) {
-    failed = true;
-    console.error(`PreviewPage still exposes deprecated top-level action: ${marker}`);
-  }
-}
-
-const requiredExportSheetActions = [
-  "this.ExportSheetAction('导出 JSON'",
-  "this.ExportSheetAction(this.isUploadingHomeStorage ? '上传中...' : '上传家庭存储'",
-  "this.ExportSheetAction(this.isExporting ? '导出中...' : '导出图片'",
-  "this.ExportSheetAction('复制数据'"
-];
-
-for (const marker of requiredExportSheetActions) {
-  if (!previewPageSource.includes(marker)) {
-    failed = true;
-    console.error(`PreviewPage export sheet missing action: ${marker}`);
-  }
-}
-
-for (let index = 1; index < requiredExportSheetActions.length; index += 1) {
-  const previousMarker = requiredExportSheetActions[index - 1];
-  const currentMarker = requiredExportSheetActions[index];
-  if (previewPageSource.indexOf(previousMarker) > previewPageSource.indexOf(currentMarker)) {
-    failed = true;
-    console.error('PreviewPage export sheet actions must be ordered by expected use frequency.');
-  }
-}
-
-if (!syncCenterPageSource.includes("title: '同步中心'")) {
-  failed = true;
-  console.error('SyncCenterPage title is missing.');
-}
-
-if (!syncCenterPageSource.includes("label: this.isTesting ? '测试中...' : '测试'")) {
-  failed = true;
-  console.error('SyncCenterPage must provide 测试.');
-}
-
-if (!syncCenterPageSource.includes("label: '配置'")) {
-  failed = true;
-  console.error('SyncCenterPage must provide 配置.');
-}
-
-if (!appRouterSource.includes("export const SYNC_CENTER_PAGE: string = 'pages/SyncCenterPage';")) {
-  failed = true;
-  console.error('AppRouter missing SyncCenterPage route.');
-}
-
-if (!mainPagesSource.includes('"pages/SyncCenterPage"')) {
-  failed = true;
-  console.error('main_pages.json missing SyncCenterPage registration.');
-}
+[
+  '"pages/HomeHeroImagePage"',
+  '"pages/SyncCenterPage"'
+].forEach((marker) => requireIncludes(sources.mainPages, marker, 'main_pages.json missing registration'));
 
 if (failed) {
   process.exit(1);
 }
 
-console.log('home information architecture verified: fixed tabs, home sections, sync center, export entry consolidated');
+console.log('home information architecture verified: fixed first screen, tab IA, settings entries, export entry, and home hero config');

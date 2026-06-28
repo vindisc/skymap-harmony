@@ -1,7 +1,7 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
-import { HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../app/AppRouter';
+import { HOME_HERO_IMAGE_PAGE, HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../app/AppRouter';
 import {
   AppColors,
   AppMetrics,
@@ -21,6 +21,7 @@ import {
 import { ENABLE_RDB_DIAGNOSTICS_ENTRY } from '../services/ReviewFlowFeedback';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
+import { HomeHeroImageService } from '../services/HomeHeroImageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
@@ -35,6 +36,7 @@ export struct MyPage {
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State reviewCount: number = 0;
   @State validReviewCount: number = 0;
+  @State homeHeroImageCount: number = 0;
   @State isRdbDiagnosticsRunning: boolean = false;
   @State rdbDiagnosticsSummary: string = '未运行';
   @State rdbDiagnosticsStatus: string = '开发';
@@ -86,6 +88,11 @@ export struct MyPage {
     if (requestId !== this.loadRequestId) {
       return;
     }
+
+    this.homeHeroImageCount = (await HomeHeroImageService.listImages(context)).length;
+    if (requestId !== this.loadRequestId) {
+      return;
+    }
   }
 
   private resolveHomeStorageStatus(): HomeStorageConfigStatus {
@@ -105,6 +112,20 @@ export struct MyPage {
 
   private resolveSyncSummary(): string {
     return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
+  }
+
+  private resolveHomeHeroSummary(): string {
+    if (this.homeHeroImageCount <= 0) {
+      return '使用默认首页图';
+    }
+    if (this.homeHeroImageCount === 1) {
+      return '已设置 1 张图片';
+    }
+    return `已设置 ${this.homeHeroImageCount} 张图片，会自动轮播`;
+  }
+
+  private resolveHomeHeroBadge(): string {
+    return this.homeHeroImageCount <= 0 ? '默认' : `${this.homeHeroImageCount} 张`;
   }
 
   private resolveHomeStorageBadge(): string {
@@ -152,6 +173,10 @@ export struct MyPage {
 
   private openReviewerProfile(): void {
     router.pushUrl({ url: REVIEWER_PROFILE_PAGE });
+  }
+
+  private openHomeHeroImage(): void {
+    router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });
   }
 
   private openHomeStorage(): void {
@@ -302,6 +327,16 @@ export struct MyPage {
         tone: this.resolveReviewerSummary() === '未设置' ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
         onTap: () => {
           this.openReviewerProfile();
+        }
+      })
+
+      SettingsLinkRow({
+        title: '首页图片',
+        value: this.resolveHomeHeroSummary(),
+        status: this.resolveHomeHeroBadge(),
+        tone: this.homeHeroImageCount <= 0 ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
+        onTap: () => {
+          this.openHomeHeroImage();
         }
       })
 

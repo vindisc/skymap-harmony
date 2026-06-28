@@ -13,6 +13,13 @@ export interface PickedPhotoResult {
   message: string;
 }
 
+export interface PickedPhotoListResult {
+  success: boolean;
+  cancelled: boolean;
+  imageUris: Array<string>;
+  message: string;
+}
+
 const FALLBACK_IMAGE_WIDTH: number = 1600;
 const FALLBACK_IMAGE_HEIGHT: number = 1000;
 
@@ -29,6 +36,15 @@ function emptyResult(cancelled: boolean, message: string): PickedPhotoResult {
     imageWidth: FALLBACK_IMAGE_WIDTH,
     imageHeight: FALLBACK_IMAGE_HEIGHT,
     imageSizeFallbackUsed: false,
+    message: message
+  };
+}
+
+function emptyListResult(cancelled: boolean, message: string): PickedPhotoListResult {
+  return {
+    success: false,
+    cancelled: cancelled,
+    imageUris: [],
     message: message
   };
 }
@@ -140,5 +156,28 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
     };
   } catch (error) {
     return emptyResult(false, REVIEW_FLOW_IMPORT_FAILED_TEXT);
+  }
+}
+
+export async function pickMultiplePhotos(maxSelectNumber: number = 9): Promise<PickedPhotoListResult> {
+  try {
+    const picker = new photoAccessHelper.PhotoViewPicker();
+    const options = new photoAccessHelper.PhotoSelectOptions();
+    options.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE;
+    options.maxSelectNumber = Math.max(1, maxSelectNumber);
+
+    const result: photoAccessHelper.PhotoSelectResult = await picker.select(options);
+    if (result.photoUris.length <= 0) {
+      return emptyListResult(true, '未选择照片');
+    }
+
+    return {
+      success: true,
+      cancelled: false,
+      imageUris: result.photoUris,
+      message: ''
+    };
+  } catch (error) {
+    return emptyListResult(false, REVIEW_FLOW_IMPORT_FAILED_TEXT);
   }
 }

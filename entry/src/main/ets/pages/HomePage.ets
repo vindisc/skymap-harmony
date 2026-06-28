@@ -8,6 +8,11 @@ import {
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import {
+  HomeHeroDisplayImage,
+  HomeHeroImageConfig,
+  HomeHeroImageService
+} from '../services/HomeHeroImageService';
+import {
   ReviewCardHistoryLoadResult,
   ReviewCardHistoryService
 } from '../services/ReviewCardHistoryService';
@@ -45,6 +50,8 @@ const HOME_PRIMARY_BUTTON_HEIGHT: number = 44;
 const HOME_FLOW_CARD_GAP: number = 10;
 const HOME_FLOW_CARD_HEIGHT: number = 62;
 const HOME_FLOW_CARD_RADIUS: number = 16;
+const HOME_HERO_DOT_SIZE: number = 6;
+const HOME_HERO_DOT_GAP: number = 6;
 
 interface ReviewFlowStep {
   title: string;
@@ -54,6 +61,7 @@ interface ReviewFlowStep {
 @Component
 export struct HomePage {
   private dashboardReloadState: HomeDashboardReloadState = createHomeDashboardReloadState();
+  private heroAutoplayTimer: number = -1;
   private readonly heroFeatureTags: Array<string> = [
     '视觉落点',
     '视线路径',
@@ -69,17 +77,28 @@ export struct HomePage {
   @State isPickingPhoto: boolean = false;
   @State historyLoadFailed: boolean = false;
   @State historyDiagnosticsText: string = '';
+  @State heroImages: Array<HomeHeroDisplayImage> = [];
+  @State heroCurrentIndex: number = 0;
+  @State heroAutoplayEnabled: boolean = true;
+  @State heroIntervalSeconds: number = 4;
 
   aboutToAppear(): void {
     this.reloadHistory();
+    this.reloadHeroImages();
   }
 
   onPageShow(): void {
     this.reloadHistory();
+    this.reloadHeroImages();
+  }
+
+  aboutToDisappear(): void {
+    this.stopHeroAutoplay();
   }
 
   refreshHomeData(): void {
     this.reloadHistory();
+    this.reloadHeroImages();
   }
 
   private getAbilityContext(): common.UIAbilityContext {
@@ -103,6 +122,78 @@ export struct HomePage {
       }
       return;
     }
+  }
+
+  private async reloadHeroImages(): Promise<void> {
+    try {
+      const config: HomeHeroImageConfig = await HomeHeroImageService.loadConfig(this.getAbilityContext());
+      const images: Array<HomeHeroDisplayImage> = await HomeHeroImageService.getDisplayImages(this.getAbilityContext());
+      this.heroImages = images;
+      this.heroAutoplayEnabled = config.autoplayEnabled;
+      this.heroIntervalSeconds = config.intervalSeconds;
+      if (this.heroCurrentIndex >= images.length) {
+        this.heroCurrentIndex = 0;
+      }
+      this.refreshHeroAutoplay();
+    } catch (error) {
+      console.warn(`[HomePage] home hero reload failed: ${error}`);
+      this.heroImages = [];
+      this.heroCurrentIndex = 0;
+      this.stopHeroAutoplay();
+    }
+  }
+
+  private refreshHeroAutoplay(): void {
+    this.stopHeroAutoplay();
+    if (!this.heroAutoplayEnabled || this.heroImages.length <= 1) {
+      return;
+    }
+
+    this.heroAutoplayTimer = setInterval(() => {
+      if (this.heroImages.length <= 1) {
+        this.heroCurrentIndex = 0;
+        this.stopHeroAutoplay();
+        return;
+      }
+      this.heroCurrentIndex = (this.heroCurrentIndex + 1) % this.heroImages.length;
+    }, this.heroIntervalSeconds * 1000);
+  }
+
+  private stopHeroAutoplay(): void {
+    if (this.heroAutoplayTimer < 0) {
+      return;
+    }
+    clearInterval(this.heroAutoplayTimer);
+    this.heroAutoplayTimer = -1;
+  }
+
+  private hasUserHeroImages(): boolean {
+    return this.heroImages.length > 0;
+  }
+
+  private resolveCurrentHeroImageUri(): string {
+    if (!this.hasUserHeroImages()) {
+      return '';
+    }
+    const safeIndex: number = Math.min(Math.max(this.heroCurrentIndex, 0), this.heroImages.length - 1);
+    return this.heroImages[safeIndex].uri;
+  }
+
+  private skipFailedHeroImage(): void {
+    if (this.heroImages.length <= 1) {
+      this.heroImages = [];
+      this.heroCurrentIndex = 0;
+      this.stopHeroAutoplay();
+      return;
+    }
+
+    this.heroImages = this.heroImages.filter((item: HomeHeroDisplayImage, index: number): boolean => {
+      return index !== this.heroCurrentIndex;
+    });
+    if (this.heroCurrentIndex >= this.heroImages.length) {
+      this.heroCurrentIndex = 0;
+    }
+    this.refreshHeroAutoplay();
   }
 
   private syncDashboardStateFromPresenter(): void {
@@ -168,10 +259,20 @@ export struct HomePage {
       })
 
       Stack({ alignContent: Alignment.BottomStart }) {
-        Image($r('app.media.home_review_hero'))
-          .width('100%')
-          .height('100%')
-          .objectFit(ImageFit.Cover)
+        if (this.hasUserHeroImages()) {
+          Image(this.resolveCurrentHeroImageUri())
+            .width('100%')
+            .height('100%')
+            .objectFit(ImageFit.Cover)
+            .onError(() => {
+              this.skipFailedHeroImage();
+            })
+        } else {
+          Image($r('app.media.home_review_hero'))
+            .width('100%')
+            .height('100%')
+            .objectFit(ImageFit.Cover)
+        }
 
         Column({ space: 5 }) {
           Text('从一张照片开始，练习判断')
@@ -188,6 +289,18 @@ export struct HomePage {
             .lineHeight(17)
             .maxLines(2)
             .width('100%')
+
+          if (this.heroImages.length > 1) {
+            Row({ space: HOME_HERO_DOT_GAP }) {
+              ForEach(this.heroImages, (item: HomeHeroDisplayImage, index: number) => {
+                Circle()
+                  .width(HOME_HERO_DOT_SIZE)
+                  .height(HOME_HERO_DOT_SIZE)
+                  .fill(index === this.heroCurrentIndex ? AppColors.onPrimary : '#66FFFFFF')
+              }, (item: HomeHeroDisplayImage) => item.id)
+            }
+            .margin({ top: 3 })
+          }
         }
         .padding({
           left: HOME_HERO_TEXT_PADDING,
