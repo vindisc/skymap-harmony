@@ -53,7 +53,8 @@ assert(!appDesignSource.includes('.stateEffect(true)\n    .onClick(() => {\n    
 
 assert(myPageSource.includes('AppPageHeader({'), 'MyPage root title must use the shared main page header.');
 assert(myPageSource.includes("title: '我的'"), 'MyPage must keep the 我的 title.');
-assert(myPageSource.includes("subtitle: '复盘身份、存储同步和应用状态。'"), 'MyPage must keep the current subtitle.');
+assert(!myPageSource.includes("subtitle: '复盘身份、存储同步和应用状态。'"), 'MyPage must not keep the old explanatory subtitle.');
+assert(!myPageSource.includes("description: '影响新建复盘、导出和家庭存储连接。'"), 'MyPage settings section must not keep explanatory description.');
 assert(!myPageSource.includes('SettingsPageHeader({\n          title: \'我的\''), 'MyPage root title must not use compact settings header.');
 assert(myPageSource.includes('Scroll() {\n        Column({ space: AppMetrics.sectionGap }) {'), 'MyPage settings content must scroll below a fixed title header.');
 assert(myPageSource.includes('top: AppMetrics.sectionGap'), 'MyPage scroll content should start below the fixed title with section spacing.');

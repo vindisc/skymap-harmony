@@ -370,8 +370,7 @@ export struct StatsPage {
     Column() {
       Column() {
         AppPageHeader({
-          title: '统计',
-          subtitle: '完成复盘后，这里会展示你的判断变化。'
+          title: '统计'
         })
       }
       .padding({

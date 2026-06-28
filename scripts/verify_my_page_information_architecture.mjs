@@ -25,11 +25,9 @@ function forbidIncludes(source, marker, message) {
 
 [
   "title: '我的'",
-  "subtitle: '复盘身份、存储同步和应用状态。'",
   'this.SettingsSection()',
   'this.AboutSection()',
   "title: '设置'",
-  "description: '影响新建复盘、导出和家庭存储连接。'",
   "title: '复盘人'",
   "title: '首页图片'",
   "title: '家庭存储'",
@@ -37,6 +35,11 @@ function forbidIncludes(source, marker, message) {
   "title: '应用'",
   "title: '版本'"
 ].forEach((marker) => requireIncludes(myPageSource, marker, 'MyPage missing settings-first marker'));
+
+[
+  "subtitle: '复盘身份、存储同步和应用状态。'",
+  "description: '影响新建复盘、导出和家庭存储连接。'"
+].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must not keep explanatory page or section copy'));
 
 [
   'this.IdentityCard()',

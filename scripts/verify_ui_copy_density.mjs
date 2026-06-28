@@ -23,27 +23,28 @@ const forbiddenCopy = [
   '摄影复盘 Beta 用户',
   '请重新选择照片',
   '照片信息暂不可显示，可继续填写。',
-  '正在读取家庭存储设置',
   '上传到家庭存储中...',
   '导出复盘图片中...',
-  '复制复盘数据',
-  '导出 review.json',
   '账户与同步',
-  '搜索与回看'
+  '搜索与回看',
+  '按照片、判断和卡点回看你的复盘记录。',
+  '完成复盘后，这里会展示你的判断变化。',
+  '复盘身份、存储同步和应用状态。',
+  '影响新建复盘、导出和家庭存储连接。'
 ];
 
 const requiredCopy = [
-  ['entry/src/main/ets/pages/HomePage.ets', "return this.reviewCount > 0 ? '已更新' : '暂无记录';"],
+  ['entry/src/main/ets/pages/HomePage.ets', "Button(this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘')"],
   ['entry/src/main/ets/pages/MyPage.ets', "AppPageHeader({\n          title: '我的'\n        })"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', "placeholder: '标题、关系、卡点、文件名'"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', "this.HeaderRow()"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".height(AppMetrics.filterChipHeight)"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".constraintSize({ minWidth: value === 'all' ? 60 : 72 })"],
-  ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".fontSize(AppTypography.meta)"],
+  ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".fontSize(13)"],
   ['entry/src/main/ets/pages/PreviewPage.ets', ".height(AppMetrics.toolbarButtonHeight)"],
-  ['entry/src/main/ets/pages/PreviewPage.ets', "this.ExportSheetAction('导出 JSON'"],
-  ['entry/src/main/ets/pages/ReviewSettingsPage.ets', "Text('SMB 与凭据')"],
-  ['entry/src/main/ets/components/ReviewPhotoBlock.ets', "Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '加载失败' : '照片')"]
+  ['entry/src/main/ets/pages/PreviewPage.ets', "this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json'"],
+  ['entry/src/main/ets/pages/ReviewSettingsPage.ets', "Text('连接与凭据')"],
+  ['entry/src/main/ets/components/ReviewPhotoBlock.ets', "Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '照片暂不可见' : '照片')"]
 ];
 
 let failed = false;

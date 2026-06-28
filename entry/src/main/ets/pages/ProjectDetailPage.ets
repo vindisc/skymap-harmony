@@ -308,8 +308,7 @@ export struct ProjectDetailPage {
       Row() {
         Column({ space: 6 }) {
           AppPageHeader({
-            title: '复盘库',
-            subtitle: '按照片、判断和卡点回看你的复盘记录。'
+            title: '复盘库'
           })
         }
         .layoutWeight(1)

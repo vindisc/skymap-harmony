@@ -213,8 +213,7 @@ export struct MyPage {
   SettingsSection() {
     Column({ space: AppMetrics.space8 }) {
       SettingsSectionHeader({
-        title: '设置',
-        description: '影响新建复盘、导出和家庭存储连接。'
+        title: '设置'
       })
 
       SettingsLinkRow({
@@ -297,8 +296,7 @@ export struct MyPage {
     Column() {
       Column() {
         AppPageHeader({
-          title: '我的',
-          subtitle: '复盘身份、存储同步和应用状态。'
+          title: '我的'
         })
       }
       .padding({
