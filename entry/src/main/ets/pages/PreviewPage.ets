@@ -22,6 +22,10 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
 import { ReviewJsonExportResult, ReviewJsonExportService } from '../services/ReviewJsonExportService';
 import { ReviewBundleExportResult, ReviewBundleExportService } from '../services/ReviewBundleExportService';
+import {
+  ReviewBundleOriginalPhotoExportResult,
+  ReviewBundleOriginalPhotoExportService
+} from '../services/ReviewBundleOriginalPhotoExportService';
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
@@ -30,6 +34,9 @@ import {
   REVIEW_FLOW_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT,
+  REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT,
+  REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT,
+  REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
@@ -54,6 +61,7 @@ struct PreviewPage {
   @State isExporting: boolean = false;
   @State isExportingReviewJson: boolean = false;
   @State isExportingReviewBundle: boolean = false;
+  @State isExportingOriginalPhotoBundle: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State isExportMenuVisible: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
@@ -310,6 +318,40 @@ struct PreviewPage {
     }
   }
 
+  private async exportOriginalPhotoReviewBundleToHomeStorage(): Promise<void> {
+    if (this.isExportingOriginalPhotoBundle) {
+      return;
+    }
+
+    this.isExportingOriginalPhotoBundle = true;
+    this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT;
+    try {
+      const context = this.getAbilityContext();
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
+      const result: ReviewBundleOriginalPhotoExportResult = await ReviewBundleOriginalPhotoExportService.exportOriginalPhotoReviewBundleToHomeStorage(
+        context,
+        this.document,
+        reviewerName
+      );
+      if (result.success) {
+        await this.markExportedQuietly(result.remotePath);
+        this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT;
+        promptAction.showToast({ message: REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT });
+        return;
+      }
+      console.error(`[PreviewPage] 含原图复盘包导出失败：${result.message}`);
+      const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
+      this.actionFeedbackText = failedText;
+      promptAction.showToast({ message: failedText });
+    } catch (error) {
+      console.error(`[PreviewPage] 含原图复盘包导出异常：${error}`);
+      this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
+      promptAction.showToast({ message: REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT });
+    } finally {
+      this.isExportingOriginalPhotoBundle = false;
+    }
+  }
+
   private async waitForExportLayout(): Promise<void> {
     return new Promise<void>((resolve: () => void) => {
       setTimeout(() => {
@@ -337,7 +379,8 @@ struct PreviewPage {
     return this.isSaving ||
       this.isExporting ||
       this.isExportingReviewJson ||
-      this.isExportingReviewBundle;
+      this.isExportingReviewBundle ||
+      this.isExportingOriginalPhotoBundle;
   }
 
   private openExportMenu(): void {
@@ -590,6 +633,10 @@ struct PreviewPage {
           })
 
           this.ExportSheetSectionTitle('高级')
+
+          this.ExportSheetAction(this.isExportingOriginalPhotoBundle ? '导出中…' : '导出复盘包（含原图）', '包含原始照片和复盘数据，适合在 Mac 端继续处理。', this.isActionBusy(), () => {
+            this.exportOriginalPhotoReviewBundleToHomeStorage();
+          })
 
           this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json', '只导出复盘数据文件，不包含图片。', this.isActionBusy(), () => {
             this.exportReviewJson();
