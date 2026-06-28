@@ -33,6 +33,14 @@ interface ReviewBundleOriginalPhotoPaths {
   assetsReadme: string;
 }
 
+interface OriginalPhotoCopyResult {
+  success: boolean;
+  errorType: HomeStorageErrorType;
+  message: string;
+  rawMessage: string;
+  rawStack: string;
+}
+
 interface ReviewBundleDateParts {
   year: string;
   month: string;
@@ -114,6 +122,21 @@ function safeHash(value: string): string {
   return (hash >>> 0).toString(16).padStart(8, '0').slice(0, 8);
 }
 
+function resolveUriScheme(value: string): string {
+  const separatorIndex: number = value.indexOf('://');
+  if (separatorIndex > 0) {
+    return value.slice(0, separatorIndex).toLowerCase();
+  }
+  if (value.indexOf('/') === 0) {
+    return 'path';
+  }
+  return value.length > 0 ? 'unknown' : 'empty';
+}
+
+function safeUriDigest(value: string): string {
+  return safeHash(value);
+}
+
 function sanitizeBundleName(value: string): string {
   const sanitized: string = value
     .replace(/[^0-9A-Za-z_-]+/g, '_')
@@ -160,12 +183,18 @@ function fileSize(path: string): number {
   }
 }
 
-function describeError(error: Error): string {
-  return error.message;
+function describeUnknownError(error: Error | Object): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return `${error}`;
 }
 
-function describeStack(error: Error): string {
-  return typeof error.stack === 'string' ? error.stack : '';
+function describeUnknownStack(error: Error | Object): string {
+  if (error instanceof Error && typeof error.stack === 'string') {
+    return error.stack;
+  }
+  return '';
 }
 
 function assertFileExists(path: string, label: string): void {
@@ -269,12 +298,42 @@ function buildAssetsReadme(): string {
   ].join('\n');
 }
 
-function copyOriginalPhoto(sourceUri: string, targetPath: string): void {
+function createCopySuccessResult(): OriginalPhotoCopyResult {
+  return {
+    success: true,
+    errorType: HomeStorageErrorType.NONE,
+    message: '',
+    rawMessage: '',
+    rawStack: ''
+  };
+}
+
+function createCopyFailureResult(
+  errorType: HomeStorageErrorType,
+  message: string,
+  rawMessage: string,
+  rawStack: string
+): OriginalPhotoCopyResult {
+  return {
+    success: false,
+    errorType: errorType,
+    message: message,
+    rawMessage: rawMessage,
+    rawStack: rawStack
+  };
+}
+
+function copyOriginalPhoto(sourceUri: string, targetPath: string): OriginalPhotoCopyResult {
   let sourceFile: fs.File | null = null;
   try {
     sourceFile = fs.openSync(sourceUri, fs.OpenMode.READ_ONLY);
   } catch (error) {
-    throw new Error(ORIGINAL_READ_FAILED_TEXT);
+    return createCopyFailureResult(
+      HomeStorageErrorType.ORIGINAL_READ_FAILED,
+      ORIGINAL_READ_FAILED_TEXT,
+      describeUnknownError(error),
+      describeUnknownStack(error)
+    );
   }
 
   let targetFile: fs.File | null = null;
@@ -282,7 +341,12 @@ function copyOriginalPhoto(sourceUri: string, targetPath: string): void {
     targetFile = fs.openSync(targetPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
     fs.copyFileSync(sourceFile.fd, targetFile.fd);
   } catch (error) {
-    throw new Error(ORIGINAL_COPY_FAILED_TEXT);
+    return createCopyFailureResult(
+      HomeStorageErrorType.ORIGINAL_COPY_FAILED,
+      ORIGINAL_COPY_FAILED_TEXT,
+      describeUnknownError(error),
+      describeUnknownStack(error)
+    );
   } finally {
     if (targetFile !== null) {
       fs.closeSync(targetFile);
@@ -291,6 +355,7 @@ function copyOriginalPhoto(sourceUri: string, targetPath: string): void {
       fs.closeSync(sourceFile);
     }
   }
+  return createCopySuccessResult();
 }
 
 function buildManifest(
@@ -427,23 +492,17 @@ export class ReviewBundleOriginalPhotoExportService {
     const reviewId: number = document.createdAt;
 
     try {
-      console.info(`[ReviewBundleOriginalPhotoExport] bundle_v2_export_start review_id=${reviewId} bundleId=${bundleId} original_source_uri=${hasDisplayableImageUri(document.imageUri) ? 'present' : 'missing'} local=${paths.root} remote=${remoteDirectory}`);
-      const availabilityResult: HomeStorageOperationResult = await HomeStorageService.checkAvailability(context);
-      console.info(`[ReviewBundleOriginalPhotoExport] availability_checked success=${availabilityResult.success} type=${availabilityResult.errorType} message=${availabilityResult.message}`);
-      if (!availabilityResult.success) {
-        return {
-          success: false,
-          localBundlePath: '',
-          remotePath: availabilityResult.remotePath,
-          bundleId: bundleId,
-          bundleDirectoryName: bundleDirectoryName,
-          message: availabilityResult.message,
-          errorType: availabilityResult.errorType
-        };
-      }
+      const hasOriginalSource: boolean = hasDisplayableImageUri(document.imageUri);
+      const sourceUriScheme: string = resolveUriScheme(document.imageUri);
+      const sourceUriDigest: string = safeUriDigest(document.imageUri);
+      const sourceFileName: string = resolveSourceFileName(document);
+      const mimeType: string = resolveMimeType(extension);
+      console.info(`[ReviewBundleOriginalPhotoExport] bundle_v2_export_start review_id=${reviewId} bundleId=${bundleId} document_file_name=${sourceFileName.length > 0 ? 'present' : 'empty'} original_source_uri=${hasOriginalSource ? 'present' : 'missing'} image_uri=${hasOriginalSource ? 'present' : 'missing'} uri_scheme=${sourceUriScheme} uri_digest=${sourceUriDigest} uri_length=${document.imageUri.length} local=${paths.root}`);
+      console.info(`[ReviewBundleOriginalPhotoExport] remote_target_directory review_id=${reviewId} bundleId=${bundleId} remote=${remoteDirectory}`);
 
-      if (!hasDisplayableImageUri(document.imageUri)) {
-        console.error(`[ReviewBundleOriginalPhotoExport] original_read_failed review_id=${reviewId} bundleId=${bundleId} reason=missing_source_uri`);
+      if (!hasOriginalSource) {
+        console.error(`[ReviewBundleOriginalPhotoExport] original_read_failed review_id=${reviewId} bundleId=${bundleId} type=${HomeStorageErrorType.ORIGINAL_READ_FAILED} reason=missing_source_uri image_uri=missing`);
+        console.error(`[ReviewBundleOriginalPhotoExport] bundle_v2_export_failed review_id=${reviewId} bundleId=${bundleId} type=${HomeStorageErrorType.ORIGINAL_READ_FAILED} error=missing_source_uri stack=`);
         return {
           success: false,
           localBundlePath: '',
@@ -451,7 +510,7 @@ export class ReviewBundleOriginalPhotoExportService {
           bundleId: bundleId,
           bundleDirectoryName: bundleDirectoryName,
           message: ORIGINAL_READ_FAILED_TEXT,
-          errorType: HomeStorageErrorType.UPLOAD_FAILED
+          errorType: HomeStorageErrorType.ORIGINAL_READ_FAILED
         };
       }
 
@@ -459,32 +518,41 @@ export class ReviewBundleOriginalPhotoExportService {
       ensureDirectory(`${paths.root}/assets`);
       console.info(`[ReviewBundleOriginalPhotoExport] local_directories_ready root=${paths.root}`);
 
-      writeTextFile(paths.reviewJson, stringifyReviewCardExchangeSchemaV1(document, reviewerText));
-      console.info(`[ReviewBundleOriginalPhotoExport] review_json_write_success path=${paths.reviewJson} bytes=${fileSize(paths.reviewJson)}`);
-
-      console.info(`[ReviewBundleOriginalPhotoExport] original_copy_start review_id=${reviewId} bundleId=${bundleId} target=${originalRelativePath}`);
-      try {
-        copyOriginalPhoto(document.imageUri, paths.originalPhoto);
-      } catch (error) {
-        const message: string = error instanceof Error ? describeError(error) : `${error}`;
-        const isReadFailure: boolean = message === ORIGINAL_READ_FAILED_TEXT;
-        console.error(`[ReviewBundleOriginalPhotoExport] ${isReadFailure ? 'original_read_failed' : 'original_copy_failed'} review_id=${reviewId} bundleId=${bundleId} message=${message}`);
+      console.info(`[ReviewBundleOriginalPhotoExport] original_copy_start review_id=${reviewId} bundleId=${bundleId} target=${originalRelativePath} read_method=fs.openSync_read_only uri_scheme=${sourceUriScheme} uri_digest=${sourceUriDigest}`);
+      const copyResult: OriginalPhotoCopyResult = copyOriginalPhoto(document.imageUri, paths.originalPhoto);
+      if (!copyResult.success) {
+        const failedToken: string = copyResult.errorType === HomeStorageErrorType.ORIGINAL_READ_FAILED ? 'original_read_failed' : 'original_copy_failed';
+        console.error(`[ReviewBundleOriginalPhotoExport] ${failedToken} review_id=${reviewId} bundleId=${bundleId} type=${copyResult.errorType} raw_message=${copyResult.rawMessage} raw_stack=${copyResult.rawStack}`);
+        console.error(`[ReviewBundleOriginalPhotoExport] bundle_v2_export_failed review_id=${reviewId} bundleId=${bundleId} type=${copyResult.errorType} error=${copyResult.rawMessage} stack=${copyResult.rawStack}`);
         return {
           success: false,
           localBundlePath: paths.root,
           remotePath: '',
           bundleId: bundleId,
           bundleDirectoryName: bundleDirectoryName,
-          message: isReadFailure ? ORIGINAL_READ_FAILED_TEXT : ORIGINAL_COPY_FAILED_TEXT,
-          errorType: HomeStorageErrorType.UPLOAD_FAILED
+          message: copyResult.message,
+          errorType: copyResult.errorType
         };
       }
       const originalSize: number = fileSize(paths.originalPhoto);
-      console.info(`[ReviewBundleOriginalPhotoExport] original_copy_success review_id=${reviewId} bundleId=${bundleId} fileSize=${originalSize}`);
+      if (originalSize <= 0) {
+        console.error(`[ReviewBundleOriginalPhotoExport] original_copy_failed review_id=${reviewId} bundleId=${bundleId} type=${HomeStorageErrorType.ORIGINAL_COPY_FAILED} reason=empty_file fileSize=${originalSize}`);
+        console.error(`[ReviewBundleOriginalPhotoExport] bundle_v2_export_failed review_id=${reviewId} bundleId=${bundleId} type=${HomeStorageErrorType.ORIGINAL_COPY_FAILED} error=empty_file stack=`);
+        return {
+          success: false,
+          localBundlePath: paths.root,
+          remotePath: '',
+          bundleId: bundleId,
+          bundleDirectoryName: bundleDirectoryName,
+          message: ORIGINAL_COPY_FAILED_TEXT,
+          errorType: HomeStorageErrorType.ORIGINAL_COPY_FAILED
+        };
+      }
+      console.info(`[ReviewBundleOriginalPhotoExport] original_copy_success review_id=${reviewId} bundleId=${bundleId} localPath=${paths.originalPhoto} fileSize=${originalSize} ext=${extension} mimeType=${mimeType}`);
 
+      writeTextFile(paths.reviewJson, stringifyReviewCardExchangeSchemaV1(document, reviewerText));
+      console.info(`[ReviewBundleOriginalPhotoExport] review_json_write_success path=${paths.reviewJson} bytes=${fileSize(paths.reviewJson)}`);
       writeTextFile(paths.assetsReadme, buildAssetsReadme());
-      const sourceFileName: string = resolveSourceFileName(document);
-      const mimeType: string = resolveMimeType(extension);
       writeTextFile(paths.manifest, buildManifest(
         document,
         reviewerText,
@@ -497,18 +565,52 @@ export class ReviewBundleOriginalPhotoExportService {
       ));
       console.info(`[ReviewBundleOriginalPhotoExport] manifest_v2_write_success path=${paths.manifest} bytes=${fileSize(paths.manifest)}`);
 
-      verifyBundle(paths, originalRelativePath);
+      console.info(`[ReviewBundleOriginalPhotoExport] local_bundle_v2_validation_start review_id=${reviewId} bundleId=${bundleId}`);
+      try {
+        verifyBundle(paths, originalRelativePath);
+      } catch (error) {
+        const validationMessage: string = describeUnknownError(error);
+        const validationStack: string = describeUnknownStack(error);
+        console.error(`[ReviewBundleOriginalPhotoExport] local_bundle_v2_validation_failed review_id=${reviewId} bundleId=${bundleId} type=${HomeStorageErrorType.LOCAL_BUNDLE_VALIDATION_FAILED} message=${validationMessage} stack=${validationStack}`);
+        console.error(`[ReviewBundleOriginalPhotoExport] bundle_v2_export_failed review_id=${reviewId} bundleId=${bundleId} type=${HomeStorageErrorType.LOCAL_BUNDLE_VALIDATION_FAILED} error=${validationMessage} stack=${validationStack}`);
+        return {
+          success: false,
+          localBundlePath: paths.root,
+          remotePath: '',
+          bundleId: bundleId,
+          bundleDirectoryName: bundleDirectoryName,
+          message: ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT,
+          errorType: HomeStorageErrorType.LOCAL_BUNDLE_VALIDATION_FAILED
+        };
+      }
       console.info(`[ReviewBundleOriginalPhotoExport] local_bundle_v2_validation_success review_id=${reviewId} bundleId=${bundleId}`);
 
+      const availabilityResult: HomeStorageOperationResult = await HomeStorageService.checkAvailability(context);
+      console.info(`[ReviewBundleOriginalPhotoExport] home_storage_reachability_result review_id=${reviewId} bundleId=${bundleId} success=${availabilityResult.success} type=${availabilityResult.errorType} message=${availabilityResult.message}`);
+      if (!availabilityResult.success) {
+        console.error(`[ReviewBundleOriginalPhotoExport] bundle_v2_export_failed review_id=${reviewId} bundleId=${bundleId} type=${availabilityResult.errorType} error=${availabilityResult.message} stack=`);
+        return {
+          success: false,
+          localBundlePath: paths.root,
+          remotePath: availabilityResult.remotePath,
+          bundleId: bundleId,
+          bundleDirectoryName: bundleDirectoryName,
+          message: availabilityResult.message,
+          errorType: availabilityResult.errorType
+        };
+      }
+
       console.info(`[ReviewBundleOriginalPhotoExport] bundle_v2_upload_start review_id=${reviewId} bundleId=${bundleId} remote=${remoteDirectory}`);
+      console.info(`[ReviewBundleOriginalPhotoExport] original_upload_start review_id=${reviewId} bundleId=${bundleId} remote=${remoteDirectory} bytes=${originalSize}`);
       const uploadResult: HomeStorageOperationResult = await HomeStorageService.uploadFilesToDirectory(
         context,
         remoteDirectory,
         buildUploadFiles(paths, originalRelativePath)
       );
       if (!uploadResult.success) {
-        console.error(`[ReviewBundleOriginalPhotoExport] original_upload_failed review_id=${reviewId} bundleId=${bundleId} remote=${remoteDirectory} message=${uploadResult.message}`);
+        console.error(`[ReviewBundleOriginalPhotoExport] original_upload_failed review_id=${reviewId} bundleId=${bundleId} remote=${remoteDirectory} type=${uploadResult.errorType} message=${uploadResult.message}`);
         console.error(`[ReviewBundleOriginalPhotoExport] bundle_v2_upload_failed review_id=${reviewId} bundleId=${bundleId} type=${uploadResult.errorType} message=${uploadResult.message}`);
+        console.error(`[ReviewBundleOriginalPhotoExport] bundle_v2_export_failed review_id=${reviewId} bundleId=${bundleId} type=${uploadResult.errorType} error=${uploadResult.message} stack=`);
         return {
           success: false,
           localBundlePath: paths.root,
@@ -532,8 +634,8 @@ export class ReviewBundleOriginalPhotoExportService {
         errorType: HomeStorageErrorType.NONE
       };
     } catch (error) {
-      const message: string = error instanceof Error ? describeError(error) : `${error}`;
-      const stack: string = error instanceof Error ? describeStack(error) : '';
+      const message: string = describeUnknownError(error);
+      const stack: string = describeUnknownStack(error);
       console.error(`[ReviewBundleOriginalPhotoExport] bundle_v2_export_failed review_id=${reviewId} bundleId=${bundleId} type=${HomeStorageErrorType.UPLOAD_FAILED} error=${message} stack=${stack}`);
       return {
         success: false,

@@ -7,6 +7,7 @@ const feedbackSource = fs.readFileSync('entry/src/main/ets/services/ReviewFlowFe
 const exchangeSchemaSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardExchangeSchema.ets', 'utf8');
 const rdbModelSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardRdbModel.ets', 'utf8');
 const smbClientSource = fs.readFileSync('entry/src/main/ets/services/Smb2Client.ets', 'utf8');
+const homeStorageSource = fs.readFileSync('entry/src/main/ets/services/HomeStorageService.ets', 'utf8');
 
 let failed = false;
 
@@ -44,13 +45,27 @@ for (const token of [
   'remoteRelativePath: originalRelativePath',
   'HomeStorageService.uploadFilesToDirectory(',
   'bundle_v2_export_start',
+  'document_file_name=',
   'original_source_uri=',
+  'image_uri=',
+  'uri_scheme=',
+  'uri_digest=',
+  'uri_length=',
   'original_copy_start',
+  'read_method=fs.openSync_read_only',
+  'original_read_failed',
   'original_copy_success',
   'original_copy_failed',
+  'raw_message=',
+  'raw_stack=',
   'manifest_v2_write_success',
+  'local_bundle_v2_validation_start',
+  'local_bundle_v2_validation_failed',
   'local_bundle_v2_validation_success',
+  'home_storage_reachability_result',
+  'remote_target_directory',
   'bundle_v2_upload_start',
+  'original_upload_start',
   'original_upload_success',
   'original_upload_failed',
   'bundle_v2_upload_failed',
@@ -58,6 +73,17 @@ for (const token of [
   'bundle_v2_export_failed'
 ]) {
   assertIncludes(v2ServiceSource, token, 'ReviewBundleOriginalPhotoExportService');
+}
+
+for (const token of [
+  "ORIGINAL_READ_FAILED = 'originalReadFailed'",
+  "ORIGINAL_COPY_FAILED = 'originalCopyFailed'",
+  "LOCAL_BUNDLE_VALIDATION_FAILED = 'localBundleValidationFailed'",
+  'original_upload_start',
+  'original_upload_success',
+  'original_upload_failed'
+]) {
+  assertIncludes(homeStorageSource, token, 'HomeStorageService');
 }
 
 for (const token of [
@@ -87,6 +113,16 @@ assertNotIncludes(v2ServiceSource, 'REVIEW_CARD_IMAGE_PATH', 'v2 service');
 assertNotIncludes(v2ServiceSource, "thumbnailPath: 'thumbnails/thumb.jpg'", 'v2 manifest must not declare missing thumbnail');
 assertNotIncludes(v2ServiceSource, 'thumbnailPath: THUMBNAIL_PATH', 'v2 manifest must not declare missing thumbnail');
 assertNotIncludes(v2ServiceSource, "remoteRelativePath: 'exports/review-card.png'", 'v2 upload list');
+
+const sourceCheckIndex = v2ServiceSource.indexOf('if (!hasOriginalSource)');
+const copyStartIndex = v2ServiceSource.indexOf('original_copy_start');
+const validationStartIndex = v2ServiceSource.indexOf('local_bundle_v2_validation_start');
+const availabilityIndex = v2ServiceSource.indexOf('HomeStorageService.checkAvailability(context)');
+const uploadStartIndex = v2ServiceSource.indexOf('bundle_v2_upload_start');
+assert(sourceCheckIndex >= 0 && sourceCheckIndex < availabilityIndex, 'v2 must reject missing imageUri before home storage reachability.');
+assert(copyStartIndex >= 0 && copyStartIndex < availabilityIndex, 'v2 must copy original before home storage reachability.');
+assert(validationStartIndex >= 0 && validationStartIndex < availabilityIndex, 'v2 must validate local bundle before home storage reachability.');
+assert(availabilityIndex >= 0 && availabilityIndex < uploadStartIndex, 'v2 must check reachability before upload.');
 
 assertIncludes(previewSource, 'ReviewBundleOriginalPhotoExportService', 'PreviewPage');
 assertIncludes(previewSource, '@State isExportingOriginalPhotoBundle: boolean = false;', 'PreviewPage');

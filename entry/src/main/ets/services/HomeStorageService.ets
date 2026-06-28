@@ -58,6 +58,9 @@ export enum HomeStorageErrorType {
   UNREACHABLE = 'unreachable',
   AUTH_FAILED = 'authFailed',
   DIRECTORY_CREATE_FAILED = 'directoryCreateFailed',
+  ORIGINAL_READ_FAILED = 'originalReadFailed',
+  ORIGINAL_COPY_FAILED = 'originalCopyFailed',
+  LOCAL_BUNDLE_VALIDATION_FAILED = 'localBundleValidationFailed',
   UPLOAD_FAILED = 'uploadFailed',
   UNKNOWN = 'unknown'
 }
@@ -233,6 +236,15 @@ function resolveHomeStorageErrorMessage(errorType: HomeStorageErrorType): string
   }
   if (errorType === HomeStorageErrorType.DIRECTORY_CREATE_FAILED) {
     return '家庭存储目录创建失败，请稍后重试';
+  }
+  if (errorType === HomeStorageErrorType.ORIGINAL_READ_FAILED) {
+    return '原始照片无法读取，请重新选择照片。';
+  }
+  if (errorType === HomeStorageErrorType.ORIGINAL_COPY_FAILED) {
+    return '原始照片保存失败，请重试。';
+  }
+  if (errorType === HomeStorageErrorType.LOCAL_BUNDLE_VALIDATION_FAILED) {
+    return '含原图复盘包导出失败，请重试。';
   }
   if (errorType === HomeStorageErrorType.UPLOAD_FAILED) {
     return '复盘包导出失败，请重试';
@@ -804,6 +816,10 @@ export class HomeStorageService {
       const subDirectory: string = parts.length > 1 ? parts.slice(0, parts.length - 1).join('/') : '';
       const fileRemoteDirectory: string = joinRemotePath(targetDirectory, subDirectory);
       console.info(`[HomeStorageService] bundle_upload_file index=${index + 1}/${files.length} relative=${entry.remoteRelativePath} directory=${fileRemoteDirectory} bytes=${fileSizeText(entry.localPath)}`);
+      const isOriginalUpload: boolean = entry.remoteRelativePath.indexOf('assets/original/') === 0;
+      if (isOriginalUpload) {
+        console.info(`[HomeStorageService] original_upload_start relative=${entry.remoteRelativePath} directory=${fileRemoteDirectory} bytes=${fileSizeText(entry.localPath)}`);
+      }
       const result: HomeStorageOperationResult = await uploadFileBySmb(
         settings,
         entry.localPath,
@@ -812,7 +828,13 @@ export class HomeStorageService {
       );
       if (!result.success) {
         console.error(`[HomeStorageService] bundle_upload_failed index=${index + 1}/${files.length} relative=${entry.remoteRelativePath} remote=${result.remotePath} message=${result.message}`);
+        if (isOriginalUpload) {
+          console.error(`[HomeStorageService] original_upload_failed relative=${entry.remoteRelativePath} remote=${result.remotePath} type=${result.errorType} message=${result.message}`);
+        }
         return result;
+      }
+      if (isOriginalUpload) {
+        console.info(`[HomeStorageService] original_upload_success relative=${entry.remoteRelativePath} remote=${result.remotePath}`);
       }
       lastRemotePath = result.remotePath;
     }
