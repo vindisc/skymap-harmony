@@ -85,13 +85,35 @@ const docsSource = read(files.docs);
 [
   'HomeHeroImageService.getDisplayImages',
   'this.heroImages.length > 1',
-  'setInterval(() =>',
-  'clearInterval(this.heroAutoplayTimer)',
-  'Image(this.resolveCurrentHeroImageUri())',
+  'Swiper()',
+  'this.HeroImageSlide(item)',
+  'this.DefaultHeroImageSlide()',
+  '.autoPlay(this.shouldAutoplayHero())',
+  '.indicator(this.shouldShowHeroIndicator())',
+  '.loop(this.shouldShowHeroIndicator())',
+  '.indicatorStyle({',
+  'this.skipFailedHeroImage(item.id)',
+  'Image(item.uri)',
   "Image($r('app.media.home_review_hero'))",
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
-  'this.skipFailedHeroImage()'
+  'AppColors.onPrimarySubtle',
+  'AppColors.heroGradientMiddle',
+  'AppColors.heroGradientEnd'
 ].forEach((marker) => requireIncludes(homePageSource, marker, 'HomePage missing hero display marker'));
+
+[
+  'setInterval(() =>',
+  'clearInterval(this.heroAutoplayTimer)',
+  'heroAutoplayTimer',
+  'heroCurrentIndex',
+  'resolveCurrentHeroImageUri',
+  'HOME_HERO_DOT_SIZE',
+  'HOME_HERO_DOT_GAP',
+  "'#D9FFFFFF'",
+  "'#66FFFFFF'",
+  "'#0F121B12'",
+  "'#0F121B80'"
+].forEach((marker) => forbidIncludes(homePageSource, marker, 'HomePage must use Swiper and shared Hero tokens'));
 
 [
   "title: '首页图片'",

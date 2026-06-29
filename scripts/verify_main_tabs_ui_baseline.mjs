@@ -73,11 +73,21 @@ baselineImagePaths.forEach((imagePath) => {
 [
   'HomeHeroImageService.getDisplayImages',
   'this.heroImages.length > 1',
-  'setInterval(() =>',
+  'Swiper()',
+  '.autoPlay(this.shouldAutoplayHero())',
+  '.indicator(this.shouldShowHeroIndicator())',
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
   "Button(this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘')",
   'bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding'
 ].forEach((marker) => requireIncludes(sources.home, marker, 'HomePage must keep hero config, carousel and tab clearance'));
+
+[
+  'setInterval(() =>',
+  'clearInterval(this.heroAutoplayTimer)',
+  'heroAutoplayTimer',
+  'heroCurrentIndex',
+  'resolveCurrentHeroImageUri'
+].forEach((marker) => forbidIncludes(sources.home, marker, 'HomePage must not regress to manual hero timer'));
 
 [
   '按照片、判断和卡点回看你的复盘记录。',

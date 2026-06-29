@@ -27,7 +27,11 @@ export class AppColors {
   static readonly primarySoft: string = '#E5EEF3';
   static readonly primaryDisabled: string = '#AFC5D0';
   static readonly onPrimary: string = '#FFFFFF';
+  static readonly onPrimarySubtle: string = '#D9FFFFFF';
   static readonly transparent: string = '#00000000';
+  static readonly overlayLight: string = '#66FFFFFF';
+  static readonly heroGradientMiddle: string = '#0F121B12';
+  static readonly heroGradientEnd: string = '#0F121B80';
   static readonly scrim: string = '#66000000';
   static readonly modalScrim: string = '#73000000';
   static readonly floatingShadow: string = '#1A000000';

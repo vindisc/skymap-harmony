@@ -50,8 +50,7 @@ const HOME_PRIMARY_BUTTON_HEIGHT: number = 44;
 const HOME_FLOW_CARD_GAP: number = 10;
 const HOME_FLOW_CARD_HEIGHT: number = 62;
 const HOME_FLOW_CARD_RADIUS: number = 16;
-const HOME_HERO_DOT_SIZE: number = 6;
-const HOME_HERO_DOT_GAP: number = 6;
+const HOME_HERO_INDICATOR_BOTTOM: number = 18;
 
 interface ReviewFlowStep {
   title: string;
@@ -61,7 +60,6 @@ interface ReviewFlowStep {
 @Component
 export struct HomePage {
   private dashboardReloadState: HomeDashboardReloadState = createHomeDashboardReloadState();
-  private heroAutoplayTimer: number = -1;
   private readonly heroFeatureTags: Array<string> = [
     '视觉落点',
     '视线路径',
@@ -78,7 +76,6 @@ export struct HomePage {
   @State historyLoadFailed: boolean = false;
   @State historyDiagnosticsText: string = '';
   @State heroImages: Array<HomeHeroDisplayImage> = [];
-  @State heroCurrentIndex: number = 0;
   @State heroAutoplayEnabled: boolean = true;
   @State heroIntervalSeconds: number = 4;
 
@@ -90,10 +87,6 @@ export struct HomePage {
   onPageShow(): void {
     this.reloadHistory();
     this.reloadHeroImages();
-  }
-
-  aboutToDisappear(): void {
-    this.stopHeroAutoplay();
   }
 
   refreshHomeData(): void {
@@ -131,69 +124,33 @@ export struct HomePage {
       this.heroImages = images;
       this.heroAutoplayEnabled = config.autoplayEnabled;
       this.heroIntervalSeconds = config.intervalSeconds;
-      if (this.heroCurrentIndex >= images.length) {
-        this.heroCurrentIndex = 0;
-      }
-      this.refreshHeroAutoplay();
     } catch (error) {
       console.warn(`[HomePage] home hero reload failed: ${error}`);
       this.heroImages = [];
-      this.heroCurrentIndex = 0;
-      this.stopHeroAutoplay();
     }
-  }
-
-  private refreshHeroAutoplay(): void {
-    this.stopHeroAutoplay();
-    if (!this.heroAutoplayEnabled || this.heroImages.length <= 1) {
-      return;
-    }
-
-    this.heroAutoplayTimer = setInterval(() => {
-      if (this.heroImages.length <= 1) {
-        this.heroCurrentIndex = 0;
-        this.stopHeroAutoplay();
-        return;
-      }
-      this.heroCurrentIndex = (this.heroCurrentIndex + 1) % this.heroImages.length;
-    }, this.heroIntervalSeconds * 1000);
-  }
-
-  private stopHeroAutoplay(): void {
-    if (this.heroAutoplayTimer < 0) {
-      return;
-    }
-    clearInterval(this.heroAutoplayTimer);
-    this.heroAutoplayTimer = -1;
   }
 
   private hasUserHeroImages(): boolean {
     return this.heroImages.length > 0;
   }
 
-  private resolveCurrentHeroImageUri(): string {
-    if (!this.hasUserHeroImages()) {
-      return '';
-    }
-    const safeIndex: number = Math.min(Math.max(this.heroCurrentIndex, 0), this.heroImages.length - 1);
-    return this.heroImages[safeIndex].uri;
+  private shouldShowHeroIndicator(): boolean {
+    return this.heroImages.length > 1;
   }
 
-  private skipFailedHeroImage(): void {
+  private shouldAutoplayHero(): boolean {
+    return this.heroAutoplayEnabled && this.shouldShowHeroIndicator();
+  }
+
+  private skipFailedHeroImage(failedId: string): void {
     if (this.heroImages.length <= 1) {
       this.heroImages = [];
-      this.heroCurrentIndex = 0;
-      this.stopHeroAutoplay();
       return;
     }
 
-    this.heroImages = this.heroImages.filter((item: HomeHeroDisplayImage, index: number): boolean => {
-      return index !== this.heroCurrentIndex;
+    this.heroImages = this.heroImages.filter((item: HomeHeroDisplayImage): boolean => {
+      return item.id !== failedId;
     });
-    if (this.heroCurrentIndex >= this.heroImages.length) {
-      this.heroCurrentIndex = 0;
-    }
-    this.refreshHeroAutoplay();
   }
 
   private syncDashboardStateFromPresenter(): void {
@@ -258,64 +215,27 @@ export struct HomePage {
         subtitleTop: 4
       })
 
-      Stack({ alignContent: Alignment.BottomStart }) {
+      Swiper() {
         if (this.hasUserHeroImages()) {
-          Image(this.resolveCurrentHeroImageUri())
-            .width('100%')
-            .height('100%')
-            .objectFit(ImageFit.Cover)
-            .onError(() => {
-              this.skipFailedHeroImage();
-            })
+          ForEach(this.heroImages, (item: HomeHeroDisplayImage) => {
+            this.HeroImageSlide(item)
+          }, (item: HomeHeroDisplayImage) => item.id)
         } else {
-          Image($r('app.media.home_review_hero'))
-            .width('100%')
-            .height('100%')
-            .objectFit(ImageFit.Cover)
+          this.DefaultHeroImageSlide()
         }
-
-        Column({ space: 5 }) {
-          Text('从一张照片开始，练习判断')
-            .fontSize(16)
-            .fontWeight(600)
-            .fontColor(AppColors.onPrimary)
-            .lineHeight(21)
-            .maxLines(2)
-            .width('100%')
-
-          Text('看见落点、路径和关系。')
-            .fontSize(13)
-            .fontColor('#D9FFFFFF')
-            .lineHeight(17)
-            .maxLines(2)
-            .width('100%')
-
-          if (this.heroImages.length > 1) {
-            Row({ space: HOME_HERO_DOT_GAP }) {
-              ForEach(this.heroImages, (item: HomeHeroDisplayImage, index: number) => {
-                Circle()
-                  .width(HOME_HERO_DOT_SIZE)
-                  .height(HOME_HERO_DOT_SIZE)
-                  .fill(index === this.heroCurrentIndex ? AppColors.onPrimary : '#66FFFFFF')
-              }, (item: HomeHeroDisplayImage) => item.id)
-            }
-            .margin({ top: 3 })
-          }
-        }
-        .padding({
-          left: HOME_HERO_TEXT_PADDING,
-          right: HOME_HERO_TEXT_PADDING,
-          top: 40,
-          bottom: HOME_HERO_TEXT_BOTTOM
-        })
-        .width('100%')
-        .linearGradient({
-          angle: 180,
-          colors: [['#00000000', 0], ['#0F121B12', 0.55], ['#0F121B80', 1]]
-        })
       }
       .width('100%')
       .aspectRatio(HOME_HERO_ASPECT_RATIO)
+      .autoPlay(this.shouldAutoplayHero())
+      .interval(this.heroIntervalSeconds * 1000)
+      .indicator(this.shouldShowHeroIndicator())
+      .loop(this.shouldShowHeroIndicator())
+      .curve(Curve.EaseInOut)
+      .indicatorStyle({
+        bottom: HOME_HERO_INDICATOR_BOTTOM,
+        color: AppColors.overlayLight,
+        selectedColor: AppColors.onPrimary
+      })
       .borderRadius(HOME_HERO_RADIUS)
       .clip(true)
       .border({ width: 1, color: AppColors.border })
@@ -344,6 +264,68 @@ export struct HomePage {
     .width('100%')
     .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING, top: 0, bottom: 0 })
     .backgroundColor(AppColors.pageBackground)
+  }
+
+  @Builder
+  HeroImageSlide(item: HomeHeroDisplayImage) {
+    Stack({ alignContent: Alignment.BottomStart }) {
+      Image(item.uri)
+        .width('100%')
+        .height('100%')
+        .objectFit(ImageFit.Cover)
+        .onError(() => {
+          this.skipFailedHeroImage(item.id);
+        })
+
+      this.HeroTextOverlay()
+    }
+    .width('100%')
+    .height('100%')
+  }
+
+  @Builder
+  DefaultHeroImageSlide() {
+    Stack({ alignContent: Alignment.BottomStart }) {
+      Image($r('app.media.home_review_hero'))
+        .width('100%')
+        .height('100%')
+        .objectFit(ImageFit.Cover)
+
+      this.HeroTextOverlay()
+    }
+    .width('100%')
+    .height('100%')
+  }
+
+  @Builder
+  HeroTextOverlay() {
+    Column({ space: 5 }) {
+      Text('从一张照片开始，练习判断')
+        .fontSize(16)
+        .fontWeight(600)
+        .fontColor(AppColors.onPrimary)
+        .lineHeight(21)
+        .maxLines(2)
+        .width('100%')
+
+      Text('看见落点、路径和关系。')
+        .fontSize(13)
+        .fontColor(AppColors.onPrimarySubtle)
+        .lineHeight(17)
+        .maxLines(2)
+        .width('100%')
+    }
+    .padding({
+      left: HOME_HERO_TEXT_PADDING,
+      right: HOME_HERO_TEXT_PADDING,
+      top: 40,
+      bottom: HOME_HERO_TEXT_BOTTOM
+    })
+    .width('100%')
+    .linearGradient({
+      angle: 180,
+      colors: [[AppColors.transparent, 0], [AppColors.heroGradientMiddle, 0.55], [AppColors.heroGradientEnd, 1]]
+    })
   }
 
   @Builder
@@ -379,8 +361,8 @@ export struct HomePage {
       .height(HOME_METHOD_TAG_HEIGHT)
       .padding({ left: 10, right: 10 })
       .borderRadius(HOME_METHOD_TAG_RADIUS)
-      .backgroundColor('#EDF4F7')
-      .border({ width: 1, color: '#DDE8EE' })
+      .backgroundColor(AppColors.primarySoft)
+      .border({ width: 1, color: AppColors.border })
       .maxLines(1)
   }
 
