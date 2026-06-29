@@ -9,13 +9,14 @@ export const REVIEW_FLOW_SAVE_FAILED_TEXT: string = '保存失败，请稍后重
 
 export const REVIEW_FLOW_EXPORT_PENDING_TEXT: string = '导出中…';
 export const REVIEW_FLOW_EXPORT_SUCCESS_TEXT: string = '导出完成';
+export const REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT: string = '已保存到图库最近项目';
 export const REVIEW_FLOW_EXPORT_FAILED_TEXT: string = '导出失败，请重试';
 export const REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT: string = '复盘包已导出到家庭存储';
 export const REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT: string = '复盘包导出失败，请重试';
 export const REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT: string = '正在导出含原图复盘包…';
 export const REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT: string = '含原图复盘包已导出到家庭存储';
 export const REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT: string = '含原图复盘包导出失败，请重试。';
-export const REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_READ_FAILED_TEXT: string = '原始照片无法读取，请重新选择照片。';
+export const REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_READ_FAILED_TEXT: string = '原始照片无法读取，请重新导入。';
 export const REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_COPY_FAILED_TEXT: string = '原始照片保存失败，请重试。';
 export const REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_REQUIRED_TEXT: string = '请先配置家庭存储';
 export const REVIEW_FLOW_BUNDLE_EXPORT_CONFIG_INCOMPLETE_TEXT: string = '家庭存储配置不完整，请检查设置';

@@ -32,6 +32,7 @@ import {
   REVIEW_FLOW_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_EXPORT_PENDING_TEXT,
   REVIEW_FLOW_EXPORT_SUCCESS_TEXT,
+  REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT,
@@ -193,7 +194,7 @@ struct PreviewPage {
   }
 
   private async exportImage(): Promise<void> {
-    if (this.isExporting) {
+    if (this.isActionBusy()) {
       return;
     }
 
@@ -211,13 +212,14 @@ struct PreviewPage {
       );
       if (result.savedToPhotoLibrary) {
         await this.markExportedQuietly(result.path);
-        this.actionFeedbackText = REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
-        promptAction.showToast({ message: REVIEW_FLOW_EXPORT_SUCCESS_TEXT });
+        this.actionFeedbackText = REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT;
+        promptAction.showToast({ message: REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT });
       } else if (result.cancelled) {
         this.actionFeedbackText = '';
       } else {
-        this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-        promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
+        const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_EXPORT_FAILED_TEXT;
+        this.actionFeedbackText = failedText;
+        promptAction.showToast({ message: failedText });
       }
     } catch (error) {
       this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
@@ -428,6 +430,25 @@ struct PreviewPage {
   }
 
   @Builder
+  MoreActionButton(isDisabled: boolean, onTap: () => void) {
+    Button('更多')
+      .height(AppMetrics.toolbarButtonHeight)
+      .width(AppMetrics.toolbarButtonHeight)
+      .borderRadius(AppMetrics.buttonRadius)
+      .fontSize(AppTypography.smallButtonText)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
+      .backgroundColor(AppColors.surface)
+      .border({ width: 1, color: AppColors.border })
+      .opacity(isDisabled ? 0.52 : 1)
+      .stateEffect(!isDisabled)
+      .enabled(!isDisabled)
+      .onClick(() => {
+        onTap();
+      })
+  }
+
+  @Builder
   FloatingActionBar() {
     Column({ space: AppMetrics.space8 }) {
       if (this.actionFeedbackText.length > 0) {
@@ -450,11 +471,18 @@ struct PreviewPage {
         .layoutWeight(1)
 
         Column() {
-          this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出', true, this.isActionBusy(), () => {
+          this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {
+            this.exportImage();
+          })
+        }
+        .layoutWeight(2)
+
+        Column() {
+          this.MoreActionButton(this.isActionBusy(), () => {
             this.openExportMenu();
           })
         }
-        .layoutWeight(1)
+        .width(AppMetrics.toolbarButtonHeight)
       }
       .alignItems(VerticalAlign.Center)
       .width('100%')
@@ -465,7 +493,7 @@ struct PreviewPage {
     .backgroundColor(AppColors.surface)
     .shadow({
       radius: 18,
-      color: '#1A000000',
+      color: AppColors.floatingShadow,
       offsetX: 0,
       offsetY: 8
     })
@@ -609,7 +637,7 @@ struct PreviewPage {
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor('#73000000')
+        .backgroundColor(AppColors.modalScrim)
         .onClick(() => {
           this.closeExportMenu();
         })
@@ -623,10 +651,6 @@ struct PreviewPage {
             .width('100%')
 
           this.ExportSheetSectionTitle('常用')
-
-          this.ExportSheetAction(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', '生成这张复盘卡片图片。', this.isActionBusy(), () => {
-            this.exportImage();
-          })
 
           this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包', '包含复盘数据和导出图，用于家庭存储和 Mac 接力。', this.isActionBusy(), () => {
             this.exportReviewBundleToHomeStorage();

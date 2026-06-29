@@ -120,9 +120,9 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
 
 [
   "this.ActionButton('编辑', false, this.isActionBusy(), () => {",
-  "this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出', true, this.isActionBusy(), () => {",
+  "this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {",
+  'this.MoreActionButton(this.isActionBusy(), () => {',
   '.height(AppMetrics.toolbarButtonHeight)',
-  "this.ExportSheetAction(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片'",
   "this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包'",
   "this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json'",
   "this.ExportSheetAction('复制复盘数据'"

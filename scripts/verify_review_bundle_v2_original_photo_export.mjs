@@ -138,7 +138,7 @@ for (const token of [
   "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT: string = '正在导出含原图复盘包…'",
   "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT: string = '含原图复盘包已导出到家庭存储'",
   "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT: string = '含原图复盘包导出失败，请重试。'",
-  "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_READ_FAILED_TEXT: string = '原始照片无法读取，请重新选择照片。'",
+  "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_READ_FAILED_TEXT: string = '原始照片无法读取，请重新导入。'",
   "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_COPY_FAILED_TEXT: string = '原始照片保存失败，请重试。'",
   "REVIEW_FLOW_BUNDLE_EXPORT_AUTH_FAILED_TEXT: string = '家庭存储账号或密码不正确，请检查设置'",
   "REVIEW_FLOW_BUNDLE_EXPORT_UNREACHABLE_TEXT: string = '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。'"
@@ -155,7 +155,7 @@ const feedbackUserCopy = [
   "正在导出含原图复盘包…",
   "含原图复盘包已导出到家庭存储",
   "含原图复盘包导出失败，请重试。",
-  "原始照片无法读取，请重新选择照片。",
+  "原始照片无法读取，请重新导入。",
   "原始照片保存失败，请重试。",
   "请先配置家庭存储",
   "无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。",

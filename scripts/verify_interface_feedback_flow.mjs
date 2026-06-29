@@ -22,6 +22,7 @@ assert(feedbackSource.includes('ENABLE_RDB_DIAGNOSTICS_ENTRY: boolean = false'),
 assert(feedbackSource.includes("REVIEW_FLOW_IMPORT_PENDING_TEXT: string = '正在打开照片…'"), 'Import pending copy must be centralized.');
 assert(feedbackSource.includes("REVIEW_FLOW_SAVE_PENDING_TEXT: string = '保存中…'"), 'Save pending copy must be centralized.');
 assert(feedbackSource.includes("REVIEW_FLOW_EXPORT_PENDING_TEXT: string = '导出中…'"), 'Export pending copy must be centralized.');
+assert(feedbackSource.includes("REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT: string = '已保存到图库最近项目'"), 'Image export success copy must say where the user can find the result.');
 assert(feedbackSource.includes("REVIEW_FLOW_DELETE_CONFIRM_MESSAGE: string ="), 'Delete scope copy must be centralized.');
 
 assert(homeSource.includes('REVIEW_FLOW_IMPORT_PENDING_TEXT'), 'Home page should use shared import pending copy.');
@@ -38,6 +39,9 @@ assert(previewSource.includes('markExportedQuietly'), 'Preview should separate e
 assert(previewSource.includes('result.cancelled'), 'Preview should treat cancelled export separately from failed export.');
 assert(previewSource.includes('this.isSaving ||') && previewSource.includes('this.isExportingReviewBundle'), 'Preview busy gate should block repeated actions across save/export/bundle export.');
 assert(previewSource.includes('ExportSheetAction(label: string, description: string, isDisabled: boolean'), 'Preview export sheet actions should support descriptions and disabled state.');
+assert(previewSource.includes("this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {"), 'Preview primary action should export the image directly.');
+assert(previewSource.includes('this.MoreActionButton(this.isActionBusy(), () => {'), 'Preview should keep secondary export choices behind a More action.');
+assert(previewSource.includes('REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT'), 'Preview image export should use user-visible photo-library success copy.');
 assert(previewSource.includes('REVIEW_FLOW_EXPORT_SUCCESS_TEXT'), 'Preview should use shared export success copy.');
 assert(previewSource.includes('REVIEW_FLOW_EXPORT_FAILED_TEXT'), 'Preview should use shared export failure copy.');
 

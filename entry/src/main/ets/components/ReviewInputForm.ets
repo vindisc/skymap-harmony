@@ -4,6 +4,7 @@ import {
   normalizeReviewJudgement,
   ReviewJudgementStatus
 } from '../model/ReviewCardModel';
+import { estimateReviewTextLineCount } from '../utils/ReviewTextMetrics';
 
 const REVIEW_TEXTAREA_LINE_HEIGHT: number = AppTypography.inputTextLineHeight;
 const REVIEW_TEXTAREA_VERTICAL_PADDING: number = 24;
@@ -15,24 +16,12 @@ const PRIMARY_FIELD_INPUT_SIZE: number = AppTypography.inputText;
 const SECONDARY_FIELD_LABEL_SIZE: number = AppTypography.inputLabel;
 const SECONDARY_FIELD_INPUT_SIZE: number = AppTypography.inputText;
 
-function estimateVisualLineCount(value: string, defaultLines: number): number {
-  if (value.length === 0) {
-    return defaultLines;
-  }
-
-  const rows: Array<string> = value.split('\n');
-  let lines: number = 0;
-  for (let index = 0; index < rows.length; index += 1) {
-    const rowLength: number = rows[index].length;
-    const wrappedLines: number = Math.max(1, Math.ceil(rowLength / REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE));
-    lines += wrappedLines;
-  }
-
-  return Math.max(defaultLines, lines);
-}
-
 function resolveReviewTextAreaHeight(value: string, defaultLines: number): number {
-  return estimateVisualLineCount(value, defaultLines) * REVIEW_TEXTAREA_LINE_HEIGHT + REVIEW_TEXTAREA_VERTICAL_PADDING;
+  return estimateReviewTextLineCount(
+    value,
+    defaultLines,
+    REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE
+  ) * REVIEW_TEXTAREA_LINE_HEIGHT + REVIEW_TEXTAREA_VERTICAL_PADDING;
 }
 
 @Component

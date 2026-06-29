@@ -29,6 +29,8 @@ export class AppColors {
   static readonly onPrimary: string = '#FFFFFF';
   static readonly transparent: string = '#00000000';
   static readonly scrim: string = '#66000000';
+  static readonly modalScrim: string = '#73000000';
+  static readonly floatingShadow: string = '#1A000000';
   static readonly danger: string = '#B73A31';
   static readonly dangerPressed: string = '#8F2B25';
   static readonly dangerSoft: string = '#F6E8E5';

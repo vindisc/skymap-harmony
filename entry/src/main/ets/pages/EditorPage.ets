@@ -20,6 +20,7 @@ import {
   REVIEW_FLOW_SAVE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
 import { AppColors, AppMetrics, AppTypography, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
+import { estimateReviewTextLineCount } from '../utils/ReviewTextMetrics';
 
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
@@ -29,8 +30,8 @@ const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 42;
 const EDITOR_FIELD_SAFE_TOP_GAP: number = 6;
 const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 34;
 const EDITOR_KEYBOARD_VISIBLE_RESERVE: number = 54;
-const EDITOR_KEYBOARD_SCROLL_DELAY: number = 220;
-const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 80;
+const EDITOR_KEYBOARD_SCROLL_DELAY: number = 96;
+const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 48;
 const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 4;
 const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 10;
 const EDITOR_PHOTO_MIN_HEIGHT: number = 172;
@@ -293,17 +294,11 @@ struct EditorPage {
   }
 
   private estimateTextAreaHeight(field: string, value: string): number {
-    if (value.length === 0) {
-      return this.getDefaultLines(field) * EDITOR_TEXTAREA_LINE_HEIGHT + EDITOR_TEXTAREA_VERTICAL_PADDING;
-    }
-
-    const rows: Array<string> = value.split('\n');
-    let lineCount: number = 0;
-    for (let index = 0; index < rows.length; index += 1) {
-      lineCount += Math.max(1, Math.ceil(rows[index].length / EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE));
-    }
-
-    const visibleLines: number = Math.max(this.getDefaultLines(field), lineCount);
+    const visibleLines: number = estimateReviewTextLineCount(
+      value,
+      this.getDefaultLines(field),
+      EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE
+    );
     return visibleLines * EDITOR_TEXTAREA_LINE_HEIGHT + EDITOR_TEXTAREA_VERTICAL_PADDING;
   }
 
@@ -394,7 +389,7 @@ struct EditorPage {
     const safeTop: number = currentOffset + EDITOR_FIELD_SAFE_TOP_GAP;
     const safeBottom: number = currentOffset + visibleHeight - EDITOR_FIELD_SAFE_BOTTOM_GAP;
 
-    if (intent === EditorFieldScrollIntent.START && this.isKeyboardActive()) {
+    if (intent === EditorFieldScrollIntent.START) {
       return Math.max(0, fieldTop - EDITOR_FIELD_SAFE_TOP_GAP);
     }
 
@@ -415,7 +410,7 @@ struct EditorPage {
       xOffset: 0,
       yOffset: targetOffset,
       animation: {
-        duration: 240,
+        duration: 180,
         curve: Curve.EaseOut
       }
     });
@@ -423,6 +418,7 @@ struct EditorPage {
 
   private focusField(field: string): void {
     this.focusedField = field;
+    this.scrollFieldIntoView(field, EditorFieldScrollIntent.START);
     this.scheduleFieldIntoView(field, EDITOR_KEYBOARD_SCROLL_DELAY, EditorFieldScrollIntent.START);
   }
 

@@ -32,10 +32,10 @@ function assertNotIncludes(source, token, label) {
 
 assertIncludes(previewSource, "Text('导出当前复盘')", 'Preview export sheet');
 assertNotIncludes(previewSource, "Text('导出与同步')", 'Preview export sheet');
+assertIncludes(previewSource, "this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片'", 'Preview floating action bar');
+assertIncludes(previewSource, 'this.MoreActionButton(this.isActionBusy()', 'Preview floating action bar');
 assertIncludes(previewSource, "this.ExportSheetSectionTitle('常用')", 'Preview export sheet');
 assertIncludes(previewSource, "this.ExportSheetSectionTitle('高级')", 'Preview export sheet');
-assertIncludes(previewSource, "'导出图片'", 'Preview export sheet');
-assertIncludes(previewSource, "'生成这张复盘卡片图片。'", 'Preview export sheet');
 assertIncludes(previewSource, "'导出复盘包'", 'Preview export sheet');
 assertIncludes(previewSource, "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'", 'Preview export sheet');
 assertIncludes(previewSource, "'导出 review.json'", 'Preview export sheet');
@@ -45,6 +45,7 @@ assertIncludes(previewSource, "'复制当前复盘的文本数据。'", 'Preview
 
 assertNotIncludes(previewSource, "'上传家庭存储'", 'Preview export sheet');
 assertNotIncludes(previewSource, 'uploadReviewJsonToHomeStorage', 'Preview export sheet');
+assertNotIncludes(previewSource, "'生成这张复盘卡片图片。'", 'Preview export sheet');
 assertNotIncludes(previewSource, "'复制数据'", 'Preview export sheet');
 assertNotIncludes(previewSource, 'isUploadingHomeStorage', 'Preview export sheet');
 
