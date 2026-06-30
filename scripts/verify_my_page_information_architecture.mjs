@@ -87,8 +87,10 @@ assert(myPageSource.includes('HomeStorageService.resolveEntryStatusLabel'), 'Hom
   'ReviewCardHistoryService.load(this.getAbilityContext())',
   'ReviewProjectService.buildStatsFeedback(items)',
   'OverviewCard()',
-  'Text(`${this.feedback.totalCount} 次复盘`)',
-  'Text(`成立 ${this.feedback.worksCount}'
+  '.fontSize(AppTypography.statNumber)',
+  'this.OverviewMetric(',
+  'resolveDistributionProgressWidth',
+  'resolveRecentReviewOpacity'
 ].forEach((marker) => requireIncludes(statsPageSource, marker, 'StatsPage must keep review statistics'));
 
 [

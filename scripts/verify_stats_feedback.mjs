@@ -51,7 +51,18 @@ const requiredStatsPageTokens = [
   '最近卡点',
   '暂时还没有记录卡点。',
   '最近复盘',
-  'Stack({ alignContent: Alignment.Start })'
+  'Stack({ alignContent: Alignment.Start })',
+  "import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';",
+  'this.OverviewMetric(',
+  '.fontSize(AppTypography.statNumber)',
+  '.shadow(ElevationTokens.medium)',
+  '.shadow(ElevationTokens.subtle)',
+  'resolveDistributionProgressWidth',
+  'Math.max(item.rate, 4)',
+  '.animation({ duration: MotionTokens.durationStandard, curve: MotionTokens.curveDecelerate })',
+  'resolveRecentReviewOpacity',
+  'STATS_RECENT_REVIEW_FADE_WINDOW',
+  '.opacity(this.resolveRecentReviewOpacity(item.updatedAt))'
 ];
 
 for (const token of requiredStatsPageTokens) {

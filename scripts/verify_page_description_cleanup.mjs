@@ -127,9 +127,10 @@ requireIncludes(myPageSource, '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })', 'My
 
 ['AppMetrics.space4', 'AppMetrics.space12'].forEach((marker) => {
   forbidIncludes(projectDetailSource, marker, 'ProjectDetailPage must keep existing spacing scale');
-  forbidIncludes(statsPageSource, marker, 'StatsPage must keep existing spacing scale');
   forbidIncludes(myPageSource, marker, 'MyPage must keep existing spacing scale');
 });
+forbidIncludes(statsPageSource, 'AppMetrics.space4', 'StatsPage must keep existing spacing scale');
+requireIncludes(statsPageSource, 'AppMetrics.space12', 'StatsPage may use shared 12vp rhythm for production metric groups');
 
 if (failed) {
   process.exit(1);

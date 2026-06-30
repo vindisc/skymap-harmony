@@ -1,5 +1,6 @@
 import common from '@ohos.app.ability.common';
 import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState } from '../components/AppDesign';
+import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import {
@@ -14,9 +15,10 @@ import { formatReviewTime } from '../utils/ImageLayoutUtils';
 
 const STATS_OVERVIEW_MIN_HEIGHT: number = 120;
 const STATS_CARD_MIN_HEIGHT: number = 104;
-const STATS_PROGRESS_HEIGHT: number = 9;
+const STATS_PROGRESS_HEIGHT: number = 10;
 const STATS_PROGRESS_RADIUS: number = 5;
 const STATS_CONTENT_TOP_GAP: number = AppMetrics.space10;
+const STATS_RECENT_REVIEW_FADE_WINDOW: number = 14 * 24 * 60 * 60 * 1000;
 
 @Component
 export struct StatsPage {
@@ -107,32 +109,93 @@ export struct StatsPage {
     return AppColors.primary;
   }
 
+  private resolveDistributionProgressWidth(item: ReviewStatsDistributionItem): string {
+    if (item.count <= 0) {
+      return '0%';
+    }
+    return `${Math.max(item.rate, 4)}%`;
+  }
+
+  private resolveRecentReviewOpacity(updatedAt: number): number {
+    if (updatedAt <= 0 || this.feedback.latestReviewTime <= 0) {
+      return 0.8;
+    }
+    const ageFromLatest: number = Math.max(0, this.feedback.latestReviewTime - updatedAt);
+    if (ageFromLatest <= STATS_RECENT_REVIEW_FADE_WINDOW / 3) {
+      return 1;
+    }
+    if (ageFromLatest <= STATS_RECENT_REVIEW_FADE_WINDOW) {
+      return 0.88;
+    }
+    return 0.74;
+  }
+
+  @Builder
+  OverviewMetric(label: string, value: number, color: string, background: string) {
+    Column({ space: 2 }) {
+      Text(`${value}`)
+        .fontSize(AppTypography.cardTitle)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(color)
+        .lineHeight(AppTypography.cardTitleLineHeight)
+        .maxLines(1)
+
+      Text(label)
+        .fontSize(AppTypography.meta)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .maxLines(1)
+    }
+    .alignItems(HorizontalAlign.Center)
+    .layoutWeight(1)
+    .padding({ top: AppMetrics.space8, bottom: AppMetrics.space8 })
+    .borderRadius(AppMetrics.buttonRadius)
+    .backgroundColor(background)
+  }
+
   @Builder
   OverviewCard() {
-    Column({ space: 10 }) {
-      Text(`${this.feedback.totalCount} 次复盘`)
-        .fontSize(AppTypography.sectionTitle)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.sectionTitleLineHeight)
-        .width('100%')
+    Column({ space: AppMetrics.space12 }) {
+      Row({ space: AppMetrics.space12 }) {
+        Column({ space: 2 }) {
+          Text(`${this.feedback.totalCount}`)
+            .fontSize(AppTypography.statNumber)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.primary)
+            .lineHeight(AppTypography.statNumberLineHeight)
+            .maxLines(1)
 
-      Text(`成立 ${this.feedback.worksCount} · 待判断 ${this.feedback.uncertainCount} · 不成立 ${this.feedback.notWorksCount}`)
-        .fontSize(AppTypography.body)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.bodyLineHeight)
+          Text('次复盘')
+            .fontSize(AppTypography.body)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.text)
+            .lineHeight(AppTypography.bodyLineHeight)
+            .maxLines(1)
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+
+        Text(`成立率 ${this.feedback.worksRate}%`)
+          .fontSize(AppTypography.meta)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.tagGreenText)
+          .lineHeight(AppTypography.metaLineHeight)
+          .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+          .borderRadius(AppMetrics.capsuleRadius)
+          .backgroundColor(AppColors.tagGreen)
+          .maxLines(1)
+      }
+      .alignItems(VerticalAlign.Center)
+      .width('100%')
+
+      Row({ space: AppMetrics.space8 }) {
+        this.OverviewMetric('成立', this.feedback.worksCount, AppColors.tagGreenText, AppColors.tagGreen)
+        this.OverviewMetric('待判断', this.feedback.uncertainCount, AppColors.primary, AppColors.primarySoft)
+        this.OverviewMetric('不成立', this.feedback.notWorksCount, AppColors.tagAmberText, AppColors.tagAmber)
+      }
         .width('100%')
 
       Row({ space: AppMetrics.space8 }) {
-        Text(`成立率 ${this.feedback.worksRate}%`)
-          .fontSize(AppTypography.meta)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.tagGreenText)
-          .lineHeight(AppTypography.metaLineHeight)
-          .padding({ left: 10, right: 10, top: 5, bottom: 5 })
-          .borderRadius(10)
-          .backgroundColor(AppColors.tagGreen)
-
         Text(`最近一次：${this.resolveLatestReviewDate()}`)
           .fontSize(AppTypography.meta)
           .fontWeight(FontWeight.Medium)
@@ -150,33 +213,43 @@ export struct StatsPage {
     .constraintSize({ minHeight: STATS_OVERVIEW_MIN_HEIGHT })
     .padding(AppMetrics.cardPadding)
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.medium)
   }
 
   @Builder
   Recent30DaysCard() {
-    Column({ space: 8 }) {
-      Text('最近 30 天')
-        .fontSize(AppTypography.cardTitle)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.cardTitleLineHeight)
-        .width('100%')
+    Column({ space: AppMetrics.space10 }) {
+      Row() {
+        Text('最近 30 天')
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .layoutWeight(1)
+
+        if (this.feedback.recent30DaysCount > 0) {
+          Text(`${this.feedback.recent30DaysCount} 次`)
+            .fontSize(AppTypography.meta)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.primary)
+            .lineHeight(AppTypography.metaLineHeight)
+            .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+            .borderRadius(AppMetrics.capsuleRadius)
+            .backgroundColor(AppColors.primarySoft)
+        }
+      }
+      .alignItems(VerticalAlign.Center)
+      .width('100%')
 
       if (this.feedback.recent30DaysCount > 0) {
-        Text(`复盘 ${this.feedback.recent30DaysCount} 次`)
-          .fontSize(AppTypography.body)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.primary)
-          .lineHeight(AppTypography.bodyLineHeight)
-          .width('100%')
-
-        Text(`成立 ${this.feedback.recent30DaysWorksCount} · 待判断 ${this.feedback.recent30DaysUncertainCount} · 不成立 ${this.feedback.recent30DaysNotWorksCount}`)
-          .fontSize(AppTypography.meta)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.metaLineHeight)
-          .width('100%')
+        Row({ space: AppMetrics.space8 }) {
+          this.OverviewMetric('成立', this.feedback.recent30DaysWorksCount, AppColors.tagGreenText, AppColors.tagGreen)
+          this.OverviewMetric('待判断', this.feedback.recent30DaysUncertainCount, AppColors.primary, AppColors.primarySoft)
+          this.OverviewMetric('不成立', this.feedback.recent30DaysNotWorksCount, AppColors.tagAmberText, AppColors.tagAmber)
+        }
+        .width('100%')
       } else {
         Text('继续复盘后，这里会显示最近 30 天变化。')
           .fontSize(AppTypography.body)
@@ -190,13 +263,14 @@ export struct StatsPage {
     .constraintSize({ minHeight: STATS_CARD_MIN_HEIGHT })
     .padding(AppMetrics.cardPadding)
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
   }
 
   @Builder
   DistributionRow(item: ReviewStatsDistributionItem) {
-    Column({ space: 7 }) {
+    Column({ space: AppMetrics.space8 }) {
       Row() {
         Text(`${item.label} ${item.count}`)
           .fontSize(AppTypography.meta)
@@ -207,8 +281,12 @@ export struct StatsPage {
 
         Text(`${item.rate}%`)
           .fontSize(AppTypography.meta)
-          .fontColor(AppColors.secondaryText)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.resolveDistributionColor(item.key))
           .lineHeight(AppTypography.metaLineHeight)
+          .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+          .borderRadius(AppMetrics.capsuleRadius)
+          .backgroundColor(this.resolveDistributionBackground(item.key))
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
@@ -221,10 +299,11 @@ export struct StatsPage {
           .backgroundColor(AppColors.surfaceMuted)
 
         Column()
-          .width(`${item.rate}%`)
+          .width(this.resolveDistributionProgressWidth(item))
           .height(STATS_PROGRESS_HEIGHT)
           .borderRadius(STATS_PROGRESS_RADIUS)
           .backgroundColor(this.resolveDistributionColor(item.key))
+          .animation({ duration: MotionTokens.durationStandard, curve: MotionTokens.curveDecelerate })
       }
       .width('100%')
       .height(STATS_PROGRESS_HEIGHT)
@@ -237,7 +316,7 @@ export struct StatsPage {
     Column({ space: 12 }) {
       Text('判断分布')
         .fontSize(AppTypography.cardTitle)
-        .fontWeight(FontWeight.Medium)
+        .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
         .lineHeight(AppTypography.cardTitleLineHeight)
         .width('100%')
@@ -250,8 +329,9 @@ export struct StatsPage {
     .width('100%')
     .padding(AppMetrics.cardPadding)
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
   }
 
   @Builder
@@ -282,7 +362,7 @@ export struct StatsPage {
     Column({ space: 10 }) {
       Text('最近卡点')
         .fontSize(AppTypography.cardTitle)
-        .fontWeight(FontWeight.Medium)
+        .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
         .lineHeight(AppTypography.cardTitleLineHeight)
         .width('100%')
@@ -303,8 +383,9 @@ export struct StatsPage {
     .width('100%')
     .padding(AppMetrics.cardPadding)
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
   }
 
   @Builder
@@ -344,6 +425,7 @@ export struct StatsPage {
     .alignItems(VerticalAlign.Center)
     .width('100%')
     .padding({ top: 2, bottom: 2 })
+    .opacity(this.resolveRecentReviewOpacity(item.updatedAt))
   }
 
   @Builder
@@ -351,7 +433,7 @@ export struct StatsPage {
     Column({ space: 10 }) {
       Text('最近复盘')
         .fontSize(AppTypography.cardTitle)
-        .fontWeight(FontWeight.Medium)
+        .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
         .lineHeight(AppTypography.cardTitleLineHeight)
         .width('100%')
@@ -364,8 +446,9 @@ export struct StatsPage {
     .width('100%')
     .padding(AppMetrics.cardPadding)
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
   }
 
   build() {
