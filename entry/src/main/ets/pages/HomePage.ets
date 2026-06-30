@@ -48,15 +48,7 @@ const HOME_HERO_TEXT_BOTTOM: number = 22;
 const HOME_METHOD_TAG_HEIGHT: number = 28;
 const HOME_METHOD_TAG_RADIUS: number = AppMetrics.capsuleRadius;
 const HOME_METHOD_TAG_GAP: number = 6;
-const HOME_FLOW_CARD_GAP: number = AppMetrics.space8;
-const HOME_FLOW_CARD_HEIGHT: number = 50;
-const HOME_FLOW_CARD_RADIUS: number = AppMetrics.panelRadius;
 const HOME_HERO_INDICATOR_BOTTOM: number = 18;
-
-interface ReviewFlowStep {
-  title: string;
-  description: string;
-}
 
 @Component
 export struct HomePage {
@@ -66,11 +58,6 @@ export struct HomePage {
     '视线路径',
     '画面关系',
     '是否成立'
-  ];
-  private readonly reviewFlowSteps: Array<ReviewFlowStep> = [
-    { title: '导入照片', description: '选一张照片' },
-    { title: '记录观看', description: '写落点路径' },
-    { title: '判断成立', description: '留结论卡点' }
   ];
   @Prop @Watch('refreshHomeData') refreshToken: number = 0;
   @State isPickingPhoto: boolean = false;
@@ -255,8 +242,6 @@ export struct HomePage {
       }
       .width('100%')
       .margin({ top: AppMetrics.space12 })
-
-      this.ReviewFlowPanel()
     }
     .width('100%')
     .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING, top: 0, bottom: 0 })
@@ -378,48 +363,6 @@ export struct HomePage {
         this.startPhotoDraft();
       }
     })
-  }
-
-  @Builder
-  ReviewFlowPanel() {
-    Row({ space: HOME_FLOW_CARD_GAP }) {
-      ForEach(this.reviewFlowSteps, (step: ReviewFlowStep) => {
-        this.FlowStepCard(step)
-      }, (step: ReviewFlowStep) => step.title)
-    }
-    .width('100%')
-    .margin({ top: AppMetrics.space10 })
-  }
-
-  @Builder
-  FlowStepCard(step: ReviewFlowStep) {
-    Column({ space: 2 }) {
-      Text(step.title)
-        .fontSize(13)
-        .fontWeight(700)
-        .fontColor(AppColors.text)
-        .lineHeight(18)
-        .maxLines(1)
-        .width('100%')
-        .textAlign(TextAlign.Center)
-
-      Text(step.description)
-        .fontSize(10)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(13)
-        .maxLines(1)
-        .width('100%')
-        .textAlign(TextAlign.Center)
-    }
-    .alignItems(HorizontalAlign.Center)
-    .justifyContent(FlexAlign.Center)
-    .layoutWeight(1)
-    .height(HOME_FLOW_CARD_HEIGHT)
-    .padding({ left: 8, right: 8, top: 6, bottom: 6 })
-    .borderRadius(HOME_FLOW_CARD_RADIUS)
-    .backgroundColor(AppColors.surfaceElevated)
-    .border({ width: 1, color: AppColors.border })
-    .shadow(ElevationTokens.subtle)
   }
 
   build() {

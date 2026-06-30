@@ -74,8 +74,11 @@ const primaryPageSources = [
   "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'",
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
   'Row({ space: HOME_METHOD_TAG_GAP })',
+  "'视觉落点'",
+  "'视线路径'",
+  "'画面关系'",
+  "'是否成立'",
   '.justifyContent(FlexAlign.SpaceBetween)',
-  'this.ReviewFlowPanel()',
   'ReviewCardHistoryService.loadWithDiagnostics(context)',
   'pasteboard.createData',
   'HomeHeroImageService.getDisplayImages'
@@ -84,6 +87,16 @@ const primaryPageSources = [
 forbidIncludes(sources.homePage, "subtitle: '从照片里练习观看与判断'", 'HomePage must not show the removed header subtitle');
 forbidIncludes(sources.homePage, 'ScrollDirection.Horizontal', 'HomePage hero tags must fit without horizontal clipping');
 forbidIncludes(sources.homePage, 'ScrollDirection.Vertical', 'HomePage must not make the fixed first screen vertically scrollable');
+[
+  'this.ReviewFlowPanel()',
+  '@Builder\n  ReviewFlowPanel()',
+  '@Builder\n  FlowStepCard',
+  'reviewFlowSteps',
+  'HOME_FLOW_CARD_',
+  "description: '选一张照片'",
+  "description: '写落点路径'",
+  "description: '留结论卡点'"
+].forEach((marker) => forbidIncludes(sources.homePage, marker, 'HomePage must not duplicate the hero tags and primary action with flow cards'));
 
 [
   "label: '首页', activeIcon:",
