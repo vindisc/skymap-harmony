@@ -711,7 +711,7 @@ export struct PhotoWritingHero {
         .width('100%')
         .height('100%')
         .alignSelf(ItemAlign.Center)
-        .backgroundColor(AppColors.pageBackground)
+        .backgroundColor(AppColors.surfaceMuted)
     } else {
       Stack() {
         if (hasDisplayableImageUri(this.imageUri) && !this.loadFailed) {

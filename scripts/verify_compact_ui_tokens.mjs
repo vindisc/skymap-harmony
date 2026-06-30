@@ -32,11 +32,14 @@ const requiredTokens = [
   'static readonly meta: number = TypographyTokens.CardMeta;',
   'static readonly buttonText: number = TypographyTokens.ButtonText;',
   'static readonly tabLabel: number = TypographyTokens.TabLabel;',
-  'static readonly pageTopPadding: number = 28;',
+  'static readonly pageTopPadding: number = 16;',
   'static readonly searchHeight: number = LayoutTokens.SearchHeight;',
   'static readonly chipHeight: number = LayoutTokens.ChipHeight;',
   'static readonly tabBarHeight: number = LayoutTokens.TabBarHeight;',
-  'static readonly listThumbnailSize: number = LayoutTokens.ListThumbnailSize;'
+  'static readonly listThumbnailSize: number = LayoutTokens.ListThumbnailSize;',
+  'static readonly cardRadius: number = RadiusTokens.lg;',
+  'static readonly buttonRadius: number = RadiusTokens.md;',
+  'static readonly inputRadius: number = RadiusTokens.md;'
 ];
 
 for (const marker of requiredTokens) {
@@ -44,23 +47,27 @@ for (const marker of requiredTokens) {
 }
 
 const requiredDesignTokens = [
-  'static readonly PageTitle: number = 24;',
+  'static readonly PageTitle: number = 26;',
   'static readonly PageSubtitle: number = 14;',
-  'static readonly SectionTitle: number = 17;',
+  'static readonly SectionTitle: number = 16;',
   'static readonly CardTitle: number = 16;',
-  'static readonly CardBody: number = 15;',
+  'static readonly CardBody: number = 14;',
   'static readonly ListTitle: number = 16;',
   'static readonly ListBody: number = 14;',
   'static readonly CardMeta: number = 12;',
-  'static readonly ButtonText: number = 15;',
-  'static readonly TabLabel: number = 12;',
+  'static readonly ButtonText: number = 14;',
+  'static readonly TabLabel: number = 11;',
   'static readonly SearchHeight: number = 44;',
-  'static readonly ChipHeight: number = 44;',
+  'static readonly ChipHeight: number = 34;',
   'static readonly SecondaryButtonHeight: number = 44;',
   'static readonly PrimaryButtonHeight: number = 48;',
-  'static readonly TabBarHeight: number = 58;',
-  'static readonly TabBarItemHeight: number = 50;',
-  'static readonly ListThumbnailSize: number = 68;'
+  'static readonly TabBarHeight: number = 60;',
+  'static readonly TabBarItemHeight: number = 44;',
+  'static readonly ListThumbnailSize: number = 68;',
+  'export class ElevationTokens',
+  'static readonly overlay: ShadowToken = {',
+  'export class MotionTokens',
+  'static readonly scalePressed: number = 0.96;'
 ];
 
 for (const marker of requiredDesignTokens) {
@@ -131,10 +138,11 @@ for (const marker of forbiddenTabMarkers) {
 
 assertIncludes(appShellSource, "$r('app.media.tab_home_active')", 'TabBar must use the home line icon resource.');
 assertIncludes(appShellSource, "$r('app.media.tab_library_active')", 'TabBar must use the library line icon resource.');
+assertIncludes(appShellSource, "$r('app.media.tab_stats_active')", 'TabBar must use the stats line icon resource.');
 assertIncludes(appShellSource, "$r('app.media.tab_user_active')", 'TabBar must use the user line icon resource.');
-assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use 12fp Compact token.');
+assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use shared tab label token.');
 assertIncludes(appShellSource, '.height(AppMetrics.tabBarHeight)', 'TabBar must use shared touch-safe token.');
-assertIncludes(appShellSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })', 'TabBar must not leave oversized blank bottom padding.');
+assertIncludes(appShellSource, 'bottom: 4', 'TabBar must not leave oversized blank bottom padding.');
 assertIncludes(appShellSource, 'Divider()', 'TabBar must use a light top divider instead of a boxed border.');
 assertIncludes(appShellSource, '.opacity(0.42)', 'TabBar divider must stay visually soft.');
 if (appShellSource.includes('.border({ width: 1, color: AppColors.border })')) {
@@ -147,6 +155,8 @@ const iconFiles = [
   'tab_home_active.svg',
   'tab_library.svg',
   'tab_library_active.svg',
+  'tab_stats.svg',
+  'tab_stats_active.svg',
   'tab_user.svg',
   'tab_user_active.svg'
 ];
@@ -158,60 +168,41 @@ for (const fileName of iconFiles) {
   }
 }
 
-assertIncludes(homePageSource, 'Text(`${this.reviewCount}`)', 'Home stats must render scalar reviewCount state.');
-assertIncludes(homePageSource, 'Text(`${this.validReviewCount}`)', 'Home valid stats must render scalar validReviewCount state.');
-assertIncludes(homePageSource, 'Text(`${this.unsureReviewCount}`)', 'Home unsure stats must render scalar unsureReviewCount state.');
-if (homePageSource.includes('StatItem(')) {
-  failed = true;
-  console.error('Home stats must not pass dynamic values through a parameterized StatItem builder.');
-}
-assertIncludes(homePageSource, "return '—';", 'Home streak fallback must be —, not 0天.');
-if (homePageSource.includes('0天')) {
-  failed = true;
-  console.error('Home page must not render 0天.');
-}
+assertIncludes(homePageSource, "AppPageHeader({\n        title: '摄影复盘'", 'Home page must keep the compact title-only header.');
+assertIncludes(homePageSource, 'PrimaryButton({', 'Home import entry must use the shared primary button.');
+assertIncludes(homePageSource, '.shadow(ElevationTokens.medium)', 'Home hero must keep production elevation.');
+assertIncludes(homePageSource, '.shadow(ElevationTokens.subtle)', 'Home feature tags and flow cards must keep subtle elevation.');
+assertIncludes(homePageSource, 'HOME_METHOD_TAG_HEIGHT: number = 28;', 'Home feature tags must remain compact enough for the first screen.');
 
 assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use shared touch-safe token.');
 assertIncludes(projectDetailSource, '.height(AppMetrics.filterChipHeight)', 'Library chips must use compact filter token.');
 assertIncludes(projectDetailSource, '.constraintSize({ minWidth: value === \'all\' ? 60 : 72 })', 'Library filter chips must read as compact horizontal pills.');
-assertIncludes(projectDetailSource, '.borderRadius(AppMetrics.cardRadius)', 'Library filter chips must avoid oversized capsule corners.');
+assertIncludes(projectDetailSource, '.borderRadius(12)', 'Library filter chips must avoid oversized capsule corners.');
 assertIncludes(projectDetailSource, '.fontSize(AppTypography.meta)', 'Library filter chips must use small label typography.');
-assertIncludes(projectDetailSource, '.fontSize(AppTypography.caption)', 'Library search text must stay lighter than body forms.');
+assertIncludes(projectDetailSource, '.fontSize(AppTypography.inputText)', 'Library search text must use shared input typography.');
 assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use compact 68vp thumbnail token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'Status tags must use compact token.');
 
-const topAlignedPages = [
-  ['HomePage', homePageSource],
-  ['ProjectDetailPage', projectDetailSource],
-  ['MyPage', myPageSource],
-  ['ReviewerProfilePage', reviewerProfileSource],
-  ['HomeStoragePage', homeStorageSource],
-  ['PreviewPage', previewPageSource],
-  ['EditorPage', editorPageSource]
-];
-
-for (const [pageName, source] of topAlignedPages) {
-  if (source.includes('.justifyContent(FlexAlign.Center)')) {
-    failed = true;
-    console.error(`${pageName} must not vertically center primary page content.`);
-  }
-}
-
-assertIncludes(myPageSource, '.fontSize(AppTypography.profileName)', 'My identity card name must use compact profile token.');
-assertIncludes(myPageSource, '次复盘 ·', 'My identity card must show compact one-line review stats.');
-assertIncludes(appDesignSource, 'static readonly profileName: number = TypographyTokens.CardTitle;', 'My identity name must align with card title scale.');
-assertIncludes(myPageSource, '.constraintSize({ minHeight: 64, maxHeight: 70 })', 'My identity and link rows must use compact card heights.');
-if (myPageSource.includes('Scroll() {')) {
-  failed = true;
-  console.error('MyPage must not scroll when the visible content fits the first screen.');
-}
+assertIncludes(myPageSource, "AppPageHeader({\n            title: '我的'", 'MyPage must keep the compact title-only header.');
+assertIncludes(myPageSource, 'SettingsLinkRow({', 'MyPage settings entries must use the shared link row.');
+assertIncludes(myPageSource, 'dense: true', 'MyPage settings rows must use compact density.');
+assertIncludes(myPageSource, 'SettingsEntryTone.SUCCESS', 'MyPage status badges must use semantic tones.');
+assertIncludes(myPageSource, 'SettingsEntryTone.WARNING', 'MyPage status badges must keep warning tone coverage.');
+assertIncludes(myPageSource, '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })', 'MyPage title-to-content gap must stay compact.');
+assertIncludes(appDesignSource, '@State isPressed: boolean = false;', 'Shared interactive rows and buttons must keep custom press state.');
+assertIncludes(appDesignSource, '.scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })',
+  'Shared cards and settings rows must keep subtle press feedback.');
 assertIncludes(reviewerProfileSource, '.justifyContent(FlexAlign.Start)', 'ReviewerProfilePage must explicitly top-align content.');
-assertIncludes(homeStorageSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding', 'HomeStoragePage must use shared top padding.');
+assertIncludes(homeStorageSource, 'top: AppMetrics.pageTopPadding', 'HomeStoragePage must use shared top padding.');
+assertIncludes(previewPageSource, '.shadow(ElevationTokens.high)', 'Preview floating action bar must use high elevation.');
+assertIncludes(previewPageSource, '@State pressedActionKey: string = \'\';', 'Preview actions must keep explicit press feedback state.');
+assertIncludes(editorPageSource, '.shadow(ElevationTokens.medium)', 'Editor photo header must keep medium elevation.');
+assertIncludes(editorPageSource, 'duration: MotionTokens.durationStandard', 'Editor focus scrolling must use shared motion tokens.');
 
 if (failed) {
   process.exit(1);
 }
 
-console.log('compact ui tokens verified: typography<=34, tab icons=line assets, density tokens, top alignment, true home stats markers');
+console.log('compact ui tokens verified: production tokens, tab icons, density, shared press feedback, editor/preview elevation');

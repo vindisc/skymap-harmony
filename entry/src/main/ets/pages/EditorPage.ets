@@ -20,6 +20,7 @@ import {
   REVIEW_FLOW_SAVE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
 import { AppColors, AppMetrics, AppTypography, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
+import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { estimateReviewTextLineCount } from '../utils/ReviewTextMetrics';
 
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
@@ -410,8 +411,8 @@ struct EditorPage {
       xOffset: 0,
       yOffset: targetOffset,
       animation: {
-        duration: 180,
-        curve: Curve.EaseOut
+        duration: MotionTokens.durationStandard,
+        curve: MotionTokens.curveDecelerate
       }
     });
   }
@@ -459,22 +460,36 @@ struct EditorPage {
         })
       }
     }
+    .padding(AppMetrics.space12)
     .width('100%')
+    .borderRadius(AppMetrics.panelRadius)
+    .backgroundColor(AppColors.surfaceElevated)
+    .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
   }
 
   @Builder
   PhotoHeader() {
     Column() {
-      PhotoWritingHero({
-        imageUri: this.imageUri,
-        imageWidth: this.imageWidth,
-        imageHeight: this.imageHeight,
-        imageSizeFallbackUsed: this.imageSizeFallbackUsed,
-        fixedFrame: true
-      })
-        .width(this.getPhotoFrameWidth())
-        .height(this.getPhotoFrameHeight())
-        .alignSelf(ItemAlign.Center)
+      Column() {
+        PhotoWritingHero({
+          imageUri: this.imageUri,
+          imageWidth: this.imageWidth,
+          imageHeight: this.imageHeight,
+          imageSizeFallbackUsed: this.imageSizeFallbackUsed,
+          fixedFrame: true
+        })
+          .width(this.getPhotoFrameWidth())
+          .height(this.getPhotoFrameHeight())
+      }
+      .width(this.getPhotoFrameWidth())
+      .height(this.getPhotoFrameHeight())
+      .alignSelf(ItemAlign.Center)
+      .borderRadius(AppMetrics.cardRadius)
+      .clip(true)
+      .backgroundColor(AppColors.surfaceElevated)
+      .border({ width: 1, color: AppColors.border })
+      .shadow(ElevationTokens.medium)
     }
     .alignItems(HorizontalAlign.Start)
     .padding({

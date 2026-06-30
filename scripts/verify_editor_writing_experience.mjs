@@ -38,6 +38,18 @@ assertIncludes(editorPageSource, 'onFieldChange: (field: string) => {', 'EditorP
 assertIncludes(editorPageSource, 'this.scheduleFieldIntoView(field, EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY, EditorFieldScrollIntent.CARET);',
   'EditorPage must keep the caret area visible as multiline fields expand.');
 assertIncludes(editorPageSource, 'estimateReviewTextLineCount(', 'EditorPage scroll math must use the shared review text metric.');
+assertIncludes(editorPageSource, "import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';",
+  'EditorPage must use shared elevation and motion tokens.');
+assertIncludes(editorPageSource, 'duration: MotionTokens.durationStandard',
+  'EditorPage focus scroll animation must use the shared motion duration.');
+assertIncludes(editorPageSource, 'curve: MotionTokens.curveDecelerate',
+  'EditorPage focus scroll animation must use the shared motion curve.');
+assertIncludes(editorPageSource, '.shadow(ElevationTokens.medium)',
+  'EditorPage photo header must have production-level visual separation.');
+assertIncludes(editorPageSource, '.shadow(ElevationTokens.subtle)',
+  'EditorPage save action area must keep a subtle elevated layer.');
+assertIncludes(editorPageSource, '.borderRadius(AppMetrics.panelRadius)',
+  'EditorPage save action area must use the shared panel radius.');
 
 assertIncludes(reviewInputFormSource, 'const REVIEW_FIELD_LABEL_GAP: number = AppMetrics.space8;', 'ReviewInputForm labels must sit closer to inputs.');
 assertIncludes(reviewInputFormSource, 'const REVIEW_FORM_FIELD_GAP: number = AppMetrics.space16;', 'ReviewInputForm field gaps must provide production-level breathing room.');
@@ -63,6 +75,8 @@ assertNotIncludes(reviewInputFormSource, 'Column({ space: AppMetrics.space16 }) 
 assertIncludes(reviewTextMetricsSource, 'estimateReviewTextRowUnits', 'Review text metric helper must estimate visual width per row.');
 assertIncludes(reviewTextMetricsSource, 'code <= 0x007F', 'Review text metric helper must not treat ASCII and CJK as equal width.');
 assertIncludes(reviewTextMetricsSource, 'code >= 0xD800 && code <= 0xDBFF', 'Review text metric helper must handle surrogate pairs such as emoji.');
+assertIncludes(fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8'), '.backgroundColor(AppColors.surfaceMuted)',
+  'PhotoWritingHero fixed frame must not blend into the page background.');
 
 if (failed) {
   process.exit(1);

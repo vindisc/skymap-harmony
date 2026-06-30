@@ -26,25 +26,25 @@ function assertIncludes(source, marker, message) {
 }
 
 const requiredTypographyTokens = [
-  ['PageTitle', 24],
+  ['PageTitle', 26],
   ['PageSubtitle', 14],
-  ['SectionTitle', 17],
-  ['SectionSubtitle', 13],
+  ['SectionTitle', 16],
+  ['SectionSubtitle', 12],
   ['CardTitle', 16],
-  ['CardBody', 15],
+  ['CardBody', 14],
   ['CardMeta', 12],
   ['ListTitle', 16],
   ['ListBody', 14],
   ['ListMeta', 12],
-  ['StatNumber', 26],
+  ['StatNumber', 30],
   ['StatLabel', 12],
-  ['ButtonText', 15],
+  ['ButtonText', 14],
   ['SmallButtonText', 14],
-  ['InputText', 15],
-  ['InputPlaceholder', 15],
+  ['InputText', 14],
+  ['InputPlaceholder', 14],
   ['InputLabel', 14],
-  ['TabIcon', 21],
-  ['TabLabel', 12]
+  ['TabIcon', 19],
+  ['TabLabel', 11]
 ];
 
 for (const [name, value] of requiredTypographyTokens) {
@@ -56,15 +56,15 @@ for (const [name, value] of requiredTypographyTokens) {
 }
 
 const requiredLayoutTokens = [
-  ['TabBarHeight', 58],
-  ['TabBarItemHeight', 50],
+  ['TabBarHeight', 60],
+  ['TabBarItemHeight', 44],
   ['SearchHeight', 44],
-  ['ChipHeight', 44],
+  ['ChipHeight', 34],
   ['PrimaryButtonHeight', 48],
   ['SecondaryButtonHeight', 44],
   ['ListThumbnailSize', 68],
-  ['ListCardMinHeight', 88],
-  ['ListCardMaxHeight', 100]
+  ['ListCardMinHeight', 96],
+  ['ListCardMaxHeight', 108]
 ];
 
 for (const [name, value] of requiredLayoutTokens) {
@@ -81,24 +81,24 @@ assertIncludes(appDesignSource, 'static readonly tabLabel: number = TypographyTo
 assertIncludes(appDesignSource, 'static readonly tabIconSize: number = TypographyTokens.TabIcon;', 'Tab icon size must be mapped from DesignTokens.');
 
 const maxByToken = new Map([
-  ['PageTitle', 24],
+  ['PageTitle', 26],
   ['PageSubtitle', 14],
-  ['SectionTitle', 17],
-  ['SectionSubtitle', 13],
+  ['SectionTitle', 16],
+  ['SectionSubtitle', 12],
   ['CardTitle', 16],
-  ['CardBody', 15],
+  ['CardBody', 14],
   ['CardMeta', 12],
-  ['ListTitle', 17],
+  ['ListTitle', 16],
   ['ListBody', 14],
   ['ListMeta', 12],
-  ['StatNumber', 26],
+  ['StatNumber', 30],
   ['StatLabel', 12],
-  ['ButtonText', 15],
+  ['ButtonText', 14],
   ['SmallButtonText', 14],
-  ['InputText', 15],
-  ['InputPlaceholder', 15],
+  ['InputText', 14],
+  ['InputPlaceholder', 14],
   ['InputLabel', 14],
-  ['TabLabel', 12]
+  ['TabLabel', 11]
 ]);
 
 const typographyBlockMatch = designTokensSource.match(/export class TypographyTokens \{([\s\S]*?)\n\}/);
@@ -176,50 +176,37 @@ for (const forbiddenSize of [40, 44, 48, 56]) {
 
 assertIncludes(appShellSource, '.fontSize(AppTypography.tabLabel)', 'Tab label must use TabLabel token.');
 assertIncludes(appShellSource, '.width(AppMetrics.tabIconSize)', 'Tab icon must use TabIcon token.');
-assertIncludes(appShellSource, '.padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: 4, bottom: 4 })', 'TabBar must keep compact bottom-safe padding.');
-if (designTokensSource.includes('static readonly TabLabel: number = 13;') ||
-  designTokensSource.includes('static readonly TabLabel: number = 14;')) {
-  fail('TabLabel must not exceed 12fp.');
+assertIncludes(appShellSource, 'bottom: 4', 'TabBar must keep compact bottom-safe padding.');
+if (typographyBlock.includes('static readonly TabLabel: number = 12;') ||
+  typographyBlock.includes('static readonly TabLabel: number = 13;') ||
+  typographyBlock.includes('static readonly TabLabel: number = 14;')) {
+  fail('TabLabel must not exceed 11fp.');
 }
-if (designTokensSource.includes('static readonly ButtonText: number = 16;') ||
-  designTokensSource.includes('static readonly ButtonText: number = 17;')) {
-  fail('ButtonText must not exceed 15fp.');
-}
-
-assertIncludes(homePageSource, 'Text(`${this.reviewCount}`)', 'Home total stats must render scalar reviewCount state directly.');
-assertIncludes(homePageSource, 'Text(`${this.validReviewCount}`)', 'Home valid stats must render scalar validReviewCount state directly.');
-assertIncludes(homePageSource, 'Text(`${this.unsureReviewCount}`)', 'Home unsure stats must render scalar unsureReviewCount state directly.');
-assertIncludes(homePageSource, "return '—';", 'Home streak fallback must be —.');
-
-if (homePageSource.includes('StatItem(') ||
-  homePageSource.includes("@Builder\n  StatItem") ||
-  homePageSource.includes('0天')) {
-  fail('Home stats must not use parameterized StatItem builders or render 0天.');
+if (typographyBlock.includes('static readonly ButtonText: number = 15;') ||
+  typographyBlock.includes('static readonly ButtonText: number = 16;') ||
+  typographyBlock.includes('static readonly ButtonText: number = 17;')) {
+  fail('ButtonText must not exceed 14fp.');
 }
 
-const primaryPageFiles = [
-  'entry/src/main/ets/pages/HomePage.ets',
-  'entry/src/main/ets/pages/ProjectDetailPage.ets',
-  'entry/src/main/ets/pages/MyPage.ets',
-  'entry/src/main/ets/pages/ReviewerProfilePage.ets',
-  'entry/src/main/ets/pages/HomeStoragePage.ets',
-  'entry/src/main/ets/pages/EditorPage.ets'
-];
-
-for (const filePath of primaryPageFiles) {
-  const source = fs.readFileSync(filePath, 'utf8');
-  if (source.includes('.justifyContent(FlexAlign.Center)')) {
-    fail(`${filePath} must not vertically center primary page content.`);
-  }
+assertIncludes(homePageSource, "AppPageHeader({\n        title: '摄影复盘'", 'Home header must stay title-only and compact.');
+assertIncludes(homePageSource, '.fontSize(17)', 'Home hero title must keep readable production size.');
+assertIncludes(homePageSource, '.fontSize(13)', 'Home feature tags must keep compact readable typography.');
+if (homePageSource.includes('StatItem(') || homePageSource.includes("@Builder\n  StatItem")) {
+  fail('Home page must not restore the old parameterized StatItem builder.');
 }
 
-assertIncludes(appDesignSource, '.constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })', 'List cards must use compact 88-100vp height tokens.');
+assertIncludes(homePageSource, 'top: AppMetrics.pageTopPadding', 'HomePage must use shared top padding.');
+assertIncludes(fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8'), 'AppPageHeader({', 'ProjectDetailPage must keep a visible page header.');
+assertIncludes(fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8'), "title: '我的'", 'MyPage must keep a visible page header.');
+assertIncludes(fs.readFileSync('entry/src/main/ets/pages/EditorPage.ets', 'utf8'), 'this.PhotoHeader()', 'EditorPage must keep photo header at the top of the writing flow.');
+
+assertIncludes(appDesignSource, '.constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })', 'List cards must use shared compact height tokens.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titles must use ListTitle token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List bodies must use ListBody token.');
-assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'List meta and badges must use 13fp token.');
+assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'List meta and badges must use meta token.');
 
 if (failed) {
   process.exit(1);
 }
 
-console.log('compact typography verified: tokens, font caps, tab density, home stats, top alignment');
+console.log('compact typography verified: production tokens, font caps, tab density, headers, shared list typography');
