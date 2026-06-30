@@ -44,6 +44,12 @@ assert(previewSource.includes('this.MoreActionButton(this.isActionBusy(), () => 
 assert(previewSource.includes('REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT'), 'Preview image export should use user-visible photo-library success copy.');
 assert(previewSource.includes('REVIEW_FLOW_EXPORT_SUCCESS_TEXT'), 'Preview should use shared export success copy.');
 assert(previewSource.includes('REVIEW_FLOW_EXPORT_FAILED_TEXT'), 'Preview should use shared export failure copy.');
+assert(previewSource.includes('@State pressedActionKey: string = \'\';'), 'Preview actions should keep shared pressed state.');
+assert(previewSource.includes('private updatePressedAction(event: TouchEvent, key: string, isDisabled: boolean): void'), 'Preview actions should share touch feedback handling.');
+assert(previewSource.includes('.shadow(ElevationTokens.high)'), 'Preview floating action bar should use high elevation token.');
+assert(previewSource.includes('.scale({ x: this.isPressed(label) ? MotionTokens.scalePressed : 1'), 'Preview toolbar buttons should scale on press.');
+assert(previewSource.includes('.scale({ x: this.isPressed(label) ? MotionTokens.scaleSubtle : 1'), 'Preview export sheet rows should use subtle press scale.');
+assert(previewSource.includes('.animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })'), 'Preview press feedback should use motion tokens.');
 
 assert(projectSource.includes('REVIEW_FLOW_DELETE_CONFIRM_TITLE'), 'Project detail delete dialog should use shared confirm title.');
 assert(projectSource.includes('REVIEW_FLOW_DELETE_CONFIRM_MESSAGE'), 'Project detail delete dialog should use shared scope copy.');

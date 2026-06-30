@@ -42,6 +42,7 @@ import {
   REVIEW_FLOW_SAVE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
 import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
+import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 
@@ -68,6 +69,7 @@ struct PreviewPage {
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
   @State actionFeedbackText: string = '';
   @State reviewerText: string = '';
+  @State pressedActionKey: string = '';
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -396,6 +398,24 @@ struct PreviewPage {
     this.isExportMenuVisible = false;
   }
 
+  private isPressed(key: string): boolean {
+    return this.pressedActionKey === key;
+  }
+
+  private updatePressedAction(event: TouchEvent, key: string, isDisabled: boolean): void {
+    if (isDisabled) {
+      this.pressedActionKey = '';
+      return;
+    }
+    if (event.type === TouchType.Down) {
+      this.pressedActionKey = key;
+      return;
+    }
+    if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+      this.pressedActionKey = '';
+    }
+  }
+
   private getFloatingActionBarHeight(): number {
     const feedbackHeight: number = this.actionFeedbackText.length > 0
       ? AppTypography.captionLineHeight + AppMetrics.space8
@@ -419,11 +439,19 @@ struct PreviewPage {
       .fontSize(AppTypography.smallButtonText)
       .fontWeight(emphasized ? FontWeight.Medium : FontWeight.Regular)
       .fontColor(isDisabled ? AppColors.secondaryText : (emphasized ? AppColors.onPrimary : AppColors.text))
-      .backgroundColor(emphasized ? AppColors.primary : AppColors.surface)
+      .backgroundColor(emphasized
+        ? (this.isPressed(label) ? AppColors.primaryPressed : AppColors.primary)
+        : (this.isPressed(label) ? AppColors.surfaceMuted : AppColors.surfaceElevated))
       .border({ width: 1, color: emphasized ? AppColors.primaryPressed : AppColors.border })
+      .shadow(isDisabled ? ElevationTokens.none : (this.isPressed(label) ? ElevationTokens.subtle : ElevationTokens.low))
+      .scale({ x: this.isPressed(label) ? MotionTokens.scalePressed : 1, y: this.isPressed(label) ? MotionTokens.scalePressed : 1 })
+      .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
       .opacity(isDisabled ? 0.52 : 1)
       .stateEffect(!isDisabled)
       .enabled(!isDisabled)
+      .onTouch((event: TouchEvent) => {
+        this.updatePressedAction(event, label, isDisabled);
+      })
       .onClick(() => {
         onTap();
       })
@@ -438,11 +466,17 @@ struct PreviewPage {
       .fontSize(AppTypography.smallButtonText)
       .fontWeight(FontWeight.Medium)
       .fontColor(isDisabled ? AppColors.secondaryText : AppColors.text)
-      .backgroundColor(AppColors.surface)
+      .backgroundColor(this.isPressed('more') ? AppColors.surfaceMuted : AppColors.surfaceElevated)
       .border({ width: 1, color: AppColors.border })
+      .shadow(isDisabled ? ElevationTokens.none : (this.isPressed('more') ? ElevationTokens.subtle : ElevationTokens.low))
+      .scale({ x: this.isPressed('more') ? MotionTokens.scalePressed : 1, y: this.isPressed('more') ? MotionTokens.scalePressed : 1 })
+      .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
       .opacity(isDisabled ? 0.52 : 1)
       .stateEffect(!isDisabled)
       .enabled(!isDisabled)
+      .onTouch((event: TouchEvent) => {
+        this.updatePressedAction(event, 'more', isDisabled);
+      })
       .onClick(() => {
         onTap();
       })
@@ -490,13 +524,9 @@ struct PreviewPage {
     .padding({ left: AppMetrics.space10, right: AppMetrics.space10, top: AppMetrics.space10, bottom: AppMetrics.space10 })
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
-    .shadow({
-      radius: 18,
-      color: AppColors.floatingShadow,
-      offsetX: 0,
-      offsetY: 8
-    })
+    .backgroundColor(AppColors.surfaceElevated)
+    .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.high)
   }
 
   @Builder
@@ -545,9 +575,15 @@ struct PreviewPage {
       .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space8, bottom: AppMetrics.space8 })
       .width('100%')
       .borderRadius(AppMetrics.cardRadius)
-      .backgroundColor(AppColors.surface)
+      .backgroundColor(this.isPressed(label) ? AppColors.surfaceMuted : AppColors.surfaceElevated)
       .border({ width: 1, color: AppColors.border })
+      .shadow(isDisabled ? ElevationTokens.none : (this.isPressed(label) ? ElevationTokens.medium : ElevationTokens.subtle))
+      .scale({ x: this.isPressed(label) ? MotionTokens.scaleSubtle : 1, y: this.isPressed(label) ? MotionTokens.scaleSubtle : 1 })
+      .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
       .opacity(isDisabled ? 0.56 : 1)
+      .onTouch((event: TouchEvent) => {
+        this.updatePressedAction(event, label, isDisabled);
+      })
       .onClick(() => {
         if (isDisabled) {
           return;
