@@ -4,13 +4,10 @@ import {
   AppColors,
   AppMetrics,
   AppTypography,
-  DangerButton,
-  EmptyState,
-  PrimaryButton,
-  SecondaryButton,
   SettingsPageHeader,
   SettingsSectionHeader
 } from '../components/AppDesign';
+import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { pickMultiplePhotos, PickedPhotoListResult } from '../services/PhotoPickerService';
 import {
   HomeHeroDisplayImage,
@@ -30,6 +27,8 @@ struct HomeHeroImagePage {
   @State isAdding: boolean = false;
   @State isClearing: boolean = false;
   @State deletingImageId: string = '';
+  @State addRowPressed: boolean = false;
+  @State clearActionPressed: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -198,31 +197,6 @@ struct HomeHeroImagePage {
   }
 
   @Builder
-  SummaryCard() {
-    Column({ space: AppMetrics.space8 }) {
-      Text(this.resolveStatusText())
-        .fontSize(AppTypography.body)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.bodyLineHeight)
-        .width('100%')
-
-      Text('选择一张或多张图片作为首页展示图。多张图片会自动轮播。')
-        .fontSize(AppTypography.caption)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.captionLineHeight)
-        .width('100%')
-        .maxLines(3)
-    }
-    .alignItems(HorizontalAlign.Start)
-    .padding(AppMetrics.cardPadding)
-    .width('100%')
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
-    .border({ width: 1, color: AppColors.border })
-  }
-
-  @Builder
   ImageRow(item: HomeHeroDisplayImage) {
     Row({ space: AppMetrics.cardGap }) {
       Image(item.uri)
@@ -272,26 +246,185 @@ struct HomeHeroImagePage {
     .borderRadius(AppMetrics.panelRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
+  }
+
+  @Builder
+  DefaultImageRow() {
+    Row({ space: AppMetrics.cardGap }) {
+      Image($r('app.media.home_review_hero'))
+        .width(HOME_HERO_THUMBNAIL_SIZE)
+        .height(HOME_HERO_THUMBNAIL_SIZE)
+        .objectFit(ImageFit.Cover)
+        .borderRadius(14)
+        .clip(true)
+        .backgroundColor(AppColors.surfaceMuted)
+
+      Column({ space: 4 }) {
+        Text('默认首页图')
+          .fontSize(AppTypography.body)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.bodyLineHeight)
+          .width('100%')
+
+        Text(this.images.length <= 0 ? '当前展示，固定保留' : '固定保留，自定义图片会优先轮播')
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
+          .maxLines(2)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+
+      Text(this.images.length <= 0 ? '展示中' : '默认')
+        .fontSize(AppTypography.meta)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(this.images.length <= 0 ? AppColors.tagGreenText : AppColors.mutedText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+        .borderRadius(AppMetrics.capsuleRadius)
+        .backgroundColor(this.images.length <= 0 ? AppColors.tagGreen : AppColors.surfaceMuted)
+        .maxLines(1)
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.listCardPadding)
+    .width('100%')
+    .borderRadius(AppMetrics.panelRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
+  }
+
+  @Builder
+  AddImageRow() {
+    Row({ space: AppMetrics.cardGap }) {
+      Stack() {
+        Text('+')
+          .fontSize(28)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.isAdding || this.isLoading ? AppColors.mutedText : AppColors.primary)
+      }
+      .width(HOME_HERO_THUMBNAIL_SIZE)
+      .height(HOME_HERO_THUMBNAIL_SIZE)
+      .borderRadius(14)
+      .backgroundColor(AppColors.primarySoft)
+      .border({ width: 1, color: AppColors.border })
+
+      Column({ space: 4 }) {
+        Text(this.isAdding ? '添加中…' : '添加图片')
+          .fontSize(AppTypography.body)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.isAdding || this.isLoading ? AppColors.mutedText : AppColors.primary)
+          .lineHeight(AppTypography.bodyLineHeight)
+          .width('100%')
+
+        Text('可一次选择多张，加入首页轮播')
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+
+      Text('›')
+        .fontSize(20)
+        .fontColor(this.isAdding || this.isLoading ? AppColors.mutedText : AppColors.primary)
+        .opacity(this.isAdding || this.isLoading ? 0.5 : 0.8)
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.listCardPadding)
+    .width('100%')
+    .borderRadius(AppMetrics.panelRadius)
+    .backgroundColor(this.addRowPressed ? AppColors.surfaceMuted : AppColors.surfaceElevated)
+    .border({ width: 1, color: AppColors.border })
+    .shadow(this.addRowPressed ? ElevationTokens.medium : ElevationTokens.subtle)
+    .scale({ x: this.addRowPressed ? MotionTokens.scaleSubtle : 1, y: this.addRowPressed ? MotionTokens.scaleSubtle : 1 })
+    .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
+    .onTouch((event: TouchEvent) => {
+      if (this.isAdding || this.isLoading) {
+        this.addRowPressed = false;
+        return;
+      }
+      if (event.type === TouchType.Down) {
+        this.addRowPressed = true;
+        return;
+      }
+      if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+        this.addRowPressed = false;
+      }
+    })
+    .onClick(() => {
+      if (this.isAdding || this.isLoading) {
+        return;
+      }
+      this.addImages();
+    })
+  }
+
+  @Builder
+  ClearImagesAction() {
+    Button(this.isClearing ? '清空中…' : '清空自定义')
+      .height(34)
+      .constraintSize({ minWidth: 88 })
+      .borderRadius(AppMetrics.capsuleRadius)
+      .fontSize(AppTypography.meta)
+      .fontWeight(600)
+      .fontColor(this.isClearing ? AppColors.secondaryText : AppColors.danger)
+      .backgroundColor(this.clearActionPressed ? AppColors.dangerSoft : AppColors.surfaceTint)
+      .border({ width: 1, color: this.isClearing ? AppColors.border : AppColors.danger })
+      .shadow(this.isClearing ? ElevationTokens.none : ElevationTokens.subtle)
+      .scale({ x: this.clearActionPressed ? MotionTokens.scalePressed : 1, y: this.clearActionPressed ? MotionTokens.scalePressed : 1 })
+      .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
+      .enabled(!this.isClearing && this.images.length > 0)
+      .stateEffect(!this.isClearing && this.images.length > 0)
+      .onTouch((event: TouchEvent) => {
+        if (this.isClearing || this.images.length <= 0) {
+          this.clearActionPressed = false;
+          return;
+        }
+        if (event.type === TouchType.Down) {
+          this.clearActionPressed = true;
+          return;
+        }
+        if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+          this.clearActionPressed = false;
+        }
+      })
+      .onClick(() => {
+        this.confirmClearImages();
+      })
   }
 
   @Builder
   ImageList() {
     Column({ space: AppMetrics.space8 }) {
-      SettingsSectionHeader({
-        title: '已配置图片',
-        description: this.images.length > 1 ? '按添加顺序轮播。' : ''
-      })
-
-      if (this.images.length <= 0) {
-        EmptyState({
-          title: '还没有自定义首页图',
-          message: '添加图片后，首页会优先展示你选择的图片。'
+      Row({ space: AppMetrics.cardGap }) {
+        SettingsSectionHeader({
+          title: '已配置图片',
+          description: this.resolveStatusText()
         })
-      } else {
-        ForEach(this.images, (item: HomeHeroDisplayImage) => {
-          this.ImageRow(item)
-        }, (item: HomeHeroDisplayImage) => item.id)
+        .layoutWeight(1)
+
+        if (this.images.length > 0) {
+          this.ClearImagesAction()
+        }
       }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
+
+      this.DefaultImageRow()
+
+      ForEach(this.images, (item: HomeHeroDisplayImage) => {
+        this.ImageRow(item)
+      }, (item: HomeHeroDisplayImage) => item.id)
+
+      this.AddImageRow()
     }
     .width('100%')
   }
@@ -300,43 +433,8 @@ struct HomeHeroImagePage {
     Scroll() {
       Column({ space: AppMetrics.sectionGap }) {
         SettingsPageHeader({
-          title: '首页图片',
-          subtitle: '管理首页展示图。'
+          title: '首页图片'
         })
-
-        this.SummaryCard()
-
-        Column({ space: AppMetrics.cardGap }) {
-          PrimaryButton({
-            label: this.isAdding ? '添加中…' : '添加图片',
-            isDisabled: this.isAdding || this.isLoading,
-            onTap: () => {
-              this.addImages();
-            }
-          })
-
-          Row({ space: AppMetrics.cardGap }) {
-            SecondaryButton({
-              label: '使用默认图片',
-              isDisabled: this.images.length <= 0 || this.isClearing,
-              onTap: () => {
-                this.confirmClearImages();
-              }
-            })
-            .layoutWeight(1)
-
-            DangerButton({
-              label: this.isClearing ? '清空中…' : '清空图片',
-              isDisabled: this.images.length <= 0 || this.isClearing,
-              onTap: () => {
-                this.confirmClearImages();
-              }
-            })
-            .layoutWeight(1)
-          }
-          .width('100%')
-        }
-        .width('100%')
 
         this.ImageList()
       }

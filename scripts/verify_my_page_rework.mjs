@@ -84,7 +84,8 @@ assert(myPageSource.includes('router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });'), 
 assert(myPageSource.includes('HomeHeroImageService.listImages'), 'MyPage must keep home hero status display.');
 assert(myPageSource.includes("title: '家庭存储'"), 'MyPage must expose home storage entry.');
 assert(myPageSource.includes("title: '同步中心'"), 'MyPage must expose sync center entry.');
-assert(myPageSource.includes("title: '开发诊断'"), 'MyPage must keep diagnostics as a weak developer entry.');
+assert(myPageSource.includes('@Builder\n  DeveloperDiagnosticsCard()'), 'MyPage must keep diagnostics as a weak developer entry.');
+assert(myPageSource.includes("Text('开发诊断')"), 'MyPage must keep diagnostics as a weak developer entry.');
 assert(myPageSource.includes('运行开发诊断？'), 'Developer diagnostics must require confirmation.');
 assert(!myPageSource.includes('this.LinkRow('), 'MyPage should use SettingsLinkRow instead of the old local row.');
 assert(myPageSource.includes('bottom: MY_PAGE_BOTTOM_PADDING'), 'MyPage scroll content must keep bottom padding for the tab bar.');

@@ -120,14 +120,28 @@ const docsSource = read(files.docs);
 
 [
   "title: '首页图片'",
-  "label: this.isAdding ? '添加中…' : '添加图片'",
-  "label: '使用默认图片'",
-  "label: this.isClearing ? '清空中…' : '清空图片'",
+  '@Builder\n  DefaultImageRow()',
+  "Text('默认首页图')",
+  "Text(this.images.length <= 0 ? '展示中' : '默认')",
+  '@Builder\n  AddImageRow()',
+  "Text(this.isAdding ? '添加中…' : '添加图片')",
+  "Text('可一次选择多张，加入首页轮播')",
+  '@Builder\n  ClearImagesAction()',
+  "Button(this.isClearing ? '清空中…' : '清空自定义')",
   "title: '删除这张图片？'",
   "title: '清空首页图片？'",
   "promptAction.showToast({ message: '已恢复默认首页图片' })",
   "promptAction.showToast({ message: '图片保存失败，请重试' })"
 ].forEach((marker) => requireIncludes(configPageSource, marker, 'HomeHeroImagePage missing UX marker'));
+
+[
+  '@Builder\n  SummaryCard()',
+  "subtitle: '管理首页展示图。'",
+  "label: '使用默认图片'",
+  "label: this.isClearing ? '清空中…' : '清空图片'",
+  "EmptyState({\n          title: '还没有自定义首页图'",
+  "Text('选择一张或多张图片作为首页展示图。多张图片会自动轮播。')"
+].forEach((marker) => forbidIncludes(configPageSource, marker, 'HomeHeroImagePage must keep hero image controls inside configured list'));
 
 [
   'HOME_HERO_IMAGE_PAGE',
