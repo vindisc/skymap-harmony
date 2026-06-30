@@ -12,9 +12,10 @@ let failed = false;
 
 const requiredHomeTokens = [
   "title: '摄影复盘'",
-  "subtitle: '从照片里练习观看与判断'",
   "Text('从一张照片开始，练习判断')",
-  "Text('看见落点、路径和关系。')"
+  "Text('看见落点、路径和关系。')",
+  'Row({ space: HOME_METHOD_TAG_GAP })',
+  '.justifyContent(FlexAlign.SpaceBetween)'
 ];
 
 for (const token of requiredHomeTokens) {
@@ -22,6 +23,16 @@ for (const token of requiredHomeTokens) {
     failed = true;
     console.error(`HomePage missing token: ${token}`);
   }
+}
+
+if (homePageSource.includes("subtitle: '从照片里练习观看与判断'")) {
+  failed = true;
+  console.error('HomePage must not show the removed header subtitle.');
+}
+
+if (homePageSource.includes('ScrollDirection.Horizontal')) {
+  failed = true;
+  console.error('HomePage hero tags must fit without horizontal clipping.');
 }
 
 const requiredDetailTokens = [

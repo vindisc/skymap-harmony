@@ -69,17 +69,20 @@ const primaryPageSources = [
 
 [
   "title: '摄影复盘'",
-  "subtitle: '从照片里练习观看与判断'",
   "Text('从一张照片开始，练习判断')",
   'PrimaryButton({',
   "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'",
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
+  'Row({ space: HOME_METHOD_TAG_GAP })',
+  '.justifyContent(FlexAlign.SpaceBetween)',
   'this.ReviewFlowPanel()',
   'ReviewCardHistoryService.loadWithDiagnostics(context)',
   'pasteboard.createData',
   'HomeHeroImageService.getDisplayImages'
 ].forEach((marker) => requireIncludes(sources.homePage, marker, 'HomePage missing current information-architecture marker'));
 
+forbidIncludes(sources.homePage, "subtitle: '从照片里练习观看与判断'", 'HomePage must not show the removed header subtitle');
+forbidIncludes(sources.homePage, 'ScrollDirection.Horizontal', 'HomePage hero tags must fit without horizontal clipping');
 forbidIncludes(sources.homePage, 'ScrollDirection.Vertical', 'HomePage must not make the fixed first screen vertically scrollable');
 
 [

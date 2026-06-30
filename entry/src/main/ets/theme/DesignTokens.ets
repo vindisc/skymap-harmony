@@ -44,7 +44,7 @@ export class LayoutTokens {
   static readonly TabBarItemHeight: number = 44;
   static readonly SearchHeight: number = 44;
   static readonly ChipHeight: number = 34;
-  static readonly PrimaryButtonHeight: number = 44;
+  static readonly PrimaryButtonHeight: number = 48;
   static readonly SecondaryButtonHeight: number = 44;
   static readonly ListThumbnailSize: number = 68;
   static readonly ListCardMinHeight: number = 96;

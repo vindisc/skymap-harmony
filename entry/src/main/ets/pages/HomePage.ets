@@ -40,16 +40,16 @@ import {
 } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 
-const HOME_HERO_ASPECT_RATIO: number = 0.75;
+const HOME_HERO_ASPECT_RATIO: number = 0.68;
 const HOME_SIDE_PADDING: number = AppMetrics.pagePadding;
 const HOME_HERO_TEXT_PADDING: number = 20;
 const HOME_HERO_RADIUS: number = AppMetrics.cardRadius;
-const HOME_HERO_TEXT_BOTTOM: number = 24;
-const HOME_METHOD_TAG_HEIGHT: number = 30;
+const HOME_HERO_TEXT_BOTTOM: number = 22;
+const HOME_METHOD_TAG_HEIGHT: number = 28;
 const HOME_METHOD_TAG_RADIUS: number = AppMetrics.capsuleRadius;
-const HOME_METHOD_TAG_GAP: number = AppMetrics.space8;
-const HOME_FLOW_CARD_GAP: number = AppMetrics.cardGap;
-const HOME_FLOW_CARD_HEIGHT: number = 72;
+const HOME_METHOD_TAG_GAP: number = 6;
+const HOME_FLOW_CARD_GAP: number = AppMetrics.space8;
+const HOME_FLOW_CARD_HEIGHT: number = 50;
 const HOME_FLOW_CARD_RADIUS: number = AppMetrics.panelRadius;
 const HOME_HERO_INDICATOR_BOTTOM: number = 18;
 
@@ -211,9 +211,7 @@ export struct HomePage {
   HeroPanel() {
     Column() {
       AppPageHeader({
-        title: '摄影复盘',
-        subtitle: '从照片里练习观看与判断',
-        subtitleTop: 4
+        title: '摄影复盘'
       })
 
       Swiper() {
@@ -241,25 +239,22 @@ export struct HomePage {
       .clip(true)
       .border({ width: 1, color: AppColors.border })
       .shadow(ElevationTokens.medium)
-      .margin({ top: AppMetrics.space16 })
+      .margin({ top: AppMetrics.space12 })
 
-      Scroll() {
-        Row({ space: HOME_METHOD_TAG_GAP }) {
-          ForEach(this.heroFeatureTags, (item: string) => {
-            this.MethodTag(item)
-          }, (item: string) => item)
-        }
+      Row({ space: HOME_METHOD_TAG_GAP }) {
+        ForEach(this.heroFeatureTags, (item: string) => {
+          this.MethodTag(item)
+        }, (item: string) => item)
       }
       .width('100%')
-      .scrollable(ScrollDirection.Horizontal)
-      .scrollBar(BarState.Off)
-      .margin({ top: AppMetrics.space16 })
+      .justifyContent(FlexAlign.SpaceBetween)
+      .margin({ top: AppMetrics.space12 })
 
       Column() {
         this.StartReviewButton()
       }
       .width('100%')
-      .margin({ top: AppMetrics.space20 })
+      .margin({ top: AppMetrics.space12 })
 
       this.ReviewFlowPanel()
     }
@@ -366,7 +361,7 @@ export struct HomePage {
       .fontWeight(FontWeight.Bold)
       .fontColor(AppColors.primary)
       .height(HOME_METHOD_TAG_HEIGHT)
-      .padding({ left: 14, right: 14 })
+      .padding({ left: 10, right: 10 })
       .borderRadius(HOME_METHOD_TAG_RADIUS)
       .backgroundColor(AppColors.primarySoft)
       .border({ width: 0.5, color: AppColors.border })
@@ -393,30 +388,34 @@ export struct HomePage {
       }, (step: ReviewFlowStep) => step.title)
     }
     .width('100%')
-    .margin({ top: 14 })
+    .margin({ top: AppMetrics.space10 })
   }
 
   @Builder
   FlowStepCard(step: ReviewFlowStep) {
-    Column({ space: 4 }) {
+    Column({ space: 2 }) {
       Text(step.title)
         .fontSize(13)
         .fontWeight(700)
         .fontColor(AppColors.text)
         .lineHeight(18)
         .maxLines(1)
+        .width('100%')
+        .textAlign(TextAlign.Center)
 
       Text(step.description)
-        .fontSize(11)
+        .fontSize(10)
         .fontColor(AppColors.secondaryText)
-        .lineHeight(15)
-        .maxLines(2)
+        .lineHeight(13)
+        .maxLines(1)
+        .width('100%')
+        .textAlign(TextAlign.Center)
     }
-    .alignItems(HorizontalAlign.Start)
+    .alignItems(HorizontalAlign.Center)
     .justifyContent(FlexAlign.Center)
     .layoutWeight(1)
     .height(HOME_FLOW_CARD_HEIGHT)
-    .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+    .padding({ left: 8, right: 8, top: 6, bottom: 6 })
     .borderRadius(HOME_FLOW_CARD_RADIUS)
     .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
