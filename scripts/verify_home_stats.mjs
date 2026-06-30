@@ -23,7 +23,8 @@ function requireIncludes(source, marker, message) {
 
 [
   "title: '摄影复盘'",
-  "Button(this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘')",
+  'PrimaryButton({',
+  "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'",
   'beginHomeDashboardReload(this.dashboardReloadState)',
   'ReviewCardHistoryService.loadWithDiagnostics(context)',
   'applyHomeDashboardReloadSuccess(this.dashboardReloadState, requestId, result.items)',

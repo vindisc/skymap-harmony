@@ -50,3 +50,92 @@ export class LayoutTokens {
   static readonly ListCardMinHeight: number = 96;
   static readonly ListCardMaxHeight: number = 108;
 }
+
+export class SpacingTokens {
+  static readonly xs: number = 4;
+  static readonly sm: number = 8;
+  static readonly md: number = 12;
+  static readonly lg: number = 16;
+  static readonly xl: number = 24;
+  static readonly xxl: number = 32;
+}
+
+export class RadiusTokens {
+  static readonly xs: number = 6;
+  static readonly sm: number = 10;
+  static readonly md: number = 14;
+  static readonly lg: number = 18;
+  static readonly xl: number = 24;
+  static readonly full: number = 999;
+}
+
+export interface ShadowToken {
+  radius: number;
+  color: string;
+  offsetX: number;
+  offsetY: number;
+}
+
+export class ElevationTokens {
+  static readonly none: ShadowToken = {
+    radius: 0,
+    color: '#00000000',
+    offsetX: 0,
+    offsetY: 0
+  };
+  static readonly subtle: ShadowToken = {
+    radius: 6,
+    color: '#0A000000',
+    offsetX: 0,
+    offsetY: 2
+  };
+  static readonly low: ShadowToken = {
+    radius: 8,
+    color: '#12000000',
+    offsetX: 0,
+    offsetY: 3
+  };
+  static readonly medium: ShadowToken = {
+    radius: 12,
+    color: '#18000000',
+    offsetX: 0,
+    offsetY: 4
+  };
+  static readonly high: ShadowToken = {
+    radius: 20,
+    color: '#1F000000',
+    offsetX: 0,
+    offsetY: 8
+  };
+  static readonly overlay: ShadowToken = {
+    radius: 28,
+    color: '#26000000',
+    offsetX: 0,
+    offsetY: 12
+  };
+  static readonly danger: ShadowToken = {
+    radius: 10,
+    color: '#26B73A31',
+    offsetX: 0,
+    offsetY: 3
+  };
+  static readonly focus: ShadowToken = {
+    radius: 8,
+    color: '#1A365F75',
+    offsetX: 0,
+    offsetY: 0
+  };
+}
+
+export class MotionTokens {
+  static readonly durationInstant: number = 80;
+  static readonly durationQuick: number = 150;
+  static readonly durationStandard: number = 250;
+  static readonly durationSlow: number = 400;
+  static readonly curveStandard: Curve = Curve.EaseInOut;
+  static readonly curveDecelerate: Curve = Curve.EaseOut;
+  static readonly curveAccelerate: Curve = Curve.EaseIn;
+  static readonly scalePressed: number = 0.96;
+  static readonly scaleSubtle: number = 0.98;
+  static readonly scaleSoftPressed: number = 0.97;
+}

@@ -7,17 +7,27 @@ import {
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import { getReviewProjectExcerpt } from '../services/ReviewProjectService';
 import { formatReviewTime, getImageRatioLabel, getImageSizeText, hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
-import { LayoutTokens, LineHeightTokens, TypographyTokens } from '../theme/DesignTokens';
+import {
+  ElevationTokens,
+  LayoutTokens,
+  LineHeightTokens,
+  MotionTokens,
+  RadiusTokens,
+  SpacingTokens,
+  TypographyTokens
+} from '../theme/DesignTokens';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
   static readonly pageBackground: string = '#F7F5F0';
   static readonly tabBarBackground: string = '#F8F6F1';
   static readonly surface: string = '#FFFEFC';
+  static readonly surfaceElevated: string = '#FFFFFF';
   static readonly surfaceMuted: string = '#F3EFE7';
   static readonly surfaceTint: string = '#F8F5EE';
   static readonly border: string = '#E3DBCF';
   static readonly borderStrong: string = '#C8C0B4';
+  static readonly borderFocused: string = '#365F75';
   static readonly text: string = '#15191F';
   static readonly secondaryText: string = '#5E6570';
   static readonly mutedText: string = '#8B919A';
@@ -31,10 +41,15 @@ export class AppColors {
   static readonly transparent: string = '#00000000';
   static readonly overlayLight: string = '#66FFFFFF';
   static readonly heroGradientMiddle: string = '#0F121B12';
+  static readonly heroGradientBlue: string = '#223F542F';
+  static readonly heroGradientDeep: string = '#0F121BA0';
   static readonly heroGradientEnd: string = '#0F121B80';
   static readonly scrim: string = '#66000000';
   static readonly modalScrim: string = '#73000000';
   static readonly floatingShadow: string = '#1A000000';
+  static readonly shadowSubtle: string = '#0A000000';
+  static readonly shadowMedium: string = '#18000000';
+  static readonly shadowStrong: string = '#26000000';
   static readonly danger: string = '#B73A31';
   static readonly dangerPressed: string = '#8F2B25';
   static readonly dangerSoft: string = '#F6E8E5';
@@ -47,11 +62,14 @@ export class AppColors {
 }
 
 export class AppMetrics {
-  static readonly space8: number = 8;
+  static readonly space4: number = SpacingTokens.xs;
+  static readonly space8: number = SpacingTokens.sm;
   static readonly space10: number = 10;
-  static readonly space16: number = 16;
-  static readonly space24: number = 24;
-  static readonly space32: number = 32;
+  static readonly space12: number = SpacingTokens.md;
+  static readonly space16: number = SpacingTokens.lg;
+  static readonly space20: number = 20;
+  static readonly space24: number = SpacingTokens.xl;
+  static readonly space32: number = SpacingTokens.xxl;
   static readonly pagePadding: number = 16;
   static readonly pageTopPadding: number = 16;
   static readonly pageBottomPadding: number = 20;
@@ -59,10 +77,11 @@ export class AppMetrics {
   static readonly cardGap: number = 12;
   static readonly cardPadding: number = 16;
   static readonly listCardPadding: number = 12;
-  static readonly cardRadius: number = 18;
-  static readonly buttonRadius: number = 14;
-  static readonly capsuleRadius: number = 999;
-  static readonly panelRadius: number = 16;
+  static readonly cardRadius: number = RadiusTokens.lg;
+  static readonly buttonRadius: number = RadiusTokens.md;
+  static readonly inputRadius: number = RadiusTokens.md;
+  static readonly capsuleRadius: number = RadiusTokens.full;
+  static readonly panelRadius: number = RadiusTokens.lg;
   static readonly pressInset: number = 8;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
@@ -154,6 +173,7 @@ export struct AppPageHeader {
       if (this.subtitle.length > 0) {
         Text(this.subtitle)
           .fontSize(AppTypography.pageSubtitle)
+          .fontWeight(FontWeight.Medium)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.pageSubtitleLineHeight)
           .maxLines(2)
@@ -191,7 +211,7 @@ function resolveSettingsToneBackground(tone: SettingsEntryTone): string {
     return AppColors.tagAmber;
   }
   if (tone === SettingsEntryTone.DANGER) {
-    return AppColors.surfaceTint;
+    return AppColors.dangerSoft;
   }
   if (tone === SettingsEntryTone.MUTED) {
     return AppColors.surfaceMuted;
@@ -267,6 +287,7 @@ export struct SettingsLinkRow {
   @Prop tone: SettingsEntryTone = SettingsEntryTone.DEFAULT;
   @Prop showChevron: boolean = true;
   @Prop dense: boolean = false;
+  @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
   build() {
@@ -323,8 +344,20 @@ export struct SettingsLinkRow {
     .width('100%')
     .constraintSize({ minHeight: this.dense ? 60 : 68 })
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(this.isPressed ? AppColors.surfaceMuted : AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
+    .shadow(this.isPressed ? ElevationTokens.medium : ElevationTokens.subtle)
+    .scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })
+    .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
+    .onTouch((event: TouchEvent) => {
+      if (event.type === TouchType.Down) {
+        this.isPressed = true;
+        return;
+      }
+      if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+        this.isPressed = false;
+      }
+    })
     .onClick(() => {
       this.onTap();
     })
@@ -335,6 +368,7 @@ export struct SettingsLinkRow {
 export struct PrimaryButton {
   @Prop label: string = '';
   @Prop isDisabled: boolean = false;
+  @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
   build() {
@@ -343,13 +377,29 @@ export struct PrimaryButton {
         .width('100%')
         .borderRadius(AppMetrics.buttonRadius)
         .fontSize(AppTypography.buttonText)
-        .fontWeight(600)
+        .fontWeight(700)
         .fontColor(AppColors.onPrimary)
         .backgroundColor(this.isDisabled ? AppColors.primaryDisabled : AppColors.primary)
         .border({ width: 1, color: this.isDisabled ? AppColors.primaryDisabled : AppColors.primaryPressed })
+        .shadow(this.isDisabled ? ElevationTokens.none : (this.isPressed ? ElevationTokens.subtle : ElevationTokens.low))
+        .scale({ x: this.isPressed ? MotionTokens.scalePressed : 1, y: this.isPressed ? MotionTokens.scalePressed : 1 })
+        .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
         .opacity(this.isDisabled ? 0.72 : 1)
         .enabled(!this.isDisabled)
         .stateEffect(!this.isDisabled)
+      .onTouch((event: TouchEvent) => {
+        if (this.isDisabled) {
+          this.isPressed = false;
+          return;
+        }
+        if (event.type === TouchType.Down) {
+          this.isPressed = true;
+          return;
+        }
+        if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+          this.isPressed = false;
+        }
+      })
       .onClick(() => {
         if (this.isDisabled) {
           return;
@@ -363,6 +413,7 @@ export struct PrimaryButton {
 export struct SecondaryButton {
   @Prop label: string = '';
   @Prop isDisabled: boolean = false;
+  @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
   build() {
@@ -373,11 +424,27 @@ export struct SecondaryButton {
         .fontSize(AppTypography.smallButtonText)
         .fontWeight(600)
         .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.text)
-        .backgroundColor(AppColors.surface)
+        .backgroundColor(this.isPressed ? AppColors.surfaceMuted : AppColors.surfaceElevated)
         .border({ width: 1, color: AppColors.border })
+        .shadow(this.isDisabled ? ElevationTokens.none : ElevationTokens.subtle)
+        .scale({ x: this.isPressed ? MotionTokens.scaleSoftPressed : 1, y: this.isPressed ? MotionTokens.scaleSoftPressed : 1 })
+        .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
         .opacity(this.isDisabled ? 0.72 : 1)
         .enabled(!this.isDisabled)
         .stateEffect(!this.isDisabled)
+      .onTouch((event: TouchEvent) => {
+        if (this.isDisabled) {
+          this.isPressed = false;
+          return;
+        }
+        if (event.type === TouchType.Down) {
+          this.isPressed = true;
+          return;
+        }
+        if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+          this.isPressed = false;
+        }
+      })
       .onClick(() => {
         if (this.isDisabled) {
           return;
@@ -391,6 +458,7 @@ export struct SecondaryButton {
 export struct DangerButton {
   @Prop label: string = '';
   @Prop isDisabled: boolean = false;
+  @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
   build() {
@@ -400,11 +468,27 @@ export struct DangerButton {
         .fontSize(AppTypography.smallButtonText)
         .fontWeight(600)
         .fontColor(this.isDisabled ? AppColors.secondaryText : AppColors.danger)
-        .backgroundColor(AppColors.surfaceTint)
+        .backgroundColor(this.isPressed ? AppColors.dangerSoft : AppColors.surfaceTint)
         .border({ width: 1, color: this.isDisabled ? AppColors.border : AppColors.danger })
+        .shadow(this.isDisabled ? ElevationTokens.none : (this.isPressed ? ElevationTokens.subtle : ElevationTokens.danger))
+        .scale({ x: this.isPressed ? MotionTokens.scaleSoftPressed : 1, y: this.isPressed ? MotionTokens.scaleSoftPressed : 1 })
+        .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
         .opacity(this.isDisabled ? 0.72 : 1)
         .enabled(!this.isDisabled)
         .stateEffect(!this.isDisabled)
+      .onTouch((event: TouchEvent) => {
+        if (this.isDisabled) {
+          this.isPressed = false;
+          return;
+        }
+        if (event.type === TouchType.Down) {
+          this.isPressed = true;
+          return;
+        }
+        if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+          this.isPressed = false;
+        }
+      })
       .onClick(() => {
         if (this.isDisabled) {
           return;
@@ -423,8 +507,9 @@ export struct EmptyState {
     Column() {
       Text(this.title)
         .fontSize(AppTypography.cardTitle)
-        .fontWeight(FontWeight.Medium)
+        .fontWeight(FontWeight.Bold)
         .fontColor(AppColors.text)
+        .textAlign(TextAlign.Center)
         .maxLines(2)
         .wordBreak(WordBreak.BREAK_WORD)
         .width('100%')
@@ -435,16 +520,18 @@ export struct EmptyState {
           .lineHeight(AppTypography.auxiliaryLineHeight)
           .maxLines(3)
           .wordBreak(WordBreak.BREAK_WORD)
-          .margin({ top: AppMetrics.space8 })
+          .textAlign(TextAlign.Center)
+          .margin({ top: AppMetrics.space10 })
           .width('100%')
       }
     }
-    .alignItems(HorizontalAlign.Start)
-    .padding(AppMetrics.space16)
+    .alignItems(HorizontalAlign.Center)
+    .padding(AppMetrics.space24)
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
   }
 }
 
@@ -457,11 +544,12 @@ export struct TagLabel {
   build() {
     Text(this.label)
       .fontSize(AppTypography.meta)
-      .fontWeight(FontWeight.Medium)
+      .fontWeight(FontWeight.Bold)
       .fontColor(this.color)
       .padding({ left: 10, right: 10, top: 5, bottom: 5 })
       .borderRadius(AppMetrics.capsuleRadius)
       .backgroundColor(this.tagBackground)
+      .shadow(ElevationTokens.subtle)
   }
 }
 
@@ -653,6 +741,7 @@ export struct PhotoWritingHero {
 @Component
 export struct ProjectHomeCard {
   @Prop summary: ReviewProjectSummary = createDefaultProjectSummary();
+  @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
   @Builder
@@ -749,9 +838,20 @@ export struct ProjectHomeCard {
     .width('100%')
     .constraintSize({ minHeight: 124 })
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
-
+    .shadow(this.isPressed ? ElevationTokens.medium : ElevationTokens.subtle)
+    .scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })
+    .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
+    .onTouch((event: TouchEvent) => {
+      if (event.type === TouchType.Down) {
+        this.isPressed = true;
+        return;
+      }
+      if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+        this.isPressed = false;
+      }
+    })
     .onClick(() => {
       this.onTap();
     })
@@ -764,6 +864,7 @@ export struct RecentReviewCard {
     document: createDefaultReviewCardDocument(),
     exportedPath: ''
   };
+  @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
   build() {
@@ -819,9 +920,20 @@ export struct RecentReviewCard {
     .width('100%')
     .constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
-
+    .shadow(this.isPressed ? ElevationTokens.medium : ElevationTokens.subtle)
+    .scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })
+    .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
+    .onTouch((event: TouchEvent) => {
+      if (event.type === TouchType.Down) {
+        this.isPressed = true;
+        return;
+      }
+      if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+        this.isPressed = false;
+      }
+    })
     .onClick(() => {
       this.onTap();
     })
@@ -834,6 +946,7 @@ export struct ProjectReviewCard {
     document: createDefaultReviewCardDocument(),
     exportedPath: ''
   };
+  @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
   build() {
@@ -889,9 +1002,20 @@ export struct ProjectReviewCard {
     .width('100%')
     .constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
-
+    .shadow(this.isPressed ? ElevationTokens.medium : ElevationTokens.subtle)
+    .scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })
+    .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
+    .onTouch((event: TouchEvent) => {
+      if (event.type === TouchType.Down) {
+        this.isPressed = true;
+        return;
+      }
+      if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+        this.isPressed = false;
+      }
+    })
     .onClick(() => {
       this.onTap();
     })
@@ -928,5 +1052,6 @@ export struct InfoBlockCard {
     .borderRadius(AppMetrics.panelRadius)
     .backgroundColor(AppColors.surfaceMuted)
     .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
   }
 }

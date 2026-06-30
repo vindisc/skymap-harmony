@@ -14,6 +14,7 @@ const files = {
   bundleExport: 'entry/src/main/ets/services/ReviewBundleExportService.ets',
   homeStorage: 'entry/src/main/ets/services/HomeStorageService.ets',
   appDesign: 'entry/src/main/ets/components/AppDesign.ets',
+  designTokens: 'entry/src/main/ets/theme/DesignTokens.ets',
   docs: 'docs/product/HOME_HERO_IMAGE_CONFIG_V1.md'
 };
 
@@ -54,6 +55,7 @@ const pickerSource = read(files.picker);
 const routerSource = read(files.router);
 const mainPagesSource = read(files.mainPages);
 const appDesignSource = read(files.appDesign);
+const designTokensSource = read(files.designTokens);
 const docsSource = read(files.docs);
 
 [
@@ -96,9 +98,10 @@ const docsSource = read(files.docs);
   'Image(item.uri)',
   "Image($r('app.media.home_review_hero'))",
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
-  'AppColors.onPrimarySubtle',
   'AppColors.heroGradientMiddle',
-  'AppColors.heroGradientEnd'
+  'AppColors.heroGradientBlue',
+  'AppColors.heroGradientDeep',
+  '.shadow(ElevationTokens.medium)'
 ].forEach((marker) => requireIncludes(homePageSource, marker, 'HomePage missing hero display marker'));
 
 [
@@ -164,16 +167,18 @@ forbidIncludes(configPageSource, "@ohos.data.preferences", 'HomeHeroImagePage mu
 });
 
 [
-  'static readonly space4:',
-  'static readonly space12:',
-  'AppMetrics.space4',
-  'AppMetrics.space12'
-].forEach((marker) => {
-  forbidIncludes(appDesignSource, marker, 'Design System V1 spacing baseline must remain intact');
-  forbidIncludes(homePageSource, marker, 'HomePage spacing baseline must remain intact');
-  forbidIncludes(myPageSource, marker, 'MyPage spacing baseline must remain intact');
-  forbidIncludes(configPageSource, marker, 'HomeHeroImagePage spacing baseline must remain intact');
-});
+  'export class SpacingTokens',
+  'export class RadiusTokens',
+  'export class ElevationTokens',
+  'export class MotionTokens'
+].forEach((marker) => requireIncludes(designTokensSource, marker, 'Design System V2 foundation missing marker'));
+
+[
+  'static readonly space4: number = SpacingTokens.xs;',
+  'static readonly space12: number = SpacingTokens.md;',
+  'static readonly cardRadius: number = RadiusTokens.lg;',
+  'static readonly buttonRadius: number = RadiusTokens.md;'
+].forEach((marker) => requireIncludes(appDesignSource, marker, 'AppDesign must map Design System V2 tokens'));
 
 [
   '本轮不新建 RDB 表',

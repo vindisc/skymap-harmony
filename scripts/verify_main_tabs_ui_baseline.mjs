@@ -77,7 +77,8 @@ baselineImagePaths.forEach((imagePath) => {
   '.autoPlay(this.shouldAutoplayHero())',
   '.indicator(this.shouldShowHeroIndicator())',
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
-  "Button(this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘')",
+  'PrimaryButton({',
+  "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'",
   'bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding'
 ].forEach((marker) => requireIncludes(sources.home, marker, 'HomePage must keep hero config, carousel and tab clearance'));
 

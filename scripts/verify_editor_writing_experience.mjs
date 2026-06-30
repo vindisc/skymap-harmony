@@ -40,15 +40,21 @@ assertIncludes(editorPageSource, 'this.scheduleFieldIntoView(field, EDITOR_KEYBO
 assertIncludes(editorPageSource, 'estimateReviewTextLineCount(', 'EditorPage scroll math must use the shared review text metric.');
 
 assertIncludes(reviewInputFormSource, 'const REVIEW_FIELD_LABEL_GAP: number = AppMetrics.space8;', 'ReviewInputForm labels must sit closer to inputs.');
-assertIncludes(reviewInputFormSource, 'const REVIEW_FORM_FIELD_GAP: number = AppMetrics.cardGap;', 'ReviewInputForm field gaps must stay compact.');
+assertIncludes(reviewInputFormSource, 'const REVIEW_FORM_FIELD_GAP: number = AppMetrics.space16;', 'ReviewInputForm field gaps must provide production-level breathing room.');
 assertIncludes(reviewInputFormSource, 'estimateReviewTextLineCount(', 'ReviewInputForm TextArea height must use the shared review text metric.');
 assertIncludes(reviewInputFormSource, '.style(TextContentStyle.DEFAULT)', 'ReviewInputForm TextArea must avoid inline-mode internal scrolling.');
 assertIncludes(reviewInputFormSource, '.barState(BarState.Off)', 'ReviewInputForm TextArea must not show its own scrollbar.');
 assertIncludes(reviewInputFormSource, '.enableKeyboardOnFocus(true)', 'ReviewInputForm inputs must reliably summon the keyboard on focus.');
 assertIncludes(reviewInputFormSource, '.caretColor(AppColors.primary)', 'ReviewInputForm caret must use the visible primary color.');
 assertIncludes(reviewInputFormSource, '.caretStyle({ width: 2, color: AppColors.primary })', 'ReviewInputForm TextArea caret must be visibly sized.');
-assertIncludes(reviewInputFormSource, '.padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: 12, bottom: 12 })',
+assertIncludes(reviewInputFormSource, 'const REVIEW_TEXTAREA_VERTICAL_PADDING: number = 28;', 'ReviewInputForm TextArea height estimate must match 14vp vertical padding.');
+assertIncludes(reviewInputFormSource, '.padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: 14, bottom: 14 })',
   'ReviewInputForm TextArea vertical padding must match the editor height estimate.');
+assertIncludes(reviewInputFormSource, '@State focusedField: string = \'\';', 'ReviewInputForm must own visible focus state.');
+assertIncludes(reviewInputFormSource, '.shadow(this.focusedField === fieldKey ? ElevationTokens.focus : ElevationTokens.none)',
+  'ReviewInputForm multiline fields must show focus elevation.');
+assertIncludes(reviewInputFormSource, '.animation({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate })',
+  'ReviewInputForm focus changes must animate quickly.');
 assertIncludes(reviewInputFormSource, 'this.onFieldChange(fieldKey);', 'ReviewInputForm multiline changes must notify the editor page.');
 assertIncludes(reviewInputFormSource, "this.onFieldChange('title');", 'ReviewInputForm title changes must notify the editor page.');
 assertNotIncludes(reviewInputFormSource, 'Column({ space: AppMetrics.space16 }) {\n      this.FieldLabel(label, labelSize)',

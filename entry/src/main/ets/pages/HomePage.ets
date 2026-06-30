@@ -35,21 +35,22 @@ import {
   AppMetrics,
   AppPageHeader,
   AppTypography,
+  PrimaryButton,
   SecondaryButton
 } from '../components/AppDesign';
+import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 
 const HOME_HERO_ASPECT_RATIO: number = 0.75;
-const HOME_SIDE_PADDING: number = 16;
+const HOME_SIDE_PADDING: number = AppMetrics.pagePadding;
 const HOME_HERO_TEXT_PADDING: number = 20;
-const HOME_HERO_RADIUS: number = 18;
-const HOME_HERO_TEXT_BOTTOM: number = 20;
-const HOME_METHOD_TAG_HEIGHT: number = 24;
-const HOME_METHOD_TAG_RADIUS: number = 999;
-const HOME_METHOD_TAG_GAP: number = 6;
-const HOME_PRIMARY_BUTTON_HEIGHT: number = 44;
-const HOME_FLOW_CARD_GAP: number = 10;
-const HOME_FLOW_CARD_HEIGHT: number = 62;
-const HOME_FLOW_CARD_RADIUS: number = 16;
+const HOME_HERO_RADIUS: number = AppMetrics.cardRadius;
+const HOME_HERO_TEXT_BOTTOM: number = 24;
+const HOME_METHOD_TAG_HEIGHT: number = 30;
+const HOME_METHOD_TAG_RADIUS: number = AppMetrics.capsuleRadius;
+const HOME_METHOD_TAG_GAP: number = AppMetrics.space8;
+const HOME_FLOW_CARD_GAP: number = AppMetrics.cardGap;
+const HOME_FLOW_CARD_HEIGHT: number = 72;
+const HOME_FLOW_CARD_RADIUS: number = AppMetrics.panelRadius;
 const HOME_HERO_INDICATOR_BOTTOM: number = 18;
 
 interface ReviewFlowStep {
@@ -230,7 +231,7 @@ export struct HomePage {
       .interval(this.heroIntervalSeconds * 1000)
       .indicator(this.shouldShowHeroIndicator())
       .loop(this.shouldShowHeroIndicator())
-      .curve(Curve.EaseInOut)
+      .curve(MotionTokens.curveDecelerate)
       .indicatorStyle({
         bottom: HOME_HERO_INDICATOR_BOTTOM,
         color: AppColors.overlayLight,
@@ -239,7 +240,8 @@ export struct HomePage {
       .borderRadius(HOME_HERO_RADIUS)
       .clip(true)
       .border({ width: 1, color: AppColors.border })
-      .margin({ top: 12 })
+      .shadow(ElevationTokens.medium)
+      .margin({ top: AppMetrics.space16 })
 
       Scroll() {
         Row({ space: HOME_METHOD_TAG_GAP }) {
@@ -251,13 +253,13 @@ export struct HomePage {
       .width('100%')
       .scrollable(ScrollDirection.Horizontal)
       .scrollBar(BarState.Off)
-      .margin({ top: 10 })
+      .margin({ top: AppMetrics.space16 })
 
       Column() {
         this.StartReviewButton()
       }
       .width('100%')
-      .margin({ top: 12 })
+      .margin({ top: AppMetrics.space20 })
 
       this.ReviewFlowPanel()
     }
@@ -299,18 +301,18 @@ export struct HomePage {
 
   @Builder
   HeroTextOverlay() {
-    Column({ space: 5 }) {
+    Column({ space: 6 }) {
       Text('从一张照片开始，练习判断')
-        .fontSize(16)
-        .fontWeight(600)
+        .fontSize(17)
+        .fontWeight(700)
         .fontColor(AppColors.onPrimary)
-        .lineHeight(21)
+        .lineHeight(23)
         .maxLines(2)
         .width('100%')
 
       Text('看见落点、路径和关系。')
         .fontSize(13)
-        .fontColor(AppColors.onPrimarySubtle)
+        .fontColor('#E6FFFFFF')
         .lineHeight(17)
         .maxLines(2)
         .width('100%')
@@ -324,7 +326,12 @@ export struct HomePage {
     .width('100%')
     .linearGradient({
       angle: 180,
-      colors: [[AppColors.transparent, 0], [AppColors.heroGradientMiddle, 0.55], [AppColors.heroGradientEnd, 1]]
+      colors: [
+        [AppColors.transparent, 0],
+        [AppColors.heroGradientMiddle, 0.38],
+        [AppColors.heroGradientBlue, 0.68],
+        [AppColors.heroGradientDeep, 1]
+      ]
     })
   }
 
@@ -355,37 +362,27 @@ export struct HomePage {
   @Builder
   MethodTag(label: string) {
     Text(label)
-      .fontSize(12)
-      .fontWeight(FontWeight.Medium)
+      .fontSize(13)
+      .fontWeight(FontWeight.Bold)
       .fontColor(AppColors.primary)
       .height(HOME_METHOD_TAG_HEIGHT)
-      .padding({ left: 10, right: 10 })
+      .padding({ left: 14, right: 14 })
       .borderRadius(HOME_METHOD_TAG_RADIUS)
       .backgroundColor(AppColors.primarySoft)
-      .border({ width: 1, color: AppColors.border })
+      .border({ width: 0.5, color: AppColors.border })
+      .shadow(ElevationTokens.subtle)
       .maxLines(1)
   }
 
   @Builder
   StartReviewButton() {
-    Button(this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘')
-      .height(HOME_PRIMARY_BUTTON_HEIGHT)
-      .width('100%')
-      .borderRadius(AppMetrics.buttonRadius)
-      .fontSize(14)
-      .fontWeight(600)
-      .fontColor(AppColors.onPrimary)
-      .backgroundColor(this.isPickingPhoto ? AppColors.primaryDisabled : AppColors.primary)
-      .border({ width: 1, color: this.isPickingPhoto ? AppColors.primaryDisabled : AppColors.primaryPressed })
-      .opacity(this.isPickingPhoto ? 0.72 : 1)
-      .enabled(!this.isPickingPhoto)
-      .stateEffect(!this.isPickingPhoto)
-      .onClick(() => {
-        if (this.isPickingPhoto) {
-          return;
-        }
+    PrimaryButton({
+      label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘',
+      isDisabled: this.isPickingPhoto,
+      onTap: () => {
         this.startPhotoDraft();
-      })
+      }
+    })
   }
 
   @Builder
@@ -403,16 +400,16 @@ export struct HomePage {
   FlowStepCard(step: ReviewFlowStep) {
     Column({ space: 4 }) {
       Text(step.title)
-        .fontSize(12)
-        .fontWeight(600)
+        .fontSize(13)
+        .fontWeight(700)
         .fontColor(AppColors.text)
-        .lineHeight(16)
+        .lineHeight(18)
         .maxLines(1)
 
       Text(step.description)
-        .fontSize(10)
+        .fontSize(11)
         .fontColor(AppColors.secondaryText)
-        .lineHeight(14)
+        .lineHeight(15)
         .maxLines(2)
     }
     .alignItems(HorizontalAlign.Start)
@@ -421,8 +418,9 @@ export struct HomePage {
     .height(HOME_FLOW_CARD_HEIGHT)
     .padding({ left: 10, right: 10, top: 8, bottom: 8 })
     .borderRadius(HOME_FLOW_CARD_RADIUS)
-    .backgroundColor(AppColors.surface)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
   }
 
   build() {

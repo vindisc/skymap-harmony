@@ -11,6 +11,7 @@ const sources = {
   homeStoragePage: fs.readFileSync('entry/src/main/ets/pages/HomeStoragePage.ets', 'utf8'),
   appRouter: fs.readFileSync('entry/src/main/ets/app/AppRouter.ets', 'utf8'),
   appDesign: fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8'),
+  designTokens: fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8'),
   mainPages: fs.readFileSync('entry/src/main/resources/base/profile/main_pages.json', 'utf8')
 };
 
@@ -50,22 +51,28 @@ const primaryPageSources = [
   ['SyncCenterPage', sources.syncCenterPage]
 ];
 
-for (const marker of ['static readonly space4:', 'static readonly space12:', 'AppMetrics.space4', 'AppMetrics.space12']) {
-  if (sources.appDesign.includes(marker)) {
-    fail(`Design system must keep the 8pt spacing scale, found: ${marker}`);
-  }
-  primaryPageSources.forEach(([pageName, source]) => {
-    if (source.includes(marker)) {
-      fail(`${pageName} must keep the shared spacing scale, found: ${marker}`);
-    }
-  });
-}
+[
+  'export class SpacingTokens',
+  'static readonly xs: number = 4;',
+  'static readonly sm: number = 8;',
+  'static readonly md: number = 12;',
+  'static readonly lg: number = 16;',
+  'static readonly xl: number = 24;',
+  'static readonly xxl: number = 32;'
+].forEach((marker) => requireIncludes(sources.designTokens, marker, 'Design system missing 4/8pt spacing token'));
+
+[
+  'static readonly space4: number = SpacingTokens.xs;',
+  'static readonly space12: number = SpacingTokens.md;',
+  'static readonly space16: number = SpacingTokens.lg;'
+].forEach((marker) => requireIncludes(sources.appDesign, marker, 'AppMetrics must map shared spacing tokens'));
 
 [
   "title: '摄影复盘'",
   "subtitle: '从照片里练习观看与判断'",
   "Text('从一张照片开始，练习判断')",
-  "Button(this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘')",
+  'PrimaryButton({',
+  "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'",
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
   'this.ReviewFlowPanel()',
   'ReviewCardHistoryService.loadWithDiagnostics(context)',

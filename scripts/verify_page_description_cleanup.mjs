@@ -5,6 +5,7 @@ const statsPageSource = fs.readFileSync('entry/src/main/ets/pages/StatsPage.ets'
 const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8');
 const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
 const appDesignSource = fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8');
+const designTokensSource = fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8');
 
 let failed = false;
 
@@ -114,12 +115,17 @@ requireIncludes(myPageSource, '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })', 'My
 ].forEach((marker) => requireIncludes(appDesignSource, marker, 'Global typography baseline must remain intact'));
 
 [
-  'static readonly space4:',
-  'static readonly space12:',
-  'AppMetrics.space4',
-  'AppMetrics.space12'
-].forEach((marker) => {
-  forbidIncludes(appDesignSource, marker, 'Global spacing baseline must remain intact');
+  'export class SpacingTokens',
+  'static readonly xs: number = 4;',
+  'static readonly md: number = 12;'
+].forEach((marker) => requireIncludes(designTokensSource, marker, 'Global spacing token foundation must remain intact'));
+
+[
+  'static readonly space4: number = SpacingTokens.xs;',
+  'static readonly space12: number = SpacingTokens.md;'
+].forEach((marker) => requireIncludes(appDesignSource, marker, 'AppDesign must map global spacing tokens'));
+
+['AppMetrics.space4', 'AppMetrics.space12'].forEach((marker) => {
   forbidIncludes(projectDetailSource, marker, 'ProjectDetailPage must keep existing spacing scale');
   forbidIncludes(statsPageSource, marker, 'StatsPage must keep existing spacing scale');
   forbidIncludes(myPageSource, marker, 'MyPage must keep existing spacing scale');
