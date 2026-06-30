@@ -33,7 +33,9 @@ function forbidIncludes(source, marker, message) {
   "title: '家庭存储'",
   "title: '同步中心'",
   "title: '应用'",
-  "title: '版本'"
+  "Text('版本')",
+  'this.VersionInfoCard()',
+  'this.DeveloperDiagnosticsCard()'
 ].forEach((marker) => requireIncludes(myPageSource, marker, 'MyPage missing settings-first marker'));
 
 [

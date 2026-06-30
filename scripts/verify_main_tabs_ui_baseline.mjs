@@ -144,7 +144,9 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   "title: '首页图片'",
   "title: '家庭存储'",
   "title: '同步中心'",
-  "title: '版本'",
+  "Text('版本')",
+  'this.VersionInfoCard()',
+  'this.DeveloperDiagnosticsCard()',
   'dense: true',
   'bottom: MY_PAGE_BOTTOM_PADDING',
   '.justifyContent(FlexAlign.Start)'

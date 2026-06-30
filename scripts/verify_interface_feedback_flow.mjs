@@ -57,7 +57,7 @@ assert(projectSource.includes('REVIEW_FLOW_DELETE_PENDING_TEXT'), 'Project detai
 assert(projectSource.includes('REVIEW_FLOW_IMPORT_PENDING_TEXT'), 'Project detail create-first-review action should reuse import pending copy.');
 
 assert(mySource.includes('if (ENABLE_RDB_DIAGNOSTICS_ENTRY) {'), 'My page diagnostics entry should be guarded by a debug-only flag.');
-assert(mySource.includes("title: '开发诊断'"), 'My page should keep diagnostics code path for development use.');
+assert(mySource.includes("Text('开发诊断')"), 'My page should keep diagnostics code path for development use.');
 
 assert(exportServiceSource.includes('cancelled: boolean;'), 'Image export result should expose a cancelled flag.');
 assert(jsonExportServiceSource.includes('cancelled: boolean;'), 'Review JSON export result should expose a cancelled flag.');

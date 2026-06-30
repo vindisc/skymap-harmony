@@ -191,6 +191,10 @@ assertIncludes(myPageSource, 'dense: true', 'MyPage settings rows must use compa
 assertIncludes(myPageSource, 'SettingsEntryTone.SUCCESS', 'MyPage status badges must use semantic tones.');
 assertIncludes(myPageSource, 'SettingsEntryTone.WARNING', 'MyPage status badges must keep warning tone coverage.');
 assertIncludes(myPageSource, '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })', 'MyPage title-to-content gap must stay compact.');
+assertIncludes(myPageSource, 'this.VersionInfoCard()', 'MyPage app version must use a static information card.');
+assertIncludes(myPageSource, 'this.DeveloperDiagnosticsCard()', 'MyPage diagnostics must be visually separated from ordinary settings.');
+assertIncludes(myPageSource, '.backgroundColor(this.isDeveloperDiagnosticsPressed ? AppColors.surfaceMuted : AppColors.tagAmber)',
+  'MyPage diagnostics card must keep its highlighted press state.');
 assertIncludes(appDesignSource, '@State isPressed: boolean = false;', 'Shared interactive rows and buttons must keep custom press state.');
 assertIncludes(appDesignSource, '.scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })',
   'Shared cards and settings rows must keep subtle press feedback.');

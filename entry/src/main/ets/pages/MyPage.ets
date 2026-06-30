@@ -6,10 +6,12 @@ import {
   AppColors,
   AppMetrics,
   AppPageHeader,
+  AppTypography,
   SettingsEntryTone,
   SettingsLinkRow,
   SettingsSectionHeader
 } from '../components/AppDesign';
+import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import {
   RdbDiagnosticsResult,
   RdbMigrationDiagnosticsResult,
@@ -35,6 +37,7 @@ export struct MyPage {
   @State isRdbDiagnosticsRunning: boolean = false;
   @State rdbDiagnosticsSummary: string = '未运行';
   @State rdbDiagnosticsStatus: string = '开发';
+  @State isDeveloperDiagnosticsPressed: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -125,17 +128,44 @@ export struct MyPage {
     return SettingsEntryTone.MUTED;
   }
 
-  private resolveDeveloperTone(): SettingsEntryTone {
+  private resolveDeveloperStatusTextColor(): string {
     if (this.rdbDiagnosticsStatus === '通过') {
-      return SettingsEntryTone.SUCCESS;
+      return AppColors.tagGreenText;
     }
     if (this.rdbDiagnosticsStatus === '失败') {
-      return SettingsEntryTone.DANGER;
+      return AppColors.danger;
     }
     if (this.rdbDiagnosticsStatus === '运行中') {
-      return SettingsEntryTone.WARNING;
+      return AppColors.tagAmberText;
     }
-    return SettingsEntryTone.MUTED;
+    return AppColors.secondaryText;
+  }
+
+  private resolveDeveloperStatusBackground(): string {
+    if (this.rdbDiagnosticsStatus === '通过') {
+      return AppColors.tagGreen;
+    }
+    if (this.rdbDiagnosticsStatus === '失败') {
+      return AppColors.dangerSoft;
+    }
+    if (this.rdbDiagnosticsStatus === '运行中') {
+      return AppColors.tagAmber;
+    }
+    return AppColors.surfaceMuted;
+  }
+
+  private updateDeveloperDiagnosticsPressed(event: TouchEvent): void {
+    if (this.isRdbDiagnosticsRunning) {
+      this.isDeveloperDiagnosticsPressed = false;
+      return;
+    }
+    if (event.type === TouchType.Down) {
+      this.isDeveloperDiagnosticsPressed = true;
+      return;
+    }
+    if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+      this.isDeveloperDiagnosticsPressed = false;
+    }
   }
 
   private openReviewerProfile(): void {
@@ -271,31 +301,111 @@ export struct MyPage {
         title: '应用'
       })
 
-      SettingsLinkRow({
-        title: '版本',
-        value: `${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`,
-        status: '',
-        tone: SettingsEntryTone.MUTED,
-        showChevron: false,
-        dense: true,
-        onTap: () => {
-        }
-      })
+      this.VersionInfoCard()
 
       if (ENABLE_RDB_DIAGNOSTICS_ENTRY) {
-        SettingsLinkRow({
-          title: '开发诊断',
-          value: this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : `RDB 验证 · ${this.rdbDiagnosticsSummary}`,
-          status: this.rdbDiagnosticsStatus,
-          tone: this.resolveDeveloperTone(),
-          dense: true,
-          onTap: () => {
-            this.confirmRdbDeveloperDiagnostics();
-          }
-        })
+        this.DeveloperDiagnosticsCard()
       }
     }
     .width('100%')
+  }
+
+  @Builder
+  VersionInfoCard() {
+    Column({ space: 4 }) {
+      Text('版本')
+        .fontSize(AppTypography.body)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.bodyLineHeight)
+        .width('100%')
+
+      Text(`${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`)
+        .fontSize(AppTypography.caption)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.captionLineHeight)
+        .width('100%')
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+    }
+    .alignItems(HorizontalAlign.Start)
+    .padding({
+      left: AppMetrics.cardPadding,
+      right: AppMetrics.cardPadding,
+      top: AppMetrics.space10,
+      bottom: AppMetrics.space10
+    })
+    .width('100%')
+    .height(60)
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surfaceMuted)
+    .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
+  }
+
+  @Builder
+  DeveloperDiagnosticsCard() {
+    Row({ space: AppMetrics.cardGap }) {
+      Column({ space: 4 }) {
+        Text('开发诊断')
+          .fontSize(AppTypography.body)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.tagAmberText)
+          .lineHeight(AppTypography.bodyLineHeight)
+          .width('100%')
+          .maxLines(1)
+
+        Text(this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : `RDB 验证 · ${this.rdbDiagnosticsSummary}`)
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
+          .maxLines(2)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      Text(this.rdbDiagnosticsStatus)
+        .fontSize(AppTypography.meta)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(this.resolveDeveloperStatusTextColor())
+        .lineHeight(AppTypography.metaLineHeight)
+        .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+        .borderRadius(AppMetrics.capsuleRadius)
+        .backgroundColor(this.resolveDeveloperStatusBackground())
+        .maxLines(1)
+
+      Text('›')
+        .fontSize(18)
+        .fontColor(AppColors.tagAmberText)
+        .opacity(0.5)
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding({
+      left: AppMetrics.cardPadding,
+      right: AppMetrics.cardPadding,
+      top: AppMetrics.space10,
+      bottom: AppMetrics.space10
+    })
+    .width('100%')
+    .height(68)
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(this.isDeveloperDiagnosticsPressed ? AppColors.surfaceMuted : AppColors.tagAmber)
+    .border({ width: 1, color: AppColors.tagAmberText })
+    .shadow(this.isDeveloperDiagnosticsPressed ? ElevationTokens.medium : ElevationTokens.subtle)
+    .scale({
+      x: this.isDeveloperDiagnosticsPressed ? MotionTokens.scaleSubtle : 1,
+      y: this.isDeveloperDiagnosticsPressed ? MotionTokens.scaleSubtle : 1
+    })
+    .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
+    .opacity(this.isRdbDiagnosticsRunning ? 0.72 : 1)
+    .onTouch((event: TouchEvent) => {
+      this.updateDeveloperDiagnosticsPressed(event);
+    })
+    .onClick(() => {
+      this.confirmRdbDeveloperDiagnostics();
+    })
   }
 
   build() {
