@@ -1,7 +1,6 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import display from '@ohos.display';
-import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { PREVIEW_PAGE } from '../app/AppRouter';
@@ -22,6 +21,7 @@ import {
 import { AppColors, AppMetrics, AppTypography, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { estimateReviewTextLineCount } from '../utils/ReviewTextMetrics';
+import { ToastService } from '../services/ToastService';
 
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
@@ -33,6 +33,7 @@ const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 34;
 const EDITOR_KEYBOARD_VISIBLE_RESERVE: number = 54;
 const EDITOR_KEYBOARD_SCROLL_DELAY: number = 96;
 const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 48;
+const EDITOR_KEYBOARD_HEIGHT_CHANGE_THRESHOLD: number = 10;
 const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 4;
 const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 10;
 const EDITOR_PHOTO_MIN_HEIGHT: number = 172;
@@ -43,7 +44,7 @@ const EDITOR_FIELD_LABEL_HEIGHT: number = AppTypography.inputLabelLineHeight;
 const EDITOR_FIELD_LABEL_GAP: number = 8;
 const EDITOR_FIELD_GAP: number = AppMetrics.cardGap;
 const EDITOR_TEXTAREA_LINE_HEIGHT: number = AppTypography.inputTextLineHeight;
-const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 24;
+const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
 const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 10;
 
 interface EditorPhotoFrameSize {
@@ -66,6 +67,10 @@ struct EditorPage {
   private previousKeyboardAvoidMode: KeyboardAvoidMode = KeyboardAvoidMode.OFFSET;
   private isPageAlive: boolean = false;
   private scrollRequestId: number = 0;
+  private lastKeyboardHeight: number = 0;
+  private scheduledScrollField: string = '';
+  private scheduledScrollIntent: EditorFieldScrollIntent = EditorFieldScrollIntent.START;
+  private shouldDiscardChanges: boolean = false;
   @State title: string = DEFAULT_REVIEW_TITLE;
   @State visualFocus: string = '';
   @State focusReason: string = '';
@@ -84,6 +89,7 @@ struct EditorPage {
   @State viewportHeight: number = EDITOR_VIEWPORT_FALLBACK_HEIGHT;
   @State keyboardHeight: number = 0;
   @State isSaving: boolean = false;
+  @State isDirty: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -108,6 +114,8 @@ struct EditorPage {
     this.judgement = normalizeReviewJudgement(this.document.content.judgement);
     this.extendedUnderstanding = this.document.content.extendedUnderstanding;
     this.currentBlocker = this.document.content.currentBlocker;
+    this.isDirty = false;
+    this.shouldDiscardChanges = false;
   }
 
   private disableSystemKeyboardAvoidance(): void {
@@ -128,8 +136,14 @@ struct EditorPage {
 
   private registerKeyboardHeightObserver(): void {
     this.keyboardHeightChangeCallback = (height: number): void => {
-      this.keyboardHeight = Math.max(0, px2vp(height));
-      if (this.keyboardHeight === 0) {
+      const nextKeyboardHeight: number = Math.max(0, px2vp(height));
+      if (Math.abs(nextKeyboardHeight - this.lastKeyboardHeight) <= EDITOR_KEYBOARD_HEIGHT_CHANGE_THRESHOLD) {
+        return;
+      }
+
+      this.lastKeyboardHeight = nextKeyboardHeight;
+      this.keyboardHeight = nextKeyboardHeight;
+      if (nextKeyboardHeight === 0) {
         return;
       }
 
@@ -175,6 +189,9 @@ struct EditorPage {
     this.isPageAlive = false;
     this.unregisterKeyboardHeightObserver();
     this.restoreSystemKeyboardAvoidance();
+    if (this.shouldDiscardChanges) {
+      return;
+    }
     this.syncDocumentFromInput();
     ReviewCardStore.setCurrentDocument(this.document);
   }
@@ -201,10 +218,11 @@ struct EditorPage {
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
     try {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
-      promptAction.showToast({ message: REVIEW_FLOW_SAVE_SUCCESS_TEXT });
+      this.isDirty = false;
+      ToastService.show(REVIEW_FLOW_SAVE_SUCCESS_TEXT);
       router.replaceUrl({ url: PREVIEW_PAGE });
     } catch (error) {
-      promptAction.showToast({ message: REVIEW_FLOW_SAVE_FAILED_TEXT });
+      ToastService.show(REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
       this.isSaving = false;
     }
@@ -424,6 +442,7 @@ struct EditorPage {
   }
 
   private handleFieldChange(field: string): void {
+    this.isDirty = true;
     if (this.focusedField !== field || !this.isKeyboardActive()) {
       return;
     }
@@ -436,15 +455,54 @@ struct EditorPage {
       return;
     }
 
+    if (this.scheduledScrollField === field && this.scheduledScrollIntent === intent) {
+      return;
+    }
+
+    this.scheduledScrollField = field;
+    this.scheduledScrollIntent = intent;
     this.scrollRequestId += 1;
     const requestId: number = this.scrollRequestId;
     setTimeout(() => {
+      if (requestId === this.scrollRequestId) {
+        this.scheduledScrollField = '';
+      }
       if (requestId !== this.scrollRequestId || this.focusedField !== field) {
         return;
       }
 
       this.scrollFieldIntoView(field, intent);
     }, delay);
+  }
+
+  private showUnsavedDialog(): void {
+    AlertDialog.show({
+      title: '有未保存的更改',
+      message: '是否放弃当前编辑内容？',
+      autoCancel: true,
+      primaryButton: {
+        value: '继续编辑',
+        action: () => {
+        }
+      },
+      secondaryButton: {
+        value: '放弃',
+        fontColor: AppColors.danger,
+        action: () => {
+          this.shouldDiscardChanges = true;
+          router.back();
+        }
+      }
+    });
+  }
+
+  onBackPress(): boolean {
+    if (!this.isDirty || this.isSaving) {
+      return false;
+    }
+
+    this.showUnsavedDialog();
+    return true;
   }
 
   @Builder
@@ -544,6 +602,7 @@ struct EditorPage {
       .layoutWeight(1)
       .width('100%')
       .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
     }
     .width('100%')
     .height('100%')

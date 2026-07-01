@@ -1,5 +1,4 @@
 import common from '@ohos.app.ability.common';
-import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import {
@@ -17,6 +16,7 @@ import {
   HomeStorageService,
   HomeStorageSettings
 } from '../services/HomeStorageService';
+import { ToastService } from '../services/ToastService';
 
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
@@ -177,15 +177,15 @@ struct HomeStoragePage {
         verifiedSettings.username !== this.homeStorageUsername ||
         verifiedSettings.smbDomain !== this.homeStorageDomain) {
         this.setActionFeedback('已保存，但回读不一致', 'warning');
-        promptAction.showToast({ message: '已保存，但回读结果与当前输入不一致' });
+        ToastService.show('已保存，但回读结果与当前输入不一致');
         return;
       }
       this.persistedHomeStorageSettings = verifiedSettings;
       this.setActionFeedback('已保存家庭存储设置', 'success');
-      promptAction.showToast({ message: '已保存家庭存储设置' });
+      ToastService.show('已保存家庭存储设置');
     } catch (error) {
       this.setActionFeedback('保存失败，请稍后重试', 'error');
-      promptAction.showToast({ message: '保存失败，请稍后重试' });
+      ToastService.show('保存失败，请稍后重试');
     } finally {
       this.isSaving = false;
     }
@@ -200,7 +200,7 @@ struct HomeStoragePage {
     try {
       const result: HomeStorageOperationResult = await HomeStorageService.testConnection(this.currentHomeStorageSettings());
       this.setActionFeedback(result.message, result.success ? 'success' : 'error');
-      promptAction.showToast({ message: result.message });
+      ToastService.show(result.message);
     } finally {
       this.isTestingHomeStorage = false;
     }

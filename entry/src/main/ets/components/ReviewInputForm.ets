@@ -16,6 +16,8 @@ const PRIMARY_FIELD_LABEL_SIZE: number = AppTypography.inputLabel;
 const PRIMARY_FIELD_INPUT_SIZE: number = AppTypography.inputText;
 const SECONDARY_FIELD_LABEL_SIZE: number = AppTypography.inputLabel;
 const SECONDARY_FIELD_INPUT_SIZE: number = AppTypography.inputText;
+const REVIEW_TEXTAREA_HORIZONTAL_PADDING: number = AppMetrics.space16;
+const REVIEW_TEXTAREA_VERTICAL_INSET: number = 14;
 
 function resolveReviewTextAreaHeight(value: string, defaultLines: number): number {
   return estimateReviewTextLineCount(
@@ -23,6 +25,80 @@ function resolveReviewTextAreaHeight(value: string, defaultLines: number): numbe
     defaultLines,
     REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE
   ) * REVIEW_TEXTAREA_LINE_HEIGHT + REVIEW_TEXTAREA_VERTICAL_PADDING;
+}
+
+@Component
+struct ReviewTextAreaField {
+  @Link value: string;
+  @Prop label: string = '';
+  @Prop placeholder: string = '';
+  @Prop fieldKey: string = '';
+  @Prop defaultLines: number = 2;
+  @Prop labelSize: number = PRIMARY_FIELD_LABEL_SIZE;
+  @Prop inputSize: number = PRIMARY_FIELD_INPUT_SIZE;
+  @Prop isFocused: boolean = false;
+  onFocusField: () => void = () => {};
+  onBlurField: () => void = () => {};
+  onFieldChange: () => void = () => {};
+
+  @Builder
+  FieldLabel(label: string, labelSize: number = PRIMARY_FIELD_LABEL_SIZE) {
+    Column({ space: AppMetrics.space8 }) {
+      Text(label)
+        .fontSize(labelSize)
+        .fontWeight(600)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.inputLabelLineHeight)
+        .width('100%')
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+  }
+
+  build() {
+    Column({ space: REVIEW_FIELD_LABEL_GAP }) {
+      this.FieldLabel(this.label, this.labelSize)
+      TextArea({ text: $$this.value, placeholder: this.placeholder })
+        .height(resolveReviewTextAreaHeight(this.value, this.defaultLines))
+        .style(TextContentStyle.DEFAULT)
+        .barState(BarState.Off)
+        .enableKeyboardOnFocus(true)
+        .borderRadius(AppMetrics.inputRadius)
+        .fontSize(this.inputSize)
+        .lineHeight(REVIEW_TEXTAREA_LINE_HEIGHT)
+        .fontColor(AppColors.text)
+        .placeholderColor(AppColors.placeholderText)
+        .caretColor(AppColors.primary)
+        .caretStyle({ width: 2, color: AppColors.primary })
+        .backgroundColor(this.isFocused ? AppColors.surface : AppColors.surfaceTint)
+        .padding({
+          left: REVIEW_TEXTAREA_HORIZONTAL_PADDING,
+          right: REVIEW_TEXTAREA_HORIZONTAL_PADDING,
+          top: REVIEW_TEXTAREA_VERTICAL_INSET,
+          bottom: REVIEW_TEXTAREA_VERTICAL_INSET
+        })
+        .border({
+          width: this.isFocused ? 1.5 : 1,
+          color: this.isFocused ? AppColors.borderFocused : AppColors.border
+        })
+        .shadow(this.isFocused ? ElevationTokens.focus : ElevationTokens.none)
+        .onFocus(() => {
+          animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+            this.onFocusField();
+          });
+        })
+        .onBlur(() => {
+          animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+            this.onBlurField();
+          });
+        })
+        .onChange((nextValue: string) => {
+          this.value = nextValue;
+          this.onFieldChange();
+        })
+    }
+    .width('100%')
+  }
 }
 
 @Component
@@ -53,10 +129,6 @@ export struct ReviewInputForm {
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-  }
-
-  private getTextAreaHeight(value: string, defaultLines: number): number {
-    return resolveReviewTextAreaHeight(value, defaultLines);
   }
 
   @Builder
@@ -103,55 +175,6 @@ export struct ReviewInputForm {
     .width('100%')
   }
 
-  @Builder
-  ReviewField(
-    label: string,
-    placeholder: string,
-    value: string,
-    fieldKey: string,
-    defaultLines: number,
-    labelSize: number,
-    inputSize: number,
-    onChange: (value: string) => void
-  ) {
-    Column({ space: REVIEW_FIELD_LABEL_GAP }) {
-      this.FieldLabel(label, labelSize)
-      TextArea({ text: value, placeholder: placeholder })
-        .height(this.getTextAreaHeight(value, defaultLines))
-        .style(TextContentStyle.DEFAULT)
-        .barState(BarState.Off)
-        .enableKeyboardOnFocus(true)
-        .borderRadius(AppMetrics.inputRadius)
-        .fontSize(inputSize)
-        .lineHeight(REVIEW_TEXTAREA_LINE_HEIGHT)
-        .fontColor(AppColors.text)
-        .placeholderColor(AppColors.placeholderText)
-        .caretColor(AppColors.primary)
-        .caretStyle({ width: 2, color: AppColors.primary })
-        .backgroundColor(this.focusedField === fieldKey ? AppColors.surface : AppColors.surfaceTint)
-        .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: 14, bottom: 14 })
-        .border({
-          width: this.focusedField === fieldKey ? 1.5 : 1,
-          color: this.focusedField === fieldKey ? AppColors.borderFocused : AppColors.border
-        })
-        .shadow(this.focusedField === fieldKey ? ElevationTokens.focus : ElevationTokens.none)
-        .animation({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate })
-        .onFocus(() => {
-          this.focusedField = fieldKey;
-          this.onFieldFocus(fieldKey);
-        })
-        .onBlur(() => {
-          this.focusedField = '';
-          this.onFieldBlur();
-        })
-        .onChange((nextValue: string) => {
-          onChange(nextValue);
-          this.onFieldChange(fieldKey);
-        })
-    }
-    .width('100%')
-  }
-
   build() {
     Column({ space: REVIEW_FORM_FIELD_GAP }) {
       Column({ space: REVIEW_FIELD_LABEL_GAP }) {
@@ -171,14 +194,17 @@ export struct ReviewInputForm {
             color: this.focusedField === 'title' ? AppColors.borderFocused : AppColors.border
           })
           .shadow(this.focusedField === 'title' ? ElevationTokens.focus : ElevationTokens.none)
-          .animation({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate })
           .onFocus(() => {
-            this.focusedField = 'title';
-            this.onFieldFocus('title');
+            animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+              this.focusedField = 'title';
+              this.onFieldFocus('title');
+            });
           })
           .onBlur(() => {
-            this.focusedField = '';
-            this.onFieldBlur();
+            animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+              this.focusedField = '';
+              this.onFieldBlur();
+            });
           })
           .onChange((value: string) => {
             this.title = value;
@@ -187,34 +213,153 @@ export struct ReviewInputForm {
       }
       .width('100%')
 
-      this.ReviewField('视觉落点', '第一眼先看到哪里？', this.visualFocus, 'visualFocus', 2,
-        PRIMARY_FIELD_LABEL_SIZE, PRIMARY_FIELD_INPUT_SIZE, (value: string) => {
-        this.visualFocus = value;
+      ReviewTextAreaField({
+        value: $visualFocus,
+        label: '视觉落点',
+        placeholder: '第一眼先看到哪里？',
+        fieldKey: 'visualFocus',
+        defaultLines: 2,
+        labelSize: PRIMARY_FIELD_LABEL_SIZE,
+        inputSize: PRIMARY_FIELD_INPUT_SIZE,
+        isFocused: this.focusedField === 'visualFocus',
+        onFocusField: () => {
+          this.focusedField = 'visualFocus';
+          this.onFieldFocus('visualFocus');
+        },
+        onBlurField: () => {
+          this.focusedField = '';
+          this.onFieldBlur();
+        },
+        onFieldChange: () => {
+          this.onFieldChange('visualFocus');
+        }
       })
-      this.ReviewField('落点原因', '为什么它会先被看到？', this.focusReason, 'focusReason', 2,
-        PRIMARY_FIELD_LABEL_SIZE, PRIMARY_FIELD_INPUT_SIZE, (value: string) => {
-        this.focusReason = value;
+      ReviewTextAreaField({
+        value: $focusReason,
+        label: '落点原因',
+        placeholder: '为什么它会先被看到？',
+        fieldKey: 'focusReason',
+        defaultLines: 2,
+        labelSize: PRIMARY_FIELD_LABEL_SIZE,
+        inputSize: PRIMARY_FIELD_INPUT_SIZE,
+        isFocused: this.focusedField === 'focusReason',
+        onFocusField: () => {
+          this.focusedField = 'focusReason';
+          this.onFieldFocus('focusReason');
+        },
+        onBlurField: () => {
+          this.focusedField = '';
+          this.onFieldBlur();
+        },
+        onFieldChange: () => {
+          this.onFieldChange('focusReason');
+        }
       })
-      this.ReviewField('视线路径', '视线接着从哪里走到哪里？', this.visualPath, 'visualPath', 3,
-        PRIMARY_FIELD_LABEL_SIZE, PRIMARY_FIELD_INPUT_SIZE, (value: string) => {
-        this.visualPath = value;
+      ReviewTextAreaField({
+        value: $visualPath,
+        label: '视线路径',
+        placeholder: '视线接着从哪里走到哪里？',
+        fieldKey: 'visualPath',
+        defaultLines: 3,
+        labelSize: PRIMARY_FIELD_LABEL_SIZE,
+        inputSize: PRIMARY_FIELD_INPUT_SIZE,
+        isFocused: this.focusedField === 'visualPath',
+        onFocusField: () => {
+          this.focusedField = 'visualPath';
+          this.onFieldFocus('visualPath');
+        },
+        onBlurField: () => {
+          this.focusedField = '';
+          this.onFieldBlur();
+        },
+        onFieldChange: () => {
+          this.onFieldChange('visualPath');
+        }
       })
-      this.ReviewField('画面事实', '画面里有哪些可见事实？', this.visibleFacts, 'visibleFacts', 3,
-        PRIMARY_FIELD_LABEL_SIZE, PRIMARY_FIELD_INPUT_SIZE, (value: string) => {
-        this.visibleFacts = value;
+      ReviewTextAreaField({
+        value: $visibleFacts,
+        label: '画面事实',
+        placeholder: '画面里有哪些可见事实？',
+        fieldKey: 'visibleFacts',
+        defaultLines: 3,
+        labelSize: PRIMARY_FIELD_LABEL_SIZE,
+        inputSize: PRIMARY_FIELD_INPUT_SIZE,
+        isFocused: this.focusedField === 'visibleFacts',
+        onFocusField: () => {
+          this.focusedField = 'visibleFacts';
+          this.onFieldFocus('visibleFacts');
+        },
+        onBlurField: () => {
+          this.focusedField = '';
+          this.onFieldBlur();
+        },
+        onFieldChange: () => {
+          this.onFieldChange('visibleFacts');
+        }
       })
-      this.ReviewField('核心关系', '最重要的 A ↔ B 关系是什么？', this.coreRelation, 'coreRelation', 2,
-        PRIMARY_FIELD_LABEL_SIZE, PRIMARY_FIELD_INPUT_SIZE, (value: string) => {
-        this.coreRelation = value;
+      ReviewTextAreaField({
+        value: $coreRelation,
+        label: '核心关系',
+        placeholder: '最重要的 A ↔ B 关系是什么？',
+        fieldKey: 'coreRelation',
+        defaultLines: 2,
+        labelSize: PRIMARY_FIELD_LABEL_SIZE,
+        inputSize: PRIMARY_FIELD_INPUT_SIZE,
+        isFocused: this.focusedField === 'coreRelation',
+        onFocusField: () => {
+          this.focusedField = 'coreRelation';
+          this.onFieldFocus('coreRelation');
+        },
+        onBlurField: () => {
+          this.focusedField = '';
+          this.onFieldBlur();
+        },
+        onFieldChange: () => {
+          this.onFieldChange('coreRelation');
+        }
       })
       this.JudgementSelect()
-      this.ReviewField('延伸理解', '这张照片为什么成立或不成立？', this.extendedUnderstanding, 'extendedUnderstanding', 2,
-        SECONDARY_FIELD_LABEL_SIZE, SECONDARY_FIELD_INPUT_SIZE, (value: string) => {
-        this.extendedUnderstanding = value;
+      ReviewTextAreaField({
+        value: $extendedUnderstanding,
+        label: '延伸理解',
+        placeholder: '这张照片为什么成立或不成立？',
+        fieldKey: 'extendedUnderstanding',
+        defaultLines: 2,
+        labelSize: SECONDARY_FIELD_LABEL_SIZE,
+        inputSize: SECONDARY_FIELD_INPUT_SIZE,
+        isFocused: this.focusedField === 'extendedUnderstanding',
+        onFocusField: () => {
+          this.focusedField = 'extendedUnderstanding';
+          this.onFieldFocus('extendedUnderstanding');
+        },
+        onBlurField: () => {
+          this.focusedField = '';
+          this.onFieldBlur();
+        },
+        onFieldChange: () => {
+          this.onFieldChange('extendedUnderstanding');
+        }
       })
-      this.ReviewField('当前卡点', '当前最大问题是什么？', this.currentBlocker, 'currentBlocker', 2,
-        SECONDARY_FIELD_LABEL_SIZE, SECONDARY_FIELD_INPUT_SIZE, (value: string) => {
-        this.currentBlocker = value;
+      ReviewTextAreaField({
+        value: $currentBlocker,
+        label: '当前卡点',
+        placeholder: '当前最大问题是什么？',
+        fieldKey: 'currentBlocker',
+        defaultLines: 2,
+        labelSize: SECONDARY_FIELD_LABEL_SIZE,
+        inputSize: SECONDARY_FIELD_INPUT_SIZE,
+        isFocused: this.focusedField === 'currentBlocker',
+        onFocusField: () => {
+          this.focusedField = 'currentBlocker';
+          this.onFieldFocus('currentBlocker');
+        },
+        onBlurField: () => {
+          this.focusedField = '';
+          this.onFieldBlur();
+        },
+        onFieldChange: () => {
+          this.onFieldChange('currentBlocker');
+        }
       })
     }
     .width('100%')

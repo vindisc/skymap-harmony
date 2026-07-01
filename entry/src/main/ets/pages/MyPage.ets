@@ -1,6 +1,5 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
-import promptAction from '@ohos.promptAction';
 import { HOME_HERO_IMAGE_PAGE, HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../app/AppRouter';
 import {
   AppColors,
@@ -20,6 +19,7 @@ import { ENABLE_RDB_DIAGNOSTICS_ENTRY } from '../services/ReviewFlowFeedback';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { HomeHeroImageService } from '../services/HomeHeroImageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
+import { ToastService } from '../services/ToastService';
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
 const APP_BUILD_TEXT: string = 'Harmony Beta V1';
@@ -228,12 +228,12 @@ export struct MyPage {
       this.rdbDiagnosticsStatus = isSuccess ? '通过' : '失败';
       this.rdbDiagnosticsSummary =
         `${isSuccess ? '通过' : '失败'} · RDB ${rdbResult.steps.length} 步 · 迁移 ${migrationResult.steps.length} 步 · 错误 ${errorCount}`;
-      promptAction.showToast({ message: isSuccess ? 'RDB开发诊断通过' : 'RDB开发诊断失败，查看日志' });
+      ToastService.show(isSuccess ? 'RDB开发诊断通过' : 'RDB开发诊断失败，查看日志');
     } catch (error) {
       this.rdbDiagnosticsStatus = '失败';
       this.rdbDiagnosticsSummary = `异常：${error}`;
       console.info(`[RDB开发诊断] exception=${error}`);
-      promptAction.showToast({ message: 'RDB开发诊断异常，查看日志' });
+      ToastService.show('RDB开发诊断异常，查看日志');
     } finally {
       this.isRdbDiagnosticsRunning = false;
     }

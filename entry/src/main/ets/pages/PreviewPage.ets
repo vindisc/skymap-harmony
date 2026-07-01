@@ -1,7 +1,6 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import pasteboard from '@ohos.pasteboard';
-import promptAction from '@ohos.promptAction';
 import { EDITOR_PAGE } from '../app/AppRouter';
 import {
   cloneReviewCardDocument,
@@ -45,6 +44,7 @@ import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
+import { ToastService } from '../services/ToastService';
 
 enum PreviewSaveState {
   UNSAVED = '未保存',
@@ -52,18 +52,24 @@ enum PreviewSaveState {
   EXPORTED = '已导出'
 }
 
+enum ExportState {
+  IDLE = 'idle',
+  IMAGE = 'image',
+  JSON = 'json',
+  BUNDLE = 'bundle',
+  ORIGINAL = 'original'
+}
+
 const FLOATING_DOCK_TOP_MASK_HEIGHT: number = 8;
 const FLOATING_DOCK_SCROLL_CLEARANCE: number = 24;
+const EXPORT_ACTION_TIMEOUT_MS: number = 30000;
 
 @Entry
 @Component
 struct PreviewPage {
   @State document: ReviewCardDocument = createDefaultReviewCardDocument();
   @State isSaving: boolean = false;
-  @State isExporting: boolean = false;
-  @State isExportingReviewJson: boolean = false;
-  @State isExportingReviewBundle: boolean = false;
-  @State isExportingOriginalPhotoBundle: boolean = false;
+  @State exportState: ExportState = ExportState.IDLE;
   @State isExportSnapshotMode: boolean = false;
   @State isExportMenuVisible: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
@@ -177,10 +183,10 @@ struct PreviewPage {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
       this.saveStateLabel = PreviewSaveState.SAVED;
       this.actionFeedbackText = REVIEW_FLOW_SAVE_SUCCESS_TEXT;
-      promptAction.showToast({ message: REVIEW_FLOW_SAVE_SUCCESS_TEXT });
+      ToastService.show(REVIEW_FLOW_SAVE_SUCCESS_TEXT);
     } catch (error) {
       this.actionFeedbackText = REVIEW_FLOW_SAVE_FAILED_TEXT;
-      promptAction.showToast({ message: REVIEW_FLOW_SAVE_FAILED_TEXT });
+      ToastService.show(REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
       this.isSaving = false;
     }
@@ -200,11 +206,13 @@ struct PreviewPage {
       return;
     }
 
-    this.isExporting = true;
+    this.startExportAction(ExportState.IMAGE, '准备导出图片…');
     this.isExportSnapshotMode = true;
-    this.actionFeedbackText = REVIEW_FLOW_EXPORT_PENDING_TEXT;
+    let timeoutId: number = this.startExportTimeout(ExportState.IMAGE);
     try {
+      this.actionFeedbackText = '渲染导出图…';
       await this.waitForExportLayout();
+      this.actionFeedbackText = '保存到相册…';
       const result: ReviewCardExportResult = await ReviewCardExportService.exportSnapshot(
         this.getAbilityContext(),
         this.getExportComponentId(),
@@ -215,20 +223,21 @@ struct PreviewPage {
       if (result.savedToPhotoLibrary) {
         await this.markExportedQuietly(result.path);
         this.actionFeedbackText = REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT;
-        promptAction.showToast({ message: REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT });
+        ToastService.show(REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT);
       } else if (result.cancelled) {
         this.actionFeedbackText = '';
       } else {
         const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_EXPORT_FAILED_TEXT;
         this.actionFeedbackText = failedText;
-        promptAction.showToast({ message: failedText });
+        ToastService.show(failedText);
       }
     } catch (error) {
       this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
+      ToastService.show(REVIEW_FLOW_EXPORT_FAILED_TEXT);
     } finally {
+      clearTimeout(timeoutId);
       this.isExportSnapshotMode = false;
-      this.isExporting = false;
+      this.finishExportAction(ExportState.IMAGE);
     }
   }
 
@@ -238,21 +247,22 @@ struct PreviewPage {
       const exchangeJson: string = stringifyReviewCardExchangeSchemaV1(this.document, reviewerName);
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, exchangeJson);
       await pasteboard.getSystemPasteboard().setData(data);
-      promptAction.showToast({ message: '已复制复盘数据' });
+      ToastService.show('已复制复盘数据');
     } catch (error) {
-      promptAction.showToast({ message: '复制失败，请稍后重试' });
+      ToastService.show('复制失败，请稍后重试');
     }
   }
 
   private async exportReviewJson(): Promise<void> {
-    if (this.isExportingReviewJson) {
+    if (this.isActionBusy()) {
       return;
     }
 
-    this.isExportingReviewJson = true;
-    this.actionFeedbackText = REVIEW_FLOW_EXPORT_PENDING_TEXT;
+    this.startExportAction(ExportState.JSON, '准备导出 review.json…');
+    let timeoutId: number = this.startExportTimeout(ExportState.JSON);
     const context = this.getAbilityContext();
     try {
+      this.actionFeedbackText = '写入数据文件…';
       const result: ReviewJsonExportResult = await ReviewJsonExportService.exportReviewJson(
         context,
         this.document
@@ -260,7 +270,7 @@ struct PreviewPage {
       if (result.success) {
         await this.markExportedQuietly(result.path);
         this.actionFeedbackText = REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
-        promptAction.showToast({ message: REVIEW_FLOW_EXPORT_SUCCESS_TEXT });
+        ToastService.show(REVIEW_FLOW_EXPORT_SUCCESS_TEXT);
         return;
       }
 
@@ -270,25 +280,28 @@ struct PreviewPage {
       }
 
       this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
+      ToastService.show(REVIEW_FLOW_EXPORT_FAILED_TEXT);
     } catch (error) {
       this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      promptAction.showToast({ message: REVIEW_FLOW_EXPORT_FAILED_TEXT });
+      ToastService.show(REVIEW_FLOW_EXPORT_FAILED_TEXT);
     } finally {
-      this.isExportingReviewJson = false;
+      clearTimeout(timeoutId);
+      this.finishExportAction(ExportState.JSON);
     }
   }
 
   private async exportReviewBundleToHomeStorage(): Promise<void> {
-    if (this.isExportingReviewBundle) {
+    if (this.isActionBusy()) {
       return;
     }
 
-    this.isExportingReviewBundle = true;
+    this.startExportAction(ExportState.BUNDLE, '准备导出复盘包…');
     this.isExportSnapshotMode = true;
-    this.actionFeedbackText = '复盘包导出中…';
+    let timeoutId: number = this.startExportTimeout(ExportState.BUNDLE);
     try {
+      this.actionFeedbackText = '渲染导出图…';
       await this.waitForExportLayout();
+      this.actionFeedbackText = '写入家庭存储…';
       const context = this.getAbilityContext();
       const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
       const result: ReviewBundleExportResult = await ReviewBundleExportService.exportReviewBundleToHomeStorage(
@@ -305,33 +318,36 @@ struct PreviewPage {
       if (result.success) {
         await this.markExportedQuietly(result.remotePath);
         this.actionFeedbackText = REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT;
-        promptAction.showToast({ message: REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT });
+        ToastService.show(REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT);
         return;
       }
       console.error(`[PreviewPage] 复盘包导出失败：${result.message}`);
       const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
       this.actionFeedbackText = failedText;
-      promptAction.showToast({ message: failedText });
+      ToastService.show(failedText);
     } catch (error) {
       console.error(`[PreviewPage] 复盘包导出异常：${error}`);
       this.actionFeedbackText = REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
-      promptAction.showToast({ message: REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT });
+      ToastService.show(REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT);
     } finally {
+      clearTimeout(timeoutId);
       this.isExportSnapshotMode = false;
-      this.isExportingReviewBundle = false;
+      this.finishExportAction(ExportState.BUNDLE);
     }
   }
 
   private async exportOriginalPhotoReviewBundleToHomeStorage(): Promise<void> {
-    if (this.isExportingOriginalPhotoBundle) {
+    if (this.isActionBusy()) {
       return;
     }
 
-    this.isExportingOriginalPhotoBundle = true;
-    this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT;
+    this.startExportAction(ExportState.ORIGINAL, REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT);
+    let timeoutId: number = this.startExportTimeout(ExportState.ORIGINAL);
     try {
+      this.actionFeedbackText = '整理原图和复盘数据…';
       const context = this.getAbilityContext();
       const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
+      this.actionFeedbackText = '写入家庭存储…';
       const result: ReviewBundleOriginalPhotoExportResult = await ReviewBundleOriginalPhotoExportService.exportOriginalPhotoReviewBundleToHomeStorage(
         context,
         this.document,
@@ -340,19 +356,43 @@ struct PreviewPage {
       if (result.success) {
         await this.markExportedQuietly(result.remotePath);
         this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT;
-        promptAction.showToast({ message: REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT });
+        ToastService.show(REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT);
         return;
       }
       console.error(`[PreviewPage] 含原图复盘包导出失败：${result.message}`);
       const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
       this.actionFeedbackText = failedText;
-      promptAction.showToast({ message: failedText });
+      ToastService.show(failedText);
     } catch (error) {
       console.error(`[PreviewPage] 含原图复盘包导出异常：${error}`);
       this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
-      promptAction.showToast({ message: REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT });
+      ToastService.show(REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT);
     } finally {
-      this.isExportingOriginalPhotoBundle = false;
+      clearTimeout(timeoutId);
+      this.finishExportAction(ExportState.ORIGINAL);
+    }
+  }
+
+  private startExportAction(state: ExportState, message: string): void {
+    this.exportState = state;
+    this.actionFeedbackText = message;
+  }
+
+  private startExportTimeout(state: ExportState): number {
+    return setTimeout(() => {
+      if (this.exportState !== state) {
+        return;
+      }
+      this.actionFeedbackText = '导出超时，请重试';
+      this.isExportSnapshotMode = false;
+      this.exportState = ExportState.IDLE;
+      ToastService.show('导出超时，请重试');
+    }, EXPORT_ACTION_TIMEOUT_MS);
+  }
+
+  private finishExportAction(state: ExportState): void {
+    if (this.exportState === state) {
+      this.exportState = ExportState.IDLE;
     }
   }
 
@@ -381,10 +421,7 @@ struct PreviewPage {
 
   private isActionBusy(): boolean {
     return this.isSaving ||
-      this.isExporting ||
-      this.isExportingReviewJson ||
-      this.isExportingReviewBundle ||
-      this.isExportingOriginalPhotoBundle;
+      this.exportState !== ExportState.IDLE;
   }
 
   private openExportMenu(): void {
@@ -505,7 +542,7 @@ struct PreviewPage {
         .layoutWeight(1)
 
         Column() {
-          this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {
+          this.ActionButton(this.exportState === ExportState.IMAGE ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {
             this.exportImage();
           })
         }
@@ -688,17 +725,17 @@ struct PreviewPage {
 
           this.ExportSheetSectionTitle('常用')
 
-          this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包', '包含复盘数据和导出图，用于家庭存储和 Mac 接力。', this.isActionBusy(), () => {
+          this.ExportSheetAction(this.exportState === ExportState.BUNDLE ? '导出中…' : '导出复盘包', '包含复盘数据和导出图，用于家庭存储和 Mac 接力。', this.isActionBusy(), () => {
             this.exportReviewBundleToHomeStorage();
           })
 
           this.ExportSheetSectionTitle('高级')
 
-          this.ExportSheetAction(this.isExportingOriginalPhotoBundle ? '导出中…' : '导出复盘包（含原图）', '包含原始照片和复盘数据，适合在 Mac 端继续处理。', this.isActionBusy(), () => {
+          this.ExportSheetAction(this.exportState === ExportState.ORIGINAL ? '导出中…' : '导出复盘包（含原图）', '包含原始照片和复盘数据，适合在 Mac 端继续处理。', this.isActionBusy(), () => {
             this.exportOriginalPhotoReviewBundleToHomeStorage();
           })
 
-          this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json', '只导出复盘数据文件，不包含图片。', this.isActionBusy(), () => {
+          this.ExportSheetAction(this.exportState === ExportState.JSON ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json', '只导出复盘数据文件，不包含图片。', this.isActionBusy(), () => {
             this.exportReviewJson();
           })
 

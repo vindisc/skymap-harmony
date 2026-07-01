@@ -1,6 +1,5 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
-import promptAction from '@ohos.promptAction';
 import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
 import {
   AppColors,
@@ -33,6 +32,7 @@ import {
   REVIEW_FLOW_DELETE_SUCCESS_TEXT,
   REVIEW_FLOW_IMPORT_PENDING_TEXT
 } from '../services/ReviewFlowFeedback';
+import { ToastService } from '../services/ToastService';
 
 const DELETE_SWIPE_ACTION_WIDTH: number = 92;
 const DELETE_SWIPE_BUTTON_WIDTH: number = 68;
@@ -127,7 +127,7 @@ export struct ProjectDetailPage {
 
     if (!result.success) {
       if (!result.cancelled && result.message.length > 0) {
-        promptAction.showToast({ message: result.message });
+        ToastService.show(result.message);
       }
       return;
     }
@@ -205,12 +205,12 @@ export struct ProjectDetailPage {
           ? this.summary.items[0].document
           : createDefaultReviewCardDocument());
       }
-      promptAction.showToast({ message: REVIEW_FLOW_DELETE_SUCCESS_TEXT });
+      ToastService.show(REVIEW_FLOW_DELETE_SUCCESS_TEXT);
       this.reloadData();
     } catch (error) {
       this.summary = ReviewProjectService.buildDefaultProjectSummary(previousItems);
       this.applyFilters();
-      promptAction.showToast({ message: REVIEW_FLOW_DELETE_FAILED_TEXT });
+      ToastService.show(REVIEW_FLOW_DELETE_FAILED_TEXT);
       this.reloadData();
     } finally {
       this.deletingReviewKey = '';
@@ -492,7 +492,7 @@ export struct ProjectDetailPage {
         }
         .layoutWeight(1)
         .width('100%')
-        .edgeEffect(EdgeEffect.None)
+        .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
         .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: LIBRARY_LIST_TOP_GAP })
       }

@@ -1,5 +1,4 @@
 import common from '@ohos.app.ability.common';
-import promptAction from '@ohos.promptAction';
 import {
   AppColors,
   AppMetrics,
@@ -14,6 +13,7 @@ import {
   HomeHeroImageService,
   HomeHeroImportResult
 } from '../services/HomeHeroImageService';
+import { ToastService } from '../services/ToastService';
 
 const HOME_HERO_MAX_PICK_COUNT: number = 9;
 const HOME_HERO_THUMBNAIL_SIZE: number = 72;
@@ -85,7 +85,7 @@ struct HomeHeroImagePage {
       const pickResult: PickedPhotoListResult = await pickMultiplePhotos(HOME_HERO_MAX_PICK_COUNT);
       if (!pickResult.success) {
         if (!pickResult.cancelled && pickResult.message.length > 0) {
-          promptAction.showToast({ message: '图片保存失败，请重试' });
+          ToastService.show('图片保存失败，请重试');
         }
         return;
       }
@@ -94,13 +94,13 @@ struct HomeHeroImagePage {
         await HomeHeroImageService.importImages(this.getAbilityContext(), pickResult.imageUris);
       await this.loadImages();
       if (importResult.failedCount > 0 && importResult.importedCount > 0) {
-        promptAction.showToast({ message: '部分图片无法保存，请重试' });
+        ToastService.show('部分图片无法保存，请重试');
         return;
       }
-      promptAction.showToast({ message: importResult.message });
+      ToastService.show(importResult.message);
     } catch (error) {
       console.warn(`[HomeHeroImagePage] add failed: ${error}`);
-      promptAction.showToast({ message: '图片保存失败，请重试' });
+      ToastService.show('图片保存失败，请重试');
     } finally {
       this.isAdding = false;
     }
@@ -138,14 +138,14 @@ struct HomeHeroImagePage {
     try {
       const success: boolean = await HomeHeroImageService.removeImage(this.getAbilityContext(), imageId);
       if (!success) {
-        promptAction.showToast({ message: '删除失败，请重试' });
+        ToastService.show('删除失败，请重试');
         return;
       }
       await this.loadImages();
-      promptAction.showToast({ message: this.images.length <= 0 ? '已恢复默认首页图片' : '首页图片已更新' });
+      ToastService.show(this.images.length <= 0 ? '已恢复默认首页图片' : '首页图片已更新');
     } catch (error) {
       console.warn(`[HomeHeroImagePage] remove failed: ${error}`);
-      promptAction.showToast({ message: '删除失败，请重试' });
+      ToastService.show('删除失败，请重试');
     } finally {
       this.deletingImageId = '';
     }
@@ -183,14 +183,14 @@ struct HomeHeroImagePage {
     try {
       const success: boolean = await HomeHeroImageService.clearImages(this.getAbilityContext());
       if (!success) {
-        promptAction.showToast({ message: '清空失败，请重试' });
+        ToastService.show('清空失败，请重试');
         return;
       }
       await this.loadImages();
-      promptAction.showToast({ message: '已恢复默认首页图片' });
+      ToastService.show('已恢复默认首页图片');
     } catch (error) {
       console.warn(`[HomeHeroImagePage] clear failed: ${error}`);
-      promptAction.showToast({ message: '清空失败，请重试' });
+      ToastService.show('清空失败，请重试');
     } finally {
       this.isClearing = false;
     }

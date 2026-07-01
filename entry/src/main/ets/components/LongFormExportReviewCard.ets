@@ -9,6 +9,8 @@ import { ReviewPhotoArea } from './ReviewPhotoArea';
 import { ReviewCardTitle } from './ReviewCardTitle';
 import { ReviewInfoGroup } from './ReviewInfoGroup';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
+import { ExportCardColors } from './AppDesign';
+import { RadiusTokens } from '../theme/DesignTokens';
 
 export class CompactReviewTextStyle {
   static readonly titleSize: number = 32;
@@ -22,6 +24,7 @@ export class CompactReviewTextStyle {
   static readonly itemBottomGap: number = 9;
 }
 
+// 导出卡片常量按成品图版式设定，不能完全套用应用界面的交互间距 token。
 const EXPORT_CARD_CANVAS_PADDING: number = 48;
 const EXPORT_CARD_TEXT_TOP_PADDING: number = 18;
 const EXPORT_CARD_META_TOP_MARGIN: number = 6;
@@ -317,13 +320,13 @@ export struct LongFormExportReviewCard {
     Text(getExportJudgementText(this.document.content.judgement))
       .fontSize(19)
       .fontWeight(FontWeight.Medium)
-      .fontColor('#5B625F')
+      .fontColor(ExportCardColors.judgementText)
       .lineHeight(24)
       .padding({ left: 20, right: 20 })
       .height(EXPORT_CARD_HORIZONTAL_PILL_HEIGHT)
-      .borderRadius(20)
-      .backgroundColor('#ECE8DE')
-      .border({ width: 1, color: '#DCD3C3' })
+      .borderRadius(RadiusTokens.xl)
+      .backgroundColor(ExportCardColors.judgementBg)
+      .border({ width: 1, color: ExportCardColors.judgementBorder })
       .maxLines(1)
       .textAlign(TextAlign.Center)
   }
@@ -341,7 +344,7 @@ export struct LongFormExportReviewCard {
         Text(this.getMetaText())
           .fontSize(EXPORT_CARD_META_SIZE)
           .lineHeight(EXPORT_CARD_META_LINE_HEIGHT)
-          .fontColor('#8D929A')
+          .fontColor(ExportCardColors.metaText)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .margin({ top: EXPORT_CARD_META_TOP_MARGIN })
@@ -356,9 +359,9 @@ export struct LongFormExportReviewCard {
     .padding({ left: 30, right: 30, top: 18, bottom: 18 })
     .width('100%')
     .constraintSize({ minHeight: EXPORT_CARD_HORIZONTAL_TITLE_BAR_MIN_HEIGHT })
-    .borderRadius(18)
-    .backgroundColor('#FBFAF6')
-    .border({ width: 1, color: '#E7DFD2' })
+    .borderRadius(RadiusTokens.lg)
+    .backgroundColor(ExportCardColors.titlePanelBg)
+    .border({ width: 1, color: ExportCardColors.titlePanelBorder })
     .margin({ top: EXPORT_CARD_HORIZONTAL_BAR_TOP_MARGIN })
   }
 
@@ -370,14 +373,14 @@ export struct LongFormExportReviewCard {
           .fontSize(CompactReviewTextStyle.labelSize)
           .lineHeight(CompactReviewTextStyle.labelLineHeight)
           .fontWeight(FontWeight.Medium)
-          .fontColor('#929085')
+          .fontColor(ExportCardColors.labelText)
           .maxLines(1)
           .width('100%')
 
         Text(cleanExportDisplayText(value))
           .fontSize(CompactReviewTextStyle.bodySize)
           .lineHeight(CompactReviewTextStyle.bodyLineHeight)
-          .fontColor('#343635')
+          .fontColor(ExportCardColors.bodyText)
           .fontWeight(FontWeight.Regular)
           .wordBreak(WordBreak.BREAK_WORD)
           .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
@@ -416,7 +419,7 @@ export struct LongFormExportReviewCard {
       Column()
         .width(EXPORT_CARD_HORIZONTAL_DIVIDER_WIDTH)
         .height(this.getHorizontalPanelDividerHeight())
-        .backgroundColor('#E4DCCE')
+        .backgroundColor(ExportCardColors.dividerColor)
 
       this.HorizontalInfoColumn(false)
     }
@@ -424,9 +427,9 @@ export struct LongFormExportReviewCard {
     .padding(EXPORT_CARD_HORIZONTAL_PANEL_PADDING)
     .width('100%')
     .height(this.getHorizontalPanelHeight())
-    .borderRadius(20)
-    .backgroundColor('#F5F1E8')
-    .border({ width: 1, color: '#E2D8C8' })
+    .borderRadius(RadiusTokens.xl)
+    .backgroundColor(ExportCardColors.panelBg)
+    .border({ width: 1, color: ExportCardColors.panelBorder })
     .margin({ top: EXPORT_CARD_HORIZONTAL_PANEL_TOP_MARGIN, bottom: EXPORT_CARD_HORIZONTAL_BOTTOM_SAFE_GAP })
   }
 
@@ -443,7 +446,7 @@ export struct LongFormExportReviewCard {
         Text(formatReviewTime(this.document.updatedAt))
           .fontSize(EXPORT_CARD_META_SIZE)
           .lineHeight(EXPORT_CARD_META_LINE_HEIGHT)
-          .fontColor('#8D929A')
+          .fontColor(ExportCardColors.metaText)
           .maxLines(1)
 
         Blank()
@@ -451,7 +454,7 @@ export struct LongFormExportReviewCard {
         Text(getExportJudgementText(this.document.content.judgement))
           .fontSize(EXPORT_CARD_META_SIZE)
           .lineHeight(EXPORT_CARD_META_LINE_HEIGHT)
-          .fontColor('#8D929A')
+          .fontColor(ExportCardColors.metaText)
           .textAlign(TextAlign.End)
           .maxLines(1)
       }
@@ -471,16 +474,16 @@ export struct LongFormExportReviewCard {
         labelLineHeight: CompactReviewTextStyle.labelLineHeight,
         bodySize: CompactReviewTextStyle.bodySize,
         bodyLineHeight: CompactReviewTextStyle.bodyLineHeight,
-        labelColor: '#8D929A',
+        labelColor: ExportCardColors.metaText,
         bodyColor: ReviewCardStyleTokens.bodyColor,
-        dividerColor: '#ECE5DA',
+        dividerColor: ExportCardColors.infoDividerColor,
         valueTopGap: CompactReviewTextStyle.valueTopGap,
         dividerBottomGap: CompactReviewTextStyle.dividerBottomGap,
         itemBottomGap: CompactReviewTextStyle.itemBottomGap
       })
         .margin({ top: EXPORT_CARD_INFO_TOP_MARGIN })
     }
-    .padding({ top: 18 })
+    .padding({ top: EXPORT_CARD_TEXT_TOP_PADDING })
     .alignItems(HorizontalAlign.Start)
     .width('100%')
   }
@@ -504,7 +507,7 @@ export struct LongFormExportReviewCard {
       }
     }
     .alignItems(HorizontalAlign.Start)
-    .padding(48)
+    .padding(EXPORT_CARD_CANVAS_PADDING)
     .width(this.canvasWidth)
     .height(this.getCanvasHeight())
     .id(this.exportComponentId)

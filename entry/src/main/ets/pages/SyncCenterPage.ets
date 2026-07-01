@@ -1,6 +1,5 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
-import promptAction from '@ohos.promptAction';
 import { HOME_STORAGE_PAGE } from '../app/AppRouter';
 import {
   AppColors,
@@ -20,6 +19,7 @@ import {
 } from '../services/HomeStorageService';
 import { SettingsRefreshService } from '../services/SettingsRefreshService';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
+import { ToastService } from '../services/ToastService';
 
 @Entry
 @Component
@@ -110,7 +110,7 @@ struct SyncCenterPage {
       this.lastCheckedAt = Date.now();
       this.lastTestMessage = result.message;
       this.lastTestSucceeded = result.success;
-      promptAction.showToast({ message: result.message });
+      ToastService.show(result.message);
     } finally {
       this.isTesting = false;
     }

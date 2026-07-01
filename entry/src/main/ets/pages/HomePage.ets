@@ -1,7 +1,6 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import pasteboard from '@ohos.pasteboard';
-import promptAction from '@ohos.promptAction';
 import {
   EDITOR_PAGE
 } from '../app/AppRouter';
@@ -40,6 +39,7 @@ import {
   SkeletonBlock
 } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
+import { ToastService } from '../services/ToastService';
 
 const HOME_HERO_ASPECT_RATIO: number = 0.68;
 const HOME_SIDE_PADDING: number = AppMetrics.pagePadding;
@@ -66,7 +66,9 @@ export struct HomePage {
   @State historyDiagnosticsText: string = '';
   @State heroImages: Array<HomeHeroDisplayImage> = [];
   @State heroAutoplayEnabled: boolean = true;
+  @State heroAutoplayPaused: boolean = false;
   @State heroIntervalSeconds: number = 4;
+  @State activeHeroIndex: number = 0;
   @State isHistoryLoading: boolean = false;
 
   aboutToAppear(): void {
@@ -135,6 +137,17 @@ export struct HomePage {
     return this.heroAutoplayEnabled && this.shouldShowHeroIndicator();
   }
 
+  private pauseHeroAutoplayBriefly(): void {
+    this.heroAutoplayPaused = true;
+    setTimeout(() => {
+      this.heroAutoplayPaused = false;
+    }, 5000);
+  }
+
+  private shouldRenderHeroImage(index: number): boolean {
+    return index < 3 || index <= this.activeHeroIndex + 1;
+  }
+
   private skipFailedHeroImage(failedId: string): void {
     if (this.heroImages.length <= 1) {
       this.heroImages = [];
@@ -161,7 +174,7 @@ export struct HomePage {
 
     if (!result.success) {
       if (!result.cancelled && result.message.length > 0) {
-        promptAction.showToast({ message: result.message });
+        ToastService.show(result.message);
       }
       return;
     }
@@ -197,9 +210,9 @@ export struct HomePage {
     try {
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, diagnosticsText);
       await pasteboard.getSystemPasteboard().setData(data);
-      promptAction.showToast({ message: REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT });
+      ToastService.show(REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT);
     } catch (error) {
-      promptAction.showToast({ message: REVIEW_FLOW_HOME_COPY_ISSUE_FAILED_TEXT });
+      ToastService.show(REVIEW_FLOW_HOME_COPY_ISSUE_FAILED_TEXT);
     }
   }
 
@@ -212,8 +225,8 @@ export struct HomePage {
 
       Swiper() {
         if (this.hasUserHeroImages()) {
-          ForEach(this.heroImages, (item: HomeHeroDisplayImage) => {
-            this.HeroImageSlide(item)
+          ForEach(this.heroImages, (item: HomeHeroDisplayImage, index: number) => {
+            this.HeroImageSlide(item, index)
           }, (item: HomeHeroDisplayImage) => item.id)
         } else {
           this.DefaultHeroImageSlide()
@@ -221,11 +234,19 @@ export struct HomePage {
       }
       .width('100%')
       .aspectRatio(HOME_HERO_ASPECT_RATIO)
-      .autoPlay(this.shouldAutoplayHero())
+      .autoPlay(this.shouldAutoplayHero() && !this.heroAutoplayPaused)
       .interval(this.heroIntervalSeconds * 1000)
       .indicator(this.shouldShowHeroIndicator())
       .loop(this.shouldShowHeroIndicator())
       .curve(MotionTokens.curveDecelerate)
+      .onChange((index: number) => {
+        this.activeHeroIndex = index;
+      })
+      .onTouch((event: TouchEvent) => {
+        if (event.type === TouchType.Down) {
+          this.pauseHeroAutoplayBriefly();
+        }
+      })
       .indicatorStyle({
         bottom: HOME_HERO_INDICATOR_BOTTOM,
         color: AppColors.overlayLight,
@@ -244,13 +265,13 @@ export struct HomePage {
       }
       .width('100%')
       .justifyContent(FlexAlign.SpaceBetween)
-      .margin({ top: AppMetrics.space12 })
+      .margin({ top: AppMetrics.space16 })
 
       Column() {
         this.StartReviewButton()
       }
       .width('100%')
-      .margin({ top: AppMetrics.space12 })
+      .margin({ top: AppMetrics.space20 })
     }
     .width('100%')
     .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING, top: 0, bottom: 0 })
@@ -258,15 +279,23 @@ export struct HomePage {
   }
 
   @Builder
-  HeroImageSlide(item: HomeHeroDisplayImage) {
+  HeroImageSlide(item: HomeHeroDisplayImage, index: number) {
     Stack({ alignContent: Alignment.BottomStart }) {
-      Image(item.uri)
-        .width('100%')
-        .height('100%')
-        .objectFit(ImageFit.Cover)
-        .onError(() => {
-          this.skipFailedHeroImage(item.id);
-        })
+      if (this.shouldRenderHeroImage(index)) {
+        Image(item.uri)
+          .width('100%')
+          .height('100%')
+          .objectFit(ImageFit.Cover)
+          .backgroundColor(AppColors.surfaceMuted)
+          .onError(() => {
+            this.skipFailedHeroImage(item.id);
+          })
+      } else {
+        Column()
+          .width('100%')
+          .height('100%')
+          .backgroundColor(AppColors.surfaceMuted)
+      }
 
       this.HeroTextOverlay()
     }
@@ -281,6 +310,7 @@ export struct HomePage {
         .width('100%')
         .height('100%')
         .objectFit(ImageFit.Cover)
+        .backgroundColor(AppColors.surfaceMuted)
 
       this.HeroTextOverlay()
     }

@@ -1,5 +1,4 @@
 import common from '@ohos.app.ability.common';
-import promptAction from '@ohos.promptAction';
 import {
   AppColors,
   AppMetrics,
@@ -8,6 +7,7 @@ import {
   SettingsPageHeader
 } from '../components/AppDesign';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
+import { ToastService } from '../services/ToastService';
 
 @Entry
 @Component
@@ -40,9 +40,9 @@ struct ReviewerProfilePage {
     this.isSaving = true;
     try {
       this.reviewerName = await ReviewSettingsService.saveReviewerName(this.getAbilityContext(), this.reviewerName);
-      promptAction.showToast({ message: '已保存复盘人' });
+      ToastService.show('已保存复盘人');
     } catch (error) {
-      promptAction.showToast({ message: '保存失败，请稍后重试' });
+      ToastService.show('保存失败，请稍后重试');
     } finally {
       this.isSaving = false;
     }

@@ -1,12 +1,12 @@
 import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
-import promptAction from '@ohos.promptAction';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { HOME_STORAGE_PAGE } from '../app/AppRouter';
 import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
+import { ToastService } from '../services/ToastService';
 
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
@@ -121,9 +121,9 @@ struct ReviewSettingsPage {
     this.isSaving = true;
     try {
       this.reviewerName = await ReviewSettingsService.saveReviewerName(this.getAbilityContext(), this.reviewerName);
-      promptAction.showToast({ message: '已保存复盘人' });
+      ToastService.show('已保存复盘人');
     } catch (error) {
-      promptAction.showToast({ message: '保存失败，请稍后重试' });
+      ToastService.show('保存失败，请稍后重试');
     } finally {
       this.isSaving = false;
     }

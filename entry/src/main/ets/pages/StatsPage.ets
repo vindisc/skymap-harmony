@@ -1,6 +1,5 @@
 import common from '@ohos.app.ability.common';
 import router from '@ohos.router';
-import promptAction from '@ohos.promptAction';
 import { EDITOR_PAGE } from '../app/AppRouter';
 import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState, SkeletonBlock } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
@@ -18,6 +17,7 @@ import { formatReviewTime } from '../utils/ImageLayoutUtils';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { REVIEW_FLOW_IMPORT_PENDING_TEXT } from '../services/ReviewFlowFeedback';
+import { ToastService } from '../services/ToastService';
 
 const STATS_OVERVIEW_MIN_HEIGHT: number = 120;
 const STATS_CARD_MIN_HEIGHT: number = 104;
@@ -91,7 +91,7 @@ export struct StatsPage {
 
     if (!result.success) {
       if (!result.cancelled && result.message.length > 0) {
-        promptAction.showToast({ message: result.message });
+        ToastService.show(result.message);
       }
       return;
     }
@@ -595,7 +595,7 @@ export struct StatsPage {
       .width('100%')
       .layoutWeight(1)
       .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.None)
+      .edgeEffect(EdgeEffect.Spring)
     }
     .width('100%')
     .height('100%')

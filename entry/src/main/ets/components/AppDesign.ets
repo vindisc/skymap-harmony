@@ -61,6 +61,21 @@ export class AppColors {
   static readonly tagAmberText: string = '#8A6426';
 }
 
+export class ExportCardColors {
+  static readonly judgementText: string = '#5B625F';
+  static readonly judgementBg: string = '#ECE8DE';
+  static readonly judgementBorder: string = '#DCD3C3';
+  static readonly metaText: string = '#8D929A';
+  static readonly labelText: string = '#929085';
+  static readonly bodyText: string = '#343635';
+  static readonly titlePanelBg: string = '#FBFAF6';
+  static readonly titlePanelBorder: string = '#E7DFD2';
+  static readonly panelBg: string = '#F5F1E8';
+  static readonly panelBorder: string = '#E2D8C8';
+  static readonly dividerColor: string = '#E4DCCE';
+  static readonly infoDividerColor: string = '#ECE5DA';
+}
+
 export class AppMetrics {
   static readonly space4: number = SpacingTokens.xs;
   static readonly space8: number = SpacingTokens.sm;
@@ -500,6 +515,7 @@ export struct DangerButton {
 
 @Component
 export struct EmptyState {
+  @Prop icon: Resource | null = null;
   @Prop title: string = '';
   @Prop message: string = '';
   @Prop actionLabel: string = '';
@@ -508,6 +524,13 @@ export struct EmptyState {
 
   build() {
     Column({ space: AppMetrics.space16 }) {
+      if (this.icon !== null) {
+        Image(this.icon)
+          .width(48)
+          .height(48)
+          .objectFit(ImageFit.Contain)
+      }
+
       Text(this.title)
         .fontSize(AppTypography.cardTitle)
         .fontWeight(FontWeight.Bold)

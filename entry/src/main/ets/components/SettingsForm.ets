@@ -1,4 +1,5 @@
 import { AppColors, AppMetrics, AppTypography, PrimaryButton, SecondaryButton } from './AppDesign';
+import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 
 @Component
 export struct SettingsTextInput {
@@ -9,6 +10,7 @@ export struct SettingsTextInput {
   @Prop showsPasswordToggle: boolean = false;
   @Prop inputType: InputType = InputType.Normal;
   @State isPasswordVisible: boolean = false;
+  @State isFocused: boolean = false;
   onChange: (value: string) => void = () => {};
   onFocusInput: () => void = () => {};
   onBlurInput: () => void = () => {};
@@ -45,10 +47,16 @@ export struct SettingsTextInput {
             this.onChange(value);
           })
           .onFocus(() => {
-            this.onFocusInput();
+            animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+              this.isFocused = true;
+              this.onFocusInput();
+            });
           })
           .onBlur(() => {
-            this.onBlurInput();
+            animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+              this.isFocused = false;
+              this.onBlurInput();
+            });
           })
 
         if (this.showsPasswordToggle) {
@@ -72,9 +80,13 @@ export struct SettingsTextInput {
       .alignItems(VerticalAlign.Center)
       .width('100%')
       .height(AppMetrics.controlHeight)
-      .borderRadius(AppMetrics.buttonRadius)
-      .backgroundColor(AppColors.surface)
-      .border({ width: 1, color: AppColors.border })
+      .borderRadius(AppMetrics.inputRadius)
+      .backgroundColor(this.isFocused ? AppColors.surface : AppColors.surfaceTint)
+      .border({
+        width: this.isFocused ? 1.5 : 1,
+        color: this.isFocused ? AppColors.borderFocused : AppColors.border
+      })
+      .shadow(this.isFocused ? ElevationTokens.focus : ElevationTokens.none)
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')

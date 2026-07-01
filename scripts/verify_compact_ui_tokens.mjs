@@ -12,6 +12,10 @@ const reviewerProfileSource = fs.readFileSync('entry/src/main/ets/pages/Reviewer
 const homeStorageSource = fs.readFileSync('entry/src/main/ets/pages/HomeStoragePage.ets', 'utf8');
 const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
 const editorPageSource = fs.readFileSync('entry/src/main/ets/pages/EditorPage.ets', 'utf8');
+const reviewInputFormSource = fs.readFileSync('entry/src/main/ets/components/ReviewInputForm.ets', 'utf8');
+const longFormExportSource = fs.readFileSync('entry/src/main/ets/components/LongFormExportReviewCard.ets', 'utf8');
+const statsPageSource = fs.readFileSync('entry/src/main/ets/pages/StatsPage.ets', 'utf8');
+const toastServiceSource = fs.readFileSync('entry/src/main/ets/services/ToastService.ets', 'utf8');
 
 let failed = false;
 
@@ -204,6 +208,57 @@ assertIncludes(previewPageSource, '.shadow(ElevationTokens.high)', 'Preview floa
 assertIncludes(previewPageSource, '@State pressedActionKey: string = \'\';', 'Preview actions must keep explicit press feedback state.');
 assertIncludes(editorPageSource, '.shadow(ElevationTokens.medium)', 'Editor photo header must keep medium elevation.');
 assertIncludes(editorPageSource, 'duration: MotionTokens.durationStandard', 'Editor focus scrolling must use shared motion tokens.');
+assertIncludes(reviewInputFormSource, 'struct ReviewTextAreaField', 'Review text fields must use an isolated @Link component.');
+assertIncludes(reviewInputFormSource, 'TextArea({ text: $$this.value', 'Review TextArea must keep true two-way binding.');
+assertIncludes(editorPageSource, '@State isDirty: boolean = false;', 'Editor must track unsaved changes.');
+assertIncludes(editorPageSource, 'onBackPress(): boolean', 'Editor must intercept back navigation when dirty.');
+assertIncludes(editorPageSource, 'EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;', 'Editor scroll estimation must match ReviewInputForm vertical padding.');
+assertIncludes(editorPageSource, 'EDITOR_KEYBOARD_HEIGHT_CHANGE_THRESHOLD: number = 10;', 'Editor keyboard observer must debounce small height jitter.');
+assertIncludes(editorPageSource, '.edgeEffect(EdgeEffect.Spring)', 'Editor scroll must keep spring edge feedback.');
+assertIncludes(statsPageSource, '.edgeEffect(EdgeEffect.Spring)', 'Stats scroll must keep spring edge feedback.');
+assertIncludes(projectDetailSource, '.edgeEffect(EdgeEffect.Spring)', 'Library list must keep spring edge feedback.');
+assertIncludes(homePageSource, '@State heroAutoplayPaused: boolean = false;', 'Home hero autoplay must pause after user touch.');
+assertIncludes(homePageSource, '.autoPlay(this.shouldAutoplayHero() && !this.heroAutoplayPaused)', 'Home hero autoplay must respect touch pause.');
+assertIncludes(homePageSource, '.margin({ top: AppMetrics.space16 })', 'Home hero-to-tags spacing must use space16.');
+assertIncludes(homePageSource, '.margin({ top: AppMetrics.space20 })', 'Home tags-to-button spacing must use space20.');
+assertIncludes(previewPageSource, 'enum ExportState', 'Preview export actions must use a single export state enum.');
+assertIncludes(previewPageSource, 'EXPORT_ACTION_TIMEOUT_MS: number = 30000;', 'Preview export actions must have a 30s timeout.');
+assertIncludes(appDesignSource, 'export class ExportCardColors', 'Export card colors must be centralized.');
+assertIncludes(appDesignSource, '@Prop icon: Resource | null = null;', 'EmptyState must expose an optional icon prop.');
+assertIncludes(longFormExportSource, 'ExportCardColors.', 'Long form export card must use centralized export colors.');
+assertIncludes(toastServiceSource, 'export class ToastService', 'ToastService must centralize toast feedback.');
+
+const reviewTextAreaBlock = reviewInputFormSource.split('TextArea({ text: $$this.value')[1]?.split('@Component\nexport struct ReviewInputForm')[0] ?? '';
+const reviewTitleInputBlock = reviewInputFormSource.split('TextInput({ text: this.title')[1]?.split('ReviewTextAreaField({')[0] ?? '';
+
+if (reviewTextAreaBlock.includes('.animation(')) {
+  failed = true;
+  console.error('Review TextArea must not animate height or all property changes.');
+}
+
+if (reviewTitleInputBlock.includes('.animation(')) {
+  failed = true;
+  console.error('Review title TextInput must not use global animation.');
+}
+
+for (const filePath of sourceFiles) {
+  const relativePath = path.relative(root, filePath);
+  const source = fs.readFileSync(filePath, 'utf8');
+  if (relativePath.startsWith('entry/src/main/ets/pages/') && source.includes('promptAction.showToast')) {
+    failed = true;
+    console.error(`Page must use ToastService instead of direct promptAction.showToast: ${relativePath}`);
+  }
+}
+
+if (/#[0-9A-Fa-f]{6,8}/.test(longFormExportSource)) {
+  failed = true;
+  console.error('LongFormExportReviewCard must not leak direct color literals; use ExportCardColors or ReviewCardStyleTokens.');
+}
+
+if (/borderRadius\((17|20)\)/.test(longFormExportSource)) {
+  failed = true;
+  console.error('LongFormExportReviewCard must use RadiusTokens instead of non-standard radius literals.');
+}
 
 if (failed) {
   process.exit(1);
