@@ -9,6 +9,7 @@
 - `DATA_MODEL.md`：Review、Photo、Template、Preset、Profile、ExportJob 等产品级领域模型。
 - `REVIEW_JSON_SEMANTICS.md`：`review.json` v1 字段语义、空值策略和双端责任分工。
 - `HARMONYOS_V0_BASELINE.md`：HarmonyOS v0 发布基线、回归清单、存储边界、已知风险和下一阶段路线。
+- `REVIEW_LIBRARY_STORAGE_AUDIT.md`：HarmonyOS 端当前复盘库主存储、RDB 主索引、`review_exchange` 备份和删除 / 恢复边界。
 - `REVIEW_BUNDLE_V1_DESIGN.md`：review bundle v1 的目录结构、manifest、家庭存储、双端导入导出、删除语义和 v1 不做范围。
 - `REVIEW_BUNDLE_V1_E2E_CHECKLIST.md`：Mac / HarmonyOS 单条 review bundle v1 端到端验收清单和发布前真实样本测试债。
 - `REVIEW_BUNDLE_V2_ORIGINAL_PHOTO.md`：review bundle v2 原图复盘包的 manifest、原图资产、双端识别边界和本轮不做范围。
@@ -26,12 +27,19 @@
 当前实现备注：
 
 - HarmonyOS 已支持单条复盘导出 review bundle v1 到家庭存储。
+- HarmonyOS 已支持原图复盘包 v2 导出到家庭存储。
 - Mac 已支持选择单个 review bundle 导入 Review Library。
 - Mac 已支持选择家庭存储 `ReviewBundles` 根目录，浏览 v1/v2 候选包并手动导入单个 bundle。
-- Mac / HarmonyOS 单条 review bundle v1 已形成端到端验收清单。
+- Mac / HarmonyOS 单条 review bundle v1/v2 已形成端到端验收清单。
 - Mac 当前不是批量导入、自动同步、双向同步或冲突合并。
 - Review JSON v1 字段继续冻结，bundleId、导出图、缩略图等 bundle 信息不写回 `review.json`。
 - Mac 已固化脱敏 v1/v2 bundle fixture，覆盖 Reader、Import、只读预览和 v2 打开为复盘卡；真实隐私照片不得提交到仓库。
+
+## 清理规则
+
+本目录只保留仍可作为当前产品契约、实现边界或验收依据的文档。阶段性 Beta 冻结、已完成迁移设计、历史能力追溯和已经被当前契约吸收的旧 Sync v0.5 文档不再保留在镜像目录中。
+
+如果需要追溯旧决策，应优先查看 Git 历史，而不是把过期快照重新加入当前 Product Layer。
 
 ## 镜像副本规则
 

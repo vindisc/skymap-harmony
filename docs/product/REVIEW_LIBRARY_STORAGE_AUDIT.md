@@ -24,7 +24,7 @@
   - 在保存前刷新 `updatedAt`
 
 参考代码：
-- [entry/src/main/ets/services/ReviewCardStore.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardStore.ets:8)
+- `entry/src/main/ets/services/ReviewCardStore.ets`
 
 ### 2. `ReviewCardHistoryService` 的职责
 
@@ -40,7 +40,7 @@
   - 输出诊断信息
 
 参考代码：
-- [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:263)
+- `entry/src/main/ets/services/ReviewCardHistoryService.ets`
 
 ### 3. `ReviewProjectService` 的职责
 
@@ -55,7 +55,7 @@
 换句话说，它是“读模型加工层”，不是“写入层”。
 
 参考代码：
-- [entry/src/main/ets/services/ReviewProjectService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewProjectService.ets:88)
+- `entry/src/main/ets/services/ReviewProjectService.ets`
 
 ### 4. RDB `reviews` 的职责
 
@@ -66,8 +66,8 @@
 - 标题、判断、图片引用、关系、卡点、导出路径等字段作为索引列存在，方便列表、筛选、搜索和统计。
 
 参考代码：
-- [entry/src/main/ets/services/ReviewCardRdbService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardRdbService.ets:129)
-- [entry/src/main/ets/services/ReviewCardRdbModel.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardRdbModel.ets:1)
+- `entry/src/main/ets/services/ReviewCardRdbService.ets`
+- `entry/src/main/ets/services/ReviewCardRdbModel.ets`
 
 ### 5. `Preferences(review_card_history.items)` 的职责
 
@@ -95,9 +95,9 @@ interface ReviewCardHistoryItem {
 - `exportedPath` 保存导出结果引用
 
 参考代码：
-- [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:19)
-- [entry/src/main/ets/services/ReviewCardMigrationService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardMigrationService.ets:131)
-- [entry/src/main/ets/model/ReviewCardModel.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/model/ReviewCardModel.ets:84)
+- `entry/src/main/ets/services/ReviewCardHistoryService.ets`
+- `entry/src/main/ets/services/ReviewCardMigrationService.ets`
+- `entry/src/main/ets/model/ReviewCardModel.ets`
 
 ### 6. `review_exchange/*.review.json` 的职责
 
@@ -113,8 +113,8 @@ interface ReviewCardHistoryItem {
 - 阶段 5 后，恢复结果写入 RDB，不再回写 `Preferences.items`。
 
 参考代码：
-- [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:474)
-- [entry/src/main/ets/services/ReviewJsonExportService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewJsonExportService.ets:31)
+- `entry/src/main/ets/services/ReviewCardHistoryService.ets`
+- `entry/src/main/ets/services/ReviewJsonExportService.ets`
 
 ### 7. `exportedPath` 的职责
 
@@ -126,8 +126,8 @@ interface ReviewCardHistoryItem {
 - 它用于表达“这条复盘是否已导出/同步过”，不是原图路径。
 
 参考代码：
-- [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:437)
-- [entry/src/main/ets/pages/PreviewPage.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/pages/PreviewPage.ets:170)
+- `entry/src/main/ets/services/ReviewCardHistoryService.ets`
+- `entry/src/main/ets/pages/PreviewPage.ets`
 
 ### 8. `imageUri` 的含义和风险
 
@@ -142,8 +142,8 @@ interface ReviewCardHistoryItem {
 - 仅凭复盘库记录无法保证永远重新打开原图
 
 参考代码：
-- [entry/src/main/ets/services/ReviewCardStore.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardStore.ets:16)
-- [entry/src/main/ets/services/ReviewProjectService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewProjectService.ets:89)
+- `entry/src/main/ets/services/ReviewCardStore.ets`
+- `entry/src/main/ets/services/ReviewProjectService.ets`
 
 ## 二、当前数据流
 
@@ -251,8 +251,8 @@ review bundle 不参与 HarmonyOS 本地复盘库主索引查询，也不替代 
 - 是否删除家庭存储远端文件
 
 参考代码：
-- [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:455)
-- [entry/src/main/ets/services/ReviewJsonExportService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewJsonExportService.ets:152)
+- `entry/src/main/ets/services/ReviewCardHistoryService.ets`
+- `entry/src/main/ets/services/ReviewJsonExportService.ets`
 
 ## 五、恢复语义
 
@@ -275,24 +275,22 @@ review bundle 不参与 HarmonyOS 本地复盘库主索引查询，也不替代 
 - 当前没有更细粒度的恢复冲突处理、人工确认或恢复日志界面
 
 参考代码：
-- [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:305)
-- [entry/src/main/ets/services/ReviewCardHistoryService.ets](/Users/wangbo/Documents/Codex/codexPro/skymap-HarmonyOS/entry/src/main/ets/services/ReviewCardHistoryService.ets:335)
+- `entry/src/main/ets/services/ReviewCardHistoryService.ets`
 
 ## 六、当前方案优点
 
-- 实现简单，适合 v0 阶段快速落地
-- 不引入数据库复杂度，调试成本低
-- `Preferences + JSON` 便于快速迁移和兼容旧结构
-- `review.json` 天然适合跨端交换、人工备份和问题排查
-- 与 Mac 端 `review.json` 方向保持一致
-- 历史项是完整文档快照，页面读取逻辑比较直接
-- 自动备份导入机制让“Preferences 丢失但备份仍在”的情况有一定自愈能力
+- RDB 已成为复盘库主读主写索引，能承接列表、搜索、筛选、统计、更新和删除。
+- `raw_document_json` 保留完整文档快照，降低字段演进和旧记录兼容成本。
+- `review_exchange` 继续作为沙箱备份、交换和有限恢复来源，便于人工排障和异常恢复。
+- `Preferences.items` 退到迁移 / 诊断来源，避免旧数据残留污染当前主列表。
+- 页面层仍通过 `ReviewCardHistoryService` 读写历史，底层存储变化不泄漏到 UI。
+- 删除语义已经收口为“本地索引 + 沙箱备份”，不会误删原图、图库导出物或家庭存储复盘包。
 
 ## 七、当前方案风险
 
 ### 1. RDB 写失败需要更明确的用户反馈
 
-- 阶段 5 后不再静默写 `Preferences` 当主索引回退。
+- 当前不再静默写 `Preferences` 当主索引回退。
 - 保存 / 更新失败时会 best-effort 写 `review_exchange` 备份并向上抛出错误。
 - 当前 UI 已有基础失败 toast，后续可以补“已保留沙箱备份，可稍后恢复”的更明确提示。
 
@@ -342,7 +340,7 @@ review bundle 不参与 HarmonyOS 本地复盘库主索引查询，也不替代 
 
 ## 八、短期改进建议
 
-短期建议围绕 RDB 阶段 5 做收口：
+短期建议围绕 RDB 主索引稳态做收口：
 
 - 为 `ReviewCardHistoryService` 增加更多 RDB 写失败 / 备份恢复真机验证
 - 保留并验证 `Preferences JSON` 旧数据迁移容错
