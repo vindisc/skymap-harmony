@@ -181,7 +181,10 @@ assertIncludes(homePageSource, 'HOME_METHOD_TAG_HEIGHT: number = 28;', 'Home fea
 assertIncludes(projectDetailSource, '.height(AppMetrics.searchHeight)', 'Library search input must use shared touch-safe token.');
 assertIncludes(projectDetailSource, '.height(AppMetrics.filterChipHeight)', 'Library chips must use compact filter token.');
 assertIncludes(projectDetailSource, '.constraintSize({ minWidth: value === \'all\' ? 60 : 72 })', 'Library filter chips must read as compact horizontal pills.');
-assertIncludes(projectDetailSource, '.borderRadius(12)', 'Library filter chips must avoid oversized capsule corners.');
+assertIncludes(appDesignSource, 'static readonly badgeRadius: number = RadiusTokens.sm;', 'Compact badges must use a shared small radius token.');
+assertIncludes(appDesignSource, 'static readonly filterChipRadius: number = RadiusTokens.sm;', 'Library filter chips must use a shared compact radius token.');
+assertIncludes(appDesignSource, 'static readonly thumbnailRadius: number = RadiusTokens.md;', 'Image thumbnails must use a shared thumbnail radius token.');
+assertIncludes(projectDetailSource, '.borderRadius(AppMetrics.filterChipRadius)', 'Library filter chips must avoid oversized capsule corners through a token.');
 assertIncludes(projectDetailSource, '.fontSize(AppTypography.meta)', 'Library filter chips must use small label typography.');
 assertIncludes(projectDetailSource, '.fontSize(AppTypography.inputText)', 'Library search text must use shared input typography.');
 assertIncludes(appDesignSource, '.width(AppMetrics.listThumbnailSize)', 'List cards must use compact 68vp thumbnail token.');
@@ -221,6 +224,7 @@ assertIncludes(homePageSource, '@State heroAutoplayPaused: boolean = false;', 'H
 assertIncludes(homePageSource, '.autoPlay(this.shouldAutoplayHero() && !this.heroAutoplayPaused)', 'Home hero autoplay must respect touch pause.');
 assertIncludes(homePageSource, '.margin({ top: AppMetrics.space16 })', 'Home hero-to-tags spacing must use space16.');
 assertIncludes(homePageSource, '.margin({ top: AppMetrics.space20 })', 'Home tags-to-button spacing must use space20.');
+assertIncludes(homePageSource, '.fontColor(AppColors.onPrimaryMuted)', 'Home hero overlay secondary text must use a semantic color token.');
 assertIncludes(previewPageSource, 'enum ExportState', 'Preview export actions must use a single export state enum.');
 assertIncludes(previewPageSource, 'EXPORT_ACTION_TIMEOUT_MS: number = 30000;', 'Preview export actions must have a 30s timeout.');
 assertIncludes(appDesignSource, 'export class ExportCardColors', 'Export card colors must be centralized.');
@@ -258,6 +262,18 @@ if (/#[0-9A-Fa-f]{6,8}/.test(longFormExportSource)) {
 if (/borderRadius\((17|20)\)/.test(longFormExportSource)) {
   failed = true;
   console.error('LongFormExportReviewCard must use RadiusTokens instead of non-standard radius literals.');
+}
+
+const forbiddenNonTokenRadii = [
+  ['entry/src/main/ets/pages/ProjectDetailPage.ets', projectDetailSource],
+  ['entry/src/main/ets/pages/HomeHeroImagePage.ets', fs.readFileSync('entry/src/main/ets/pages/HomeHeroImagePage.ets', 'utf8')],
+  ['entry/src/main/ets/pages/StatsPage.ets', statsPageSource]
+];
+for (const [fileName, source] of forbiddenNonTokenRadii) {
+  if (/borderRadius\((10|14|17)\)/.test(source)) {
+    failed = true;
+    console.error(`Non-token compact radius remains in ${fileName}`);
+  }
 }
 
 if (failed) {

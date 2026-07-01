@@ -331,7 +331,7 @@ export struct HomePage {
 
       Text('看见落点、路径和关系。')
         .fontSize(13)
-        .fontColor('#E6FFFFFF')
+        .fontColor(AppColors.onPrimaryMuted)
         .lineHeight(17)
         .maxLines(2)
         .width('100%')
@@ -415,7 +415,10 @@ export struct HomePage {
       .fontWeight(FontWeight.Bold)
       .fontColor(AppColors.primary)
       .height(HOME_METHOD_TAG_HEIGHT)
-      .padding({ left: 10, right: 10 })
+      .padding({
+        left: AppMetrics.compactBadgePaddingHorizontal,
+        right: AppMetrics.compactBadgePaddingHorizontal
+      })
       .borderRadius(HOME_METHOD_TAG_RADIUS)
       .backgroundColor(AppColors.primarySoft)
       .border({ width: 0.5, color: AppColors.border })

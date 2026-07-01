@@ -203,7 +203,7 @@ struct HomeHeroImagePage {
         .width(HOME_HERO_THUMBNAIL_SIZE)
         .height(HOME_HERO_THUMBNAIL_SIZE)
         .objectFit(ImageFit.Cover)
-        .borderRadius(14)
+        .borderRadius(AppMetrics.thumbnailRadius)
         .clip(true)
         .backgroundColor(AppColors.surfaceMuted)
 
@@ -256,7 +256,7 @@ struct HomeHeroImagePage {
         .width(HOME_HERO_THUMBNAIL_SIZE)
         .height(HOME_HERO_THUMBNAIL_SIZE)
         .objectFit(ImageFit.Cover)
-        .borderRadius(14)
+        .borderRadius(AppMetrics.thumbnailRadius)
         .clip(true)
         .backgroundColor(AppColors.surfaceMuted)
 
@@ -284,7 +284,12 @@ struct HomeHeroImagePage {
         .fontWeight(FontWeight.Medium)
         .fontColor(this.images.length <= 0 ? AppColors.tagGreenText : AppColors.mutedText)
         .lineHeight(AppTypography.metaLineHeight)
-        .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+        .padding({
+          left: AppMetrics.compactBadgePaddingHorizontal,
+          right: AppMetrics.compactBadgePaddingHorizontal,
+          top: AppMetrics.compactBadgePaddingVertical,
+          bottom: AppMetrics.compactBadgePaddingVertical
+        })
         .borderRadius(AppMetrics.capsuleRadius)
         .backgroundColor(this.images.length <= 0 ? AppColors.tagGreen : AppColors.surfaceMuted)
         .maxLines(1)
@@ -309,7 +314,7 @@ struct HomeHeroImagePage {
       }
       .width(HOME_HERO_THUMBNAIL_SIZE)
       .height(HOME_HERO_THUMBNAIL_SIZE)
-      .borderRadius(14)
+      .borderRadius(AppMetrics.thumbnailRadius)
       .backgroundColor(AppColors.primarySoft)
       .border({ width: 1, color: AppColors.border })
 

@@ -38,6 +38,7 @@ export class AppColors {
   static readonly primaryDisabled: string = '#AFC5D0';
   static readonly onPrimary: string = '#FFFFFF';
   static readonly onPrimarySubtle: string = '#D9FFFFFF';
+  static readonly onPrimaryMuted: string = '#E6FFFFFF';
   static readonly transparent: string = '#00000000';
   static readonly overlayLight: string = '#66FFFFFF';
   static readonly heroGradientMiddle: string = '#0F121B12';
@@ -97,7 +98,14 @@ export class AppMetrics {
   static readonly inputRadius: number = RadiusTokens.md;
   static readonly capsuleRadius: number = RadiusTokens.full;
   static readonly panelRadius: number = RadiusTokens.lg;
+  static readonly badgeRadius: number = RadiusTokens.sm;
+  static readonly filterChipRadius: number = RadiusTokens.sm;
+  static readonly thumbnailRadius: number = RadiusTokens.md;
   static readonly pressInset: number = 8;
+  static readonly compactBadgePaddingHorizontal: number = 10;
+  static readonly compactBadgePaddingVertical: number = 4;
+  static readonly comfortableBadgePaddingHorizontal: number = 12;
+  static readonly comfortableBadgePaddingVertical: number = 6;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
   static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
@@ -336,8 +344,13 @@ export struct SettingsLinkRow {
           .fontWeight(FontWeight.Medium)
           .fontColor(resolveSettingsToneTextColor(this.tone))
           .lineHeight(AppTypography.metaLineHeight)
-          .padding({ left: 10, right: 10, top: 4, bottom: 4 })
-          .borderRadius(10)
+          .padding({
+            left: AppMetrics.compactBadgePaddingHorizontal,
+            right: AppMetrics.compactBadgePaddingHorizontal,
+            top: AppMetrics.compactBadgePaddingVertical,
+            bottom: AppMetrics.compactBadgePaddingVertical
+          })
+          .borderRadius(AppMetrics.badgeRadius)
           .backgroundColor(resolveSettingsToneBackground(this.tone))
           .maxLines(1)
       }
@@ -609,7 +622,12 @@ export struct TagLabel {
       .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Bold)
       .fontColor(this.color)
-      .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+      .padding({
+        left: AppMetrics.compactBadgePaddingHorizontal,
+        right: AppMetrics.compactBadgePaddingHorizontal,
+        top: AppMetrics.compactBadgePaddingVertical,
+        bottom: AppMetrics.compactBadgePaddingVertical
+      })
       .borderRadius(AppMetrics.capsuleRadius)
       .backgroundColor(this.tagBackground)
       .shadow(ElevationTokens.subtle)
@@ -658,8 +676,13 @@ export struct ReviewJudgementBadge {
       .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(getJudgementBadgeColor(this.value))
-      .padding({ left: 10, right: 10, top: 4, bottom: 4 })
-      .borderRadius(10)
+      .padding({
+        left: AppMetrics.compactBadgePaddingHorizontal,
+        right: AppMetrics.compactBadgePaddingHorizontal,
+        top: AppMetrics.compactBadgePaddingVertical,
+        bottom: AppMetrics.compactBadgePaddingVertical
+      })
+      .borderRadius(AppMetrics.badgeRadius)
       .backgroundColor(getJudgementBadgeBackground(this.value))
       .textAlign(TextAlign.Center)
       .maxLines(1)

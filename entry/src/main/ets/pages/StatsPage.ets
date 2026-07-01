@@ -220,7 +220,12 @@ export struct StatsPage {
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.tagGreenText)
           .lineHeight(AppTypography.metaLineHeight)
-          .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+          .padding({
+            left: AppMetrics.comfortableBadgePaddingHorizontal,
+            right: AppMetrics.comfortableBadgePaddingHorizontal,
+            top: AppMetrics.comfortableBadgePaddingVertical,
+            bottom: AppMetrics.comfortableBadgePaddingVertical
+          })
           .borderRadius(AppMetrics.capsuleRadius)
           .backgroundColor(AppColors.tagGreen)
           .maxLines(1)
@@ -275,7 +280,12 @@ export struct StatsPage {
             .fontWeight(FontWeight.Bold)
             .fontColor(AppColors.primary)
             .lineHeight(AppTypography.metaLineHeight)
-            .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+            .padding({
+              left: AppMetrics.compactBadgePaddingHorizontal,
+              right: AppMetrics.compactBadgePaddingHorizontal,
+              top: AppMetrics.compactBadgePaddingVertical,
+              bottom: AppMetrics.compactBadgePaddingVertical
+            })
             .borderRadius(AppMetrics.capsuleRadius)
             .backgroundColor(AppColors.primarySoft)
         }
@@ -324,7 +334,12 @@ export struct StatsPage {
           .fontWeight(FontWeight.Medium)
           .fontColor(this.resolveDistributionColor(item.key))
           .lineHeight(AppTypography.metaLineHeight)
-          .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+          .padding({
+            left: AppMetrics.space8,
+            right: AppMetrics.space8,
+            top: AppMetrics.compactBadgePaddingVertical,
+            bottom: AppMetrics.compactBadgePaddingVertical
+          })
           .borderRadius(AppMetrics.capsuleRadius)
           .backgroundColor(this.resolveDistributionBackground(item.key))
       }
@@ -457,8 +472,13 @@ export struct StatsPage {
         .fontWeight(FontWeight.Medium)
         .fontColor(this.resolveReviewDecisionColor(item.decision))
         .lineHeight(AppTypography.metaLineHeight)
-        .padding({ left: 10, right: 10, top: 5, bottom: 5 })
-        .borderRadius(10)
+        .padding({
+          left: AppMetrics.compactBadgePaddingHorizontal,
+          right: AppMetrics.compactBadgePaddingHorizontal,
+          top: AppMetrics.compactBadgePaddingVertical,
+          bottom: AppMetrics.compactBadgePaddingVertical
+        })
+        .borderRadius(AppMetrics.badgeRadius)
         .backgroundColor(this.resolveDistributionBackground(item.decision === '成立' ? 'works' : item.decision === '不成立' ? 'notWorks' : 'uncertain'))
         .maxLines(1)
     }

@@ -256,8 +256,8 @@ export struct ProjectDetailPage {
     Button(label)
       .height(AppMetrics.filterChipHeight)
       .constraintSize({ minWidth: value === 'all' ? 60 : 72 })
-      .padding({ left: 14, right: 14 })
-      .borderRadius(12)
+      .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+      .borderRadius(AppMetrics.filterChipRadius)
       .fontSize(AppTypography.meta)
       .fontWeight(FontWeight.Medium)
       .fontColor(this.resolveFilterChipTextColor(value))
@@ -294,7 +294,7 @@ export struct ProjectDetailPage {
           .height(34)
           .width(34)
           .padding(0)
-          .borderRadius(17)
+          .borderRadius(AppMetrics.capsuleRadius)
           .fontSize(18)
           .fontColor(AppColors.secondaryText)
           .backgroundColor(AppColors.surfaceMuted)
@@ -308,8 +308,8 @@ export struct ProjectDetailPage {
     .alignItems(VerticalAlign.Center)
     .width('100%')
     .height(AppMetrics.searchHeight)
-    .padding({ left: 14, right: 14 })
-    .borderRadius(14)
+    .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+    .borderRadius(AppMetrics.inputRadius)
     .backgroundColor(AppColors.surface)
     .border({ width: 1, color: AppColors.border })
   }
@@ -329,8 +329,13 @@ export struct ProjectDetailPage {
           .fontSize(13)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.metaLineHeight)
-          .padding({ left: 10, right: 10, top: 4, bottom: 4 })
-          .borderRadius(10)
+          .padding({
+            left: AppMetrics.compactBadgePaddingHorizontal,
+            right: AppMetrics.compactBadgePaddingHorizontal,
+            top: AppMetrics.compactBadgePaddingVertical,
+            bottom: AppMetrics.compactBadgePaddingVertical
+          })
+          .borderRadius(AppMetrics.badgeRadius)
           .backgroundColor(AppColors.surfaceMuted)
           .border({ width: 1, color: AppColors.border })
       }
