@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import display from '@ohos.display';
 import window from '@ohos.window';
@@ -220,7 +219,9 @@ struct EditorPage {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
       this.isDirty = false;
       ToastService.show(REVIEW_FLOW_SAVE_SUCCESS_TEXT);
-      router.replaceUrl({ url: PREVIEW_PAGE });
+      this.getUIContext().getRouter().replaceUrl({ url: PREVIEW_PAGE }).catch((error: Error) => {
+        console.error(`[EditorPage] 进入预览页失败：${error.message}`);
+      });
     } catch (error) {
       ToastService.show(REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
@@ -490,7 +491,7 @@ struct EditorPage {
         fontColor: AppColors.danger,
         action: () => {
           this.shouldDiscardChanges = true;
-          router.back();
+          this.getUIContext().getRouter().back();
         }
       }
     });

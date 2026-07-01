@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import { HOME_HERO_IMAGE_PAGE, HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../app/AppRouter';
 import {
@@ -168,19 +167,27 @@ export struct MyPage {
   }
 
   private openReviewerProfile(): void {
-    router.pushUrl({ url: REVIEWER_PROFILE_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: REVIEWER_PROFILE_PAGE }).catch((error: Error) => {
+      console.error(`[MyPage] 打开复盘人设置失败：${error.message}`);
+    });
   }
 
   private openHomeHeroImage(): void {
-    router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: HOME_HERO_IMAGE_PAGE }).catch((error: Error) => {
+      console.error(`[MyPage] 打开首页图片设置失败：${error.message}`);
+    });
   }
 
   private openHomeStorage(): void {
-    router.pushUrl({ url: HOME_STORAGE_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: HOME_STORAGE_PAGE }).catch((error: Error) => {
+      console.error(`[MyPage] 打开家庭存储设置失败：${error.message}`);
+    });
   }
 
   private openSyncCenter(): void {
-    router.pushUrl({ url: SYNC_CENTER_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: SYNC_CENTER_PAGE }).catch((error: Error) => {
+      console.error(`[MyPage] 打开同步中心失败：${error.message}`);
+    });
   }
 
   private confirmRdbDeveloperDiagnostics(): void {

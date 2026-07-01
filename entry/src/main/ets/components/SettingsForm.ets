@@ -47,13 +47,13 @@ export struct SettingsTextInput {
             this.onChange(value);
           })
           .onFocus(() => {
-            animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+            this.getUIContext().animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
               this.isFocused = true;
               this.onFocusInput();
             });
           })
           .onBlur(() => {
-            animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+            this.getUIContext().animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
               this.isFocused = false;
               this.onBlurInput();
             });

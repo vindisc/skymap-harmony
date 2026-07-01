@@ -1,5 +1,4 @@
 import common from '@ohos.app.ability.common';
-import router from '@ohos.router';
 import { EDITOR_PAGE } from '../app/AppRouter';
 import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState, SkeletonBlock } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
@@ -102,7 +101,9 @@ export struct StatsPage {
       result.imageHeight,
       result.imageSizeFallbackUsed
     );
-    router.pushUrl({ url: EDITOR_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: EDITOR_PAGE }).catch((error: Error) => {
+      console.error(`[StatsPage] 创建复盘跳转失败：${error.message}`);
+    });
   }
 
   private resolveLatestReviewDate(): string {

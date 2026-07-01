@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import pasteboard from '@ohos.pasteboard';
 import { EDITOR_PAGE } from '../app/AppRouter';
@@ -536,7 +535,9 @@ struct PreviewPage {
       Row({ space: AppMetrics.space8 }) {
         Column() {
           this.ActionButton('编辑', false, this.isActionBusy(), () => {
-            router.replaceUrl({ url: EDITOR_PAGE });
+            this.getUIContext().getRouter().replaceUrl({ url: EDITOR_PAGE }).catch((error: Error) => {
+              console.error(`[PreviewPage] 返回编辑页失败：${error.message}`);
+            });
           })
         }
         .layoutWeight(1)

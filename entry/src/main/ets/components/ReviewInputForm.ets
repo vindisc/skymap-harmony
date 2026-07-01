@@ -83,12 +83,12 @@ struct ReviewTextAreaField {
         })
         .shadow(this.isFocused ? ElevationTokens.focus : ElevationTokens.none)
         .onFocus(() => {
-          animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+          this.getUIContext().animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
             this.onFocusField();
           });
         })
         .onBlur(() => {
-          animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+          this.getUIContext().animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
             this.onBlurField();
           });
         })
@@ -195,13 +195,13 @@ export struct ReviewInputForm {
           })
           .shadow(this.focusedField === 'title' ? ElevationTokens.focus : ElevationTokens.none)
           .onFocus(() => {
-            animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+            this.getUIContext().animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
               this.focusedField = 'title';
               this.onFieldFocus('title');
             });
           })
           .onBlur(() => {
-            animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
+            this.getUIContext().animateTo({ duration: MotionTokens.durationQuick, curve: MotionTokens.curveDecelerate }, () => {
               this.focusedField = '';
               this.onFieldBlur();
             });

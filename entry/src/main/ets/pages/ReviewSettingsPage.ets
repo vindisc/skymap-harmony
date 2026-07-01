@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
@@ -130,7 +129,9 @@ struct ReviewSettingsPage {
   }
 
   private openHomeStorageSettings(): void {
-    router.pushUrl({ url: HOME_STORAGE_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: HOME_STORAGE_PAGE }).catch((error: Error) => {
+      console.error(`[ReviewSettingsPage] 打开家庭存储设置失败：${error.message}`);
+    });
   }
 
   private isKeyboardActive(): boolean {

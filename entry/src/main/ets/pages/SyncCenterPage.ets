@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import { HOME_STORAGE_PAGE } from '../app/AppRouter';
 import {
@@ -96,7 +95,9 @@ struct SyncCenterPage {
   }
 
   private openSettings(): void {
-    router.pushUrl({ url: HOME_STORAGE_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: HOME_STORAGE_PAGE }).catch((error: Error) => {
+      console.error(`[SyncCenterPage] 打开家庭存储设置失败：${error.message}`);
+    });
   }
 
   private async testConnection(): Promise<void> {

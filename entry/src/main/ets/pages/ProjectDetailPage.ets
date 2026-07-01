@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import { EDITOR_PAGE, PREVIEW_PAGE } from '../app/AppRouter';
 import {
@@ -138,7 +137,9 @@ export struct ProjectDetailPage {
       result.imageHeight,
       result.imageSizeFallbackUsed
     );
-    router.pushUrl({ url: EDITOR_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: EDITOR_PAGE }).catch((error: Error) => {
+      console.error(`[ProjectDetailPage] 创建复盘跳转失败：${error.message}`);
+    });
   }
 
   private isFilterSelected(value: string): boolean {
@@ -155,7 +156,9 @@ export struct ProjectDetailPage {
 
   private openHistory(document: ReviewCardDocument): void {
     ReviewCardStore.setCurrentDocument(document);
-    router.pushUrl({ url: PREVIEW_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: PREVIEW_PAGE }).catch((error: Error) => {
+      console.error(`[ProjectDetailPage] 打开复盘预览失败：${error.message}`);
+    });
   }
 
   private confirmDeleteHistory(document: ReviewCardDocument): void {

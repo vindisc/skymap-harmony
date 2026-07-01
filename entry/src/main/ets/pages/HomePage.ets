@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import common from '@ohos.app.ability.common';
 import pasteboard from '@ohos.pasteboard';
 import {
@@ -185,7 +184,9 @@ export struct HomePage {
       result.imageHeight,
       result.imageSizeFallbackUsed
     );
-    router.pushUrl({ url: EDITOR_PAGE });
+    this.getUIContext().getRouter().pushUrl({ url: EDITOR_PAGE }).catch((error: Error) => {
+      console.error(`[HomePage] 进入编辑页失败：${error.message}`);
+    });
   }
 
   private shouldShowHistoryDiagnostics(): boolean {
