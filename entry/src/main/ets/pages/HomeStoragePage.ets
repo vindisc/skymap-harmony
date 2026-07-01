@@ -51,7 +51,7 @@ struct HomeStoragePage {
   @State focusedInputIndex: number = -1;
 
   private getAbilityContext(): common.UIAbilityContext {
-    return getContext(this) as common.UIAbilityContext;
+    return this.getUIContext().getHostContext() as common.UIAbilityContext;
   }
 
   aboutToAppear(): void {
@@ -89,7 +89,7 @@ struct HomeStoragePage {
 
   private registerKeyboardHeightObserver(): void {
     this.keyboardHeightChangeCallback = (height: number): void => {
-      this.keyboardHeight = Math.max(0, px2vp(height));
+      this.keyboardHeight = Math.max(0, this.getUIContext().px2vp(height));
       if (this.keyboardHeight > 0 && this.focusedInputIndex >= 0) {
         this.scheduleInputIntoView(this.focusedInputIndex);
       }

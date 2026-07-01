@@ -91,7 +91,7 @@ struct EditorPage {
   @State isDirty: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
-    return getContext(this) as common.UIAbilityContext;
+    return this.getUIContext().getHostContext() as common.UIAbilityContext;
   }
 
   aboutToAppear(): void {
@@ -135,7 +135,7 @@ struct EditorPage {
 
   private registerKeyboardHeightObserver(): void {
     this.keyboardHeightChangeCallback = (height: number): void => {
-      const nextKeyboardHeight: number = Math.max(0, px2vp(height));
+      const nextKeyboardHeight: number = Math.max(0, this.getUIContext().px2vp(height));
       if (Math.abs(nextKeyboardHeight - this.lastKeyboardHeight) <= EDITOR_KEYBOARD_HEIGHT_CHANGE_THRESHOLD) {
         return;
       }
@@ -176,8 +176,8 @@ struct EditorPage {
   private captureStableViewportSize(): void {
     try {
       const currentDisplay = display.getDefaultDisplaySync();
-      this.viewportWidth = px2vp(currentDisplay.width);
-      this.viewportHeight = px2vp(currentDisplay.height);
+      this.viewportWidth = this.getUIContext().px2vp(currentDisplay.width);
+      this.viewportHeight = this.getUIContext().px2vp(currentDisplay.height);
     } catch (error) {
       this.viewportWidth = EDITOR_CONTENT_FALLBACK_WIDTH + EDITOR_PAGE_HORIZONTAL_PADDING * 2;
       this.viewportHeight = EDITOR_VIEWPORT_FALLBACK_HEIGHT;

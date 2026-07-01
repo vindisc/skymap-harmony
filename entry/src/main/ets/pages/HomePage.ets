@@ -86,7 +86,7 @@ export struct HomePage {
   }
 
   private getAbilityContext(): common.UIAbilityContext {
-    return getContext(this) as common.UIAbilityContext;
+    return this.getUIContext().getHostContext() as common.UIAbilityContext;
   }
 
   private async reloadHistory(): Promise<void> {

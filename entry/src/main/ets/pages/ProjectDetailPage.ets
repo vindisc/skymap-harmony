@@ -53,7 +53,7 @@ export struct ProjectDetailPage {
   @State isLibraryLoading: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
-    return getContext(this) as common.UIAbilityContext;
+    return this.getUIContext().getHostContext() as common.UIAbilityContext;
   }
 
   aboutToAppear(): void {
