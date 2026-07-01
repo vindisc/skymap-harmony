@@ -132,6 +132,17 @@ export struct HomePage {
     return this.heroImages.length > 1;
   }
 
+  private resolveHeroIndicator(): DotIndicator | boolean {
+    if (!this.shouldShowHeroIndicator()) {
+      return false;
+    }
+
+    return new DotIndicator()
+      .bottom(HOME_HERO_INDICATOR_BOTTOM)
+      .color(AppColors.overlayLight)
+      .selectedColor(AppColors.onPrimary);
+  }
+
   private shouldAutoplayHero(): boolean {
     return this.heroAutoplayEnabled && this.shouldShowHeroIndicator();
   }
@@ -237,7 +248,7 @@ export struct HomePage {
       .aspectRatio(HOME_HERO_ASPECT_RATIO)
       .autoPlay(this.shouldAutoplayHero() && !this.heroAutoplayPaused)
       .interval(this.heroIntervalSeconds * 1000)
-      .indicator(this.shouldShowHeroIndicator())
+      .indicator(this.resolveHeroIndicator())
       .loop(this.shouldShowHeroIndicator())
       .curve(MotionTokens.curveDecelerate)
       .onChange((index: number) => {
@@ -247,11 +258,6 @@ export struct HomePage {
         if (event.type === TouchType.Down) {
           this.pauseHeroAutoplayBriefly();
         }
-      })
-      .indicatorStyle({
-        bottom: HOME_HERO_INDICATOR_BOTTOM,
-        color: AppColors.overlayLight,
-        selectedColor: AppColors.onPrimary
       })
       .borderRadius(HOME_HERO_RADIUS)
       .clip(true)
