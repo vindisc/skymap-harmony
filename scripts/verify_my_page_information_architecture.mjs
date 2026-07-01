@@ -27,12 +27,10 @@ function forbidIncludes(source, marker, message) {
   "title: '我的'",
   'this.SettingsSection()',
   'this.AboutSection()',
-  "title: '设置'",
   "title: '复盘人'",
   "title: '首页图片'",
   "title: '家庭存储'",
   "title: '同步中心'",
-  "title: '应用'",
   "Text('版本')",
   'this.VersionInfoCard()',
   'this.DeveloperDiagnosticsCard()'
@@ -50,6 +48,11 @@ function forbidIncludes(source, marker, message) {
   'minHeight',
   'top: AppMetrics.sectionGap'
 ].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must not keep explanatory page or section copy'));
+[
+  "title: '设置'",
+  "title: '应用'",
+  'SettingsSectionHeader({'
+].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must not reintroduce redundant section labels'));
 
 [
   'this.IdentityCard()',

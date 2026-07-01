@@ -10,8 +10,7 @@ import {
   SecondaryButton,
   SettingsEntryTone,
   SettingsLinkRow,
-  SettingsPageHeader,
-  SettingsSectionHeader
+  SettingsPageHeader
 } from '../components/AppDesign';
 import {
   HomeStorageConfigStatus,
@@ -140,16 +139,10 @@ struct SyncCenterPage {
     Scroll() {
       Column({ space: AppMetrics.sectionGap }) {
         SettingsPageHeader({
-          title: '同步中心',
-          subtitle: '家庭存储通常需要连接家庭 Wi-Fi 或 VPN 后使用。离开家庭网络时，请先连接 VPN / Tailscale，再导出复盘包。'
+          title: '同步中心'
         })
 
         Column({ space: AppMetrics.space8 }) {
-          SettingsSectionHeader({
-            title: '家庭存储',
-            description: '当前家庭存储需要在同一网络或 VPN 下使用。'
-          })
-
           SettingsLinkRow({
             title: this.resolveAvailabilityText(),
             value: `${this.resolveHomeStorageAddress()} · ${this.resolveShareName()} · ${this.resolveRemoteDirectory()}`,

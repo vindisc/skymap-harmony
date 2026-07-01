@@ -8,8 +8,7 @@ import {
   AppTypography,
   SettingsEntryTone,
   SettingsLinkRow,
-  SettingsPageHeader,
-  SettingsSectionHeader
+  SettingsPageHeader
 } from '../components/AppDesign';
 import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
 import {
@@ -322,19 +321,13 @@ struct HomeStoragePage {
   @Builder
   Header() {
     SettingsPageHeader({
-      title: '家庭存储',
-      subtitle: '适合在家庭 Wi-Fi 内使用。外出时需要先连接 VPN / Tailscale 等安全网络，再访问家庭存储。'
+      title: '家庭存储'
     })
   }
 
   @Builder
   StatusSummary() {
     Column({ space: AppMetrics.space8 }) {
-      SettingsSectionHeader({
-        title: '连接状态',
-        description: ''
-      })
-
       SettingsLinkRow({
         title: this.resolveStatusTitle(),
         value: this.resolveStorageSummary(),
@@ -413,11 +406,6 @@ struct HomeStoragePage {
   @Builder
   ConfigurationForm() {
     Column({ space: AppMetrics.cardGap }) {
-      SettingsSectionHeader({
-        title: '连接信息',
-        description: '这些信息只保存在本机，用于导出后写入家庭存储。'
-      })
-
       this.SettingsInput('家庭存储地址或 IP', this.homeStorageHost, '192.168.3.10', (value: string) => {
         this.homeStorageHost = value;
         this.clearActionFeedback();

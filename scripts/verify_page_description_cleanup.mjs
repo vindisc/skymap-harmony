@@ -66,7 +66,6 @@ function forbidRegex(source, pattern, message) {
   'Scroll() {\n        Column() {\n          AppPageHeader({',
   '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })',
   'top: AppMetrics.pageTopPadding',
-  "title: '设置'",
   "title: '复盘人'",
   "title: '首页图片'",
   "title: '家庭存储'",
@@ -86,6 +85,11 @@ function forbidRegex(source, pattern, message) {
   'minHeight',
   'top: AppMetrics.sectionGap'
 ].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must not keep empty subtitle placeholders or large fixed top gaps'));
+[
+  "title: '设置'",
+  "title: '应用'",
+  'SettingsSectionHeader({'
+].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must not reintroduce redundant section labels'));
 
 forbidRegex(
   myPageSource,

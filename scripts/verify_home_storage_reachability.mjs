@@ -68,9 +68,12 @@ assertIncludes(previewSource, 'result.message.length > 0 ? result.message : REVI
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_UNREACHABLE_TEXT: string = '无法连接家庭存储。请连接家庭 Wi-Fi 或 VPN 后重试。'", 'ReviewFlowFeedback');
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_AUTH_FAILED_TEXT: string = '家庭存储账号或密码不正确，请检查设置'", 'ReviewFlowFeedback');
 
-assertIncludes(syncCenterSource, '当前家庭存储需要在同一网络或 VPN 下使用。', 'SyncCenterPage');
-assertIncludes(syncCenterSource, '家庭存储通常需要连接家庭 Wi-Fi 或 VPN 后使用。离开家庭网络时，请先连接 VPN / Tailscale，再导出复盘包。', 'SyncCenterPage');
-assertIncludes(homeStoragePageSource, '适合在家庭 Wi-Fi 内使用。外出时需要先连接 VPN / Tailscale 等安全网络，再访问家庭存储。', 'HomeStoragePage');
+assertIncludes(syncCenterSource, "title: '同步中心'", 'SyncCenterPage');
+assertIncludes(syncCenterSource, "label: this.isTesting ? '检查中…' : '检查家庭存储'", 'SyncCenterPage');
+assertIncludes(syncCenterSource, 'SettingsLinkRow({', 'SyncCenterPage');
+assertIncludes(homeStoragePageSource, "title: '家庭存储'", 'HomeStoragePage');
+assertIncludes(homeStoragePageSource, 'StatusSummary()', 'HomeStoragePage');
+assertIncludes(homeStoragePageSource, "'家庭存储地址或 IP'", 'HomeStoragePage');
 assertIncludes(reviewSettingsSource, "Text('连接与凭据')", 'ReviewSettingsPage');
 
 const ordinaryUserCopy = [

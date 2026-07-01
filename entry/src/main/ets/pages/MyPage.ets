@@ -8,8 +8,7 @@ import {
   AppPageHeader,
   AppTypography,
   SettingsEntryTone,
-  SettingsLinkRow,
-  SettingsSectionHeader
+  SettingsLinkRow
 } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import {
@@ -243,13 +242,9 @@ export struct MyPage {
   @Builder
   SettingsSection() {
     Column({ space: AppMetrics.cardGap }) {
-      SettingsSectionHeader({
-        title: '设置'
-      })
-
       SettingsLinkRow({
         title: '复盘人',
-        value: this.resolveReviewerSummary() === '未设置' ? '新建复盘会使用默认空名称' : this.resolveReviewerSummary(),
+        value: this.resolveReviewerSummary(),
         status: this.resolveReviewerSummary() === '未设置' ? '未设置' : '已设置',
         tone: this.resolveReviewerSummary() === '未设置' ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
         dense: true,
@@ -282,7 +277,7 @@ export struct MyPage {
 
       SettingsLinkRow({
         title: '同步中心',
-        value: '查看家庭存储连接状态。',
+        value: this.resolveSyncSummary(),
         status: this.resolveSyncBadge(),
         tone: this.resolveStorageTone(),
         dense: true,
@@ -297,10 +292,6 @@ export struct MyPage {
   @Builder
   AboutSection() {
     Column({ space: AppMetrics.cardGap }) {
-      SettingsSectionHeader({
-        title: '应用'
-      })
-
       this.VersionInfoCard()
 
       if (ENABLE_RDB_DIAGNOSTICS_ENTRY) {

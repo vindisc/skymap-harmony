@@ -104,12 +104,12 @@ for (const [name, source] of [
   assert(!source.includes('.justifyContent(FlexAlign.Center)'), `${name} must not vertically center content.`);
 }
 
-assert(reviewerProfileSource.includes('当前状态'), 'ReviewerProfilePage must show current state before editing.');
-assert(reviewerProfileSource.includes('复盘人只影响应用内展示和导出的复盘数据。'), 'ReviewerProfilePage must explain setting scope.');
+assert(reviewerProfileSource.includes("title: '复盘人'"), 'ReviewerProfilePage must keep its compact settings title.');
+assert(reviewerProfileSource.includes('this.resolvePreviewName()'), 'ReviewerProfilePage must show current state before editing.');
 assert(reviewerProfileSource.includes("label: this.isSaving ? '保存中…' : '保存'"), 'ReviewerProfilePage save button must show loading state.');
 
 assert(homeStorageSource.includes('StatusSummary()'), 'HomeStoragePage must show a status summary.');
-assert(homeStorageSource.includes('连接信息'), 'HomeStoragePage must group connection fields.');
+assert(homeStorageSource.includes("'家庭存储地址或 IP'"), 'HomeStoragePage must keep connection fields.');
 assert(homeStorageSource.includes("primaryLabel: this.isSaving ? '保存中…' : '保存'"), 'HomeStoragePage save action must show loading state.');
 assert(homeStorageSource.includes("secondaryLabel: this.isTestingHomeStorage ? '检查中…' : '检查'"), 'HomeStoragePage check action must show loading state.');
 

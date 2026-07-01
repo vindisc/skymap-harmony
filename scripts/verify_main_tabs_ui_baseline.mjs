@@ -139,7 +139,6 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   'const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;',
   'this.SettingsSection()',
   'this.AboutSection()',
-  "title: '设置'",
   "title: '复盘人'",
   "title: '首页图片'",
   "title: '家庭存储'",
@@ -151,6 +150,11 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   'bottom: MY_PAGE_BOTTOM_PADDING',
   '.justifyContent(FlexAlign.Start)'
 ].forEach((marker) => requireIncludes(sources.my, marker, 'My page must show settings first with compact rows and bottom clearance'));
+[
+  "title: '设置'",
+  "title: '应用'",
+  'SettingsSectionHeader({'
+].forEach((marker) => forbidIncludes(sources.my, marker, 'My page must not reintroduce redundant section labels'));
 [
   'this.IdentityCard()',
   '@Builder\n  IdentityCard()',
