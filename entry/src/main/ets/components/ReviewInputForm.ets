@@ -5,11 +5,10 @@ import {
   normalizeReviewJudgement,
   ReviewJudgementStatus
 } from '../model/ReviewCardModel';
-import { estimateReviewTextLineCount } from '../utils/ReviewTextMetrics';
+import { estimateReviewTextLineCount, estimateReviewTextWrapUnitsPerLine } from '../utils/ReviewTextMetrics';
 
 const REVIEW_TEXTAREA_LINE_HEIGHT: number = AppTypography.inputTextLineHeight;
 const REVIEW_TEXTAREA_VERTICAL_PADDING: number = 28;
-const REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE: number = 10;
 const REVIEW_FIELD_LABEL_GAP: number = AppMetrics.space8;
 const REVIEW_FORM_FIELD_GAP: number = AppMetrics.space16;
 const PRIMARY_FIELD_LABEL_SIZE: number = AppTypography.inputLabel;
@@ -19,11 +18,11 @@ const SECONDARY_FIELD_INPUT_SIZE: number = AppTypography.inputText;
 const REVIEW_TEXTAREA_HORIZONTAL_PADDING: number = AppMetrics.space16;
 const REVIEW_TEXTAREA_VERTICAL_INSET: number = 14;
 
-function resolveReviewTextAreaHeight(value: string, defaultLines: number): number {
+function resolveReviewTextAreaHeight(value: string, defaultLines: number, wrapUnitsPerLine: number): number {
   return estimateReviewTextLineCount(
     value,
     defaultLines,
-    REVIEW_TEXTAREA_APPROX_CHARS_PER_LINE
+    wrapUnitsPerLine
   ) * REVIEW_TEXTAREA_LINE_HEIGHT + REVIEW_TEXTAREA_VERTICAL_PADDING;
 }
 
@@ -34,6 +33,7 @@ struct ReviewTextAreaField {
   @Prop placeholder: string = '';
   @Prop fieldKey: string = '';
   @Prop defaultLines: number = 2;
+  @Prop wrapUnitsPerLine: number = estimateReviewTextWrapUnitsPerLine(300, PRIMARY_FIELD_INPUT_SIZE);
   @Prop labelSize: number = PRIMARY_FIELD_LABEL_SIZE;
   @Prop inputSize: number = PRIMARY_FIELD_INPUT_SIZE;
   @Prop isFocused: boolean = false;
@@ -59,7 +59,7 @@ struct ReviewTextAreaField {
     Column({ space: REVIEW_FIELD_LABEL_GAP }) {
       this.FieldLabel(this.label, this.labelSize)
       TextArea({ text: $$this.value, placeholder: this.placeholder })
-        .height(resolveReviewTextAreaHeight(this.value, this.defaultLines))
+        .height(resolveReviewTextAreaHeight(this.value, this.defaultLines, this.wrapUnitsPerLine))
         .style(TextContentStyle.DEFAULT)
         .barState(BarState.Off)
         .enableKeyboardOnFocus(true)
@@ -112,6 +112,7 @@ export struct ReviewInputForm {
   @Link judgement: string;
   @Link extendedUnderstanding: string;
   @Link currentBlocker: string;
+  @Prop wrapUnitsPerLine: number = estimateReviewTextWrapUnitsPerLine(300, PRIMARY_FIELD_INPUT_SIZE);
   onFieldFocus: (field: string) => void = () => {};
   onFieldChange: (field: string) => void = () => {};
   onFieldBlur: () => void = () => {};
@@ -219,6 +220,7 @@ export struct ReviewInputForm {
         placeholder: '第一眼先看到哪里？',
         fieldKey: 'visualFocus',
         defaultLines: 2,
+        wrapUnitsPerLine: this.wrapUnitsPerLine,
         labelSize: PRIMARY_FIELD_LABEL_SIZE,
         inputSize: PRIMARY_FIELD_INPUT_SIZE,
         isFocused: this.focusedField === 'visualFocus',
@@ -240,6 +242,7 @@ export struct ReviewInputForm {
         placeholder: '为什么它会先被看到？',
         fieldKey: 'focusReason',
         defaultLines: 2,
+        wrapUnitsPerLine: this.wrapUnitsPerLine,
         labelSize: PRIMARY_FIELD_LABEL_SIZE,
         inputSize: PRIMARY_FIELD_INPUT_SIZE,
         isFocused: this.focusedField === 'focusReason',
@@ -261,6 +264,7 @@ export struct ReviewInputForm {
         placeholder: '视线接着从哪里走到哪里？',
         fieldKey: 'visualPath',
         defaultLines: 3,
+        wrapUnitsPerLine: this.wrapUnitsPerLine,
         labelSize: PRIMARY_FIELD_LABEL_SIZE,
         inputSize: PRIMARY_FIELD_INPUT_SIZE,
         isFocused: this.focusedField === 'visualPath',
@@ -282,6 +286,7 @@ export struct ReviewInputForm {
         placeholder: '画面里有哪些可见事实？',
         fieldKey: 'visibleFacts',
         defaultLines: 3,
+        wrapUnitsPerLine: this.wrapUnitsPerLine,
         labelSize: PRIMARY_FIELD_LABEL_SIZE,
         inputSize: PRIMARY_FIELD_INPUT_SIZE,
         isFocused: this.focusedField === 'visibleFacts',
@@ -303,6 +308,7 @@ export struct ReviewInputForm {
         placeholder: '最重要的 A ↔ B 关系是什么？',
         fieldKey: 'coreRelation',
         defaultLines: 2,
+        wrapUnitsPerLine: this.wrapUnitsPerLine,
         labelSize: PRIMARY_FIELD_LABEL_SIZE,
         inputSize: PRIMARY_FIELD_INPUT_SIZE,
         isFocused: this.focusedField === 'coreRelation',
@@ -325,6 +331,7 @@ export struct ReviewInputForm {
         placeholder: '这张照片为什么成立或不成立？',
         fieldKey: 'extendedUnderstanding',
         defaultLines: 2,
+        wrapUnitsPerLine: this.wrapUnitsPerLine,
         labelSize: SECONDARY_FIELD_LABEL_SIZE,
         inputSize: SECONDARY_FIELD_INPUT_SIZE,
         isFocused: this.focusedField === 'extendedUnderstanding',
@@ -346,6 +353,7 @@ export struct ReviewInputForm {
         placeholder: '当前最大问题是什么？',
         fieldKey: 'currentBlocker',
         defaultLines: 2,
+        wrapUnitsPerLine: this.wrapUnitsPerLine,
         labelSize: SECONDARY_FIELD_LABEL_SIZE,
         inputSize: SECONDARY_FIELD_INPUT_SIZE,
         isFocused: this.focusedField === 'currentBlocker',

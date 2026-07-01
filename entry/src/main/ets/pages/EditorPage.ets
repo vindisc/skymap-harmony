@@ -19,7 +19,7 @@ import {
 } from '../services/ReviewFlowFeedback';
 import { AppColors, AppMetrics, AppTypography, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
-import { estimateReviewTextLineCount } from '../utils/ReviewTextMetrics';
+import { estimateReviewTextLineCount, estimateReviewTextWrapUnitsPerLine } from '../utils/ReviewTextMetrics';
 import { ToastService } from '../services/ToastService';
 import { DialogService } from '../services/DialogService';
 
@@ -45,7 +45,7 @@ const EDITOR_FIELD_LABEL_GAP: number = 8;
 const EDITOR_FIELD_GAP: number = AppMetrics.cardGap;
 const EDITOR_TEXTAREA_LINE_HEIGHT: number = AppTypography.inputTextLineHeight;
 const EDITOR_TEXTAREA_VERTICAL_PADDING: number = 28;
-const EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE: number = 10;
+const EDITOR_TEXTAREA_HORIZONTAL_PADDING: number = AppMetrics.space16;
 
 interface EditorPhotoFrameSize {
   width: number;
@@ -318,9 +318,14 @@ struct EditorPage {
     const visibleLines: number = estimateReviewTextLineCount(
       value,
       this.getDefaultLines(field),
-      EDITOR_TEXTAREA_APPROX_CHARS_PER_LINE
+      this.getTextAreaWrapUnitsPerLine()
     );
     return visibleLines * EDITOR_TEXTAREA_LINE_HEIGHT + EDITOR_TEXTAREA_VERTICAL_PADDING;
+  }
+
+  private getTextAreaWrapUnitsPerLine(): number {
+    const textAreaContentWidth: number = Math.max(180, this.getContentWidth() - EDITOR_TEXTAREA_HORIZONTAL_PADDING * 2);
+    return estimateReviewTextWrapUnitsPerLine(textAreaContentWidth, AppTypography.inputText);
   }
 
   private getReviewFieldHeight(field: string, value: string): number {
@@ -427,6 +432,19 @@ struct EditorPage {
 
   private scrollFieldIntoView(field: string, intent: EditorFieldScrollIntent): void {
     const targetOffset: number = this.getFieldScrollOffset(field, intent);
+    const currentOffset: number = this.getCurrentScrollOffset();
+    if (Math.abs(targetOffset - currentOffset) < 1) {
+      return;
+    }
+
+    if (intent === EditorFieldScrollIntent.CARET) {
+      this.editorScroller.scrollTo({
+        xOffset: 0,
+        yOffset: targetOffset
+      });
+      return;
+    }
+
     this.editorScroller.scrollTo({
       xOffset: 0,
       yOffset: targetOffset,
@@ -573,6 +591,7 @@ struct EditorPage {
             judgement: $judgement,
             extendedUnderstanding: $extendedUnderstanding,
             currentBlocker: $currentBlocker,
+            wrapUnitsPerLine: this.getTextAreaWrapUnitsPerLine(),
             onFieldFocus: (field: string) => {
               this.focusField(field);
             },
