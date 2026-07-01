@@ -182,10 +182,10 @@ struct PreviewPage {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
       this.saveStateLabel = PreviewSaveState.SAVED;
       this.actionFeedbackText = REVIEW_FLOW_SAVE_SUCCESS_TEXT;
-      ToastService.show(REVIEW_FLOW_SAVE_SUCCESS_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
     } catch (error) {
       this.actionFeedbackText = REVIEW_FLOW_SAVE_FAILED_TEXT;
-      ToastService.show(REVIEW_FLOW_SAVE_FAILED_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
       this.isSaving = false;
     }
@@ -222,17 +222,17 @@ struct PreviewPage {
       if (result.savedToPhotoLibrary) {
         await this.markExportedQuietly(result.path);
         this.actionFeedbackText = REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT;
-        ToastService.show(REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT);
+        ToastService.show(this.getUIContext(), REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT);
       } else if (result.cancelled) {
         this.actionFeedbackText = '';
       } else {
         const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_EXPORT_FAILED_TEXT;
         this.actionFeedbackText = failedText;
-        ToastService.show(failedText);
+        ToastService.show(this.getUIContext(), failedText);
       }
     } catch (error) {
       this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      ToastService.show(REVIEW_FLOW_EXPORT_FAILED_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_EXPORT_FAILED_TEXT);
     } finally {
       clearTimeout(timeoutId);
       this.isExportSnapshotMode = false;
@@ -246,9 +246,9 @@ struct PreviewPage {
       const exchangeJson: string = stringifyReviewCardExchangeSchemaV1(this.document, reviewerName);
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, exchangeJson);
       await pasteboard.getSystemPasteboard().setData(data);
-      ToastService.show('已复制复盘数据');
+      ToastService.show(this.getUIContext(), '已复制复盘数据');
     } catch (error) {
-      ToastService.show('复制失败，请稍后重试');
+      ToastService.show(this.getUIContext(), '复制失败，请稍后重试');
     }
   }
 
@@ -269,7 +269,7 @@ struct PreviewPage {
       if (result.success) {
         await this.markExportedQuietly(result.path);
         this.actionFeedbackText = REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
-        ToastService.show(REVIEW_FLOW_EXPORT_SUCCESS_TEXT);
+        ToastService.show(this.getUIContext(), REVIEW_FLOW_EXPORT_SUCCESS_TEXT);
         return;
       }
 
@@ -279,10 +279,10 @@ struct PreviewPage {
       }
 
       this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      ToastService.show(REVIEW_FLOW_EXPORT_FAILED_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_EXPORT_FAILED_TEXT);
     } catch (error) {
       this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      ToastService.show(REVIEW_FLOW_EXPORT_FAILED_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_EXPORT_FAILED_TEXT);
     } finally {
       clearTimeout(timeoutId);
       this.finishExportAction(ExportState.JSON);
@@ -317,17 +317,17 @@ struct PreviewPage {
       if (result.success) {
         await this.markExportedQuietly(result.remotePath);
         this.actionFeedbackText = REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT;
-        ToastService.show(REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT);
+        ToastService.show(this.getUIContext(), REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT);
         return;
       }
       console.error(`[PreviewPage] 复盘包导出失败：${result.message}`);
       const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
       this.actionFeedbackText = failedText;
-      ToastService.show(failedText);
+      ToastService.show(this.getUIContext(), failedText);
     } catch (error) {
       console.error(`[PreviewPage] 复盘包导出异常：${error}`);
       this.actionFeedbackText = REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
-      ToastService.show(REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT);
     } finally {
       clearTimeout(timeoutId);
       this.isExportSnapshotMode = false;
@@ -355,17 +355,17 @@ struct PreviewPage {
       if (result.success) {
         await this.markExportedQuietly(result.remotePath);
         this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT;
-        ToastService.show(REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT);
+        ToastService.show(this.getUIContext(), REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT);
         return;
       }
       console.error(`[PreviewPage] 含原图复盘包导出失败：${result.message}`);
       const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
       this.actionFeedbackText = failedText;
-      ToastService.show(failedText);
+      ToastService.show(this.getUIContext(), failedText);
     } catch (error) {
       console.error(`[PreviewPage] 含原图复盘包导出异常：${error}`);
       this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
-      ToastService.show(REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT);
     } finally {
       clearTimeout(timeoutId);
       this.finishExportAction(ExportState.ORIGINAL);
@@ -385,7 +385,7 @@ struct PreviewPage {
       this.actionFeedbackText = '导出超时，请重试';
       this.isExportSnapshotMode = false;
       this.exportState = ExportState.IDLE;
-      ToastService.show('导出超时，请重试');
+      ToastService.show(this.getUIContext(), '导出超时，请重试');
     }, EXPORT_ACTION_TIMEOUT_MS);
   }
 

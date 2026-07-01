@@ -40,9 +40,9 @@ struct ReviewerProfilePage {
     this.isSaving = true;
     try {
       this.reviewerName = await ReviewSettingsService.saveReviewerName(this.getAbilityContext(), this.reviewerName);
-      ToastService.show('已保存复盘人');
+      ToastService.show(this.getUIContext(), '已保存复盘人');
     } catch (error) {
-      ToastService.show('保存失败，请稍后重试');
+      ToastService.show(this.getUIContext(), '保存失败，请稍后重试');
     } finally {
       this.isSaving = false;
     }

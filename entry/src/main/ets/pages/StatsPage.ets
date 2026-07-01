@@ -90,7 +90,7 @@ export struct StatsPage {
 
     if (!result.success) {
       if (!result.cancelled && result.message.length > 0) {
-        ToastService.show(result.message);
+        ToastService.show(this.getUIContext(), result.message);
       }
       return;
     }

@@ -235,12 +235,12 @@ export struct MyPage {
       this.rdbDiagnosticsStatus = isSuccess ? '通过' : '失败';
       this.rdbDiagnosticsSummary =
         `${isSuccess ? '通过' : '失败'} · RDB ${rdbResult.steps.length} 步 · 迁移 ${migrationResult.steps.length} 步 · 错误 ${errorCount}`;
-      ToastService.show(isSuccess ? 'RDB开发诊断通过' : 'RDB开发诊断失败，查看日志');
+      ToastService.show(this.getUIContext(), isSuccess ? 'RDB开发诊断通过' : 'RDB开发诊断失败，查看日志');
     } catch (error) {
       this.rdbDiagnosticsStatus = '失败';
       this.rdbDiagnosticsSummary = `异常：${error}`;
       console.info(`[RDB开发诊断] exception=${error}`);
-      ToastService.show('RDB开发诊断异常，查看日志');
+      ToastService.show(this.getUIContext(), 'RDB开发诊断异常，查看日志');
     } finally {
       this.isRdbDiagnosticsRunning = false;
     }

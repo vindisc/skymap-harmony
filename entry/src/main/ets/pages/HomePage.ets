@@ -173,7 +173,7 @@ export struct HomePage {
 
     if (!result.success) {
       if (!result.cancelled && result.message.length > 0) {
-        ToastService.show(result.message);
+        ToastService.show(this.getUIContext(), result.message);
       }
       return;
     }
@@ -211,9 +211,9 @@ export struct HomePage {
     try {
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, diagnosticsText);
       await pasteboard.getSystemPasteboard().setData(data);
-      ToastService.show(REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT);
     } catch (error) {
-      ToastService.show(REVIEW_FLOW_HOME_COPY_ISSUE_FAILED_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_HOME_COPY_ISSUE_FAILED_TEXT);
     }
   }
 

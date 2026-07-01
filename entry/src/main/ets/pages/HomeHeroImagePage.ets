@@ -85,7 +85,7 @@ struct HomeHeroImagePage {
       const pickResult: PickedPhotoListResult = await pickMultiplePhotos(HOME_HERO_MAX_PICK_COUNT);
       if (!pickResult.success) {
         if (!pickResult.cancelled && pickResult.message.length > 0) {
-          ToastService.show('图片保存失败，请重试');
+          ToastService.show(this.getUIContext(), '图片保存失败，请重试');
         }
         return;
       }
@@ -94,13 +94,13 @@ struct HomeHeroImagePage {
         await HomeHeroImageService.importImages(this.getAbilityContext(), pickResult.imageUris);
       await this.loadImages();
       if (importResult.failedCount > 0 && importResult.importedCount > 0) {
-        ToastService.show('部分图片无法保存，请重试');
+        ToastService.show(this.getUIContext(), '部分图片无法保存，请重试');
         return;
       }
-      ToastService.show(importResult.message);
+      ToastService.show(this.getUIContext(), importResult.message);
     } catch (error) {
       console.warn(`[HomeHeroImagePage] add failed: ${error}`);
-      ToastService.show('图片保存失败，请重试');
+      ToastService.show(this.getUIContext(), '图片保存失败，请重试');
     } finally {
       this.isAdding = false;
     }
@@ -138,14 +138,14 @@ struct HomeHeroImagePage {
     try {
       const success: boolean = await HomeHeroImageService.removeImage(this.getAbilityContext(), imageId);
       if (!success) {
-        ToastService.show('删除失败，请重试');
+        ToastService.show(this.getUIContext(), '删除失败，请重试');
         return;
       }
       await this.loadImages();
-      ToastService.show(this.images.length <= 0 ? '已恢复默认首页图片' : '首页图片已更新');
+      ToastService.show(this.getUIContext(), this.images.length <= 0 ? '已恢复默认首页图片' : '首页图片已更新');
     } catch (error) {
       console.warn(`[HomeHeroImagePage] remove failed: ${error}`);
-      ToastService.show('删除失败，请重试');
+      ToastService.show(this.getUIContext(), '删除失败，请重试');
     } finally {
       this.deletingImageId = '';
     }
@@ -183,14 +183,14 @@ struct HomeHeroImagePage {
     try {
       const success: boolean = await HomeHeroImageService.clearImages(this.getAbilityContext());
       if (!success) {
-        ToastService.show('清空失败，请重试');
+        ToastService.show(this.getUIContext(), '清空失败，请重试');
         return;
       }
       await this.loadImages();
-      ToastService.show('已恢复默认首页图片');
+      ToastService.show(this.getUIContext(), '已恢复默认首页图片');
     } catch (error) {
       console.warn(`[HomeHeroImagePage] clear failed: ${error}`);
-      ToastService.show('清空失败，请重试');
+      ToastService.show(this.getUIContext(), '清空失败，请重试');
     } finally {
       this.isClearing = false;
     }

@@ -111,7 +111,7 @@ struct SyncCenterPage {
       this.lastCheckedAt = Date.now();
       this.lastTestMessage = result.message;
       this.lastTestSucceeded = result.success;
-      ToastService.show(result.message);
+      ToastService.show(this.getUIContext(), result.message);
     } finally {
       this.isTesting = false;
     }

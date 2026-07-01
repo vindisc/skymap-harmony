@@ -177,15 +177,15 @@ struct HomeStoragePage {
         verifiedSettings.username !== this.homeStorageUsername ||
         verifiedSettings.smbDomain !== this.homeStorageDomain) {
         this.setActionFeedback('已保存，但回读不一致', 'warning');
-        ToastService.show('已保存，但回读结果与当前输入不一致');
+        ToastService.show(this.getUIContext(), '已保存，但回读结果与当前输入不一致');
         return;
       }
       this.persistedHomeStorageSettings = verifiedSettings;
       this.setActionFeedback('已保存家庭存储设置', 'success');
-      ToastService.show('已保存家庭存储设置');
+      ToastService.show(this.getUIContext(), '已保存家庭存储设置');
     } catch (error) {
       this.setActionFeedback('保存失败，请稍后重试', 'error');
-      ToastService.show('保存失败，请稍后重试');
+      ToastService.show(this.getUIContext(), '保存失败，请稍后重试');
     } finally {
       this.isSaving = false;
     }
@@ -200,7 +200,7 @@ struct HomeStoragePage {
     try {
       const result: HomeStorageOperationResult = await HomeStorageService.testConnection(this.currentHomeStorageSettings());
       this.setActionFeedback(result.message, result.success ? 'success' : 'error');
-      ToastService.show(result.message);
+      ToastService.show(this.getUIContext(), result.message);
     } finally {
       this.isTestingHomeStorage = false;
     }

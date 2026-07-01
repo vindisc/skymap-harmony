@@ -126,7 +126,7 @@ export struct ProjectDetailPage {
 
     if (!result.success) {
       if (!result.cancelled && result.message.length > 0) {
-        ToastService.show(result.message);
+        ToastService.show(this.getUIContext(), result.message);
       }
       return;
     }
@@ -208,12 +208,12 @@ export struct ProjectDetailPage {
           ? this.summary.items[0].document
           : createDefaultReviewCardDocument());
       }
-      ToastService.show(REVIEW_FLOW_DELETE_SUCCESS_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_DELETE_SUCCESS_TEXT);
       this.reloadData();
     } catch (error) {
       this.summary = ReviewProjectService.buildDefaultProjectSummary(previousItems);
       this.applyFilters();
-      ToastService.show(REVIEW_FLOW_DELETE_FAILED_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_DELETE_FAILED_TEXT);
       this.reloadData();
     } finally {
       this.deletingReviewKey = '';

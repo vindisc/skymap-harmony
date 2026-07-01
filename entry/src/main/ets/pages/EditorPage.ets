@@ -218,12 +218,12 @@ struct EditorPage {
     try {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
       this.isDirty = false;
-      ToastService.show(REVIEW_FLOW_SAVE_SUCCESS_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
       this.getUIContext().getRouter().replaceUrl({ url: PREVIEW_PAGE }).catch((error: Error) => {
         console.error(`[EditorPage] 进入预览页失败：${error.message}`);
       });
     } catch (error) {
-      ToastService.show(REVIEW_FLOW_SAVE_FAILED_TEXT);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
       this.isSaving = false;
     }
