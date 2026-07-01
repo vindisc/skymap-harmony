@@ -19,6 +19,7 @@ import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from
 import { HomeHeroImageService } from '../services/HomeHeroImageService';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { ToastService } from '../services/ToastService';
+import { DialogService } from '../services/DialogService';
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
 const APP_BUILD_TEXT: string = 'Harmony Beta V1';
@@ -195,20 +196,13 @@ export struct MyPage {
       return;
     }
 
-    AlertDialog.show({
+    DialogService.confirm(this.getUIContext(), {
       title: '运行开发诊断？',
       message: '此入口仅用于开发期验证 RDB 与迁移链路，普通使用不需要运行。',
-      autoCancel: true,
-      primaryButton: {
-        value: '取消',
-        action: () => {
-        }
-      },
-      secondaryButton: {
-        value: '运行',
-        action: () => {
-          this.runRdbDeveloperDiagnostics();
-        }
+      cancelText: '取消',
+      confirmText: '运行',
+      onConfirm: () => {
+        this.runRdbDeveloperDiagnostics();
       }
     });
   }

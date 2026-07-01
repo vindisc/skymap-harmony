@@ -21,6 +21,7 @@ import { AppColors, AppMetrics, AppTypography, PhotoWritingHero, PrimaryButton }
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { estimateReviewTextLineCount } from '../utils/ReviewTextMetrics';
 import { ToastService } from '../services/ToastService';
+import { DialogService } from '../services/DialogService';
 
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
@@ -477,22 +478,15 @@ struct EditorPage {
   }
 
   private showUnsavedDialog(): void {
-    AlertDialog.show({
+    DialogService.confirm(this.getUIContext(), {
       title: '有未保存的更改',
       message: '是否放弃当前编辑内容？',
-      autoCancel: true,
-      primaryButton: {
-        value: '继续编辑',
-        action: () => {
-        }
-      },
-      secondaryButton: {
-        value: '放弃',
-        fontColor: AppColors.danger,
-        action: () => {
-          this.shouldDiscardChanges = true;
-          this.getUIContext().getRouter().back();
-        }
+      cancelText: '继续编辑',
+      confirmText: '放弃',
+      confirmColor: AppColors.danger,
+      onConfirm: () => {
+        this.shouldDiscardChanges = true;
+        this.getUIContext().getRouter().back();
       }
     });
   }

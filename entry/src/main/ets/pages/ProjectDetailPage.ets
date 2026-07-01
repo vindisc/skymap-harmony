@@ -32,6 +32,7 @@ import {
   REVIEW_FLOW_IMPORT_PENDING_TEXT
 } from '../services/ReviewFlowFeedback';
 import { ToastService } from '../services/ToastService';
+import { DialogService } from '../services/DialogService';
 
 const DELETE_SWIPE_ACTION_WIDTH: number = 92;
 const DELETE_SWIPE_BUTTON_WIDTH: number = 68;
@@ -166,21 +167,14 @@ export struct ProjectDetailPage {
       return;
     }
 
-    AlertDialog.show({
+    DialogService.confirm(this.getUIContext(), {
       title: REVIEW_FLOW_DELETE_CONFIRM_TITLE,
       message: REVIEW_FLOW_DELETE_CONFIRM_MESSAGE,
-      autoCancel: true,
-      primaryButton: {
-        value: '取消',
-        action: () => {
-        }
-      },
-      secondaryButton: {
-        value: '删除',
-        fontColor: AppColors.danger,
-        action: () => {
-          this.deleteHistory(document);
-        }
+      cancelText: '取消',
+      confirmText: '删除',
+      confirmColor: AppColors.danger,
+      onConfirm: () => {
+        this.deleteHistory(document);
       }
     });
   }

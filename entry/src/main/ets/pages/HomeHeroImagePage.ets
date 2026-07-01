@@ -14,6 +14,7 @@ import {
   HomeHeroImportResult
 } from '../services/HomeHeroImageService';
 import { ToastService } from '../services/ToastService';
+import { DialogService } from '../services/DialogService';
 
 const HOME_HERO_MAX_PICK_COUNT: number = 9;
 const HOME_HERO_THUMBNAIL_SIZE: number = 72;
@@ -111,20 +112,14 @@ struct HomeHeroImagePage {
       return;
     }
 
-    AlertDialog.show({
+    DialogService.confirm(this.getUIContext(), {
       title: '删除这张图片？',
       message: '删除后，首页将不再展示这张图片。',
-      autoCancel: true,
-      primaryButton: {
-        value: '取消',
-        action: () => {
-        }
-      },
-      secondaryButton: {
-        value: '删除',
-        action: () => {
-          this.removeImage(image.id);
-        }
+      cancelText: '取消',
+      confirmText: '删除',
+      confirmColor: AppColors.danger,
+      onConfirm: () => {
+        this.removeImage(image.id);
       }
     });
   }
@@ -156,20 +151,14 @@ struct HomeHeroImagePage {
       return;
     }
 
-    AlertDialog.show({
+    DialogService.confirm(this.getUIContext(), {
       title: '清空首页图片？',
       message: '清空后，首页会恢复默认图片。',
-      autoCancel: true,
-      primaryButton: {
-        value: '取消',
-        action: () => {
-        }
-      },
-      secondaryButton: {
-        value: '清空',
-        action: () => {
-          this.clearImages();
-        }
+      cancelText: '取消',
+      confirmText: '清空',
+      confirmColor: AppColors.danger,
+      onConfirm: () => {
+        this.clearImages();
       }
     });
   }
