@@ -1,3 +1,5 @@
+import { ElevationTokens, RadiusTokens, ShadowToken, SpacingTokens } from '../theme/DesignTokens';
+
 export class ReviewCardStyleTokens {
   static readonly canvasColor: string = '#FFFEFC';
   static readonly canvasMutedColor: string = '#F4EFE7';
@@ -7,12 +9,15 @@ export class ReviewCardStyleTokens {
   static readonly hairlineColor: string = '#E1D9CC';
   static readonly accentColor: string = '#7C947E';
   static readonly shadowColor: string = '#12000000';
+  static readonly previewCardShadow: ShadowToken = ElevationTokens.medium;
+  static readonly mobileCardShadow: ShadowToken = ElevationTokens.high;
+  static readonly exportCardShadow: ShadowToken = ElevationTokens.high;
 
-  static readonly cardRadius: number = 12;
-  static readonly photoRadius: number = 10;
-  static readonly cardPadding: number = 16;
-  static readonly textInset: number = 4;
-  static readonly sectionGap: number = 18;
+  static readonly cardRadius: number = RadiusTokens.md;
+  static readonly photoRadius: number = RadiusTokens.sm;
+  static readonly cardPadding: number = SpacingTokens.lg;
+  static readonly textInset: number = SpacingTokens.xs;
+  static readonly sectionGap: number = SpacingTokens.xl;
 
   static readonly titleSize: number = 22;
   static readonly titleLineHeight: number = 30;
@@ -20,4 +25,10 @@ export class ReviewCardStyleTokens {
   static readonly bodyLineHeight: number = 24;
   static readonly labelSize: number = 12;
   static readonly labelLineHeight: number = 16;
+
+  static resolveRenderShadow(displayMode: string): ShadowToken {
+    return displayMode === 'export'
+      ? ReviewCardStyleTokens.exportCardShadow
+      : ReviewCardStyleTokens.previewCardShadow;
+  }
 }

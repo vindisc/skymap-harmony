@@ -502,9 +502,12 @@ export struct DangerButton {
 export struct EmptyState {
   @Prop title: string = '';
   @Prop message: string = '';
+  @Prop actionLabel: string = '';
+  @Prop isActionDisabled: boolean = false;
+  onAction: () => void = () => {};
 
   build() {
-    Column() {
+    Column({ space: AppMetrics.space16 }) {
       Text(this.title)
         .fontSize(AppTypography.cardTitle)
         .fontWeight(FontWeight.Bold)
@@ -524,6 +527,16 @@ export struct EmptyState {
           .margin({ top: AppMetrics.space10 })
           .width('100%')
       }
+
+      if (this.actionLabel.length > 0) {
+        PrimaryButton({
+          label: this.actionLabel,
+          isDisabled: this.isActionDisabled,
+          onTap: () => {
+            this.onAction();
+          }
+        })
+      }
     }
     .alignItems(HorizontalAlign.Center)
     .padding(AppMetrics.space24)
@@ -532,6 +545,33 @@ export struct EmptyState {
     .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
     .shadow(ElevationTokens.subtle)
+  }
+}
+
+@Component
+export struct SkeletonBlock {
+  @Prop blockWidth: string = '100%';
+  @Prop blockHeight: number = 16;
+  @Prop blockRadius: number = AppMetrics.buttonRadius;
+  @State pulseOpacity: number = 0.42;
+
+  aboutToAppear(): void {
+    this.pulseOpacity = 0.82;
+  }
+
+  build() {
+    Column()
+      .width(this.blockWidth)
+      .height(this.blockHeight)
+      .borderRadius(this.blockRadius)
+      .backgroundColor(AppColors.surfaceMuted)
+      .opacity(this.pulseOpacity)
+      .animation({
+        duration: MotionTokens.durationSlow,
+        curve: MotionTokens.curveStandard,
+        iterations: -1,
+        playMode: PlayMode.Alternate
+      })
   }
 }
 
@@ -946,78 +986,14 @@ export struct ProjectReviewCard {
     document: createDefaultReviewCardDocument(),
     exportedPath: ''
   };
-  @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
   build() {
-    Row({ space: AppMetrics.cardGap }) {
-      ReviewPhotoBlock({
-        imageUri: this.item.document.imageUri,
-        imageWidth: this.item.document.imageWidth,
-        imageHeight: this.item.document.imageHeight,
-        imageSizeFallbackUsed: this.item.document.imageSizeFallbackUsed,
-        aspectRatioValue: 1,
-        compact: true,
-        fitMode: ImageFit.Cover,
-        cornerRadius: 8
-      })
-        .width(AppMetrics.listThumbnailSize)
-
-      Column({ space: 6 }) {
-        Text(this.item.document.content.title.length > 0 ? this.item.document.content.title : '未命名复盘')
-          .fontSize(AppTypography.listTitle)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .lineHeight(AppTypography.listTitleLineHeight)
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .width('100%')
-
-        Text(getReviewProjectExcerpt(this.item.document))
-          .fontSize(AppTypography.listSubtitle)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.listSubtitleLineHeight)
-          .width('100%')
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-        Row({ space: AppMetrics.space8 }) {
-          Text(formatReviewTime(this.item.document.updatedAt))
-            .fontSize(AppTypography.meta)
-            .fontColor(AppColors.mutedText)
-            .lineHeight(AppTypography.metaLineHeight)
-            .layoutWeight(1)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-          ReviewJudgementBadge({ value: this.item.document.content.judgement })
-        }
-        .width('100%')
+    RecentReviewCard({
+      item: this.item,
+      onTap: () => {
+        this.onTap();
       }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-    }
-    .alignItems(VerticalAlign.Center)
-    .padding(AppMetrics.listCardPadding)
-    .width('100%')
-    .constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceElevated)
-    .border({ width: 1, color: AppColors.border })
-    .shadow(this.isPressed ? ElevationTokens.medium : ElevationTokens.subtle)
-    .scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })
-    .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
-    .onTouch((event: TouchEvent) => {
-      if (event.type === TouchType.Down) {
-        this.isPressed = true;
-        return;
-      }
-      if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
-        this.isPressed = false;
-      }
-    })
-    .onClick(() => {
-      this.onTap();
     })
   }
 }

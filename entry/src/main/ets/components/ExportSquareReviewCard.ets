@@ -77,11 +77,6 @@ export struct ExportSquareReviewCard {
     .borderRadius(this.getPreset().cardRadius)
     .backgroundColor(ReviewCardStyleTokens.canvasColor)
     .border({ width: 1, color: ReviewCardStyleTokens.hairlineColor })
-    .shadow({
-      radius: this.getPreset().shadowRadius,
-      color: ReviewCardStyleTokens.shadowColor,
-      offsetX: 0,
-      offsetY: this.getPreset().shadowOffsetY
-    })
+    .shadow(ReviewCardStyleTokens.exportCardShadow)
   }
 }

@@ -36,7 +36,8 @@ import {
   AppPageHeader,
   AppTypography,
   PrimaryButton,
-  SecondaryButton
+  SecondaryButton,
+  SkeletonBlock
 } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 
@@ -66,6 +67,7 @@ export struct HomePage {
   @State heroImages: Array<HomeHeroDisplayImage> = [];
   @State heroAutoplayEnabled: boolean = true;
   @State heroIntervalSeconds: number = 4;
+  @State isHistoryLoading: boolean = false;
 
   aboutToAppear(): void {
     this.reloadHistory();
@@ -89,17 +91,20 @@ export struct HomePage {
   private async reloadHistory(): Promise<void> {
     const requestId: number = beginHomeDashboardReload(this.dashboardReloadState);
     const context = this.getAbilityContext();
+    this.isHistoryLoading = true;
 
     try {
       const result: ReviewCardHistoryLoadResult = await ReviewCardHistoryService.loadWithDiagnostics(context);
       this.historyDiagnosticsText = ReviewCardHistoryService.formatDiagnostics(result.diagnostics);
       if (applyHomeDashboardReloadSuccess(this.dashboardReloadState, requestId, result.items)) {
         this.syncDashboardStateFromPresenter();
+        this.isHistoryLoading = false;
       }
     } catch (error) {
       this.historyDiagnosticsText = `首页历史读取异常\nerror=${error}`;
       if (applyHomeDashboardReloadFailure(this.dashboardReloadState, requestId)) {
         this.syncDashboardStateFromPresenter();
+        this.isHistoryLoading = false;
       }
       return;
     }
@@ -172,6 +177,10 @@ export struct HomePage {
 
   private shouldShowHistoryDiagnostics(): boolean {
     return this.historyLoadFailed;
+  }
+
+  private shouldShowHistorySkeleton(): boolean {
+    return this.isHistoryLoading && !this.historyLoadFailed && this.dashboardReloadState.reviewCount === 0;
   }
 
   private async copyHistoryDiagnostics(): Promise<void> {
@@ -340,6 +349,36 @@ export struct HomePage {
   }
 
   @Builder
+  HomeHistorySkeleton() {
+    Column({ space: AppMetrics.space12 }) {
+      SkeletonBlock({ blockWidth: '38%', blockHeight: 16, blockRadius: 8 })
+      Row({ space: AppMetrics.space8 }) {
+        Column() {
+          SkeletonBlock({ blockHeight: 44, blockRadius: AppMetrics.buttonRadius })
+        }
+        .layoutWeight(1)
+
+        Column() {
+          SkeletonBlock({ blockHeight: 44, blockRadius: AppMetrics.buttonRadius })
+        }
+        .layoutWeight(1)
+
+        Column() {
+          SkeletonBlock({ blockHeight: 44, blockRadius: AppMetrics.buttonRadius })
+        }
+        .layoutWeight(1)
+      }
+      .width('100%')
+    }
+    .alignItems(HorizontalAlign.Start)
+    .padding(AppMetrics.cardPadding)
+    .width('100%')
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surfaceElevated)
+    .border({ width: 1, color: AppColors.border })
+  }
+
+  @Builder
   MethodTag(label: string) {
     Text(label)
       .fontSize(13)
@@ -371,6 +410,14 @@ export struct HomePage {
 
       if (this.shouldShowHistoryDiagnostics()) {
         this.DiagnosticsPanel()
+      }
+
+      if (this.shouldShowHistorySkeleton()) {
+        Column() {
+          this.HomeHistorySkeleton()
+        }
+          .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding })
+          .width('100%')
       }
     }
     .width('100%')

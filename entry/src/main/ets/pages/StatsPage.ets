@@ -1,5 +1,8 @@
 import common from '@ohos.app.ability.common';
-import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState } from '../components/AppDesign';
+import router from '@ohos.router';
+import promptAction from '@ohos.promptAction';
+import { EDITOR_PAGE } from '../app/AppRouter';
+import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState, SkeletonBlock } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
@@ -12,6 +15,9 @@ import {
   ReviewStatsRecentReviewItem
 } from '../services/ReviewProjectService';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
+import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
+import { ReviewCardStore } from '../services/ReviewCardStore';
+import { REVIEW_FLOW_IMPORT_PENDING_TEXT } from '../services/ReviewFlowFeedback';
 
 const STATS_OVERVIEW_MIN_HEIGHT: number = 120;
 const STATS_CARD_MIN_HEIGHT: number = 104;
@@ -26,6 +32,8 @@ export struct StatsPage {
   @Prop @Watch('refreshStatsData') refreshToken: number = 0;
   @State feedback: ReviewStatsFeedback = createEmptyReviewStatsFeedback();
   @State statsLoadFailed: boolean = false;
+  @State isStatsLoading: boolean = false;
+  @State isPickingPhoto: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -46,6 +54,7 @@ export struct StatsPage {
   private async reloadStats(): Promise<void> {
     const requestId: number = this.loadRequestId + 1;
     this.loadRequestId = requestId;
+    this.isStatsLoading = true;
     try {
       const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(this.getAbilityContext());
       if (requestId !== this.loadRequestId) {
@@ -53,16 +62,47 @@ export struct StatsPage {
       }
       this.feedback = ReviewProjectService.buildStatsFeedback(items);
       this.statsLoadFailed = false;
+      this.isStatsLoading = false;
     } catch (error) {
       if (requestId !== this.loadRequestId) {
         return;
       }
       this.statsLoadFailed = true;
+      this.isStatsLoading = false;
     }
   }
 
   private hasStatsData(): boolean {
     return this.feedback.totalCount > 0;
+  }
+
+  private shouldShowStatsSkeleton(): boolean {
+    return this.isStatsLoading && !this.hasStatsData() && !this.statsLoadFailed;
+  }
+
+  private async openCreateFirstReview(): Promise<void> {
+    if (this.isPickingPhoto) {
+      return;
+    }
+
+    this.isPickingPhoto = true;
+    const result: PickedPhotoResult = await pickSinglePhoto();
+    this.isPickingPhoto = false;
+
+    if (!result.success) {
+      if (!result.cancelled && result.message.length > 0) {
+        promptAction.showToast({ message: result.message });
+      }
+      return;
+    }
+
+    ReviewCardStore.createPhotoDraft(
+      result.imageUri,
+      result.imageWidth,
+      result.imageHeight,
+      result.imageSizeFallbackUsed
+    );
+    router.pushUrl({ url: EDITOR_PAGE });
   }
 
   private resolveLatestReviewDate(): string {
@@ -451,6 +491,49 @@ export struct StatsPage {
     .shadow(ElevationTokens.subtle)
   }
 
+  @Builder
+  StatsSkeletonCard(height: number, firstLineWidth: string, secondLineWidth: string) {
+    Column({ space: AppMetrics.space12 }) {
+      SkeletonBlock({ blockWidth: firstLineWidth, blockHeight: 18, blockRadius: 9 })
+      SkeletonBlock({ blockWidth: secondLineWidth, blockHeight: 14, blockRadius: 7 })
+      Row({ space: AppMetrics.space8 }) {
+        Column() {
+          SkeletonBlock({ blockHeight: 34, blockRadius: AppMetrics.buttonRadius })
+        }
+        .layoutWeight(1)
+
+        Column() {
+          SkeletonBlock({ blockHeight: 34, blockRadius: AppMetrics.buttonRadius })
+        }
+        .layoutWeight(1)
+
+        Column() {
+          SkeletonBlock({ blockHeight: 34, blockRadius: AppMetrics.buttonRadius })
+        }
+        .layoutWeight(1)
+      }
+      .width('100%')
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+    .height(height)
+    .padding(AppMetrics.cardPadding)
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surfaceElevated)
+    .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
+  }
+
+  @Builder
+  StatsSkeleton() {
+    Column({ space: AppMetrics.cardGap }) {
+      this.StatsSkeletonCard(STATS_OVERVIEW_MIN_HEIGHT, '44%', '64%')
+      this.StatsSkeletonCard(STATS_CARD_MIN_HEIGHT, '36%', '82%')
+      this.StatsSkeletonCard(STATS_CARD_MIN_HEIGHT, '40%', '74%')
+    }
+    .width('100%')
+  }
+
   build() {
     Column() {
       Column() {
@@ -470,7 +553,9 @@ export struct StatsPage {
 
       Scroll() {
         Column({ space: AppMetrics.cardGap }) {
-          if (this.statsLoadFailed) {
+          if (this.shouldShowStatsSkeleton()) {
+            this.StatsSkeleton()
+          } else if (this.statsLoadFailed) {
             EmptyState({
               title: '统计暂时无法刷新',
               message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
@@ -479,7 +564,12 @@ export struct StatsPage {
           } else if (!this.hasStatsData()) {
             EmptyState({
               title: '还没有复盘数据',
-              message: '完成第一张照片复盘后，这里会显示你的判断变化。'
+              message: '完成第一张照片复盘后，这里会显示你的判断变化。',
+              actionLabel: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '去创建第一条复盘',
+              isActionDisabled: this.isPickingPhoto,
+              onAction: () => {
+                this.openCreateFirstReview();
+              }
             })
               .margin({ top: AppMetrics.space8 })
           } else {

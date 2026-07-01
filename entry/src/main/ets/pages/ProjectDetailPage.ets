@@ -10,7 +10,8 @@ import {
   EmptyState,
   PrimaryButton,
   ProjectReviewCard,
-  SecondaryButton
+  SecondaryButton,
+  SkeletonBlock
 } from '../components/AppDesign';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import {
@@ -50,6 +51,7 @@ export struct ProjectDetailPage {
   @State isPickingPhoto: boolean = false;
   @State deletingReviewKey: string = '';
   @State libraryLoadFailed: boolean = false;
+  @State isLibraryLoading: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -70,6 +72,7 @@ export struct ProjectDetailPage {
   private async reloadData(): Promise<void> {
     const requestId: number = this.loadRequestId + 1;
     this.loadRequestId = requestId;
+    this.isLibraryLoading = true;
     try {
       const items = await ReviewCardHistoryService.load(this.getAbilityContext());
       if (requestId !== this.loadRequestId) {
@@ -77,12 +80,14 @@ export struct ProjectDetailPage {
       }
       this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
       this.libraryLoadFailed = false;
+      this.isLibraryLoading = false;
       this.applyFilters();
     } catch (error) {
       if (requestId !== this.loadRequestId) {
         return;
       }
       this.libraryLoadFailed = true;
+      this.isLibraryLoading = false;
     }
   }
 
@@ -105,6 +110,10 @@ export struct ProjectDetailPage {
 
   private hasActiveFilters(): boolean {
     return this.searchText.length > 0 || this.decisionFilter !== 'all';
+  }
+
+  private shouldShowLibrarySkeleton(): boolean {
+    return this.isLibraryLoading && this.summary.recordCount === 0 && !this.libraryLoadFailed;
   }
 
   private async openCreateFirstReview(): Promise<void> {
@@ -331,6 +340,39 @@ export struct ProjectDetailPage {
     .width('100%')
   }
 
+  @Builder
+  ReviewListSkeleton() {
+    Column({ space: AppMetrics.cardGap }) {
+      ForEach([0, 1, 2], (index: number) => {
+        Row({ space: AppMetrics.cardGap }) {
+          Column() {
+            SkeletonBlock({
+              blockHeight: AppMetrics.listThumbnailSize,
+              blockRadius: AppMetrics.buttonRadius
+            })
+          }
+          .width(AppMetrics.listThumbnailSize)
+
+          Column({ space: AppMetrics.space10 }) {
+            SkeletonBlock({ blockWidth: '72%', blockHeight: 16, blockRadius: 8 })
+            SkeletonBlock({ blockWidth: index === 2 ? '58%' : '86%', blockHeight: 14, blockRadius: 7 })
+            SkeletonBlock({ blockWidth: '44%', blockHeight: 12, blockRadius: 6 })
+          }
+          .layoutWeight(1)
+          .alignItems(HorizontalAlign.Start)
+        }
+        .alignItems(VerticalAlign.Center)
+        .padding(AppMetrics.listCardPadding)
+        .width('100%')
+        .constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })
+        .borderRadius(AppMetrics.cardRadius)
+        .backgroundColor(AppColors.surfaceElevated)
+        .border({ width: 1, color: AppColors.border })
+      }, (index: number) => `${index}`)
+    }
+    .width('100%')
+  }
+
   build() {
     Column() {
       Column() {
@@ -371,7 +413,15 @@ export struct ProjectDetailPage {
       .width('100%')
       .alignItems(HorizontalAlign.Start)
 
-      if (this.libraryLoadFailed) {
+      if (this.shouldShowLibrarySkeleton()) {
+        Column() {
+          this.ReviewListSkeleton()
+        }
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+      } else if (this.libraryLoadFailed) {
         Column() {
           EmptyState({
             title: '复盘库暂时无法刷新',

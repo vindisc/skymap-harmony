@@ -75,11 +75,6 @@ export struct VerticalReviewCard {
     .borderRadius(ReviewCardRenderPreset.cardRadius(this.displayMode))
     .backgroundColor(ReviewCardStyleTokens.canvasColor)
     .border({ width: 1, color: ReviewCardStyleTokens.hairlineColor })
-    .shadow({
-      radius: ReviewCardRenderPreset.shadowRadius(this.displayMode),
-      color: ReviewCardStyleTokens.shadowColor,
-      offsetX: 0,
-      offsetY: ReviewCardRenderPreset.shadowOffsetY(this.displayMode)
-    })
+    .shadow(ReviewCardStyleTokens.resolveRenderShadow(this.displayMode))
   }
 }

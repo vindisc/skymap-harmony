@@ -5,6 +5,7 @@ import { StatsPage } from './StatsPage';
 import { MyPage } from './MyPage';
 import { ReviewLibraryRefreshService } from '../services/ReviewLibraryRefreshService';
 import { SettingsRefreshService } from '../services/SettingsRefreshService';
+import { MotionTokens } from '../theme/DesignTokens';
 
 enum RootTabKey {
   HOME = 'home',
@@ -26,6 +27,9 @@ const ROOT_TABS: Array<RootTabItem> = [
   { key: RootTabKey.STATS, label: '统计', activeIcon: $r('app.media.tab_stats_active'), inactiveIcon: $r('app.media.tab_stats') },
   { key: RootTabKey.MY, label: '我的', activeIcon: $r('app.media.tab_user_active'), inactiveIcon: $r('app.media.tab_user') }
 ];
+
+const TAB_PAGE_EXIT_DELAY: number = 90;
+
 @Entry
 @Component
 struct AppShellPage {
@@ -40,6 +44,7 @@ struct AppShellPage {
   @State myRefreshToken: number = 0;
   @State reviewLibraryRefreshToken: number = ReviewLibraryRefreshService.getRefreshToken();
   @State settingsRefreshToken: number = SettingsRefreshService.getRefreshToken();
+  @State tabContentVisible: boolean = true;
 
   aboutToAppear(): void {
     SettingsRefreshService.subscribe(this.settingsRefreshListener);
@@ -81,15 +86,23 @@ struct AppShellPage {
   }
 
   private selectTab(key: RootTabKey): void {
-    this.currentTab = key;
-    this.syncReviewLibraryRefreshToken();
-    this.syncSettingsRefreshToken();
-    if (key === RootTabKey.HOME) {
-      this.homeRefreshToken += 1;
+    if (this.currentTab === key) {
+      return;
     }
-    if (key === RootTabKey.MY) {
-      this.myRefreshToken += 1;
-    }
+
+    this.tabContentVisible = false;
+    setTimeout(() => {
+      this.currentTab = key;
+      this.syncReviewLibraryRefreshToken();
+      this.syncSettingsRefreshToken();
+      if (key === RootTabKey.HOME) {
+        this.homeRefreshToken += 1;
+      }
+      if (key === RootTabKey.MY) {
+        this.myRefreshToken += 1;
+      }
+      this.tabContentVisible = true;
+    }, TAB_PAGE_EXIT_DELAY);
   }
 
   private resolveTabLabelColor(key: RootTabKey): string {
@@ -152,6 +165,12 @@ struct AppShellPage {
       .layoutWeight(1)
       .width('100%')
       .backgroundColor(AppColors.pageBackground)
+      .opacity(this.tabContentVisible ? 1 : 0)
+      .translate({ y: this.tabContentVisible ? 0 : 10 })
+      .animation({
+        duration: this.tabContentVisible ? MotionTokens.durationStandard : MotionTokens.durationQuick,
+        curve: this.tabContentVisible ? MotionTokens.curveDecelerate : MotionTokens.curveAccelerate
+      })
 
       Column() {
         Divider()
