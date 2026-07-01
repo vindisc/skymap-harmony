@@ -28,7 +28,7 @@ export function estimateReviewTextWrapUnitsPerLine(contentWidth: number, fontSiz
   const safeContentWidth: number = Math.max(120, contentWidth);
   const safeFontSize: number = Math.max(12, fontSize);
   // Reserve a little breathing room for real glyph width, caret space, and platform wrapping differences.
-  return Math.max(8, (safeContentWidth / safeFontSize) * 0.8);
+  return Math.max(8, (safeContentWidth / safeFontSize) * 0.9);
 }
 
 export function estimateReviewTextLineCount(value: string, defaultLines: number, wrapUnitsPerLine: number): number {

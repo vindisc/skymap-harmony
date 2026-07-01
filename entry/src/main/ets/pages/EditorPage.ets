@@ -62,6 +62,7 @@ enum EditorFieldScrollIntent {
 struct EditorPage {
   private document: ReviewCardDocument = createDefaultReviewCardDocument();
   private editorScroller: Scroller = new Scroller();
+  private measuredFieldHeights: Map<string, number> = new Map();
   private hostWindow: window.Window | null = null;
   private keyboardHeightChangeCallback: ((height: number) => void) | null = null;
   private previousKeyboardAvoidMode: KeyboardAvoidMode = KeyboardAvoidMode.OFFSET;
@@ -97,6 +98,7 @@ struct EditorPage {
 
   aboutToAppear(): void {
     this.isPageAlive = true;
+    this.measuredFieldHeights.clear();
     this.captureStableViewportSize();
     this.disableSystemKeyboardAvoidance();
     this.registerKeyboardHeightObserver();
@@ -329,6 +331,15 @@ struct EditorPage {
   }
 
   private getReviewFieldHeight(field: string, value: string): number {
+    const measuredHeight: number | undefined = this.measuredFieldHeights.get(field);
+    if (measuredHeight !== undefined && measuredHeight > 0) {
+      return measuredHeight;
+    }
+
+    if (field === 'judgement') {
+      return EDITOR_FIELD_LABEL_HEIGHT + EDITOR_FIELD_LABEL_GAP + AppMetrics.controlHeight;
+    }
+
     return EDITOR_FIELD_LABEL_HEIGHT + EDITOR_FIELD_LABEL_GAP + this.estimateTextAreaHeight(field, value);
   }
 
@@ -463,7 +474,16 @@ struct EditorPage {
 
   private handleFieldChange(field: string): void {
     this.isDirty = true;
-    if (this.focusedField !== field || !this.isKeyboardActive()) {
+  }
+
+  private handleFieldHeightChange(field: string, height: number): void {
+    const previousHeight: number = this.measuredFieldHeights.get(field) ?? 0;
+    if (Math.abs(previousHeight - height) < 1) {
+      return;
+    }
+
+    this.measuredFieldHeights.set(field, height);
+    if (previousHeight <= 0 || this.focusedField !== field || !this.isKeyboardActive()) {
       return;
     }
 
@@ -597,6 +617,9 @@ struct EditorPage {
             },
             onFieldChange: (field: string) => {
               this.handleFieldChange(field);
+            },
+            onFieldHeightChange: (field: string, height: number) => {
+              this.handleFieldHeightChange(field, height);
             },
             onFieldBlur: () => {
               this.focusedField = '';

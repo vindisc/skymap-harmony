@@ -26,6 +26,15 @@ function resolveReviewTextAreaHeight(value: string, defaultLines: number, wrapUn
   ) * REVIEW_TEXTAREA_LINE_HEIGHT + REVIEW_TEXTAREA_VERTICAL_PADDING;
 }
 
+function resolveAreaLength(areaLength: Length): number {
+  if (typeof areaLength === 'number') {
+    return areaLength;
+  }
+
+  const parsedLength: number = Number.parseFloat(String(areaLength));
+  return Number.isFinite(parsedLength) ? parsedLength : 0;
+}
+
 @Component
 struct ReviewTextAreaField {
   @Link value: string;
@@ -40,6 +49,7 @@ struct ReviewTextAreaField {
   onFocusField: () => void = () => {};
   onBlurField: () => void = () => {};
   onFieldChange: () => void = () => {};
+  onFieldHeightChange: (field: string, height: number) => void = () => {};
 
   @Builder
   FieldLabel(label: string, labelSize: number = PRIMARY_FIELD_LABEL_SIZE) {
@@ -97,6 +107,12 @@ struct ReviewTextAreaField {
           this.onFieldChange();
         })
     }
+    .onAreaChange((oldValue: Area, newValue: Area) => {
+      const nextHeight: number = resolveAreaLength(newValue.height);
+      if (nextHeight > 0) {
+        this.onFieldHeightChange(this.fieldKey, nextHeight);
+      }
+    })
     .width('100%')
   }
 }
@@ -116,6 +132,7 @@ export struct ReviewInputForm {
   onFieldFocus: (field: string) => void = () => {};
   onFieldChange: (field: string) => void = () => {};
   onFieldBlur: () => void = () => {};
+  onFieldHeightChange: (field: string, height: number) => void = () => {};
   @State focusedField: string = '';
 
   @Builder
@@ -173,6 +190,12 @@ export struct ReviewInputForm {
           this.onFieldChange('judgement');
         })
     }
+    .onAreaChange((oldValue: Area, newValue: Area) => {
+      const nextHeight: number = resolveAreaLength(newValue.height);
+      if (nextHeight > 0) {
+        this.onFieldHeightChange('judgement', nextHeight);
+      }
+    })
     .width('100%')
   }
 
@@ -212,6 +235,12 @@ export struct ReviewInputForm {
             this.onFieldChange('title');
           })
       }
+      .onAreaChange((oldValue: Area, newValue: Area) => {
+        const nextHeight: number = resolveAreaLength(newValue.height);
+        if (nextHeight > 0) {
+          this.onFieldHeightChange('title', nextHeight);
+        }
+      })
       .width('100%')
 
       ReviewTextAreaField({
@@ -234,6 +263,9 @@ export struct ReviewInputForm {
         },
         onFieldChange: () => {
           this.onFieldChange('visualFocus');
+        },
+        onFieldHeightChange: (field: string, height: number) => {
+          this.onFieldHeightChange(field, height);
         }
       })
       ReviewTextAreaField({
@@ -256,6 +288,9 @@ export struct ReviewInputForm {
         },
         onFieldChange: () => {
           this.onFieldChange('focusReason');
+        },
+        onFieldHeightChange: (field: string, height: number) => {
+          this.onFieldHeightChange(field, height);
         }
       })
       ReviewTextAreaField({
@@ -278,6 +313,9 @@ export struct ReviewInputForm {
         },
         onFieldChange: () => {
           this.onFieldChange('visualPath');
+        },
+        onFieldHeightChange: (field: string, height: number) => {
+          this.onFieldHeightChange(field, height);
         }
       })
       ReviewTextAreaField({
@@ -300,6 +338,9 @@ export struct ReviewInputForm {
         },
         onFieldChange: () => {
           this.onFieldChange('visibleFacts');
+        },
+        onFieldHeightChange: (field: string, height: number) => {
+          this.onFieldHeightChange(field, height);
         }
       })
       ReviewTextAreaField({
@@ -322,6 +363,9 @@ export struct ReviewInputForm {
         },
         onFieldChange: () => {
           this.onFieldChange('coreRelation');
+        },
+        onFieldHeightChange: (field: string, height: number) => {
+          this.onFieldHeightChange(field, height);
         }
       })
       this.JudgementSelect()
@@ -345,6 +389,9 @@ export struct ReviewInputForm {
         },
         onFieldChange: () => {
           this.onFieldChange('extendedUnderstanding');
+        },
+        onFieldHeightChange: (field: string, height: number) => {
+          this.onFieldHeightChange(field, height);
         }
       })
       ReviewTextAreaField({
@@ -367,6 +414,9 @@ export struct ReviewInputForm {
         },
         onFieldChange: () => {
           this.onFieldChange('currentBlocker');
+        },
+        onFieldHeightChange: (field: string, height: number) => {
+          this.onFieldHeightChange(field, height);
         }
       })
     }
