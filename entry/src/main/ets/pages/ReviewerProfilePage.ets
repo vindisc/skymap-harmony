@@ -3,9 +3,9 @@ import {
   AppColors,
   AppMetrics,
   AppTypography,
-  PrimaryButton,
   SettingsPageHeader
 } from '../components/AppDesign';
+import { SettingsActionBar } from '../components/SettingsForm';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { ToastService } from '../services/ToastService';
 
@@ -48,73 +48,83 @@ struct ReviewerProfilePage {
     }
   }
 
-  build() {
-    Scroll() {
-      Column({ space: AppMetrics.sectionGap }) {
-        SettingsPageHeader({
-          title: '复盘人'
-        })
+  @Builder
+  ActionBar() {
+    SettingsActionBar({
+      primaryLabel: this.isSaving ? '保存中…' : '保存',
+      isPrimaryDisabled: this.isSaving,
+      onPrimaryTap: () => {
+        this.saveReviewerName();
+      }
+    })
+  }
 
-        Column({ space: AppMetrics.space8 }) {
-          Column({ space: 4 }) {
-            Text(this.resolvePreviewName())
-              .fontSize(AppTypography.cardTitle)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .lineHeight(AppTypography.cardTitleLineHeight)
-              .width('100%')
+  build() {
+    Stack({ alignContent: Alignment.Bottom }) {
+      Scroll() {
+        Column({ space: AppMetrics.sectionGap }) {
+          SettingsPageHeader({
+            title: '复盘人'
+          })
+
+          Column({ space: AppMetrics.space8 }) {
+            Column({ space: 4 }) {
+              Text(this.resolvePreviewName())
+                .fontSize(AppTypography.cardTitle)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.text)
+                .lineHeight(AppTypography.cardTitleLineHeight)
+                .width('100%')
+            }
+            .alignItems(HorizontalAlign.Start)
+            .padding(AppMetrics.cardPadding)
+            .width('100%')
+            .borderRadius(AppMetrics.cardRadius)
+            .backgroundColor(AppColors.surface)
+            .border({ width: 1, color: AppColors.border })
           }
-          .alignItems(HorizontalAlign.Start)
+          .width('100%')
+
+          Column({ space: AppMetrics.cardGap }) {
+            TextInput({ text: this.reviewerName, placeholder: '可留空' })
+              .height(AppMetrics.controlHeight)
+              .borderRadius(AppMetrics.buttonRadius)
+              .fontSize(AppTypography.inputText)
+              .fontColor(AppColors.text)
+              .placeholderColor(AppColors.placeholderText)
+              .backgroundColor(AppColors.surface)
+              .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
+              .border({ width: 1, color: AppColors.border })
+              .onChange((value: string) => {
+                this.reviewerName = value;
+              })
+          }
           .padding(AppMetrics.cardPadding)
           .width('100%')
           .borderRadius(AppMetrics.cardRadius)
           .backgroundColor(AppColors.surface)
           .border({ width: 1, color: AppColors.border })
         }
+        .alignItems(HorizontalAlign.Start)
         .width('100%')
-
-        Column({ space: AppMetrics.cardGap }) {
-          TextInput({ text: this.reviewerName, placeholder: '可留空' })
-            .height(AppMetrics.controlHeight)
-            .borderRadius(AppMetrics.buttonRadius)
-            .fontSize(AppTypography.inputText)
-            .fontColor(AppColors.text)
-            .placeholderColor(AppColors.placeholderText)
-            .backgroundColor(AppColors.surface)
-            .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
-            .border({ width: 1, color: AppColors.border })
-            .onChange((value: string) => {
-              this.reviewerName = value;
-            })
-        }
-        .padding(AppMetrics.cardPadding)
-        .width('100%')
-        .borderRadius(AppMetrics.cardRadius)
-        .backgroundColor(AppColors.surface)
-        .border({ width: 1, color: AppColors.border })
-
-        PrimaryButton({
-          label: this.isSaving ? '保存中…' : '保存',
-          isDisabled: this.isSaving,
-          onTap: () => {
-            this.saveReviewerName();
-          }
+        .padding({
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
+          top: AppMetrics.pageTopPadding,
+          bottom: AppMetrics.floatingDockReservedHeight + AppMetrics.floatingDockScrollClearance
         })
+        .height('100%')
+        .justifyContent(FlexAlign.Start)
       }
-      .alignItems(HorizontalAlign.Start)
       .width('100%')
-      .padding({
-        left: AppMetrics.pagePadding,
-        right: AppMetrics.pagePadding,
-        top: AppMetrics.pageTopPadding,
-        bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
-      })
       .height('100%')
-      .justifyContent(FlexAlign.Start)
+      .scrollBar(BarState.Off)
+      .backgroundColor(AppColors.pageBackground)
+
+      this.ActionBar()
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

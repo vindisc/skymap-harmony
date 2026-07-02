@@ -89,6 +89,10 @@ export class AppMetrics {
   static readonly pagePadding: number = 16;
   static readonly pageTopPadding: number = 16;
   static readonly pageBottomPadding: number = 20;
+  static readonly floatingDockPadding: number = 8;
+  static readonly floatingDockBottomPadding: number = 12;
+  static readonly floatingDockTopMaskHeight: number = 8;
+  static readonly floatingDockScrollClearance: number = 12;
   static readonly sectionGap: number = 20;
   static readonly cardGap: number = 12;
   static readonly cardPadding: number = 16;
@@ -107,6 +111,8 @@ export class AppMetrics {
   static readonly comfortableBadgePaddingHorizontal: number = 12;
   static readonly comfortableBadgePaddingVertical: number = 6;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
+  static readonly floatingDockPanelHeight: number = LayoutTokens.PrimaryButtonHeight + 16;
+  static readonly floatingDockReservedHeight: number = 80;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
   static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
   static readonly chipHeight: number = LayoutTokens.ChipHeight;
@@ -446,7 +452,7 @@ export struct SecondaryButton {
 
   build() {
       Button(this.label)
-        .height(AppMetrics.compactControlHeight)
+        .height(AppMetrics.controlHeight)
         .width('100%')
         .borderRadius(AppMetrics.buttonRadius)
         .fontSize(AppTypography.smallButtonText)

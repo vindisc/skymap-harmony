@@ -26,7 +26,6 @@ import { DialogService } from '../services/DialogService';
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
 const EDITOR_VIEWPORT_FALLBACK_HEIGHT: number = 720;
-const EDITOR_FORM_BOTTOM_PADDING: number = 34;
 const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 42;
 const EDITOR_FIELD_SAFE_TOP_GAP: number = 6;
 const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 34;
@@ -247,7 +246,7 @@ struct EditorPage {
       return this.getKeyboardInset() + EDITOR_KEYBOARD_BOTTOM_PADDING;
     }
 
-    return EDITOR_FORM_BOTTOM_PADDING;
+    return AppMetrics.floatingDockReservedHeight + AppMetrics.floatingDockScrollClearance;
   }
 
   private getDefaultLines(field: string): number {
@@ -581,17 +580,15 @@ struct EditorPage {
   @Builder
   SaveActionSection() {
     Column() {
-      if (!this.isKeyboardActive()) {
-        PrimaryButton({
-          label: this.isSaving ? REVIEW_FLOW_SAVE_PENDING_TEXT : '保存并进入阅读',
-          isDisabled: this.isSaving,
-          onTap: () => {
-            this.saveAndPreview();
-          }
-        })
-      }
+      PrimaryButton({
+        label: this.isSaving ? REVIEW_FLOW_SAVE_PENDING_TEXT : '保存并进入阅读',
+        isDisabled: this.isSaving,
+        onTap: () => {
+          this.saveAndPreview();
+        }
+      })
     }
-    .padding(AppMetrics.space12)
+    .padding(AppMetrics.floatingDockPadding)
     .width('100%')
     .borderRadius(AppMetrics.panelRadius)
     .backgroundColor(AppColors.surfaceElevated)
@@ -636,50 +633,67 @@ struct EditorPage {
   }
 
   build() {
-    Column() {
-      this.PhotoHeader()
+    Stack({ alignContent: Alignment.Bottom }) {
+      Column() {
+        this.PhotoHeader()
 
-      Scroll(this.editorScroller) {
-        Column({ space: AppMetrics.space16 }) {
-          ReviewInputForm({
-            title: $title,
-            visualFocus: $visualFocus,
-            focusReason: $focusReason,
-            visualPath: $visualPath,
-            visibleFacts: $visibleFacts,
-            coreRelation: $coreRelation,
-            judgement: $judgement,
-            extendedUnderstanding: $extendedUnderstanding,
-            currentBlocker: $currentBlocker,
-            wrapUnitsPerLine: this.getTextAreaWrapUnitsPerLine(),
-            onFieldFocus: (field: string) => {
-              this.focusField(field);
-            },
-            onFieldChange: (field: string) => {
-              this.handleFieldChange(field);
-            },
-            onFieldHeightChange: (field: string, height: number) => {
-              this.handleFieldHeightChange(field, height);
-            },
-            onFieldBlur: () => {
-              this.focusedField = '';
-            }
+        Scroll(this.editorScroller) {
+          Column({ space: AppMetrics.space16 }) {
+            ReviewInputForm({
+              title: $title,
+              visualFocus: $visualFocus,
+              focusReason: $focusReason,
+              visualPath: $visualPath,
+              visibleFacts: $visibleFacts,
+              coreRelation: $coreRelation,
+              judgement: $judgement,
+              extendedUnderstanding: $extendedUnderstanding,
+              currentBlocker: $currentBlocker,
+              wrapUnitsPerLine: this.getTextAreaWrapUnitsPerLine(),
+              onFieldFocus: (field: string) => {
+                this.focusField(field);
+              },
+              onFieldChange: (field: string) => {
+                this.handleFieldChange(field);
+              },
+              onFieldHeightChange: (field: string, height: number) => {
+                this.handleFieldHeightChange(field, height);
+              },
+              onFieldBlur: () => {
+                this.focusedField = '';
+              }
+            })
+          }
+          .padding({
+            left: AppMetrics.pagePadding,
+            right: AppMetrics.pagePadding,
+            top: 0,
+            bottom: this.getEditorBottomPadding()
           })
+          .width('100%')
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
+      }
+      .width('100%')
+      .height('100%')
 
+      if (!this.isKeyboardActive()) {
+        Column() {
           this.SaveActionSection()
         }
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: 0,
-          bottom: this.getEditorBottomPadding()
+          top: AppMetrics.floatingDockTopMaskHeight,
+          bottom: AppMetrics.floatingDockBottomPadding
         })
         .width('100%')
+        .backgroundColor(AppColors.pageBackground)
+        .hitTestBehavior(HitTestMode.Transparent)
       }
-      .layoutWeight(1)
-      .width('100%')
-      .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.Spring)
     }
     .width('100%')
     .height('100%')

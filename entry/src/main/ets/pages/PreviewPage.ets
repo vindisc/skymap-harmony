@@ -18,7 +18,6 @@ import { resolveLongFormExportCardHeight } from '../components/LongFormExportRev
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
-import { ReviewJsonExportResult, ReviewJsonExportService } from '../services/ReviewJsonExportService';
 import { ReviewBundleExportResult, ReviewBundleExportService } from '../services/ReviewBundleExportService';
 import {
   ReviewBundleOriginalPhotoExportResult,
@@ -29,7 +28,6 @@ import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
   REVIEW_FLOW_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_EXPORT_PENDING_TEXT,
-  REVIEW_FLOW_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT,
@@ -54,13 +52,10 @@ enum PreviewSaveState {
 enum ExportState {
   IDLE = 'idle',
   IMAGE = 'image',
-  JSON = 'json',
   BUNDLE = 'bundle',
   ORIGINAL = 'original'
 }
 
-const FLOATING_DOCK_TOP_MASK_HEIGHT: number = 8;
-const FLOATING_DOCK_SCROLL_CLEARANCE: number = 24;
 const EXPORT_ACTION_TIMEOUT_MS: number = 30000;
 
 @Entry
@@ -252,43 +247,6 @@ struct PreviewPage {
     }
   }
 
-  private async exportReviewJson(): Promise<void> {
-    if (this.isActionBusy()) {
-      return;
-    }
-
-    this.startExportAction(ExportState.JSON, '准备导出 review.json…');
-    let timeoutId: number = this.startExportTimeout(ExportState.JSON);
-    const context = this.getAbilityContext();
-    try {
-      this.actionFeedbackText = '写入数据文件…';
-      const result: ReviewJsonExportResult = await ReviewJsonExportService.exportReviewJson(
-        context,
-        this.document
-      );
-      if (result.success) {
-        await this.markExportedQuietly(result.path);
-        this.actionFeedbackText = REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
-        ToastService.show(this.getUIContext(), REVIEW_FLOW_EXPORT_SUCCESS_TEXT);
-        return;
-      }
-
-      if (result.cancelled) {
-        this.actionFeedbackText = '';
-        return;
-      }
-
-      this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_EXPORT_FAILED_TEXT);
-    } catch (error) {
-      this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_EXPORT_FAILED_TEXT);
-    } finally {
-      clearTimeout(timeoutId);
-      this.finishExportAction(ExportState.JSON);
-    }
-  }
-
   private async exportReviewBundleToHomeStorage(): Promise<void> {
     if (this.isActionBusy()) {
       return;
@@ -456,14 +414,14 @@ struct PreviewPage {
     const feedbackHeight: number = this.actionFeedbackText.length > 0
       ? AppTypography.captionLineHeight + AppMetrics.space8
       : 0;
-    return AppMetrics.toolbarButtonHeight + AppMetrics.space10 + AppMetrics.space10 + feedbackHeight;
+    return AppMetrics.toolbarButtonHeight + AppMetrics.floatingDockPadding * 2 + feedbackHeight;
   }
 
   private getReadingContentBottomPadding(): number {
     return this.getFloatingActionBarHeight()
-      + FLOATING_DOCK_TOP_MASK_HEIGHT
-      + AppMetrics.pageBottomPadding
-      + FLOATING_DOCK_SCROLL_CLEARANCE;
+      + AppMetrics.floatingDockTopMaskHeight
+      + AppMetrics.floatingDockBottomPadding
+      + AppMetrics.floatingDockScrollClearance;
   }
 
   @Builder
@@ -559,7 +517,12 @@ struct PreviewPage {
       .alignItems(VerticalAlign.Center)
       .width('100%')
     }
-    .padding({ left: AppMetrics.space10, right: AppMetrics.space10, top: AppMetrics.space10, bottom: AppMetrics.space10 })
+    .padding({
+      left: AppMetrics.floatingDockPadding,
+      right: AppMetrics.floatingDockPadding,
+      top: AppMetrics.floatingDockPadding,
+      bottom: AppMetrics.floatingDockPadding
+    })
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surfaceElevated)
@@ -581,15 +544,6 @@ struct PreviewPage {
     .width(this.getExportCanvasWidth())
     .height(this.getExportCanvasHeight())
     .backgroundColor(AppColors.onPrimary)
-  }
-
-  @Builder
-  ExportSheetSectionTitle(label: string) {
-    Text(label)
-      .fontSize(AppTypography.caption)
-      .fontWeight(FontWeight.Medium)
-      .fontColor(AppColors.secondaryText)
-      .width('100%')
   }
 
   @Builder
@@ -680,8 +634,8 @@ struct PreviewPage {
       .padding({
         left: AppMetrics.pagePadding,
         right: AppMetrics.pagePadding,
-        top: FLOATING_DOCK_TOP_MASK_HEIGHT,
-        bottom: AppMetrics.pageBottomPadding
+        top: AppMetrics.floatingDockTopMaskHeight,
+        bottom: AppMetrics.floatingDockBottomPadding
       })
       .width('100%')
       .backgroundColor(AppColors.pageBackground)
@@ -724,20 +678,12 @@ struct PreviewPage {
             .fontColor(AppColors.text)
             .width('100%')
 
-          this.ExportSheetSectionTitle('常用')
-
           this.ExportSheetAction(this.exportState === ExportState.BUNDLE ? '导出中…' : '导出复盘包', '包含复盘数据和导出图，用于家庭存储和 Mac 接力。', this.isActionBusy(), () => {
             this.exportReviewBundleToHomeStorage();
           })
 
-          this.ExportSheetSectionTitle('高级')
-
           this.ExportSheetAction(this.exportState === ExportState.ORIGINAL ? '导出中…' : '导出复盘包（含原图）', '包含原始照片和复盘数据，适合在 Mac 端继续处理。', this.isActionBusy(), () => {
             this.exportOriginalPhotoReviewBundleToHomeStorage();
-          })
-
-          this.ExportSheetAction(this.exportState === ExportState.JSON ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json', '只导出复盘数据文件，不包含图片。', this.isActionBusy(), () => {
-            this.exportReviewJson();
           })
 
           this.ExportSheetAction('复制复盘数据', '复制当前复盘的文本数据。', this.isActionBusy(), () => {
@@ -750,8 +696,20 @@ struct PreviewPage {
         .backgroundColor(AppColors.pageBackground)
         .border({ width: 1, color: AppColors.border })
 
-        this.ExportSheetAction('取消', '返回当前复盘。', false, () => {
-        })
+        Button('取消')
+          .height(AppMetrics.controlHeight)
+          .width('100%')
+          .borderRadius(AppMetrics.cardRadius)
+          .fontSize(AppTypography.buttonText)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .backgroundColor(AppColors.surfaceElevated)
+          .border({ width: 1, color: AppColors.border })
+          .shadow(ElevationTokens.low)
+          .stateEffect(true)
+          .onClick(() => {
+            this.closeExportMenu();
+          })
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space24 })
       .width('100%')

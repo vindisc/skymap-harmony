@@ -10,10 +10,7 @@ import { ToastService } from '../services/ToastService';
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
-const SETTINGS_FORM_BOTTOM_PADDING: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
-const SETTINGS_ACTION_BAR_HEIGHT: number = 80;
-const SETTINGS_ACTION_BAR_BOTTOM_GAP: number = 8;
 
 @Entry
 @Component
@@ -139,12 +136,11 @@ struct ReviewSettingsPage {
   }
 
   private getSettingsBottomPadding(): number {
-    const actionBarPadding: number = SETTINGS_ACTION_BAR_HEIGHT + SETTINGS_ACTION_BAR_BOTTOM_GAP;
     if (this.isKeyboardActive()) {
-      return this.keyboardHeight + SETTINGS_KEYBOARD_BOTTOM_PADDING + actionBarPadding;
+      return this.keyboardHeight + SETTINGS_KEYBOARD_BOTTOM_PADDING;
     }
 
-    return SETTINGS_FORM_BOTTOM_PADDING + actionBarPadding;
+    return AppMetrics.floatingDockReservedHeight + AppMetrics.floatingDockScrollClearance;
   }
 
   private focusInput(index: number): void {
@@ -239,7 +235,6 @@ struct ReviewSettingsPage {
         this.saveSettings();
       }
     })
-    .height(SETTINGS_ACTION_BAR_HEIGHT)
   }
 
   @Builder
@@ -298,7 +293,7 @@ struct ReviewSettingsPage {
           }
           .alignItems(HorizontalAlign.Start)
           .width('100%')
-          .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding })
+          .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() })
         }
       }
       .alignItems(HorizontalAlign.Start)
@@ -306,7 +301,9 @@ struct ReviewSettingsPage {
       .width('100%')
       .height('100%')
 
-      this.ActionBar()
+      if (!this.isKeyboardActive()) {
+        this.ActionBar()
+      }
     }
     .width('100%')
     .height('100%')

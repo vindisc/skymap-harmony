@@ -21,7 +21,6 @@ import { ToastService } from '../services/ToastService';
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
-const SETTINGS_FORM_BOTTOM_PADDING: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
 
 @Entry
@@ -215,7 +214,7 @@ struct HomeStoragePage {
       return this.keyboardHeight + SETTINGS_KEYBOARD_BOTTOM_PADDING;
     }
 
-    return SETTINGS_FORM_BOTTOM_PADDING;
+    return AppMetrics.floatingDockReservedHeight + AppMetrics.floatingDockScrollClearance;
   }
 
   private focusInput(index: number): void {
@@ -446,20 +445,37 @@ struct HomeStoragePage {
   }
 
   build() {
-    Scroll(this.settingsScroller) {
-      Column({ space: AppMetrics.cardGap }) {
-        this.Header()
+    Stack({ alignContent: Alignment.Bottom }) {
+      Scroll(this.settingsScroller) {
+        Column({ space: AppMetrics.cardGap }) {
+          this.Header()
 
-        this.StatusSummary()
+          this.StatusSummary()
 
-        this.ActionFeedback()
+          this.ActionFeedback()
 
-        if (this.isSettingsLoaded) {
-          this.ConfigurationForm()
-        } else {
-          this.LoadingSettings()
+          if (this.isSettingsLoaded) {
+            this.ConfigurationForm()
+          } else {
+            this.LoadingSettings()
+          }
         }
+        .alignItems(HorizontalAlign.Start)
+        .width('100%')
+        .padding({
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
+          top: AppMetrics.pageTopPadding,
+          bottom: this.getSettingsBottomPadding()
+        })
+        .justifyContent(FlexAlign.Start)
+      }
+      .width('100%')
+      .height('100%')
+      .scrollBar(BarState.Off)
+      .backgroundColor(AppColors.pageBackground)
 
+      if (!this.isKeyboardActive()) {
         SettingsActionBar({
           primaryLabel: this.isSaving ? '保存中…' : '保存',
           secondaryLabel: this.isTestingHomeStorage ? '检查中…' : '检查',
@@ -473,19 +489,9 @@ struct HomeStoragePage {
           }
         })
       }
-      .alignItems(HorizontalAlign.Start)
-      .width('100%')
-      .padding({
-        left: AppMetrics.pagePadding,
-        right: AppMetrics.pagePadding,
-        top: AppMetrics.pageTopPadding,
-        bottom: this.getSettingsBottomPadding() + AppMetrics.pageBottomPadding
-      })
-      .justifyContent(FlexAlign.Start)
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

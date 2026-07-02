@@ -4,12 +4,11 @@ import {
   AppColors,
   AppMetrics,
   AppTypography,
-  PrimaryButton,
-  SecondaryButton,
   SettingsEntryTone,
   SettingsLinkRow,
   SettingsPageHeader
 } from '../components/AppDesign';
+import { SettingsActionBar } from '../components/SettingsForm';
 import {
   HomeStorageConfigStatus,
   HomeStorageOperationResult,
@@ -136,88 +135,90 @@ struct SyncCenterPage {
     .width('100%')
   }
 
-  build() {
-    Scroll() {
-      Column({ space: AppMetrics.sectionGap }) {
-        SettingsPageHeader({
-          title: '同步中心'
-        })
-
-        Column({ space: AppMetrics.space8 }) {
-          SettingsLinkRow({
-            title: this.resolveAvailabilityText(),
-            value: `${this.resolveHomeStorageAddress()} · ${this.resolveShareName()} · ${this.resolveRemoteDirectory()}`,
-            status: this.resolveStatusText(),
-            tone: this.resolveStatusTone(),
-            showChevron: false,
-            onTap: () => {
-            }
-          })
-        }
-        .width('100%')
-
-        Column({ space: AppMetrics.cardGap }) {
-          this.InfoRow('状态', this.resolveAvailabilityText())
-          this.InfoRow('连接地址', this.resolveHomeStorageAddress())
-          this.InfoRow('共享目录', this.resolveShareName())
-          this.InfoRow('保存位置', this.resolveRemoteDirectory())
-
-          if (this.lastCheckedAt > 0) {
-            this.InfoRow('最近测试', formatReviewTime(this.lastCheckedAt))
-          }
-
-          if (this.lastTestMessage.length > 0) {
-            Text(this.lastTestMessage)
-              .fontSize(AppTypography.caption)
-              .fontColor(this.lastTestSucceeded ? AppColors.tagGreenText : AppColors.danger)
-              .lineHeight(AppTypography.captionLineHeight)
-              .width('100%')
-              .padding({ left: 12, right: 12, top: 8, bottom: 8 })
-              .borderRadius(12)
-              .backgroundColor(this.lastTestSucceeded ? AppColors.tagGreen : AppColors.surfaceTint)
-              .border({ width: 1, color: this.lastTestSucceeded ? AppColors.border : AppColors.danger })
-          }
-        }
-        .padding(AppMetrics.cardPadding)
-        .width('100%')
-        .borderRadius(AppMetrics.cardRadius)
-        .backgroundColor(AppColors.surface)
-        .border({ width: 1, color: AppColors.border })
-
-        Row({ space: AppMetrics.cardGap }) {
-          SecondaryButton({
-            label: this.isTesting ? '检查中…' : '检查家庭存储',
-            isDisabled: this.isTesting,
-            onTap: () => {
-              this.testConnection();
-            }
-          })
-          .layoutWeight(1)
-
-          PrimaryButton({
-            label: this.resolveStatus() === HomeStorageConfigStatus.COMPLETE ? '修改配置' : '配置',
-            onTap: () => {
-              this.openSettings();
-            }
-          })
-          .layoutWeight(1)
-        }
-        .width('100%')
+  @Builder
+  ActionBar() {
+    SettingsActionBar({
+      primaryLabel: this.resolveStatus() === HomeStorageConfigStatus.COMPLETE ? '修改配置' : '配置',
+      secondaryLabel: this.isTesting ? '检查中…' : '检查家庭存储',
+      isSecondaryDisabled: this.isTesting,
+      onPrimaryTap: () => {
+        this.openSettings();
+      },
+      onSecondaryTap: () => {
+        this.testConnection();
       }
-      .padding({
-        left: AppMetrics.pagePadding,
-        right: AppMetrics.pagePadding,
-        top: AppMetrics.pageTopPadding,
-        bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
-      })
+    })
+  }
+
+  build() {
+    Stack({ alignContent: Alignment.Bottom }) {
+      Scroll() {
+        Column({ space: AppMetrics.sectionGap }) {
+          SettingsPageHeader({
+            title: '同步中心'
+          })
+
+          Column({ space: AppMetrics.space8 }) {
+            SettingsLinkRow({
+              title: this.resolveAvailabilityText(),
+              value: `${this.resolveHomeStorageAddress()} · ${this.resolveShareName()} · ${this.resolveRemoteDirectory()}`,
+              status: this.resolveStatusText(),
+              tone: this.resolveStatusTone(),
+              showChevron: false,
+              onTap: () => {
+              }
+            })
+          }
+          .width('100%')
+
+          Column({ space: AppMetrics.cardGap }) {
+            this.InfoRow('状态', this.resolveAvailabilityText())
+            this.InfoRow('连接地址', this.resolveHomeStorageAddress())
+            this.InfoRow('共享目录', this.resolveShareName())
+            this.InfoRow('保存位置', this.resolveRemoteDirectory())
+
+            if (this.lastCheckedAt > 0) {
+              this.InfoRow('最近测试', formatReviewTime(this.lastCheckedAt))
+            }
+
+            if (this.lastTestMessage.length > 0) {
+              Text(this.lastTestMessage)
+                .fontSize(AppTypography.caption)
+                .fontColor(this.lastTestSucceeded ? AppColors.tagGreenText : AppColors.danger)
+                .lineHeight(AppTypography.captionLineHeight)
+                .width('100%')
+                .padding({ left: 12, right: 12, top: 8, bottom: 8 })
+                .borderRadius(12)
+                .backgroundColor(this.lastTestSucceeded ? AppColors.tagGreen : AppColors.surfaceTint)
+                .border({ width: 1, color: this.lastTestSucceeded ? AppColors.border : AppColors.danger })
+            }
+          }
+          .padding(AppMetrics.cardPadding)
+          .width('100%')
+          .borderRadius(AppMetrics.cardRadius)
+          .backgroundColor(AppColors.surface)
+          .border({ width: 1, color: AppColors.border })
+        }
+        .padding({
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
+          top: AppMetrics.pageTopPadding,
+          bottom: AppMetrics.floatingDockReservedHeight + AppMetrics.floatingDockScrollClearance
+        })
+        .width('100%')
+        .height('100%')
+        .alignItems(HorizontalAlign.Start)
+        .justifyContent(FlexAlign.Start)
+      }
       .width('100%')
       .height('100%')
-      .alignItems(HorizontalAlign.Start)
-      .justifyContent(FlexAlign.Start)
+      .scrollBar(BarState.Off)
+      .backgroundColor(AppColors.pageBackground)
+
+      this.ActionBar()
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }

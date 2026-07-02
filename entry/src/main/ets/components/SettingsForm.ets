@@ -128,9 +128,20 @@ export struct SettingsActionBar {
       }
       .alignItems(VerticalAlign.Center)
       .width('100%')
+      .padding(AppMetrics.floatingDockPadding)
+      .borderRadius(AppMetrics.cardRadius)
+      .backgroundColor(AppColors.surfaceElevated)
+      .border({ width: 1, color: AppColors.border })
+      .shadow(ElevationTokens.high)
     }
-    .padding({ left: 0, right: 0, top: AppMetrics.cardGap, bottom: AppMetrics.cardGap })
+    .padding({
+      left: AppMetrics.pagePadding,
+      right: AppMetrics.pagePadding,
+      top: AppMetrics.floatingDockTopMaskHeight,
+      bottom: AppMetrics.floatingDockBottomPadding
+    })
     .width('100%')
     .backgroundColor(AppColors.pageBackground)
+    .hitTestBehavior(HitTestMode.Transparent)
   }
 }
