@@ -2,6 +2,7 @@ import common from '@ohos.app.ability.common';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import {
+  AppBottomSafeAreaFill,
   AppColors,
   AppMetrics,
   AppTypography,
@@ -446,6 +447,8 @@ struct HomeStoragePage {
 
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
+      AppBottomSafeAreaFill()
+
       Scroll(this.settingsScroller) {
         Column({ space: AppMetrics.cardGap }) {
           this.Header()

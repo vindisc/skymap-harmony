@@ -17,7 +17,14 @@ import {
   REVIEW_FLOW_SAVE_PENDING_TEXT,
   REVIEW_FLOW_SAVE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
-import { AppColors, AppMetrics, AppTypography, PhotoWritingHero, PrimaryButton } from '../components/AppDesign';
+import {
+  AppBottomSafeAreaFill,
+  AppColors,
+  AppMetrics,
+  AppTypography,
+  PhotoWritingHero,
+  PrimaryButton
+} from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { estimateReviewTextLineCount, estimateReviewTextWrapUnitsPerLine } from '../utils/ReviewTextMetrics';
 import { ToastService } from '../services/ToastService';
@@ -629,6 +636,8 @@ struct EditorPage {
 
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
+      AppBottomSafeAreaFill()
+
       Column() {
         this.PhotoHeader()
 

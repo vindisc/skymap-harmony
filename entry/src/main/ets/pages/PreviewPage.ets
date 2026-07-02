@@ -37,7 +37,7 @@ import {
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
-import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
+import { AppBottomSafeAreaFill, AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
@@ -584,6 +584,8 @@ struct PreviewPage {
   @Builder
   ReadingPage() {
     Stack({ alignContent: Alignment.Bottom }) {
+      AppBottomSafeAreaFill()
+
       Column() {
         Column({ space: AppMetrics.space8 }) {
           Column() {

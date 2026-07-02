@@ -184,6 +184,18 @@ export class AppTypography {
 }
 
 @Component
+export struct AppBottomSafeAreaFill {
+  build() {
+    Column()
+      .width('100%')
+      .height(1)
+      .backgroundColor(AppColors.pageBackground)
+      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
+      .hitTestBehavior(HitTestMode.None)
+  }
+}
+
+@Component
 export struct AppPageHeader {
   @Prop title: string = '';
   @Prop subtitle: string = '';

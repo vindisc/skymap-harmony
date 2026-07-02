@@ -2,7 +2,7 @@ import common from '@ohos.app.ability.common';
 import window from '@ohos.window';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { HOME_STORAGE_PAGE } from '../app/AppRouter';
-import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
+import { AppBottomSafeAreaFill, AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { ToastService } from '../services/ToastService';
@@ -276,6 +276,8 @@ struct ReviewSettingsPage {
 
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
+      AppBottomSafeAreaFill()
+
       Column() {
         this.Header()
 

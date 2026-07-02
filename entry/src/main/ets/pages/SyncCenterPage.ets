@@ -1,6 +1,7 @@
 import common from '@ohos.app.ability.common';
 import { HOME_STORAGE_PAGE } from '../app/AppRouter';
 import {
+  AppBottomSafeAreaFill,
   AppColors,
   AppMetrics,
   AppTypography,
@@ -152,6 +153,8 @@ struct SyncCenterPage {
 
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
+      AppBottomSafeAreaFill()
+
       Scroll() {
         Column({ space: AppMetrics.sectionGap }) {
           SettingsPageHeader({

@@ -1,5 +1,6 @@
 import common from '@ohos.app.ability.common';
 import {
+  AppBottomSafeAreaFill,
   AppColors,
   AppMetrics,
   AppTypography,
@@ -61,6 +62,8 @@ struct ReviewerProfilePage {
 
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
+      AppBottomSafeAreaFill()
+
       Scroll() {
         Column({ space: AppMetrics.sectionGap }) {
           SettingsPageHeader({

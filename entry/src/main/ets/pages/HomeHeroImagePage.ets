@@ -1,5 +1,6 @@
 import common from '@ohos.app.ability.common';
 import {
+  AppBottomSafeAreaFill,
   AppColors,
   AppMetrics,
   AppTypography,
@@ -424,28 +425,35 @@ struct HomeHeroImagePage {
   }
 
   build() {
-    Scroll() {
-      Column({ space: AppMetrics.sectionGap }) {
-        SettingsPageHeader({
-          title: '首页图片'
-        })
+    Stack({ alignContent: Alignment.Bottom }) {
+      AppBottomSafeAreaFill()
 
-        this.ImageList()
+      Scroll() {
+        Column({ space: AppMetrics.sectionGap }) {
+          SettingsPageHeader({
+            title: '首页图片'
+          })
+
+          this.ImageList()
+        }
+        .alignItems(HorizontalAlign.Start)
+        .width('100%')
+        .padding({
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
+          top: AppMetrics.pageTopPadding,
+          bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
+        })
+        .height('100%')
+        .justifyContent(FlexAlign.Start)
       }
-      .alignItems(HorizontalAlign.Start)
       .width('100%')
-      .padding({
-        left: AppMetrics.pagePadding,
-        right: AppMetrics.pagePadding,
-        top: AppMetrics.pageTopPadding,
-        bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
-      })
       .height('100%')
-      .justifyContent(FlexAlign.Start)
+      .scrollBar(BarState.Off)
+      .backgroundColor(AppColors.pageBackground)
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
     .backgroundColor(AppColors.pageBackground)
   }
 }
