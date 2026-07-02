@@ -37,12 +37,30 @@ assertIncludes(editorPageSource, 'this.scrollFieldIntoView(field, EditorFieldScr
 assertIncludes(editorPageSource, 'onFieldChange: (field: string) => {', 'EditorPage must respond when a text field grows.');
 assertIncludes(editorPageSource, 'private measuredFieldHeights: Map<string, number> = new Map();',
   'EditorPage must track measured field heights instead of relying only on estimates.');
+assertIncludes(editorPageSource, 'private measuredFieldLineCounts: Map<string, number> = new Map();',
+  'EditorPage must track per-field line counts so caret scrolling is tied to real multiline growth.');
 assertIncludes(editorPageSource, 'private handleFieldHeightChange(field: string, height: number): void {',
   'EditorPage must react when a field actually changes height.');
 assertIncludes(editorPageSource, 'this.measuredFieldHeights.set(field, height);',
   'EditorPage must persist measured field heights for scroll math.');
+assertIncludes(editorPageSource, 'this.measuredFieldLineCounts.set(field, nextLineCount);',
+  'EditorPage must update tracked line counts when a field height changes.');
 assertIncludes(editorPageSource, 'previousHeight <= 0 || this.focusedField !== field || !this.isKeyboardActive()',
   'EditorPage must ignore initial measurements and only follow the focused field while typing.');
+assertIncludes(editorPageSource, 'private getTitleFieldHeight(): number {',
+  'EditorPage must expose a title-height helper so measured title geometry can be consumed.');
+assertIncludes(editorPageSource, 'let offset: number = this.getTitleFieldHeight() + EDITOR_FIELD_GAP;',
+  'EditorPage must use the measured title height when calculating downstream field offsets.');
+assertIncludes(editorPageSource, 'return this.getTitleFieldHeight();',
+  'EditorPage must use measured title height when computing the focused title geometry.');
+assertIncludes(editorPageSource, 'private shouldTrackCaretGrowth(field: string): boolean {',
+  'EditorPage must separate multiline textarea growth from title/select height changes.');
+assertIncludes(editorPageSource, 'const grewByLine: boolean = nextLineCount > previousLineCount;',
+  'EditorPage should prefer multiline growth as the caret-scroll trigger.');
+assertIncludes(editorPageSource, 'const grewByHeight: boolean = height - previousHeight > Math.max(4, Math.floor(EDITOR_TEXTAREA_LINE_HEIGHT * 0.45));',
+  'EditorPage should ignore tiny focus-style height pulses.');
+assertIncludes(editorPageSource, 'if (!grewByLine && !grewByHeight) {',
+  'EditorPage must skip caret scrolling when the field did not materially grow.');
 assertIncludes(editorPageSource, 'this.scheduleFieldIntoView(field, EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY, EditorFieldScrollIntent.CARET);',
   'EditorPage must keep the caret area visible when multiline fields actually grow.');
 assertIncludes(editorPageSource, 'estimateReviewTextLineCount(', 'EditorPage scroll math must use the shared review text metric.');

@@ -63,6 +63,7 @@ struct EditorPage {
   private document: ReviewCardDocument = createDefaultReviewCardDocument();
   private editorScroller: Scroller = new Scroller();
   private measuredFieldHeights: Map<string, number> = new Map();
+  private measuredFieldLineCounts: Map<string, number> = new Map();
   private hostWindow: window.Window | null = null;
   private keyboardHeightChangeCallback: ((height: number) => void) | null = null;
   private previousKeyboardAvoidMode: KeyboardAvoidMode = KeyboardAvoidMode.OFFSET;
@@ -99,6 +100,7 @@ struct EditorPage {
   aboutToAppear(): void {
     this.isPageAlive = true;
     this.measuredFieldHeights.clear();
+    this.measuredFieldLineCounts.clear();
     this.captureStableViewportSize();
     this.disableSystemKeyboardAvoidance();
     this.registerKeyboardHeightObserver();
@@ -343,6 +345,31 @@ struct EditorPage {
     return EDITOR_FIELD_LABEL_HEIGHT + EDITOR_FIELD_LABEL_GAP + this.estimateTextAreaHeight(field, value);
   }
 
+  private getTitleFieldHeight(): number {
+    const measuredHeight: number | undefined = this.measuredFieldHeights.get('title');
+    if (measuredHeight !== undefined && measuredHeight > 0) {
+      return measuredHeight;
+    }
+
+    return EDITOR_TITLE_FIELD_HEIGHT;
+  }
+
+  private shouldTrackCaretGrowth(field: string): boolean {
+    return field !== 'title' && field !== 'judgement';
+  }
+
+  private getFieldVisibleLineCount(field: string): number {
+    if (!this.shouldTrackCaretGrowth(field)) {
+      return 1;
+    }
+
+    return estimateReviewTextLineCount(
+      this.getFieldValue(field),
+      this.getDefaultLines(field),
+      this.getTextAreaWrapUnitsPerLine()
+    );
+  }
+
   private getFieldValue(field: string): string {
     switch (field) {
       case 'visualFocus':
@@ -381,7 +408,7 @@ struct EditorPage {
       'extendedUnderstanding',
       'currentBlocker'
     ];
-    let offset: number = EDITOR_TITLE_FIELD_HEIGHT + EDITOR_FIELD_GAP;
+    let offset: number = this.getTitleFieldHeight() + EDITOR_FIELD_GAP;
 
     for (let index = 0; index < fieldOrder.length; index += 1) {
       const fieldKey: string = fieldOrder[index];
@@ -396,7 +423,7 @@ struct EditorPage {
 
   private getFocusedFieldHeight(field: string): number {
     if (field === 'title') {
-      return EDITOR_TITLE_FIELD_HEIGHT;
+      return this.getTitleFieldHeight();
     }
 
     return this.getReviewFieldHeight(field, this.getFieldValue(field));
@@ -478,12 +505,25 @@ struct EditorPage {
 
   private handleFieldHeightChange(field: string, height: number): void {
     const previousHeight: number = this.measuredFieldHeights.get(field) ?? 0;
+    const previousLineCount: number = this.measuredFieldLineCounts.get(field) ?? this.getFieldVisibleLineCount(field);
+    const nextLineCount: number = this.getFieldVisibleLineCount(field);
     if (Math.abs(previousHeight - height) < 1) {
       return;
     }
 
     this.measuredFieldHeights.set(field, height);
+    this.measuredFieldLineCounts.set(field, nextLineCount);
     if (previousHeight <= 0 || this.focusedField !== field || !this.isKeyboardActive()) {
+      return;
+    }
+
+    if (!this.shouldTrackCaretGrowth(field)) {
+      return;
+    }
+
+    const grewByLine: boolean = nextLineCount > previousLineCount;
+    const grewByHeight: boolean = height - previousHeight > Math.max(4, Math.floor(EDITOR_TEXTAREA_LINE_HEIGHT * 0.45));
+    if (!grewByLine && !grewByHeight) {
       return;
     }
 
