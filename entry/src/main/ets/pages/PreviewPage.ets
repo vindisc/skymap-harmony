@@ -524,10 +524,6 @@ struct PreviewPage {
       bottom: AppMetrics.floatingDockPadding
     })
     .width('100%')
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceElevated)
-    .border({ width: 1, color: AppColors.border })
-    .shadow(ElevationTokens.high)
   }
 
   @Builder
@@ -638,7 +634,6 @@ struct PreviewPage {
         bottom: AppMetrics.floatingDockBottomPadding
       })
       .width('100%')
-      .backgroundColor(AppColors.pageBackground)
       .hitTestBehavior(HitTestMode.Transparent)
     }
     .width('100%')

@@ -20,7 +20,7 @@ import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
   static readonly pageBackground: string = '#F7F5F0';
-  static readonly tabBarBackground: string = '#F8F6F1';
+  static readonly tabBarBackground: string = '#F7F5F0';
   static readonly surface: string = '#FFFEFC';
   static readonly surfaceElevated: string = '#FFFFFF';
   static readonly surfaceMuted: string = '#F3EFE7';
@@ -90,9 +90,9 @@ export class AppMetrics {
   static readonly pageTopPadding: number = 16;
   static readonly pageBottomPadding: number = 20;
   static readonly floatingDockPadding: number = 8;
-  static readonly floatingDockBottomPadding: number = 12;
-  static readonly floatingDockTopMaskHeight: number = 8;
-  static readonly floatingDockScrollClearance: number = 12;
+  static readonly floatingDockBottomPadding: number = 6;
+  static readonly floatingDockTopMaskHeight: number = 6;
+  static readonly floatingDockScrollClearance: number = 10;
   static readonly sectionGap: number = 20;
   static readonly cardGap: number = 12;
   static readonly cardPadding: number = 16;
@@ -112,7 +112,7 @@ export class AppMetrics {
   static readonly comfortableBadgePaddingVertical: number = 6;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
   static readonly floatingDockPanelHeight: number = LayoutTokens.PrimaryButtonHeight + 16;
-  static readonly floatingDockReservedHeight: number = 80;
+  static readonly floatingDockReservedHeight: number = 72;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
   static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
   static readonly chipHeight: number = LayoutTokens.ChipHeight;

@@ -588,12 +588,7 @@ struct EditorPage {
         }
       })
     }
-    .padding(AppMetrics.floatingDockPadding)
     .width('100%')
-    .borderRadius(AppMetrics.panelRadius)
-    .backgroundColor(AppColors.surfaceElevated)
-    .border({ width: 1, color: AppColors.border })
-    .shadow(ElevationTokens.subtle)
   }
 
   @Builder
@@ -691,7 +686,6 @@ struct EditorPage {
           bottom: AppMetrics.floatingDockBottomPadding
         })
         .width('100%')
-        .backgroundColor(AppColors.pageBackground)
         .hitTestBehavior(HitTestMode.Transparent)
       }
     }
