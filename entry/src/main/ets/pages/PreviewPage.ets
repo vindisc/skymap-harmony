@@ -37,7 +37,7 @@ import {
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
-import { AppBottomSafeAreaFill, AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
@@ -584,8 +584,6 @@ struct PreviewPage {
   @Builder
   ReadingPage() {
     Stack({ alignContent: Alignment.Bottom }) {
-      AppBottomSafeAreaFill()
-
       Column() {
         Column({ space: AppMetrics.space8 }) {
           Column() {
@@ -636,11 +634,14 @@ struct PreviewPage {
         bottom: AppMetrics.floatingDockBottomPadding
       })
       .width('100%')
+      .backgroundColor(AppColors.pageBackground)
+      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
       .hitTestBehavior(HitTestMode.Transparent)
     }
     .width('100%')
     .height('100%')
     .backgroundColor(AppColors.pageBackground)
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
     .zIndex(1)
   }
 
@@ -699,11 +700,16 @@ struct PreviewPage {
           .borderRadius(AppMetrics.cardRadius)
           .fontSize(AppTypography.buttonText)
           .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .backgroundColor(AppColors.surfaceElevated)
-          .border({ width: 1, color: AppColors.border })
-          .shadow(ElevationTokens.low)
+          .fontColor(this.isPressed('cancel-export') ? AppColors.onPrimary : AppColors.primary)
+          .backgroundColor(this.isPressed('cancel-export') ? AppColors.primary : AppColors.primarySoft)
+          .border({ width: 1, color: AppColors.primary })
+          .shadow(this.isPressed('cancel-export') ? ElevationTokens.subtle : ElevationTokens.low)
+          .scale({ x: this.isPressed('cancel-export') ? MotionTokens.scalePressed : 1, y: this.isPressed('cancel-export') ? MotionTokens.scalePressed : 1 })
+          .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
           .stateEffect(true)
+          .onTouch((event: TouchEvent) => {
+            this.updatePressedAction(event, 'cancel-export', false);
+          })
           .onClick(() => {
             this.closeExportMenu();
           })
@@ -713,6 +719,7 @@ struct PreviewPage {
     }
     .width('100%')
     .height('100%')
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
     .zIndex(10)
   }
 
@@ -731,5 +738,6 @@ struct PreviewPage {
     .width('100%')
     .height('100%')
     .backgroundColor(AppColors.pageBackground)
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
   }
 }
