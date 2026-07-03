@@ -75,6 +75,7 @@ export interface ReviewLibraryStats {
   works: number;
   notWorks: number;
   uncertain: number;
+  pendingCount: number;
 }
 
 function normalizeText(value: string | undefined): string {
@@ -187,7 +188,8 @@ export class ReviewCardRdbMapper {
       total: 0,
       works: 0,
       notWorks: 0,
-      uncertain: 0
+      uncertain: 0,
+      pendingCount: 0
     };
   }
 

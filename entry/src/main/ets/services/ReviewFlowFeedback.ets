@@ -2,6 +2,8 @@ export const ENABLE_RDB_DIAGNOSTICS_ENTRY: boolean = false;
 
 export const REVIEW_FLOW_IMPORT_PENDING_TEXT: string = '正在打开照片…';
 export const REVIEW_FLOW_IMPORT_FAILED_TEXT: string = '照片导入失败，请重新选择';
+export const REVIEW_FLOW_PENDING_IMPORT_SUCCESS_TEXT: string = '已加入待复盘';
+export const REVIEW_FLOW_PENDING_IMPORT_FAILED_TEXT: string = '加入待复盘失败，请重新选择';
 
 export const REVIEW_FLOW_SAVE_PENDING_TEXT: string = '保存中…';
 export const REVIEW_FLOW_SAVE_SUCCESS_TEXT: string = '复盘已保存';
@@ -27,6 +29,8 @@ export const REVIEW_FLOW_BUNDLE_EXPORT_DIRECTORY_FAILED_TEXT: string = '家庭�
 export const REVIEW_FLOW_DELETE_PENDING_TEXT: string = '删除中…';
 export const REVIEW_FLOW_DELETE_SUCCESS_TEXT: string = '复盘已删除';
 export const REVIEW_FLOW_DELETE_FAILED_TEXT: string = '删除失败，请重试';
+export const REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT: string = '待复盘照片已删除';
+export const REVIEW_FLOW_PENDING_DELETE_FAILED_TEXT: string = '删除失败，请重试';
 export const REVIEW_FLOW_DELETE_CONFIRM_TITLE: string = '删除这条复盘？';
 export const REVIEW_FLOW_DELETE_CONFIRM_MESSAGE: string =
   '只会删除复盘记录和应用内备份，不会删除原始照片或你已经导出的图片。';

@@ -7,6 +7,7 @@ import { getSampleImage, SampleImageKind } from '../utils/ImageLayoutUtils';
 
 export class ReviewCardStore {
   private static currentDocument: ReviewCardDocument = createDefaultReviewCardDocument();
+  private static currentPendingPhotoId: string = '';
 
   static createDraft(kind: SampleImageKind): ReviewCardDocument {
     const sample = getSampleImage(kind);
@@ -26,7 +27,25 @@ export class ReviewCardStore {
     draft.imageSizeFallbackUsed = imageSizeFallbackUsed;
     draft.updatedAt = Date.now();
     ReviewCardStore.currentDocument = draft;
+    ReviewCardStore.currentPendingPhotoId = '';
     return cloneReviewCardDocument(draft);
+  }
+
+  static createPendingPhotoDraft(
+    pendingPhotoId: string,
+    imageUri: string,
+    imageWidth: number,
+    imageHeight: number,
+    imageSizeFallbackUsed: boolean = false
+  ): ReviewCardDocument {
+    const draft: ReviewCardDocument = ReviewCardStore.createPhotoDraft(
+      imageUri,
+      imageWidth,
+      imageHeight,
+      imageSizeFallbackUsed
+    );
+    ReviewCardStore.currentPendingPhotoId = pendingPhotoId;
+    return draft;
   }
 
   static getCurrentDocument(): ReviewCardDocument {
@@ -42,5 +61,13 @@ export class ReviewCardStore {
     next.updatedAt = Date.now();
     ReviewCardStore.currentDocument = next;
     return cloneReviewCardDocument(next);
+  }
+
+  static getCurrentPendingPhotoId(): string {
+    return ReviewCardStore.currentPendingPhotoId;
+  }
+
+  static clearCurrentPendingPhotoId(): void {
+    ReviewCardStore.currentPendingPhotoId = '';
   }
 }

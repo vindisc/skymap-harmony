@@ -20,6 +20,7 @@ import { ReviewCardRdbListResult, ReviewCardRdbService } from './ReviewCardRdbSe
 import { ReviewCardRdbMapper, ReviewLibraryStats, ReviewListQuery } from './ReviewCardRdbModel';
 import { ReviewJsonBackupResult, ReviewJsonExportService } from './ReviewJsonExportService';
 import { ReviewLibraryRefreshService } from './ReviewLibraryRefreshService';
+import { PendingReviewPhotoStore } from './PendingReviewPhotoStore';
 
 const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
@@ -396,6 +397,18 @@ function buildLegacyLibraryStats(items: Array<ReviewCardHistoryItem>): ReviewLib
   return stats;
 }
 
+async function applyPendingReviewStats(
+  context: common.UIAbilityContext,
+  stats: ReviewLibraryStats
+): Promise<ReviewLibraryStats> {
+  try {
+    stats.pendingCount = await PendingReviewPhotoStore.countPending(context);
+  } catch (error) {
+    stats.pendingCount = 0;
+  }
+  return stats;
+}
+
 export class ReviewCardHistoryService {
   private static cachedItems: Array<ReviewCardHistoryItem> = [];
 
@@ -633,7 +646,7 @@ export class ReviewCardHistoryService {
     return {
       items: filteredItems.slice(offset, offset + limit),
       totalCount: filteredItems.length,
-      libraryStats: buildLegacyLibraryStats(result.items)
+      libraryStats: await applyPendingReviewStats(context, buildLegacyLibraryStats(result.items))
     };
   }
 
@@ -706,7 +719,10 @@ export class ReviewCardHistoryService {
         decision: rdbQuery.decision,
         keyword: rdbQuery.keyword
       });
-      const libraryStats: ReviewLibraryStats = await ReviewCardRdbService.getStats(context);
+      const libraryStats: ReviewLibraryStats = await applyPendingReviewStats(
+        context,
+        await ReviewCardRdbService.getStats(context)
+      );
       if (pageResult.invalidRowCount > 0) {
         throw new Error(`RDB 分页 raw_document_json 解析失败：${pageResult.invalidRowCount}/${pageResult.rowCount}`);
       }

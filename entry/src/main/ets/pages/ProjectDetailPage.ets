@@ -19,21 +19,27 @@ import {
   ReviewCardHistoryItem,
   ReviewJudgementStatus
 } from '../model/ReviewCardModel';
+import { PendingReviewPhoto } from '../model/PendingReviewPhotoModel';
 import { ReviewCardHistoryPageResult, ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardRdbMapper, ReviewLibraryStats } from '../services/ReviewCardRdbModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
+import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
 import {
   REVIEW_FLOW_DELETE_CONFIRM_MESSAGE,
   REVIEW_FLOW_DELETE_CONFIRM_TITLE,
   REVIEW_FLOW_DELETE_FAILED_TEXT,
   REVIEW_FLOW_DELETE_PENDING_TEXT,
   REVIEW_FLOW_DELETE_SUCCESS_TEXT,
-  REVIEW_FLOW_IMPORT_PENDING_TEXT
+  REVIEW_FLOW_IMPORT_PENDING_TEXT,
+  REVIEW_FLOW_PENDING_DELETE_FAILED_TEXT,
+  REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
 import { ToastService } from '../services/ToastService';
 import { DialogService } from '../services/DialogService';
+import { formatReviewTime, getImageRatioLabel, hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
+import { ElevationTokens } from '../theme/DesignTokens';
 
 const DELETE_SWIPE_ACTION_WIDTH: number = 92;
 const DELETE_SWIPE_BUTTON_WIDTH: number = 68;
@@ -41,6 +47,7 @@ const LIBRARY_HEADER_CONTROL_GAP: number = AppMetrics.space10;
 const LIBRARY_LIST_TOP_GAP: number = AppMetrics.space8;
 const LIBRARY_BOTTOM_CLEARANCE: number = AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space8;
 const REVIEW_LIBRARY_PAGE_SIZE: number = 5;
+const PENDING_REVIEW_FILTER: string = 'pending';
 
 @Component
 export struct ProjectDetailPage {
@@ -48,10 +55,13 @@ export struct ProjectDetailPage {
   @Prop @Watch('refreshReviewLibraryData') refreshToken: number = 0;
   @State summary: ReviewProjectSummary = createDefaultProjectSummary();
   @State filteredItems: Array<ReviewCardHistoryItem> = [];
+  @State pendingItems: Array<PendingReviewPhoto> = [];
+  @State pendingImageFailedIds: Array<string> = [];
   @State searchText: string = '';
   @State decisionFilter: string = 'all';
   @State isPickingPhoto: boolean = false;
   @State deletingReviewKey: string = '';
+  @State deletingPendingPhotoId: string = '';
   @State libraryLoadFailed: boolean = false;
   @State isLibraryLoading: boolean = false;
   @State isLoadingMore: boolean = false;
@@ -80,10 +90,11 @@ export struct ProjectDetailPage {
     this.isLibraryLoading = true;
     this.isLoadingMore = false;
     try {
+      const pendingItems: Array<PendingReviewPhoto> = await PendingReviewPhotoStore.listPending(this.getAbilityContext());
       const result: ReviewCardHistoryPageResult = await ReviewCardHistoryService.loadPage(this.getAbilityContext(), {
         decision: this.resolveDecisionQuery(),
-        keyword: this.searchText,
-        limit: REVIEW_LIBRARY_PAGE_SIZE,
+        keyword: this.isPendingFilter() ? '' : this.searchText,
+        limit: this.isPendingFilter() ? 1 : REVIEW_LIBRARY_PAGE_SIZE,
         offset: 0
       });
       if (requestId !== this.loadRequestId) {
@@ -93,9 +104,11 @@ export struct ProjectDetailPage {
       summary.recordCount = result.totalCount;
       summary.stats.totalCount = result.totalCount;
       this.summary = summary;
-      this.filteredItems = result.items;
+      this.filteredItems = this.isPendingFilter() ? [] : result.items;
+      this.pendingItems = pendingItems;
       this.libraryStats = result.libraryStats;
-      this.hasMoreItems = this.filteredItems.length < result.totalCount;
+      this.libraryStats.pendingCount = pendingItems.length;
+      this.hasMoreItems = !this.isPendingFilter() && this.filteredItems.length < result.totalCount;
       this.libraryLoadFailed = false;
       this.isLibraryLoading = false;
     } catch (error) {
@@ -113,7 +126,11 @@ export struct ProjectDetailPage {
   }
 
   private resolveDecisionQuery(): string | undefined {
-    return this.decisionFilter === 'all' ? undefined : this.decisionFilter;
+    return this.decisionFilter === 'all' || this.isPendingFilter() ? undefined : this.decisionFilter;
+  }
+
+  private isPendingFilter(): boolean {
+    return this.decisionFilter === PENDING_REVIEW_FILTER;
   }
 
   private async loadMoreItems(): Promise<void> {
@@ -153,10 +170,13 @@ export struct ProjectDetailPage {
   }
 
   private resolveResultCountText(): string {
-    if (this.libraryStats.total === 0) {
-      return '0';
+    if (this.isPendingFilter()) {
+      return `待复盘 ${this.libraryStats.pendingCount}`;
     }
-    return `已判断 ${this.libraryStats.works + this.libraryStats.notWorks}/${this.libraryStats.total}`;
+    if (this.libraryStats.total === 0) {
+      return `待复盘 ${this.libraryStats.pendingCount}`;
+    }
+    return `已判断 ${this.libraryStats.works + this.libraryStats.notWorks}/${this.libraryStats.total} · 待复盘 ${this.libraryStats.pendingCount}`;
   }
 
   private hasActiveFilters(): boolean {
@@ -165,6 +185,27 @@ export struct ProjectDetailPage {
 
   private shouldShowLibrarySkeleton(): boolean {
     return this.isLibraryLoading && this.summary.recordCount === 0 && !this.libraryLoadFailed;
+  }
+
+  private resolveVisiblePendingItems(): Array<PendingReviewPhoto> {
+    const query: string = this.searchText.trim().toLocaleLowerCase();
+    if (query.length === 0) {
+      return this.pendingItems;
+    }
+    return this.pendingItems.filter((item: PendingReviewPhoto): boolean => {
+      return `${item.fileName}\n${item.photoUri}`.toLocaleLowerCase().includes(query);
+    });
+  }
+
+  private isPendingImageFailed(photoId: string): boolean {
+    return this.pendingImageFailedIds.indexOf(photoId) >= 0;
+  }
+
+  private markPendingImageFailed(photoId: string): void {
+    if (this.isPendingImageFailed(photoId)) {
+      return;
+    }
+    this.pendingImageFailedIds = this.pendingImageFailedIds.concat([photoId]);
   }
 
   private async openCreateFirstReview(): Promise<void> {
@@ -208,9 +249,45 @@ export struct ProjectDetailPage {
 
   private openHistory(document: ReviewCardDocument): void {
     ReviewCardStore.setCurrentDocument(document);
+    ReviewCardStore.clearCurrentPendingPhotoId();
     this.getUIContext().getRouter().pushUrl({ url: PREVIEW_PAGE }).catch((error: Error) => {
       console.error(`[ProjectDetailPage] 打开复盘预览失败：${error.message}`);
     });
+  }
+
+  private openPendingPhoto(photo: PendingReviewPhoto): void {
+    ReviewCardStore.createPendingPhotoDraft(
+      photo.id,
+      photo.photoUri,
+      photo.width,
+      photo.height,
+      photo.orientation === 'unknown'
+    );
+    this.getUIContext().getRouter().pushUrl({ url: EDITOR_PAGE }).catch((error: Error) => {
+      console.error(`[ProjectDetailPage] 打开待复盘照片失败：${error.message}`);
+    });
+  }
+
+  private async deletePendingPhoto(photo: PendingReviewPhoto): Promise<void> {
+    if (this.deletingPendingPhotoId.length > 0) {
+      return;
+    }
+
+    this.deletingPendingPhotoId = photo.id;
+    const previousItems: Array<PendingReviewPhoto> = this.pendingItems;
+    this.pendingItems = previousItems.filter((item: PendingReviewPhoto): boolean => item.id !== photo.id);
+    this.libraryStats.pendingCount = Math.max(0, this.libraryStats.pendingCount - 1);
+    try {
+      await PendingReviewPhotoStore.delete(this.getAbilityContext(), photo.id);
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT);
+      this.reloadData();
+    } catch (error) {
+      this.pendingItems = previousItems;
+      this.libraryStats.pendingCount = previousItems.length;
+      ToastService.show(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_FAILED_TEXT);
+    } finally {
+      this.deletingPendingPhotoId = '';
+    }
   }
 
   private confirmDeleteHistory(document: ReviewCardDocument): void {
@@ -252,7 +329,8 @@ export struct ProjectDetailPage {
       total: Math.max(0, previousLibraryStats.total - 1),
       works: previousLibraryStats.works,
       notWorks: previousLibraryStats.notWorks,
-      uncertain: previousLibraryStats.uncertain
+      uncertain: previousLibraryStats.uncertain,
+      pendingCount: previousLibraryStats.pendingCount
     };
     const deletingJudgement: ReviewJudgementStatus = document.content.judgement === 'works'
       ? ReviewJudgementStatus.VALID
@@ -319,6 +397,40 @@ export struct ProjectDetailPage {
             return;
           }
           this.confirmDeleteHistory(document);
+        })
+    }
+    .width(DELETE_SWIPE_ACTION_WIDTH)
+    .height('100%')
+    .justifyContent(FlexAlign.Center)
+    .alignItems(VerticalAlign.Center)
+    .padding({ left: AppMetrics.space8, right: 0 })
+  }
+
+  @Builder
+  PendingDeleteSwipeAction(photo: PendingReviewPhoto) {
+    Row() {
+      Button(this.deletingPendingPhotoId === photo.id ? REVIEW_FLOW_DELETE_PENDING_TEXT : '删除')
+        .height(AppMetrics.compactControlHeight)
+        .width(DELETE_SWIPE_BUTTON_WIDTH)
+        .borderRadius(AppMetrics.buttonRadius)
+        .fontSize(AppTypography.smallButtonText)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.dangerPressed)
+        .backgroundColor(AppColors.dangerSoft)
+        .shadow({
+          radius: 10,
+          color: '#14000000',
+          offsetX: 0,
+          offsetY: 3
+        })
+        .opacity(this.deletingPendingPhotoId === photo.id ? 0.52 : 1)
+        .stateEffect(this.deletingPendingPhotoId.length === 0)
+        .enabled(this.deletingPendingPhotoId.length === 0)
+        .onClick(() => {
+          if (this.deletingPendingPhotoId.length > 0) {
+            return;
+          }
+          this.deletePendingPhoto(photo);
         })
     }
     .width(DELETE_SWIPE_ACTION_WIDTH)
@@ -456,6 +568,97 @@ export struct ProjectDetailPage {
     .width('100%')
   }
 
+  @Builder
+  PendingReviewPhotoCard(photo: PendingReviewPhoto) {
+    Row({ space: AppMetrics.cardGap }) {
+      Stack() {
+        if (hasDisplayableImageUri(photo.photoUri) && !this.isPendingImageFailed(photo.id)) {
+          Image(photo.photoUri)
+            .width('100%')
+            .height('100%')
+            .objectFit(ImageFit.Cover)
+            .syncLoad(true)
+            .onError(() => {
+              this.markPendingImageFailed(photo.id);
+            })
+        } else {
+          Text('图片不可访问')
+            .fontSize(AppTypography.caption)
+            .fontColor(AppColors.mutedText)
+            .lineHeight(AppTypography.captionLineHeight)
+            .textAlign(TextAlign.Center)
+            .padding({ left: AppMetrics.space8, right: AppMetrics.space8 })
+        }
+      }
+      .width(AppMetrics.listThumbnailSize)
+      .height(AppMetrics.listThumbnailSize)
+      .borderRadius(AppMetrics.thumbnailRadius)
+      .clip(true)
+      .backgroundColor(AppColors.surfaceMuted)
+      .border({ width: 1, color: AppColors.border })
+
+      Column({ space: AppMetrics.space8 }) {
+        Text(photo.fileName.length > 0 ? photo.fileName : '待复盘照片')
+          .fontSize(AppTypography.listTitle)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.listTitleLineHeight)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .width('100%')
+
+        Text(`导入时间 ${formatReviewTime(photo.importTime)}`)
+          .fontSize(AppTypography.listSubtitle)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.listSubtitleLineHeight)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .width('100%')
+
+        Row({ space: AppMetrics.space8 }) {
+          Text(getImageRatioLabel(photo.width, photo.height, photo.orientation === 'unknown'))
+            .fontSize(AppTypography.meta)
+            .fontColor(AppColors.secondaryText)
+            .padding({
+              left: AppMetrics.compactBadgePaddingHorizontal,
+              right: AppMetrics.compactBadgePaddingHorizontal,
+              top: AppMetrics.compactBadgePaddingVertical,
+              bottom: AppMetrics.compactBadgePaddingVertical
+            })
+            .borderRadius(AppMetrics.badgeRadius)
+            .backgroundColor(AppColors.surfaceMuted)
+
+          Text('待复盘')
+            .fontSize(AppTypography.meta)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(AppColors.primary)
+            .padding({
+              left: AppMetrics.compactBadgePaddingHorizontal,
+              right: AppMetrics.compactBadgePaddingHorizontal,
+              top: AppMetrics.compactBadgePaddingVertical,
+              bottom: AppMetrics.compactBadgePaddingVertical
+            })
+            .borderRadius(AppMetrics.badgeRadius)
+            .backgroundColor(AppColors.primarySoft)
+        }
+        .width('100%')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.listCardPadding)
+    .width('100%')
+    .constraintSize({ minHeight: AppMetrics.listCardMinHeight, maxHeight: AppMetrics.listCardMaxHeight })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surfaceElevated)
+    .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.subtle)
+    .onClick(() => {
+      this.openPendingPhoto(photo);
+    })
+  }
+
   build() {
     Column() {
       Column() {
@@ -467,6 +670,7 @@ export struct ProjectDetailPage {
           Scroll() {
             Row({ space: AppMetrics.space8 }) {
               this.FilterChip('全部', 'all')
+              this.FilterChip('待复盘', PENDING_REVIEW_FILTER)
               this.FilterChip('成立', ReviewJudgementStatus.VALID)
               this.FilterChip('待判断', ReviewJudgementStatus.UNSURE)
               this.FilterChip('不成立', ReviewJudgementStatus.INVALID)
@@ -503,6 +707,42 @@ export struct ProjectDetailPage {
         .width('100%')
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
+      } else if (this.isPendingFilter() && this.resolveVisiblePendingItems().length === 0) {
+        Column() {
+          EmptyState({
+            title: this.searchText.length > 0 ? '没有找到匹配的待复盘照片' : '暂无待复盘照片',
+            message: this.searchText.length > 0 ? '换个关键词，或清空搜索后再看。' : '从首页点「导入待复盘」，先收集照片，之后再逐张复盘。'
+          })
+        }
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+      } else if (this.isPendingFilter()) {
+        List({ space: AppMetrics.cardGap }) {
+          ForEach(this.resolveVisiblePendingItems(), (photo: PendingReviewPhoto) => {
+            ListItem() {
+              this.PendingReviewPhotoCard(photo)
+            }
+            .swipeAction({
+              end: () => {
+                this.PendingDeleteSwipeAction(photo);
+              },
+              edgeEffect: SwipeEdgeEffect.Spring
+            })
+          }, (photo: PendingReviewPhoto) => photo.id)
+
+          ListItem() {
+            Column()
+              .height(LIBRARY_BOTTOM_CLEARANCE)
+              .width('100%')
+          }
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .edgeEffect(EdgeEffect.Spring)
+        .scrollBar(BarState.Off)
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: LIBRARY_LIST_TOP_GAP })
       } else if (this.summary.recordCount === 0 && !this.hasActiveFilters()) {
         Column() {
           EmptyState({

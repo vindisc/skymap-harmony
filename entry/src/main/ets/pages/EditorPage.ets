@@ -6,12 +6,14 @@ import { PREVIEW_PAGE } from '../app/AppRouter';
 import {
   createDefaultReviewCardDocument,
   DEFAULT_REVIEW_TITLE,
+  getReviewDocumentKey,
   normalizeReviewJudgement,
   ReviewCardDocument
 } from '../model/ReviewCardModel';
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
 import {
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_PENDING_TEXT,
@@ -79,6 +81,7 @@ struct EditorPage {
   private scheduledScrollField: string = '';
   private scheduledScrollIntent: EditorFieldScrollIntent = EditorFieldScrollIntent.START;
   private shouldDiscardChanges: boolean = false;
+  private pendingPhotoId: string = '';
   @State title: string = DEFAULT_REVIEW_TITLE;
   @State visualFocus: string = '';
   @State focusReason: string = '';
@@ -111,6 +114,7 @@ struct EditorPage {
     this.disableSystemKeyboardAvoidance();
     this.registerKeyboardHeightObserver();
     this.document = ReviewCardStore.getCurrentDocument();
+    this.pendingPhotoId = ReviewCardStore.getCurrentPendingPhotoId();
     this.imageUri = this.document.imageUri;
     this.imageWidth = this.document.imageWidth;
     this.imageHeight = this.document.imageHeight;
@@ -228,6 +232,7 @@ struct EditorPage {
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
     try {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+      await this.markPendingPhotoReviewedQuietly();
       this.isDirty = false;
       ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
       this.getUIContext().getRouter().replaceUrl({ url: PREVIEW_PAGE }).catch((error: Error) => {
@@ -237,6 +242,24 @@ struct EditorPage {
       ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
       this.isSaving = false;
+    }
+  }
+
+  private async markPendingPhotoReviewedQuietly(): Promise<void> {
+    if (this.pendingPhotoId.length <= 0) {
+      return;
+    }
+
+    try {
+      await PendingReviewPhotoStore.markReviewed(
+        this.getAbilityContext(),
+        this.pendingPhotoId,
+        getReviewDocumentKey(this.document)
+      );
+      ReviewCardStore.clearCurrentPendingPhotoId();
+      this.pendingPhotoId = '';
+    } catch (error) {
+      console.warn(`[EditorPage] 正式复盘已保存，但待复盘状态更新失败：${error}`);
     }
   }
 
