@@ -21,11 +21,17 @@ assert(pageSource.includes('.onReachEnd(() =>'), 'List must load more when reach
 assert(pageSource.includes('this.loadMoreItems();'), 'Reach-end handler must call loadMoreItems.');
 assert(pageSource.includes('this.filteredItems.length < result.totalCount'), 'Page must track whether more records are available.');
 assert(pageSource.includes("summary.recordCount === 0 && !this.hasActiveFilters()"), 'Filtered empty state must not be treated as an empty library.');
+assert(pageSource.includes('libraryStats: ReviewLibraryStats'), 'ProjectDetailPage must keep whole-library judgement stats.');
+assert(pageSource.includes('return `成立 ${this.libraryStats.works}/${this.libraryStats.total}`;'), 'Header badge must show works count over total count.');
+assert(!pageSource.includes('return `${this.filteredItems.length}/${this.summary.recordCount}`;'), 'Header badge must not show loaded-or-filtered item count over total count.');
 
 assert(historyServiceSource.includes('export interface ReviewCardHistoryPageResult'), 'History service must expose a page result.');
+assert(historyServiceSource.includes('libraryStats: ReviewLibraryStats;'), 'Paged result must include whole-library stats.');
 assert(historyServiceSource.includes('export interface ReviewCardHistoryPageQuery'), 'History service must expose a page query.');
 assert(historyServiceSource.includes('static async loadPage('), 'History service must expose loadPage.');
 assert(historyServiceSource.includes('ReviewCardRdbService.countReviews(context'), 'Paged load must return a total count.');
+assert(historyServiceSource.includes('ReviewCardRdbService.getStats(context)'), 'Paged load must fetch whole-library judgement stats.');
+assert(historyServiceSource.includes('buildLegacyLibraryStats(result.items)'), 'Legacy page fallback must also return whole-library judgement stats.');
 assert(historyServiceSource.includes('ReviewCardRdbService.listReviewsWithDiagnostics(context, rdbQuery)'), 'Paged load must query RDB with limit and offset.');
 assert(historyServiceSource.includes('loadPageFromLegacy'), 'Paged load must keep legacy fallback.');
 

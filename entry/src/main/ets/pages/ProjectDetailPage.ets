@@ -14,11 +14,13 @@ import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/Proj
 import {
   createDefaultReviewCardDocument,
   getReviewDocumentKey,
+  normalizeReviewJudgement,
   ReviewCardDocument,
   ReviewCardHistoryItem,
   ReviewJudgementStatus
 } from '../model/ReviewCardModel';
 import { ReviewCardHistoryPageResult, ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import { ReviewCardRdbMapper, ReviewLibraryStats } from '../services/ReviewCardRdbModel';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
@@ -54,6 +56,7 @@ export struct ProjectDetailPage {
   @State isLibraryLoading: boolean = false;
   @State isLoadingMore: boolean = false;
   @State hasMoreItems: boolean = false;
+  @State libraryStats: ReviewLibraryStats = ReviewCardRdbMapper.emptyStats();
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -91,6 +94,7 @@ export struct ProjectDetailPage {
       summary.stats.totalCount = result.totalCount;
       this.summary = summary;
       this.filteredItems = result.items;
+      this.libraryStats = result.libraryStats;
       this.hasMoreItems = this.filteredItems.length < result.totalCount;
       this.libraryLoadFailed = false;
       this.isLibraryLoading = false;
@@ -135,6 +139,7 @@ export struct ProjectDetailPage {
       summary.stats.totalCount = result.totalCount;
       this.summary = summary;
       this.filteredItems = nextItems;
+      this.libraryStats = result.libraryStats;
       this.hasMoreItems = this.filteredItems.length < result.totalCount;
     } catch (error) {
       if (requestId === this.loadRequestId) {
@@ -148,10 +153,10 @@ export struct ProjectDetailPage {
   }
 
   private resolveResultCountText(): string {
-    if (this.summary.recordCount === 0) {
+    if (this.libraryStats.total === 0) {
       return '0';
     }
-    return `${this.filteredItems.length}/${this.summary.recordCount}`;
+    return `成立 ${this.libraryStats.works}/${this.libraryStats.total}`;
   }
 
   private hasActiveFilters(): boolean {
@@ -234,6 +239,7 @@ export struct ProjectDetailPage {
     this.deletingReviewKey = deletingKey;
     const previousItems: Array<ReviewCardHistoryItem> = this.summary.items;
     const previousRecordCount: number = this.summary.recordCount;
+    const previousLibraryStats: ReviewLibraryStats = this.libraryStats;
     const nextItems: Array<ReviewCardHistoryItem> = previousItems.filter((item: ReviewCardHistoryItem): boolean => {
       return getReviewDocumentKey(item.document) !== deletingKey;
     });
@@ -242,6 +248,27 @@ export struct ProjectDetailPage {
     optimisticSummary.stats.totalCount = optimisticSummary.recordCount;
     this.summary = optimisticSummary;
     this.filteredItems = nextItems;
+    const optimisticLibraryStats: ReviewLibraryStats = {
+      total: Math.max(0, previousLibraryStats.total - 1),
+      works: previousLibraryStats.works,
+      notWorks: previousLibraryStats.notWorks,
+      uncertain: previousLibraryStats.uncertain
+    };
+    const deletingJudgement: ReviewJudgementStatus = document.content.judgement === 'works'
+      ? ReviewJudgementStatus.VALID
+      : document.content.judgement === 'notWorks'
+        ? ReviewJudgementStatus.INVALID
+        : document.content.judgement === 'uncertain'
+          ? ReviewJudgementStatus.UNSURE
+          : normalizeReviewJudgement(document.content.judgement);
+    if (deletingJudgement === ReviewJudgementStatus.VALID) {
+      optimisticLibraryStats.works = Math.max(0, optimisticLibraryStats.works - 1);
+    } else if (deletingJudgement === ReviewJudgementStatus.INVALID) {
+      optimisticLibraryStats.notWorks = Math.max(0, optimisticLibraryStats.notWorks - 1);
+    } else {
+      optimisticLibraryStats.uncertain = Math.max(0, optimisticLibraryStats.uncertain - 1);
+    }
+    this.libraryStats = optimisticLibraryStats;
     this.hasMoreItems = nextItems.length < optimisticSummary.recordCount;
     try {
       await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
@@ -259,6 +286,7 @@ export struct ProjectDetailPage {
       restoredSummary.stats.totalCount = previousRecordCount;
       this.summary = restoredSummary;
       this.filteredItems = previousItems;
+      this.libraryStats = previousLibraryStats;
       ToastService.show(this.getUIContext(), REVIEW_FLOW_DELETE_FAILED_TEXT);
       this.reloadData();
     } finally {
@@ -378,6 +406,7 @@ export struct ProjectDetailPage {
           .fontSize(13)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.metaLineHeight)
+          .maxLines(1)
           .padding({
             left: AppMetrics.compactBadgePaddingHorizontal,
             right: AppMetrics.compactBadgePaddingHorizontal,

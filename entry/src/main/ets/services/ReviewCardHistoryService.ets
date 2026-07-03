@@ -6,6 +6,7 @@ import {
   createDefaultReviewCardDocument,
   DEFAULT_PROJECT_ID,
   getReviewDocumentKey,
+  normalizeReviewJudgement,
   ReviewCardDocument,
   ReviewCardHistoryItem,
   ReviewJudgementStatus
@@ -16,7 +17,7 @@ import {
 } from './ReviewCardExchangeSchema';
 import { MigrationResult, ReviewCardMigrationService } from './ReviewCardMigrationService';
 import { ReviewCardRdbListResult, ReviewCardRdbService } from './ReviewCardRdbService';
-import { ReviewListQuery } from './ReviewCardRdbModel';
+import { ReviewCardRdbMapper, ReviewLibraryStats, ReviewListQuery } from './ReviewCardRdbModel';
 import { ReviewJsonBackupResult, ReviewJsonExportService } from './ReviewJsonExportService';
 import { ReviewLibraryRefreshService } from './ReviewLibraryRefreshService';
 
@@ -34,6 +35,7 @@ export interface ReviewCardHistoryLoadResult {
 export interface ReviewCardHistoryPageResult {
   items: Array<ReviewCardHistoryItem>;
   totalCount: number;
+  libraryStats: ReviewLibraryStats;
 }
 
 export interface ReviewCardHistoryPageQuery {
@@ -337,6 +339,19 @@ function createRdbPageQuery(query: ReviewCardHistoryPageQuery): ReviewListQuery 
   return rdbQuery;
 }
 
+function normalizeHistoryJudgement(value: string | undefined): ReviewJudgementStatus {
+  if (value === 'works') {
+    return ReviewJudgementStatus.VALID;
+  }
+  if (value === 'notWorks') {
+    return ReviewJudgementStatus.INVALID;
+  }
+  if (value === 'uncertain') {
+    return ReviewJudgementStatus.UNSURE;
+  }
+  return normalizeReviewJudgement(value);
+}
+
 function filterLegacyPageItems(
   items: Array<ReviewCardHistoryItem>,
   query: ReviewCardHistoryPageQuery
@@ -344,7 +359,7 @@ function filterLegacyPageItems(
   const keyword: string = query.keyword ? query.keyword.trim().toLocaleLowerCase() : '';
   const decision: string = query.decision ? query.decision : '';
   return items.filter((item: ReviewCardHistoryItem): boolean => {
-    if (decision.length > 0 && item.document.content.judgement !== decision) {
+    if (decision.length > 0 && normalizeHistoryJudgement(item.document.content.judgement) !== decision) {
       return false;
     }
     if (keyword.length === 0) {
@@ -361,6 +376,24 @@ function filterLegacyPageItems(
       item.document.content.currentBlocker
     ].join('\n').toLocaleLowerCase().includes(keyword);
   });
+}
+
+function buildLegacyLibraryStats(items: Array<ReviewCardHistoryItem>): ReviewLibraryStats {
+  const stats: ReviewLibraryStats = ReviewCardRdbMapper.emptyStats();
+  stats.total = items.length;
+  items.forEach((item: ReviewCardHistoryItem): void => {
+    const judgement: ReviewJudgementStatus = normalizeHistoryJudgement(item.document.content.judgement);
+    if (judgement === ReviewJudgementStatus.VALID) {
+      stats.works += 1;
+      return;
+    }
+    if (judgement === ReviewJudgementStatus.INVALID) {
+      stats.notWorks += 1;
+      return;
+    }
+    stats.uncertain += 1;
+  });
+  return stats;
 }
 
 export class ReviewCardHistoryService {
@@ -599,7 +632,8 @@ export class ReviewCardHistoryService {
     const limit: number = normalizePageLimit(query.limit);
     return {
       items: filteredItems.slice(offset, offset + limit),
-      totalCount: filteredItems.length
+      totalCount: filteredItems.length,
+      libraryStats: buildLegacyLibraryStats(result.items)
     };
   }
 
@@ -672,13 +706,15 @@ export class ReviewCardHistoryService {
         decision: rdbQuery.decision,
         keyword: rdbQuery.keyword
       });
+      const libraryStats: ReviewLibraryStats = await ReviewCardRdbService.getStats(context);
       if (pageResult.invalidRowCount > 0) {
         throw new Error(`RDB 分页 raw_document_json 解析失败：${pageResult.invalidRowCount}/${pageResult.rowCount}`);
       }
       ReviewCardHistoryService.rememberItems(pageResult.items);
       return {
         items: pageResult.items,
-        totalCount: totalCount
+        totalCount: totalCount,
+        libraryStats: libraryStats
       };
     } catch (error) {
       console.warn(`[ReviewCardHistoryService] RDB 分页读取失败，回退旧链路：${error}`);
