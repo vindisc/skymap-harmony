@@ -330,7 +330,7 @@ export struct MyPage {
     .width('100%')
     .height(60)
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceMuted)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
     .shadow(ElevationTokens.subtle)
   }

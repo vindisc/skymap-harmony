@@ -19,14 +19,14 @@ import {
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 export class AppColors {
-  static readonly pageBackground: string = '#F7F5F0';
-  static readonly tabBarBackground: string = '#F7F5F0';
-  static readonly surface: string = '#FFFEFC';
-  static readonly surfaceElevated: string = '#FFFFFF';
-  static readonly surfaceMuted: string = '#F3EFE7';
-  static readonly surfaceTint: string = '#F8F5EE';
-  static readonly border: string = '#E3DBCF';
-  static readonly borderStrong: string = '#C8C0B4';
+  static readonly pageBackground: string = '#F5F1E9';
+  static readonly tabBarBackground: string = '#F7F3EC';
+  static readonly surface: string = '#FFFDF8';
+  static readonly surfaceElevated: string = '#FFFDF8';
+  static readonly surfaceMuted: string = '#EFE9DE';
+  static readonly surfaceTint: string = '#F8F3EA';
+  static readonly border: string = '#B3E6DED2';
+  static readonly borderStrong: string = '#D7CBBC';
   static readonly borderFocused: string = '#365F75';
   static readonly text: string = '#15191F';
   static readonly secondaryText: string = '#5E6570';
@@ -47,10 +47,10 @@ export class AppColors {
   static readonly heroGradientEnd: string = '#0F121B80';
   static readonly scrim: string = '#66000000';
   static readonly modalScrim: string = '#73000000';
-  static readonly floatingShadow: string = '#1A000000';
-  static readonly shadowSubtle: string = '#0A000000';
-  static readonly shadowMedium: string = '#18000000';
-  static readonly shadowStrong: string = '#26000000';
+  static readonly floatingShadow: string = '#1A0F0A04';
+  static readonly shadowSubtle: string = '#120F0A04';
+  static readonly shadowMedium: string = '#1A0F0A04';
+  static readonly shadowStrong: string = '#260F0A04';
   static readonly danger: string = '#B73A31';
   static readonly dangerPressed: string = '#8F2B25';
   static readonly dangerSoft: string = '#F6E8E5';

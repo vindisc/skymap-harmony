@@ -84,32 +84,32 @@ export class ElevationTokens {
     offsetY: 0
   };
   static readonly subtle: ShadowToken = {
-    radius: 6,
-    color: '#0A000000',
+    radius: 9,
+    color: '#120F0A04',
     offsetX: 0,
-    offsetY: 2
+    offsetY: 3
   };
   static readonly low: ShadowToken = {
-    radius: 8,
-    color: '#12000000',
+    radius: 10,
+    color: '#160F0A04',
     offsetX: 0,
     offsetY: 3
   };
   static readonly medium: ShadowToken = {
-    radius: 12,
-    color: '#18000000',
+    radius: 14,
+    color: '#1A0F0A04',
     offsetX: 0,
     offsetY: 4
   };
   static readonly high: ShadowToken = {
     radius: 20,
-    color: '#1F000000',
+    color: '#220F0A04',
     offsetX: 0,
     offsetY: 8
   };
   static readonly overlay: ShadowToken = {
     radius: 28,
-    color: '#26000000',
+    color: '#260F0A04',
     offsetX: 0,
     offsetY: 12
   };
