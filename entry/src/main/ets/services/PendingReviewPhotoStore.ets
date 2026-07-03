@@ -35,6 +35,20 @@ const PENDING_REVIEW_PHOTO_INDEX_SQLS: Array<string> = [
   'CREATE INDEX IF NOT EXISTS idx_pending_review_photos_linked_review_id ON pending_review_photos(linked_review_id)'
 ];
 
+export interface PendingReviewPhotoStats {
+  pendingCount: number;
+  reviewedCount: number;
+  totalImportedCount: number;
+}
+
+export function createEmptyPendingReviewPhotoStats(): PendingReviewPhotoStats {
+  return {
+    pendingCount: 0,
+    reviewedCount: 0,
+    totalImportedCount: 0
+  };
+}
+
 function getValue(resultSet: relationalStore.ResultSet, columnName: string): relationalStore.ValueType {
   return resultSet.getValue(resultSet.getColumnIndex(columnName));
 }
@@ -190,6 +204,29 @@ export class PendingReviewPhotoStore {
         return 0;
       }
       return getNumberValue(resultSet, 'total');
+    } finally {
+      resultSet.close();
+    }
+  }
+
+  static async getStats(context: common.UIAbilityContext): Promise<PendingReviewPhotoStats> {
+    const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
+    const resultSet: relationalStore.ResultSet = await store.querySql(
+      `SELECT COUNT(1) AS total_imported,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS pending_total,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS reviewed_total
+        FROM ${PENDING_REVIEW_PHOTO_TABLE}`,
+      [PendingReviewPhotoStatus.PENDING, PendingReviewPhotoStatus.REVIEWED]
+    );
+    try {
+      if (!resultSet.goToFirstRow()) {
+        return createEmptyPendingReviewPhotoStats();
+      }
+      return {
+        pendingCount: getNumberValue(resultSet, 'pending_total'),
+        reviewedCount: getNumberValue(resultSet, 'reviewed_total'),
+        totalImportedCount: getNumberValue(resultSet, 'total_imported')
+      };
     } finally {
       resultSet.close();
     }

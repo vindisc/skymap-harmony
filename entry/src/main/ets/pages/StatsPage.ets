@@ -17,8 +17,14 @@ import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerServi
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { REVIEW_FLOW_IMPORT_PENDING_TEXT } from '../services/ReviewFlowFeedback';
 import { ToastService } from '../services/ToastService';
+import {
+  createEmptyPendingReviewPhotoStats,
+  PendingReviewPhotoStats,
+  PendingReviewPhotoStore
+} from '../services/PendingReviewPhotoStore';
 
 const STATS_OVERVIEW_MIN_HEIGHT: number = 120;
+const STATS_LEARNING_OVERVIEW_MIN_HEIGHT: number = 132;
 const STATS_CARD_MIN_HEIGHT: number = 104;
 const STATS_PROGRESS_HEIGHT: number = 10;
 const STATS_PROGRESS_RADIUS: number = 5;
@@ -30,6 +36,7 @@ export struct StatsPage {
   private loadRequestId: number = 0;
   @Prop @Watch('refreshStatsData') refreshToken: number = 0;
   @State feedback: ReviewStatsFeedback = createEmptyReviewStatsFeedback();
+  @State learningStats: PendingReviewPhotoStats = createEmptyPendingReviewPhotoStats();
   @State statsLoadFailed: boolean = false;
   @State isStatsLoading: boolean = false;
   @State isPickingPhoto: boolean = false;
@@ -55,10 +62,17 @@ export struct StatsPage {
     this.loadRequestId = requestId;
     this.isStatsLoading = true;
     try {
-      const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(this.getAbilityContext());
+      const context: common.UIAbilityContext = this.getAbilityContext();
+      const learningStats: PendingReviewPhotoStats = await PendingReviewPhotoStore.getStats(context)
+        .catch((error: Error): PendingReviewPhotoStats => {
+          console.error(`[StatsPage] 待复盘统计加载失败：${error.message}`);
+          return createEmptyPendingReviewPhotoStats();
+        });
+      const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
       if (requestId !== this.loadRequestId) {
         return;
       }
+      this.learningStats = learningStats;
       this.feedback = ReviewProjectService.buildStatsFeedback(items);
       this.statsLoadFailed = false;
       this.isStatsLoading = false;
@@ -75,8 +89,19 @@ export struct StatsPage {
     return this.feedback.totalCount > 0;
   }
 
+  private hasLearningData(): boolean {
+    return this.learningStats.totalImportedCount > 0;
+  }
+
   private shouldShowStatsSkeleton(): boolean {
-    return this.isStatsLoading && !this.hasStatsData() && !this.statsLoadFailed;
+    return this.isStatsLoading && !this.hasStatsData() && !this.hasLearningData() && !this.statsLoadFailed;
+  }
+
+  private resolveLearningCompletionRate(): string {
+    if (this.learningStats.totalImportedCount <= 0) {
+      return '--';
+    }
+    return `${Math.floor(this.learningStats.reviewedCount * 100 / this.learningStats.totalImportedCount)}%`;
   }
 
   private async openCreateFirstReview(): Promise<void> {
@@ -192,6 +217,92 @@ export struct StatsPage {
     .padding({ top: AppMetrics.space8, bottom: AppMetrics.space8 })
     .borderRadius(AppMetrics.buttonRadius)
     .backgroundColor(background)
+  }
+
+  @Builder
+  LearningMetric(label: string, value: string, color: string, background: string) {
+    Column({ space: 3 }) {
+      Text(value)
+        .fontSize(AppTypography.cardTitle)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(color)
+        .lineHeight(AppTypography.cardTitleLineHeight)
+        .maxLines(1)
+
+      Text(label)
+        .fontSize(AppTypography.meta)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .maxLines(1)
+    }
+    .alignItems(HorizontalAlign.Center)
+    .layoutWeight(1)
+    .padding({ top: AppMetrics.space10, bottom: AppMetrics.space10 })
+    .borderRadius(AppMetrics.buttonRadius)
+    .backgroundColor(background)
+  }
+
+  @Builder
+  SectionTitle(title: string) {
+    Text(title)
+      .fontSize(AppTypography.sectionTitle)
+      .fontWeight(FontWeight.Bold)
+      .fontColor(AppColors.text)
+      .lineHeight(AppTypography.sectionTitleLineHeight)
+      .width('100%')
+      .maxLines(1)
+  }
+
+  @Builder
+  LearningOverviewCard() {
+    Column({ space: AppMetrics.space12 }) {
+      Row() {
+        Text('学习概览')
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .layoutWeight(1)
+          .maxLines(1)
+
+        Text(`完成率 ${this.resolveLearningCompletionRate()}`)
+          .fontSize(AppTypography.meta)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.primary)
+          .lineHeight(AppTypography.metaLineHeight)
+          .padding({
+            left: AppMetrics.comfortableBadgePaddingHorizontal,
+            right: AppMetrics.comfortableBadgePaddingHorizontal,
+            top: AppMetrics.comfortableBadgePaddingVertical,
+            bottom: AppMetrics.comfortableBadgePaddingVertical
+          })
+          .borderRadius(AppMetrics.capsuleRadius)
+          .backgroundColor(AppColors.primarySoft)
+          .maxLines(1)
+      }
+      .alignItems(VerticalAlign.Center)
+      .width('100%')
+
+      Row({ space: AppMetrics.space8 }) {
+        this.LearningMetric('待复盘', `${this.learningStats.pendingCount}`, AppColors.tagAmberText, AppColors.tagAmber)
+        this.LearningMetric('累计导入', `${this.learningStats.totalImportedCount}`, AppColors.primary, AppColors.primarySoft)
+      }
+      .width('100%')
+
+      Row({ space: AppMetrics.space8 }) {
+        this.LearningMetric('累计完成', `${this.learningStats.reviewedCount}`, AppColors.tagGreenText, AppColors.tagGreen)
+        this.LearningMetric('完成率', this.resolveLearningCompletionRate(), AppColors.text, AppColors.surfaceMuted)
+      }
+      .width('100%')
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+    .constraintSize({ minHeight: STATS_LEARNING_OVERVIEW_MIN_HEIGHT })
+    .padding(AppMetrics.cardPadding)
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surfaceElevated)
+    .border({ width: 1, color: AppColors.border })
+    .shadow(ElevationTokens.medium)
   }
 
   @Builder
@@ -548,6 +659,7 @@ export struct StatsPage {
   @Builder
   StatsSkeleton() {
     Column({ space: AppMetrics.cardGap }) {
+      this.StatsSkeletonCard(STATS_LEARNING_OVERVIEW_MIN_HEIGHT, '36%', '72%')
       this.StatsSkeletonCard(STATS_OVERVIEW_MIN_HEIGHT, '44%', '64%')
       this.StatsSkeletonCard(STATS_CARD_MIN_HEIGHT, '36%', '82%')
       this.StatsSkeletonCard(STATS_CARD_MIN_HEIGHT, '40%', '74%')
@@ -582,24 +694,29 @@ export struct StatsPage {
               message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
             })
               .margin({ top: AppMetrics.space8 })
-          } else if (!this.hasStatsData()) {
-            EmptyState({
-              title: '还没有复盘数据',
-              message: '完成第一张照片复盘后，这里会显示你的判断变化。',
-              actionLabel: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '去创建第一条复盘',
-              isActionDisabled: this.isPickingPhoto,
-              onAction: () => {
-                this.openCreateFirstReview();
-              }
-            })
-              .margin({ top: AppMetrics.space8 })
           } else {
             Column({ space: AppMetrics.cardGap }) {
-              this.OverviewCard()
-              this.Recent30DaysCard()
-              this.DistributionCard()
-              this.BlockersCard()
-              this.RecentReviewsCard()
+              this.LearningOverviewCard()
+
+              if (this.hasStatsData()) {
+                this.SectionTitle('复盘质量')
+                this.OverviewCard()
+                this.Recent30DaysCard()
+                this.DistributionCard()
+                this.BlockersCard()
+                this.RecentReviewsCard()
+              } else {
+                EmptyState({
+                  title: this.hasLearningData() ? '还没有完成复盘' : '还没有复盘数据',
+                  message: this.hasLearningData() ? '从待复盘照片进入编辑并保存后，这里会显示判断变化。' : '完成第一张照片复盘后，这里会显示你的判断变化。',
+                  actionLabel: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '去创建第一条复盘',
+                  isActionDisabled: this.isPickingPhoto,
+                  onAction: () => {
+                    this.openCreateFirstReview();
+                  }
+                })
+                  .margin({ top: AppMetrics.space8 })
+              }
             }
             .width('100%')
           }
