@@ -1,246 +1,76 @@
-# 摄影复盘卡模板规格
+# 摄影复盘卡模板说明
 
-## 1. 产品目标
+本文只记录当前 HarmonyOS 端复盘卡的真实渲染与导出路径。
 
-摄影复盘卡用于把一张照片和一次简短复盘组合成可分享图片。第一阶段目标是完成移动端 MVP 闭环：从系统相册选择一张真实照片，在看图状态下填写复盘内容，在手机内生成可读的阅读卡，并导出竖向长图复盘笔记，同时在首页沉淀默认项目和最近记录。示例横图、示例竖图、示例方图保留为轻量体验入口。
+## 1. 当前目标
 
-## 2. 复盘字段
+当前复盘卡用于把一张照片和一次摄影判断组织成两种稳定表达：
 
-`ReviewCardDocument` 是第一阶段的文档模型：
+- 手机阅读卡
+- 导出长图卡
 
-- `version`: 文档版本。
-- `imageUri`: 图片地址，第一阶段允许为空或使用示例 URI。
-- `imageWidth`: 图片宽度。
-- `imageHeight`: 图片高度。
-- `content`: 复盘内容。
-- `config`: 复盘卡配置。
-- `createdAt`: 创建时间。
-- `updatedAt`: 更新时间。
+它们共用同一份 `ReviewCardDocument`，但不共用同一套页面状态。
 
-`ReviewContent` 包含：
+## 2. 当前输入来源
 
-- `title`: 标题。
-- `visualFocus`: 视觉落点。
-- `focusReason`: 落点原因。
-- `visualPath`: 视线路径。
-- `visibleFacts`: 画面事实。
-- `coreRelation`: 核心关系。
-- `judgement`: 是否成立。
-- `extendedUnderstanding`: 延伸理解。
-- `currentBlocker`: 当前卡点。
+当前有两种进入复盘卡的方式：
 
-当前复盘框架固定为：
+### 直接复盘
 
-```text
-视觉落点 -> 落点原因 -> 视线路径 -> 画面事实 -> 核心关系 -> 是否成立 -> 延伸理解 -> 当前卡点
-```
+- 首页 `导入照片，开始复盘`
+- 系统相册单选
+- 进入编辑页
 
-旧数据兼容映射：
+### 待复盘转正式复盘
 
-- `firstLook` -> `visualFocus`
-- `reason` -> `focusReason`
-- `visualPath` -> `visualPath`
-- `strongestRelation` -> `coreRelation`
-- `judgement` -> `judgement`
-- `blocker` -> `currentBlocker`
+- 首页 `导入待复盘`
+- 系统相册多选并写入待复盘列表
+- 从复盘库 `待复盘` 筛选打开某一张照片进入编辑页
 
-上一版若已把旧 `judgement` 内容写入 `extendedUnderstanding`，读取时会回填到 `judgement`，避免旧记录的“是否成立”判断丢失。
+当前已经支持待复盘多选导入，不再保留单选限制说法。
 
-旧记录缺字段时按空字符串处理，不阻塞打开、编辑、阅读和导出。
+## 3. 当前文档模型
 
-`ReviewCardConfig` 包含：
+当前统一使用 `ReviewCardDocument`：
 
-- `templateId`: 模板标识。
-- `layoutMode`: 布局模式。
-- `background`: 背景。
-- `textSize`: 文字大小。
+- 一份文档贯穿编辑、阅读和导出
+- 保存后进入 `ReviewCardHistoryItem`
+- 导出状态通过 `exportedPath` 附着在历史项上
 
-默认配置：
+## 4. 当前阅读路径
 
-- `templateId`: `review_card`
-- `layoutMode`: `auto`
-- `background`: `white`
-- `textSize`: `standard`
+- 预览 / 阅读使用 `ReviewCardRenderMode.MOBILE_READING`
+- `ReviewCardRenderer` 在该模式下选择 `MobileReadingReviewCard`
+- 阅读页展示已填写字段；空字段不显示
 
-## 3. 图片选择与尺寸读取
+## 5. 当前导出路径
 
-首页主入口使用 `@ohos.file.photoAccessHelper.PhotoViewPicker` 打开系统图片选择器，只允许单选图片。
+- 导出使用 `ReviewCardRenderMode.EXPORT_CARD`
+- `ReviewCardRenderer` 在该模式下统一选择 `LongFormExportReviewCard`
+- 当前横图、竖图、方图都走同一条导出主链路
+- `LongFormExportReviewCard` 再按图片方向决定横向信息面板或单列长图结构
 
-选择成功后：
+因此当前必须明确：
 
-1. 从 `PhotoSelectResult.photoUris[0]` 获取图片 URI。
-2. 使用 `@ohos.multimedia.image.createImageSource(uri).getImageInfo()` 读取 `ImageInfo.size.width` 和 `ImageInfo.size.height`。
-3. 创建 `ReviewCardDocument`，并进入编辑页。
+- 导出主链路不是 `ExportHorizontalReviewCard / ExportVerticalReviewCard / ExportSquareReviewCard`
+- 修改导出样式时，应先确认实际截图节点与 `renderMode`
 
-用户取消、空结果、打开选择器失败时，停留在首页并避免崩溃。若图片宽高读取失败，当前版本保留 URI 并用兜底宽高继续流程，同时在预览页明确提示当前仍在使用兜底比例；后续可改为通过媒体资产元数据读取更稳定的宽高。
+## 6. 当前版式边界
 
-## 4. 本地记录
+### 手机阅读卡
 
-当前版本使用 RDB `reviews` 作为复盘库主索引，保存 `ReviewCardDocument` 快照、索引字段和导出结果引用。`Preferences.items` 只作为旧版本迁移来源。
+- 面向手机内阅读
+- 强调纵向可读性
+- 不要求和导出图完全同构
 
-保存时机：
+### 导出长图卡
 
-- 编辑页点击「保存并进入阅读」时自动保存。
-- 预览页点击「保存」时保存。
-- 导出成功后更新记录的导出路径。
+- 面向相册保存与外部分享
+- 清理按钮、占位文案、状态提示和页面噪音
+- 横图、竖图、方图按当前导出组件内规则适配
 
-首页「我的复盘」固定展示默认项目「我的摄影复盘」，`projectId` 为 `default`，点击进入长期回看列表。首页「最近记录」只展示最近 3 条，作为快捷入口，点击记录后进入阅读页查看成品卡，并可继续编辑。
+## 7. 当前不做
 
-## 5. 导出图片
-
-当前版本使用 `@ohos.arkui.componentSnapshot` 对 `exportCard` 渲染结果截图，使用 `@ohos.multimedia.image.createImagePacker()` 编码为 JPG，再通过 `@ohos.file.fs` 写入应用沙箱备份目录：
-
-```text
-files/review_exports/skymap-review-card-{timestamp}.jpg
-```
-
-随后使用 `@ohos.file.fileuri.getUriFromPath()` 转成沙箱文件 URI，并调用系统保存弹窗创建图库目标文件，再把沙箱 JPG 写入系统返回的媒体 URI。用户完成系统确认后，可在图库最近项目找到导出图；如果系统保存被取消或失败，应用保留沙箱备份并显示兜底提示，避免导出结果丢失。
-
-## 6. 渲染模式
-
-复盘卡统一使用同一份 `ReviewCardDocument`，但渲染职责拆分为两种模式：
-
-- `mobileReading`：用于手机 App 内阅读、确认和编辑后的查看。
-- `exportCard`：用于最终导出分享图。
-
-两种模式共享同一套字段：
-
-- 照片
-- 标题
-- 视觉落点
-- 落点原因
-- 视线路径
-- 画面事实
-- 核心关系
-- 是否成立
-- 延伸理解
-- 当前卡点
-
-正文区域高度由内容驱动，不能主动截断、压缩成摘要卡或省略用户输入。
-
-## 7. 方向判断
-
-方向判断统一基于真实显示宽高的比值：
-
-- `imageWidth / imageHeight >= 1.15`：横图
-- `imageWidth / imageHeight <= 0.87`：竖图
-- 其他情况：方图
-
-如果当前仍在使用兜底尺寸，不把兜底值伪装成真实尺寸；布局会继续兜底渲染，但需要明确提示用户当前比例待确认。
-
-## 8. mobileReading 阅读模式
-
-`mobileReading` 不追求导出成品感，核心目标是手机竖屏可读：
-
-- 横图、竖图、方图都使用统一的纵向阅读结构。
-- 结构固定为：照片、标题、字段列表。
-- 图片保持原比例，不拉伸、不裁切。
-- 竖图在手机内允许缩小展示，但不使用左图右文。
-- 字段始终按完整阅读顺序纵向展开。
-
-## 9. exportCard 导出模式
-
-`exportCard` 当前统一路由到 `LongFormExportReviewCard`，组件内部按照片方向选择导出版式。
-
-- 横图使用专门的横向信息面板，竖图 / 方图使用默认单列长图结构。
-- 结构固定为：照片、标题、视觉落点、落点原因、视线路径、画面事实、核心关系、是否成立、延伸理解、当前卡点。
-- 图片保持原比例，不拉伸，不错误裁切。
-- 空字段不导出，避免空白。
-- 字段名弱化为小号浅灰，字段内容清晰但不过大。
-- 字段间距和行距紧凑但可读。
-
-导出图不是手机预览截图，不包含返回、编辑、导出、保存状态、手机状态栏、页面标题和底部按钮。横图导出需要保持底部圆角完整、右侧不重复显示是否成立，长内容不得被两三行截断。
-
-## 10. 当前导出组件链路
-
-当前导出截图链路为：
-
-1. `PreviewPage.ExportSnapshotCard()` 创建隐藏的导出截图节点。
-2. `ReviewCardPreview` 以 `ReviewCardRenderMode.EXPORT_CARD` 渲染导出内容，并设置导出画布宽高。
-3. `ReviewCardRenderer` 根据 `renderMode` 选择组件：
-   - `mobileReading`：渲染 `MobileReadingReviewCard`。
-   - `exportCard`：渲染 `LongFormExportReviewCard`。
-4. `LongFormExportReviewCard` 内部按图片比例决定横图信息面板或默认单列长图。
-5. `ReviewCardExportService.exportSnapshot(...)` 对指定 `exportComponentId` 截图并写出 JPG。
-
-当前组件关系：
-
-| 场景 | 当前主链路组件 | 说明 |
-| --- | --- | --- |
-| 手机阅读预览 | `MobileReadingReviewCard` | 横图、竖图、方图都使用手机可读的纵向阅读结构。 |
-| 当前导出长图 | `LongFormExportReviewCard` | 横图走专门横向信息面板，竖图 / 方图走默认单列长图。 |
-| 旧横图导出组件 | `ExportHorizontalReviewCard` | 组件仍存在，但当前 `ReviewCardRenderer` 的 `exportCard` 主链路不选择它。 |
-| 旧竖图导出组件 | `ExportVerticalReviewCard` | 组件仍存在，但当前 `ReviewCardRenderer` 的 `exportCard` 主链路不选择它。 |
-| 旧方图导出组件 | `ExportSquareReviewCard` | 组件仍存在，但当前 `ReviewCardRenderer` 的 `exportCard` 主链路不选择它。 |
-
-因此，当前截图中“横图导出样式”由 `LongFormExportReviewCard` 负责，而不是 `ExportHorizontalReviewCard`。后续优化横图导出前，必须先确认实际导出路径、`renderMode`、`exportComponentId` 和截图节点，避免改错组件。
-
-如果未来恢复横图 / 竖图 / 方图差异化导出，应先更新 `ReviewCardRenderer` 的 `exportCard` 组件选择策略，再同步更新本文档和验证脚本。
-
-## 11. 默认文案
-
-默认标题：
-
-```text
-这张照片是否成立
-```
-
-编辑页占位文案：
-
-- 视觉落点：第一眼先看到哪里？
-- 落点原因：为什么它会先被看到？
-- 视线路径：视线接着怎么移动？
-- 画面事实：画面里有哪些可见事实？
-- 核心关系：最重要的 A ↔ B 关系是什么？
-- 是否成立：成立、不确定或不成立？
-- 延伸理解：这张照片为什么成立或不成立？
-- 当前卡点：当前最大问题是什么？
-
-## 12. 后续与 Mac 端 skymap 的关系
-
-Mac 端 skymap 是产品能力参考，不作为代码迁移来源。鸿蒙端优先保持原生体验和轻量闭环，再逐步与 Mac 端对齐复盘卡规则、导出规格和文档互通。
-
-后续可以对齐的能力：
-
-- 真实照片导入。
-- 图片导出。
-- 复盘卡视觉细节。
-- `.photoreview` 文件互通。
-- 多端模板规则版本管理。
-
-## 13. 后续 .photoreview 文件格式草案
-
-`.photoreview` 可以采用 JSON 文档格式，字段草案如下：
-
-```json
-{
-  "version": "0.1.0",
-  "image": {
-    "uri": "",
-    "width": 1600,
-    "height": 1000,
-    "assetId": ""
-  },
-  "content": {
-    "title": "这张照片是否成立",
-    "visualFocus": "",
-    "focusReason": "",
-    "visualPath": "",
-    "visibleFacts": "",
-    "coreRelation": "",
-    "judgement": "",
-    "extendedUnderstanding": "",
-    "currentBlocker": ""
-  },
-  "config": {
-    "templateId": "review_card",
-    "layoutMode": "auto",
-    "background": "white",
-    "textSize": "standard"
-  },
-  "createdAt": 0,
-  "updatedAt": 0
-}
-```
-
-后续若需要与 Mac 端互通，应保持字段向后兼容：新增字段必须可选，删除字段需要版本迁移策略。
+- 不把页面操作栏截图进导出图
+- 不为不同方向维护三条并行导出主链路
+- 不把待复盘任务直接渲染成已完成复盘卡

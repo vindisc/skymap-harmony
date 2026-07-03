@@ -1,25 +1,30 @@
 import fs from 'node:fs';
-import path from 'node:path';
 
-const productDocs = [
-  'docs/product/BETA_CANDIDATE_FREEZE_2026-06.md',
-  'docs/product/BETA_READINESS_AUDIT_2026-06.md',
-  'docs/product/HISTORICAL_CAPABILITY_AUDIT_2026-06.md',
-  'docs/product/REVIEW_LIBRARY_RDB_MIGRATION_DESIGN.md',
-  'docs/product/SMB_REALITY_AUDIT.md',
-  'docs/product/SMB_RECOVERY_STATUS_2026-06.md',
-  'docs/product/SYNC_V0_5.md'
-];
-
-const localDocs = [
-  'docs/home-stats-regression-audit-2026-06.md',
-  'docs/release-v0.2-checklist.md'
+const removedDocs = [
+  'docs/product/CHANGE_RULES.md',
+  'docs/product/FEATURE_MATRIX.md',
+  'docs/product/HARMONYOS_V0_BASELINE.md',
+  'docs/product/REVIEW_BUNDLE_STORAGE_BROWSER.md',
+  'docs/product/REVIEW_BUNDLE_V1_DESIGN.md',
+  'docs/product/REVIEW_BUNDLE_V1_E2E_CHECKLIST.md',
+  'docs/product/REVIEW_BUNDLE_V1_V2_E2E_CHECKLIST.md',
+  'docs/product/REVIEW_LIBRARY_V1_1.md',
+  'docs/product/ROADMAP.md',
+  'docs/product/SYNC_SYSTEM_V1.md',
+  'docs/product/SYNC_V0_MANUAL_EXCHANGE.md',
+  'docs/product/UI_INTERACTION_GUIDE.md',
+  'docs/product/VISION.md',
+  'docs/product/WORKFLOW.md',
+  'docs/harmony/ui-production-quality-progress-2026-07-01.md'
 ];
 
 const currentDocs = [
   'README.md',
+  'docs/AUDIT_CLEANUP_SUMMARY.md',
   'docs/mobile-main-flow.md',
+  'docs/review-card-template-spec.md',
   'docs/product/README.md',
+  'docs/product/CURRENT_PRODUCT_SPEC.md',
   'docs/product/DATA_MODEL.md',
   'docs/product/REVIEW_JSON_SEMANTICS.md',
   'docs/product/REVIEW_LIBRARY_STORAGE_AUDIT.md'
@@ -38,60 +43,59 @@ function readText(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }
 
-function assertMissing(filePath) {
+for (const filePath of removedDocs) {
   assert(!fs.existsSync(filePath), `${filePath} should stay removed from current docs`);
 }
 
-function assertIncludes(source, token, label) {
-  assert(source.includes(token), `${label} missing current token: ${token}`);
-}
-
-function assertExcludes(source, token, label) {
-  assert(!source.includes(token), `${label} still contains stale token: ${token}`);
-}
-
-for (const filePath of [...productDocs, ...localDocs]) {
-  assertMissing(filePath);
-}
-
-const productReadme = readText('docs/product/README.md');
-for (const filePath of productDocs) {
-  assertExcludes(productReadme, path.basename(filePath), 'Product Layer README');
-}
-assertIncludes(productReadme, 'REVIEW_LIBRARY_STORAGE_AUDIT.md', 'Product Layer README');
-assertIncludes(productReadme, 'HarmonyOS 已支持原图复盘包 v2 导出到家庭存储', 'Product Layer README');
-assertIncludes(productReadme, '阶段性 Beta 冻结、已完成迁移设计、历史能力追溯', 'Product Layer README');
+const readme = readText('README.md');
+assert(readme.includes('导入待复盘'), 'README should describe the pending-review import entry');
+assert(readme.includes('学习进度'), 'README should use the current stats naming');
+assert(readme.includes('复盘结果'), 'README should use the current stats naming');
+assert(!readme.includes('图片单选'), 'README should not describe the whole product as single-select only');
 
 const mobileFlow = readText('docs/mobile-main-flow.md');
 for (const token of [
-  '系统文件保存弹窗',
-  '导出复盘包',
-  '导出复盘包（含原图）',
-  '当前复盘库主索引是 RDB `reviews`',
-  '家庭存储页负责 SMB 配置',
-  'REVIEW_BUNDLE_V1_V2_CONTRACT.md',
-  'REVIEW_LIBRARY_STORAGE_AUDIT.md'
+  '并行双入口',
+  '导入待复盘',
+  '多选照片',
+  '待复盘 = pendingCount',
+  '复盘结果',
+  'pending_review_photos'
 ]) {
-  assertIncludes(mobileFlow, token, 'mobile-main-flow.md');
+  assert(mobileFlow.includes(token), `docs/mobile-main-flow.md missing token: ${token}`);
 }
+
+const productReadme = readText('docs/product/README.md');
+assert(productReadme.includes('CURRENT_PRODUCT_SPEC.md'), 'Product README should point to the current product spec');
+for (const token of ['ROADMAP.md', 'VISION.md', 'WORKFLOW.md', 'FEATURE_MATRIX.md']) {
+  assert(!productReadme.includes(token), `Product README should not keep removed doc entry: ${token}`);
+}
+
+const currentProductSpec = readText('docs/product/CURRENT_PRODUCT_SPEC.md');
 for (const token of [
-  'v0.2',
-  '当前导出目录为应用文件目录',
-  '首页统计回归审计',
-  'docs/home-stats-regression-audit-2026-06.md'
+  '导入待复盘',
+  '学习进度',
+  '复盘结果',
+  'Pending',
+  'Review'
 ]) {
-  assertExcludes(mobileFlow, token, 'mobile-main-flow.md');
+  assert(currentProductSpec.includes(token), `CURRENT_PRODUCT_SPEC.md missing token: ${token}`);
+}
+
+const storageAudit = readText('docs/product/REVIEW_LIBRARY_STORAGE_AUDIT.md');
+for (const token of ['pending_review_photos', '当前是两层模型', '待复盘 = pendingCount']) {
+  assert(storageAudit.includes(token), `REVIEW_LIBRARY_STORAGE_AUDIT.md missing token: ${token}`);
 }
 
 for (const filePath of currentDocs) {
   const text = readText(filePath);
-  assertExcludes(text, '/Users/', filePath);
-  assertExcludes(text, 'PycharmProjects', filePath);
-  assertExcludes(text, 'Documents/Codex', filePath);
+  for (const token of ['/Users/', 'PycharmProjects', 'Documents/Codex']) {
+    assert(!text.includes(token), `${filePath} should not contain local absolute path token: ${token}`);
+  }
 }
 
 if (failed) {
   process.exit(1);
 }
 
-console.log('product docs cleanup verified: stale docs removed, current flow updated, no local absolute paths');
+console.log('product docs cleanup verified: stale docs removed, current terminology retained, and no local absolute paths');

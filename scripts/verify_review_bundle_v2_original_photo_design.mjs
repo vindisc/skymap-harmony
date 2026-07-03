@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const v2Doc = fs.readFileSync('docs/product/REVIEW_BUNDLE_V2_ORIGINAL_PHOTO.md', 'utf8');
-const v1Doc = fs.readFileSync('docs/product/REVIEW_BUNDLE_V1_DESIGN.md', 'utf8');
+const contractDoc = fs.readFileSync('docs/product/REVIEW_BUNDLE_V1_V2_CONTRACT.md', 'utf8');
 const bundleServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewBundleExportService.ets', 'utf8');
 const originalPhotoExportSource = fs.readFileSync('entry/src/main/ets/services/ReviewBundleOriginalPhotoExportService.ets', 'utf8');
 const exchangeSchemaSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardExchangeSchema.ets', 'utf8');
@@ -61,8 +61,8 @@ for (const token of [
   assertIncludes(v2Doc, token, 'Review JSON 禁止字段');
 }
 
-assertIncludes(v1Doc, '"bundleVersion": 1', 'REVIEW_BUNDLE_V1_DESIGN.md');
-assertIncludes(v1Doc, '原图默认不进入 bundle v1', 'REVIEW_BUNDLE_V1_DESIGN.md');
+assertIncludes(contractDoc, '`bundleVersion` 为 `1`。', 'REVIEW_BUNDLE_V1_V2_CONTRACT.md');
+assertIncludes(contractDoc, 'v2 不替代 v1，v1 不废弃', 'REVIEW_BUNDLE_V1_V2_CONTRACT.md');
 assertIncludes(bundleServiceSource, 'bundleVersion: 1', 'ReviewBundleExportService v1 remains');
 assertIncludes(bundleServiceSource, 'included: false', 'ReviewBundleExportService v1 remains');
 assertIncludes(bundleServiceSource, 'remoteRelativePath: REVIEW_CARD_IMAGE_PATH', 'ReviewBundleExportService v1 exported image remains');

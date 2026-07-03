@@ -5,8 +5,8 @@ const homeStorageSource = fs.readFileSync('entry/src/main/ets/services/HomeStora
 const smbClientSource = fs.readFileSync('entry/src/main/ets/services/Smb2Client.ets', 'utf8');
 const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
 const exportServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewCardExportService.ets', 'utf8');
-const designDocSource = fs.readFileSync('docs/product/REVIEW_BUNDLE_V1_DESIGN.md', 'utf8');
-const baselineDocSource = fs.readFileSync('docs/product/HARMONYOS_V0_BASELINE.md', 'utf8');
+const contractDocSource = fs.readFileSync('docs/product/REVIEW_BUNDLE_V1_V2_CONTRACT.md', 'utf8');
+const currentSpecDocSource = fs.readFileSync('docs/product/CURRENT_PRODUCT_SPEC.md', 'utf8');
 
 let failed = false;
 
@@ -67,16 +67,16 @@ requireIncludes(exportServiceSource, "format: BUNDLE_REVIEW_CARD_MIME_TYPE", 'Re
 requireIncludes(exportServiceSource, "format: BUNDLE_THUMBNAIL_MIME_TYPE", 'ReviewCardExportService');
 
 requireIncludes(previewPageSource, 'ReviewBundleExportService.exportReviewBundleToHomeStorage(', 'PreviewPage');
-requireIncludes(previewPageSource, "this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包'", 'PreviewPage');
+requireIncludes(previewPageSource, "this.ExportSheetAction(this.exportState === ExportState.BUNDLE ? '导出中…' : '导出复盘包'", 'PreviewPage');
 requireIncludes(previewPageSource, "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'", 'PreviewPage');
-requireIncludes(previewPageSource, "@State isExportingReviewBundle: boolean = false;", 'PreviewPage');
+requireIncludes(previewPageSource, 'exportState === ExportState.BUNDLE', 'PreviewPage');
 requireIncludes(previewPageSource, 'this.isExportSnapshotMode = true;', 'PreviewPage');
 requireIncludes(previewPageSource, 'await this.markExportedQuietly(result.remotePath);', 'PreviewPage');
 
-requireIncludes(designDocSource, '阶段 1 已实现', 'REVIEW_BUNDLE_V1_DESIGN.md');
-requireIncludes(designDocSource, '阶段 1 先由导出截图重新打包为 JPEG', 'REVIEW_BUNDLE_V1_DESIGN.md');
-requireIncludes(designDocSource, 'SMB 写入失败时，本地临时 bundle 会保留', 'REVIEW_BUNDLE_V1_DESIGN.md');
-requireIncludes(baselineDocSource, 'review bundle v1 阶段 1 已实现', 'HARMONYOS_V0_BASELINE.md');
+requireIncludes(contractDocSource, 'v1 是成品图复盘包', 'REVIEW_BUNDLE_V1_V2_CONTRACT.md');
+requireIncludes(contractDocSource, '当前不包含自动同步、批量导入、双向同步、远端删除、冲突合并', 'REVIEW_BUNDLE_V1_V2_CONTRACT.md');
+requireIncludes(contractDocSource, 'v1 / v2 用户文案必须清楚区分', 'REVIEW_BUNDLE_V1_V2_CONTRACT.md');
+requireIncludes(currentSpecDocSource, '导出复盘包', 'CURRENT_PRODUCT_SPEC.md');
 
 if (failed) {
   process.exit(1);

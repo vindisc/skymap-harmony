@@ -1,282 +1,150 @@
-# Skymap Product Data Model
+# 当前数据模型
 
-## 产品模型与客户端实现
+本文只保留当前 HarmonyOS 代码已经落地的数据对象，不再保留模板系统、预设系统、路线图级同步模型等未来概念。
 
-本文定义的是 Skymap Product 的领域模型，不是任何客户端的代码类型、页面状态或本地存储结构。
+## 1. Review
 
-产品模型回答：
+`Review` 表示一条已经完成并保存的摄影复盘。
 
-- 用户在摄影工作流里真实关心哪些对象。
-- 这些对象之间如何关联。
-- 跨客户端交换时哪些字段必须保持同一语义。
+当前真实承载对象：
 
-客户端实现回答：
+- `ReviewCardDocument`
+- `ReviewCardHistoryItem`
+- RDB `reviews`
 
-- 某个平台如何读取照片、保存本地记录、渲染页面、调用系统导出或管理权限。
-- 某个平台如何命名内部文件、缓存和 UI 状态。
+### 当前稳定字段语义
 
-规则：
+| 字段 | 说明 |
+| --- | --- |
+| `imageUri` | 被复盘照片的引用路径，不是原图归档副本 |
+| `imageWidth / imageHeight` | 当前照片尺寸，用于阅读和导出布局 |
+| `content.title` | 复盘标题 |
+| `content.visualFocus` | 视觉落点 |
+| `content.focusReason` | 落点原因 |
+| `content.visualPath` | 视线路径 |
+| `content.visibleFacts` | 画面事实 |
+| `content.coreRelation` | 核心关系 |
+| `content.judgement` | 是否成立，当前归一化到成立 / 待判断 / 不成立 |
+| `content.extendedUnderstanding` | 延伸理解 |
+| `content.currentBlocker` | 当前卡点 |
+| `createdAt / updatedAt` | 创建与最近更新时间 |
+| `exportedPath` | 最近一次导出结果引用，不等于原图路径 |
 
-- 产品字段可以映射到客户端实现，但不能被某个客户端的内部结构绑架。
-- review.json 是产品交换文件，不等于任意客户端的完整内部状态。
-- 客户端可以有私有字段，但不得改变产品字段语义。
+### 当前边界
 
-## 领域关系
+- `Review` 是已保存复盘，不是待复盘任务。
+- `Review` 主索引在 RDB `reviews`。
+- `review.json` 可以表达同一条复盘，但不是本地复盘库主查询源。
 
-```text
-Profile
-  ├─ owns Preset
-  └─ fills Template variables
+## 2. PendingReviewPhoto
 
-Photo
-  ├─ has Review
-  ├─ uses Template
-  └─ participates in ExportJob
+`PendingReviewPhoto` 表示一张已经导入、但尚未完成正式复盘的照片。
 
-Review
-  ├─ references Photo
-  ├─ can be serialized as review.json
-  └─ can be rendered by Template
+当前真实承载对象：
 
-Preset
-  ├─ belongs to Template or ExportJob
-  └─ reuses Profile information
+- `PendingReviewPhoto`
+- RDB `pending_review_photos`
 
-ExportJob
-  ├─ consumes Photo, Review, Template and Preset
-  └─ produces exported files and archive records
+### 当前稳定字段语义
 
-SyncSystem
-  ├─ moves Review through review bundle
-  ├─ uses SMB, WebDAV or local folder as SyncTarget
-  └─ imports into Review Library through ImportRecord
-```
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 待复盘任务标识 |
+| `photoUri` | 待复盘照片引用 |
+| `fileName` | 文件名 |
+| `width / height` | 读取到的图片尺寸 |
+| `orientation` | 横图 / 竖图 / 方图 / unknown |
+| `importTime` | 导入时间 |
+| `status` | `pending` 或 `reviewed` |
+| `linkedReviewId` | 完成正式复盘后关联的 Review 标识 |
 
-## Review
+### 当前边界
 
-Review 表示一次针对照片的摄影复盘。
+- `PendingReviewPhoto` 不参与 `复盘结果` 判断分布。
+- 从待复盘进入编辑并保存后，会标记为 `reviewed`。
+- 当前库内 `待复盘` 筛选读取的是这张表，不是 `reviews` 表。
 
-`review.json` 的字段语义以 [`REVIEW_JSON_SEMANTICS.md`](./REVIEW_JSON_SEMANTICS.md) 为准；当前表格只定义 Review 领域对象中必须稳定存在的产品字段。
+## 3. LearningStats
 
-### HarmonyOS 端复盘库存储说明
+统计页的 `学习进度` 不是一张独立表，而是由两个真实数据源组合出来的读模型：
 
-HarmonyOS 端当前复盘库主存储详见 [`REVIEW_LIBRARY_STORAGE_AUDIT.md`](./REVIEW_LIBRARY_STORAGE_AUDIT.md)。
+- `PendingReviewPhotoStore.getStats(...)`
+- `ReviewCardHistoryService.load(...)`
 
-当前必须明确：
+当前口径：
 
-- HarmonyOS 端复盘库主索引是 RDB `reviews`
-- `Preferences(review_card_history.items)` 只作为旧版本数据迁移 / 诊断来源
-- 当前历史项结构为 `ReviewCardHistoryItem = document + exportedPath`
-- 原图二进制不进入复盘库，`imageUri` 只是原图引用
-- `exportedPath` 是导出结果引用，不是原图路径
-- `review.json` 可以作为交换和恢复副本存在，但不等于复盘库主查询源
+| 指标 | 计算方式 |
+| --- | --- |
+| 待复盘 | `pendingCount` |
+| 已完成 | `Review` 总数 |
+| 累计导入 | `pendingCount + Review 总数` |
+| 完成率 | `已完成 / 累计导入` |
 
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| reviewId | 标识一次复盘，便于归档、同步和去重。 | 产品模型 |
-| photoRef | 关联被复盘的照片。 | 产品模型 |
-| titleText | 复盘标题，例如「这张照片是否成立」。 | 产品模型 |
-| reviewTimeText | 复盘时间文本，用于阅读页、导出图和跨端回看时的同一时间口径。 | 产品模型 |
-| reviewerText | 复盘人文本，用于标记这次复盘由谁完成。 | 产品模型 |
-| reviewStructure | 表示复盘框架，例如快速复盘、构图光线、故事表达。 | 产品模型 |
-| decision | 表示成立、不成立或不确定。 | 产品模型 |
-| firstLookText | 第一眼视觉落点。 | 产品模型 |
-| attentionReasonText | 视觉落点原因。 | 产品模型 |
-| eyePathText | 视线路径。 | 产品模型 |
-| visualFactText | 画面事实。 | 产品模型 |
-| strongestRelationText | 核心关系。 | 产品模型 |
-| extensionReasonText | 延伸理解。 | 产品模型 |
-| blockerText | 当前卡点。 | 产品模型 |
-| reviewerRef | 关联复盘人资料。 | 产品模型 |
-| createdAt / updatedAt | 支持排序、回看和同步冲突判断。 | 产品模型 |
-| sourceClient | 记录首次创建来源，用于排障和产品分析，不改变字段语义。 | 产品模型 |
+## 4. ReviewResultStats
 
-## Photo
+统计页 `复盘结果` 只基于已保存 `Review` 构建。
 
-Photo 表示一张进入 Skymap 工作流的照片。
+当前输出包括：
 
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| photoId | 标识照片，便于多次复盘、导出和同步关联。 | 产品模型 |
-| fileName | 原始文件名，用于 review.json、导出命名和人工识别。 | 产品模型 |
-| sourceLocation | 照片在当前客户端可访问的位置。 | 客户端实现 |
-| pixelWidth / pixelHeight | 判断横图、竖图、方图和导出版式。 | 产品模型 |
-| orientation | 保存原始方向信息，避免跨端显示不一致。 | 产品模型 |
-| capturedAt | 拍摄时间，用于日期模板、搜索和成长统计。 | 产品模型 |
-| exifSummary | 相机、镜头、焦段、光圈、快门、ISO 等摘要。 | 产品模型 |
-| manualOverrides | 用户手动修正的照片资料或 EXIF 信息。 | 产品模型 |
-| linkedReviewIds | 关联该照片的复盘记录。 | 产品模型 |
+- 累计复盘
+- 成立
+- 待判断
+- 不成立
+- 最近 30 天分布
+- 最近卡点
 
-## Template
+当前必须冻结：
 
-Template 表示把照片、复盘和资料渲染成成品的表达方式。
+- 不再使用 `学习概览 / 复盘质量`
+- 不把 `Pending` 混入 `复盘结果`
 
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| templateId | 稳定标识模板，供预设、导出、归档和兼容使用。 | 产品模型 |
-| displayName | 面向用户的中文名称。 | 产品模型 |
-| family | 模板分组，例如极简、参数、日历、色卡、个人、品牌、复盘。 | 产品模型 |
-| purpose | 说明模板服务的摄影工作流场景。 | 产品模型 |
-| requiredInputs | 标明模板依赖照片、EXIF、资料、复盘字段或品牌信息。 | 产品模型 |
-| layoutRules | 描述横图、竖图、方图和长文本的产品级布局约束。 | 产品模型 |
-| supportedClients | 标明哪些客户端可以创建、编辑或渲染该模板。 | 产品模型 |
-| version | 支持模板演进和旧数据兼容。 | 产品模型 |
+## 5. ReviewJsonBackup
 
-## Preset
+`review_exchange/*.review.json` 是当前应用沙箱中的备份与交换副本。
 
-Preset 表示用户希望重复使用的一组选择。
+当前职责：
 
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| presetId | 标识一个用户预设。 | 产品模型 |
-| name | 用户可识别的中文名称。 | 产品模型 |
-| scope | 区分模板预设、导出预设、资料预设或颜色预设。 | 产品模型 |
-| targetTemplateId | 当预设服务某个模板时，关联对应模板。 | 产品模型 |
-| parameters | 保存可复用的参数集合，具体落地由客户端转换。 | 产品模型 |
-| isDefault | 表示是否作为某个范围的默认选择。 | 产品模型 |
-| ownerProfileRef | 关联创建或拥有该预设的资料。 | 产品模型 |
-| updatedAt | 支持排序、同步和冲突提示。 | 产品模型 |
+- 保存或更新复盘时额外生成一份 JSON 备份
+- 作为有限恢复来源
+- 作为导出 `review.json` 的一致字段来源
 
-## Profile
+当前边界：
 
-Profile 表示复用在复盘、模板、署名、品牌和导出命名中的身份资料。
+- 不是本地复盘库主索引
+- 不替代 `reviews`
 
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| profileId | 标识一份资料。 | 产品模型 |
-| role | 区分个人、品牌、复盘人或当前照片资料。 | 产品模型 |
-| displayName | 中文显示名或署名。 | 产品模型 |
-| signatureText | 签名文本。 | 产品模型 |
-| copyrightText | 版权文本。 | 产品模型 |
-| website | 网站或作品集链接。 | 产品模型 |
-| socialHandle | 社交账号。 | 产品模型 |
-| avatarRef | 头像或标识图片引用。 | 客户端实现 |
-| brandStyle | 品牌色、品牌署名等可复用视觉信息。 | 产品模型 |
+## 6. ReviewBundle
 
-## ExportJob
+当前代码已经支持两类外部复盘包导出：
 
-ExportJob 表示一次导出动作，不等同于单张导出按钮点击。
+- 复盘包
+- 含原图的复盘包
 
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| exportJobId | 标识一次导出任务。 | 产品模型 |
-| inputPhotoRefs | 本次导出的照片集合。 | 产品模型 |
-| inputReviewRefs | 本次导出使用的复盘集合。 | 产品模型 |
-| templateRef | 本次导出的模板。 | 产品模型 |
-| presetRef | 本次导出使用的预设。 | 产品模型 |
-| outputFormat | 输出格式，例如 JPEG。 | 产品模型 |
-| canvasRatio | 输出画布比例。 | 产品模型 |
-| namingRule | 文件命名规则。 | 产品模型 |
-| destination | 保存到本地目录、系统相册、家庭存储或其他位置。 | 产品模型 |
-| status | 排队、导出中、成功、部分失败或失败。 | 产品模型 |
-| resultRefs | 导出产物引用。 | 客户端实现 |
-| errorSummary | 用户可理解的失败原因。 | 产品模型 |
+它们都是导出产物，不是本地复盘库主模型。
 
-## SyncSystem
+当前共同边界：
 
-SyncSystem 表示 Skymap 在 Harmony、家庭存储、Mac 和 Review Library 之间的同步能力。
+- 承载 `review.json` 和相关导出文件
+- 写入家庭存储配置目标
+- 不回写进本地 `Review` 数据结构
 
-SyncSystem 是产品级文件流转模型，不是云服务器、账号系统或客户端内部数据库。SyncSystem v1 优先支持家庭存储：SMB、WebDAV 和本地同步目录。
+协议边界见：
 
-### SyncTarget
+- [`REVIEW_BUNDLE_V1_V2_CONTRACT.md`](./REVIEW_BUNDLE_V1_V2_CONTRACT.md)
+- [`REVIEW_BUNDLE_V2_ORIGINAL_PHOTO.md`](./REVIEW_BUNDLE_V2_ORIGINAL_PHOTO.md)
 
-SyncTarget 表示一个可被用户选择或配置的同步位置。
+## 7. HomeHeroImageConfig
 
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| syncTargetId | 标识一个同步位置。 | 产品模型 |
-| kind | 区分 SMB、WebDAV 或本地文件夹。 | 产品模型 |
-| displayName | 用户可识别的中文名称。 | 产品模型 |
-| rootPath | 指向 `Skymap/` 根目录的位置描述。 | 客户端实现 |
-| lastScanAt | Mac 最近一次扫描时间。 | 客户端实现 |
-| status | 可用、不可用、权限失败或等待挂载。 | 产品模型 |
-| errorSummary | 用户可理解的失败原因。 | 产品模型 |
+首页图片配置是当前独立的小型配置模型，不属于复盘主索引。
 
-### ReviewBundle
+当前职责：
 
-ReviewBundle 表示一次复盘在家庭存储中的目录级同步单元。
+- 保存首页 Hero 图片列表
+- 控制是否自动轮播
+- 控制轮播间隔
 
-详细设计见 [`REVIEW_BUNDLE_V1_DESIGN.md`](./REVIEW_BUNDLE_V1_DESIGN.md)。当前 v1 仍不修改 `ReviewCardDocument`、Review JSON v1 字段或 RDB 表结构；HarmonyOS 已建立单条 bundle 导出闭环，Mac 已支持选择单个 bundle 写入 Review Library。当前不是批量导入、自动同步、双向同步或冲突合并。
+当前边界：
 
-推荐结构：
-
-```text
-Skymap/
-└── ReviewBundles/
-    └── 2026/
-        └── 06/
-            └── review_20260626_093700_a1b2c3/
-                ├── manifest.json
-                ├── review.json
-                ├── exports/
-                │   └── review-card.png
-                ├── thumbnails/
-                │   └── thumb.jpg
-                └── assets/
-                    └── README.md
-```
-
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| bundleId | 标识一个 review bundle。 | 产品模型 |
-| reviewRef | 指向 bundle 内的 `review.json`。 | 产品模型 |
-| manifestRef | 指向 bundle 内的 `manifest.json`。 | 产品模型 |
-| exportedImageRefs | 指向 bundle 内用户可查看的导出成品图，v1 默认至少一张 `exports/review-card.png`。 | 产品模型 |
-| thumbnailRef | 指向 bundle 内快速浏览缩略图，缺失不应阻止导入。 | 产品模型 |
-| originalPhotoRef | 原图来源提示；v1 默认不包含原图二进制，只记录 `included=false` 和可选文件名、像素等提示。 | 产品模型 |
-| createdAt / updatedAt | 支持排序、扫描和冲突判断。 | 产品模型 |
-| sourceClient | 标记 Harmony、Mac 或手动导入来源。 | 产品模型 |
-
-### BundleManifest
-
-BundleManifest 表示 bundle 内的文件清单和完整性摘要，不替代 `review.json`。
-
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| bundleVersion | 清单 / bundle 格式版本，v1 使用 `1`。 | 产品模型 |
-| bundleId | 对应 ReviewBundle。 | 产品模型 |
-| createdAt / updatedAt | bundle 创建和清单更新时间。 | 产品模型 |
-| sourceApp / sourceAppVersion / platform | 首次创建 bundle 的应用、版本和平台。 | 产品模型 |
-| reviewJsonPath | `review.json` 在 bundle 内的相对路径。 | 产品模型 |
-| exportedImages | 导出图清单，包含路径、类型、尺寸和创建时间。 | 产品模型 |
-| thumbnailPath | 缩略图在 bundle 内的相对路径。 | 产品模型 |
-| originalPhoto | 原图是否包含以及来源提示；v1 默认 `included=false`。 | 产品模型 |
-| review | 少量复盘摘要字段，用于扫描预览和重复判断，不替代 `review.json`。 | 产品模型 |
-| checksum | `review.json` 和导出图的完整性摘要，v1 可 best-effort。 | 产品模型 |
-
-### ImportRecord
-
-ImportRecord 表示 Mac 已经处理过的同步对象。
-
-当前 Mac 单个 review bundle 导入会在 Review Library 索引中登记导入结果：复盘字段来自 `review.json`，bundleId、来源 bundle 名称、导出图资产路径和缩略图资产路径来自 bundle 文件清单和复制结果。相同 bundleId 默认跳过，不覆盖、不合并、不回写远端。真实 HarmonyOS 真机 bundle 样本 fixture 回归仍是发布前测试债。
-
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| importRecordId | 标识一次导入记录。 | 客户端实现 |
-| bundleId | 已导入或已跳过的 bundle。 | 产品模型 |
-| reviewId | 关联导入后的 Review。 | 产品模型 |
-| sourcePath | 导入来源路径。 | 客户端实现 |
-| importedAt | 导入时间。 | 客户端实现 |
-| result | 已导入、已存在、冲突、失败或缺失文件。 | 产品模型 |
-| errorSummary | 用户可理解的失败原因。 | 产品模型 |
-
-### ConflictRecord
-
-ConflictRecord 表示无法自动判断的同步冲突。
-
-| 字段 | 职责 | 归属 |
-| --- | --- | --- |
-| conflictRecordId | 标识一次冲突。 | 客户端实现 |
-| conflictType | 同 ID 内容不同、疑似重复照片、缺失文件或来源移动。 | 产品模型 |
-| primaryRef | 已存在记录。 | 产品模型 |
-| incomingRef | 新发现记录。 | 产品模型 |
-| detectedAt | 发现时间。 | 客户端实现 |
-| recommendedAction | 跳过、保留副本、手动选择或重新扫描。 | 产品模型 |
-
-## 当前边界
-
-- Harmony Client 当前主要创建 Review、Photo 的轻量记录和单张复盘图 ExportJob。
-- Mac Client 当前主要消费 Photo、Template、Preset、Profile，并承担批量 ExportJob。
-- Review 与 review.json 是跨端优先级最高的统一模型。
-- SyncSystem v1 只设计家庭存储优先的文件同步，不引入云服务器、账号体系或第三方后端。
-- 搜索、筛选和成长统计需要基于上述产品模型建立，不能直接依赖某个客户端的页面列表状态。
+- 不写入 `Review`
+- 不写入 `PendingReviewPhoto`
+- 不影响统计口径
