@@ -2,6 +2,7 @@ import fs from 'node:fs';
 
 const previewSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
 const entryAbilitySource = fs.readFileSync('entry/src/main/ets/entryability/EntryAbility.ets', 'utf8');
+const appDesignSource = fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8');
 
 let failed = false;
 
@@ -22,6 +23,7 @@ assert(previewSource.includes("this.updatePressedAction(event, 'cancel-export', 
 assert(entryAbilitySource.includes('setWindowLayoutFullScreen(true)'), 'Main window must use immersive layout so pages can own the bottom navigation area.');
 assert(entryAbilitySource.includes("const APP_TRANSPARENT: string = '#00000000';"), 'System bars must use a transparent color token.');
 assert(entryAbilitySource.includes('navigationBarColor: APP_TRANSPARENT'), 'Navigation bar must not draw a separate bottom strip color.');
+assert(appDesignSource.includes('static readonly pageTopPadding: number = 52;'), 'Immersive window layout must keep page content below the status bar.');
 
 if (failed) {
   process.exit(1);

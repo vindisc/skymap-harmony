@@ -87,7 +87,7 @@ export class AppMetrics {
   static readonly space24: number = SpacingTokens.xl;
   static readonly space32: number = SpacingTokens.xxl;
   static readonly pagePadding: number = 16;
-  static readonly pageTopPadding: number = 16;
+  static readonly pageTopPadding: number = 52;
   static readonly pageBottomPadding: number = 20;
   static readonly floatingDockPadding: number = 8;
   static readonly floatingDockBottomPadding: number = 6;
