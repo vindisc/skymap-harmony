@@ -21,6 +21,7 @@ const moduleConfig = read('entry/src/main/module.json5');
 const formConfig = read('entry/src/main/resources/base/profile/form_config.json');
 const formAbility = read('entry/src/main/ets/formability/LearningProgressFormAbility.ets');
 const formPage = read('entry/src/main/ets/widget/pages/LearningProgressMediumCard.ets');
+const todayReviewPage = read('entry/src/main/ets/widget/pages/TodayReviewCard.ets');
 const progressService = read('entry/src/main/ets/services/LearningProgressService.ets');
 const formService = read('entry/src/main/ets/services/LearningProgressFormService.ets');
 const launchService = read('entry/src/main/ets/services/FormLaunchIntentService.ets');
@@ -43,9 +44,12 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
   '"LearningProgressMediumCard"',
   '"displayName": "摄影学习"',
   '"src": "./ets/widget/pages/LearningProgressMediumCard.ets"',
+  '"TodayReviewCard"',
+  '"displayName": "今日复盘"',
+  '"src": "./ets/widget/pages/TodayReviewCard.ets"',
   '"uiSyntax": "arkts"',
   '"2*2"'
-].forEach((token) => requireIncludes(formConfig, token, 'form_config must expose one medium ArkTS card'));
+].forEach((token) => requireIncludes(formConfig, token, 'form_config must expose learning progress and today review ArkTS cards'));
 
 [
   'FormExtensionAbility',
@@ -76,6 +80,26 @@ assert(!formPage.includes("Text(`完成率 ${this.completionRateText}`)"),
 assert(!formPage.includes('MetricTile('), 'LearningProgressMediumCard must not render the dense four-tile layout.');
 assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('已完成')"),
   'LearningProgressMediumCard must only show pending count and completion rate on the small card.');
+
+[
+  "Text('今日复盘')",
+  'pendingCountText',
+  'targetRoute: this.targetRoute',
+  "return `待复盘 ${this.resolvePendingCount()} 张`;",
+  "return '今日已清空';",
+  "return this.hasPendingReview() ? '点击继续' : '暂无待复盘';",
+  'FormLink({',
+  "abilityName: 'EntryAbility'"
+].forEach((token) => requireIncludes(todayReviewPage, token, 'TodayReviewCard must render the action-driven pending review state'));
+
+assert(!todayReviewPage.includes('Button('), 'TodayReviewCard must not add card-level buttons.');
+assert(!todayReviewPage.includes('completionRateText') &&
+  !todayReviewPage.includes('totalImportedCountText') &&
+  !todayReviewPage.includes('completedCountText') &&
+  !todayReviewPage.includes("Text('累计导入')") &&
+  !todayReviewPage.includes("Text('已完成')") &&
+  !todayReviewPage.includes("Text('完成率')"),
+  'TodayReviewCard must only show the pending action state.');
 
 [
   'PendingReviewPhotoStore.getStats(context)',
