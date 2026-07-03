@@ -41,6 +41,18 @@ export interface PendingReviewPhotoStats {
   totalImportedCount: number;
 }
 
+export interface PendingReviewPhotoInput {
+  photoUri: string;
+  width: number;
+  height: number;
+  imageSizeFallbackUsed: boolean;
+}
+
+export interface PendingReviewPhotoBatchResult {
+  photos: Array<PendingReviewPhoto>;
+  failedCount: number;
+}
+
 export function createEmptyPendingReviewPhotoStats(): PendingReviewPhotoStats {
   return {
     pendingCount: 0,
@@ -158,6 +170,32 @@ export class PendingReviewPhotoStore {
       relationalStore.ConflictResolution.ON_CONFLICT_REPLACE
     );
     return normalizePendingReviewPhoto(photo);
+  }
+
+  static async addPhotos(
+    context: common.UIAbilityContext,
+    inputs: Array<PendingReviewPhotoInput>
+  ): Promise<PendingReviewPhotoBatchResult> {
+    const photos: Array<PendingReviewPhoto> = [];
+    let failedCount: number = 0;
+    for (let index = 0; index < inputs.length; index += 1) {
+      const input: PendingReviewPhotoInput = inputs[index];
+      try {
+        photos.push(await PendingReviewPhotoStore.addPhoto(
+          context,
+          input.photoUri,
+          input.width,
+          input.height,
+          input.imageSizeFallbackUsed
+        ));
+      } catch (error) {
+        failedCount += 1;
+      }
+    }
+    return {
+      photos: photos,
+      failedCount: failedCount
+    };
   }
 
   static async listPending(context: common.UIAbilityContext): Promise<Array<PendingReviewPhoto>> {

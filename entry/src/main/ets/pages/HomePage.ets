@@ -8,10 +8,13 @@ import {
   pickMultiplePhotoDetails,
   pickSinglePhoto,
   PickedPhotoDetailListResult,
-  PickedPhotoItem,
   PickedPhotoResult
 } from '../services/PhotoPickerService';
-import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
+import {
+  PendingReviewPhotoBatchResult,
+  PendingReviewPhotoInput,
+  PendingReviewPhotoStore
+} from '../services/PendingReviewPhotoStore';
 import {
   HomeHeroDisplayImage,
   HomeHeroImageConfig,
@@ -226,37 +229,43 @@ export struct HomePage {
         return;
       }
 
-      let successCount: number = 0;
       let failedCount: number = 0;
+      const photos: Array<PendingReviewPhotoInput> = [];
       for (let index = 0; index < result.photos.length; index += 1) {
-        const photo: PickedPhotoItem = result.photos[index];
-        try {
-          await PendingReviewPhotoStore.addPhoto(
-            this.getAbilityContext(),
-            photo.imageUri,
-            photo.imageWidth,
-            photo.imageHeight,
-            photo.imageSizeFallbackUsed
-          );
-          successCount += 1;
-        } catch (error) {
+        if (result.photos[index].imageSizeFallbackUsed) {
           failedCount += 1;
+          continue;
         }
+        photos.push({
+          photoUri: result.photos[index].imageUri,
+          width: result.photos[index].imageWidth,
+          height: result.photos[index].imageHeight,
+          imageSizeFallbackUsed: result.photos[index].imageSizeFallbackUsed
+        });
       }
 
+      const batchResult: PendingReviewPhotoBatchResult = await PendingReviewPhotoStore.addPhotos(
+        this.getAbilityContext(),
+        photos
+      );
+      const successCount: number = batchResult.photos.length;
+      failedCount += batchResult.failedCount;
+
       if (successCount <= 0) {
-        ToastService.show(this.getUIContext(), REVIEW_FLOW_PENDING_IMPORT_FAILED_TEXT);
+        ToastService.show(this.getUIContext(), failedCount > 0
+          ? `成功导入：0，失败：${failedCount}`
+          : REVIEW_FLOW_PENDING_IMPORT_FAILED_TEXT);
         return;
       }
 
       if (failedCount > 0) {
-        ToastService.show(this.getUIContext(), `已加入${successCount}张，${failedCount}张失败`);
+        ToastService.show(this.getUIContext(), `成功导入：${successCount}，失败：${failedCount}`);
         return;
       }
 
       ToastService.show(this.getUIContext(), successCount === 1
         ? REVIEW_FLOW_PENDING_IMPORT_SUCCESS_TEXT
-        : `已加入${successCount}张待复盘`);
+        : `已加入待复盘（${successCount} 张）`);
     } finally {
       this.isImportingPendingPhoto = false;
     }

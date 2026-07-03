@@ -257,7 +257,7 @@ export struct StatsPage {
   LearningOverviewCard() {
     Column({ space: AppMetrics.space12 }) {
       Row() {
-        Text('学习概览')
+        Text('学习进度')
           .fontSize(AppTypography.cardTitle)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
@@ -290,7 +290,7 @@ export struct StatsPage {
       .width('100%')
 
       Row({ space: AppMetrics.space8 }) {
-        this.LearningMetric('累计完成', `${this.learningStats.reviewedCount}`, AppColors.tagGreenText, AppColors.tagGreen)
+        this.LearningMetric('已完成', `${this.learningStats.reviewedCount}`, AppColors.tagGreenText, AppColors.tagGreen)
         this.LearningMetric('完成率', this.resolveLearningCompletionRate(), AppColors.text, AppColors.surfaceMuted)
       }
       .width('100%')
@@ -317,7 +317,7 @@ export struct StatsPage {
             .lineHeight(AppTypography.statNumberLineHeight)
             .maxLines(1)
 
-          Text('次复盘')
+          Text('累计复盘')
             .fontSize(AppTypography.body)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
@@ -699,7 +699,7 @@ export struct StatsPage {
               this.LearningOverviewCard()
 
               if (this.hasStatsData()) {
-                this.SectionTitle('复盘质量')
+                this.SectionTitle('复盘结果')
                 this.OverviewCard()
                 this.Recent30DaysCard()
                 this.DistributionCard()
