@@ -118,9 +118,9 @@ function buildWhereClause(query?: ReviewListQuery): ReviewRdbWhereClause {
   const likeKeyword: string = query ? toLikeKeyword(query.keyword) : '';
   if (likeKeyword.length > 0) {
     whereParts.push(
-      '(title LIKE ? OR focus_text LIKE ? OR reason_text LIKE ? OR path_text LIKE ? OR facts_text LIKE ? OR strongest_relation_text LIKE ? OR blocker_text LIKE ?)'
+      '(title LIKE ? OR image_uri LIKE ? OR focus_text LIKE ? OR reason_text LIKE ? OR path_text LIKE ? OR facts_text LIKE ? OR strongest_relation_text LIKE ? OR blocker_text LIKE ?)'
     );
-    for (let index = 0; index < 7; index += 1) {
+    for (let index = 0; index < 8; index += 1) {
       args.push(likeKeyword);
     }
   }

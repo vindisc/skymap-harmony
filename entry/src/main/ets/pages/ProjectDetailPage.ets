@@ -19,7 +19,7 @@ import {
   ReviewCardHistoryItem,
   ReviewJudgementStatus
 } from '../model/ReviewCardModel';
-import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import { ReviewCardHistoryPageResult, ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
@@ -39,6 +39,7 @@ const DELETE_SWIPE_BUTTON_WIDTH: number = 68;
 const LIBRARY_HEADER_CONTROL_GAP: number = AppMetrics.space10;
 const LIBRARY_LIST_TOP_GAP: number = AppMetrics.space8;
 const LIBRARY_BOTTOM_CLEARANCE: number = AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space8;
+const REVIEW_LIBRARY_PAGE_SIZE: number = 5;
 
 @Component
 export struct ProjectDetailPage {
@@ -52,6 +53,8 @@ export struct ProjectDetailPage {
   @State deletingReviewKey: string = '';
   @State libraryLoadFailed: boolean = false;
   @State isLibraryLoading: boolean = false;
+  @State isLoadingMore: boolean = false;
+  @State hasMoreItems: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -73,26 +76,76 @@ export struct ProjectDetailPage {
     const requestId: number = this.loadRequestId + 1;
     this.loadRequestId = requestId;
     this.isLibraryLoading = true;
+    this.isLoadingMore = false;
     try {
-      const items = await ReviewCardHistoryService.load(this.getAbilityContext());
+      const result: ReviewCardHistoryPageResult = await ReviewCardHistoryService.loadPage(this.getAbilityContext(), {
+        decision: this.resolveDecisionQuery(),
+        keyword: this.searchText,
+        limit: REVIEW_LIBRARY_PAGE_SIZE,
+        offset: 0
+      });
       if (requestId !== this.loadRequestId) {
         return;
       }
-      this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
+      const summary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(result.items);
+      summary.recordCount = result.totalCount;
+      summary.stats.totalCount = result.totalCount;
+      this.summary = summary;
+      this.filteredItems = result.items;
+      this.hasMoreItems = this.filteredItems.length < result.totalCount;
       this.libraryLoadFailed = false;
       this.isLibraryLoading = false;
-      this.applyFilters();
     } catch (error) {
       if (requestId !== this.loadRequestId) {
         return;
       }
       this.libraryLoadFailed = true;
       this.isLibraryLoading = false;
+      this.hasMoreItems = false;
     }
   }
 
   private applyFilters(): void {
-    this.filteredItems = ReviewProjectService.filterItems(this.summary.items, this.searchText, this.decisionFilter);
+    this.reloadData();
+  }
+
+  private resolveDecisionQuery(): string | undefined {
+    return this.decisionFilter === 'all' ? undefined : this.decisionFilter;
+  }
+
+  private async loadMoreItems(): Promise<void> {
+    if (this.isLibraryLoading || this.isLoadingMore || !this.hasMoreItems || this.libraryLoadFailed) {
+      return;
+    }
+
+    const requestId: number = this.loadRequestId;
+    this.isLoadingMore = true;
+    try {
+      const result: ReviewCardHistoryPageResult = await ReviewCardHistoryService.loadPage(this.getAbilityContext(), {
+        decision: this.resolveDecisionQuery(),
+        keyword: this.searchText,
+        limit: REVIEW_LIBRARY_PAGE_SIZE,
+        offset: this.filteredItems.length
+      });
+      if (requestId !== this.loadRequestId) {
+        return;
+      }
+      const nextItems: Array<ReviewCardHistoryItem> = this.filteredItems.concat(result.items);
+      const summary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(nextItems);
+      summary.recordCount = result.totalCount;
+      summary.stats.totalCount = result.totalCount;
+      this.summary = summary;
+      this.filteredItems = nextItems;
+      this.hasMoreItems = this.filteredItems.length < result.totalCount;
+    } catch (error) {
+      if (requestId === this.loadRequestId) {
+        this.hasMoreItems = false;
+      }
+    } finally {
+      if (requestId === this.loadRequestId) {
+        this.isLoadingMore = false;
+      }
+    }
   }
 
   private clearFilters(): void {
@@ -187,26 +240,32 @@ export struct ProjectDetailPage {
 
     this.deletingReviewKey = deletingKey;
     const previousItems: Array<ReviewCardHistoryItem> = this.summary.items;
+    const previousRecordCount: number = this.summary.recordCount;
     const nextItems: Array<ReviewCardHistoryItem> = previousItems.filter((item: ReviewCardHistoryItem): boolean => {
       return getReviewDocumentKey(item.document) !== deletingKey;
     });
-    this.summary = ReviewProjectService.buildDefaultProjectSummary(nextItems);
-    this.applyFilters();
+    const optimisticSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(nextItems);
+    optimisticSummary.recordCount = Math.max(0, previousRecordCount - 1);
+    optimisticSummary.stats.totalCount = optimisticSummary.recordCount;
+    this.summary = optimisticSummary;
+    this.filteredItems = nextItems;
+    this.hasMoreItems = nextItems.length < optimisticSummary.recordCount;
     try {
-      const items = await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
-      this.summary = ReviewProjectService.buildDefaultProjectSummary(items);
-      this.applyFilters();
+      await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
       const currentDocument: ReviewCardDocument = ReviewCardStore.getCurrentDocument();
       if (getReviewDocumentKey(currentDocument) === deletingKey) {
-        ReviewCardStore.setCurrentDocument(this.summary.items.length > 0
-          ? this.summary.items[0].document
+        ReviewCardStore.setCurrentDocument(nextItems.length > 0
+          ? nextItems[0].document
           : createDefaultReviewCardDocument());
       }
       ToastService.show(this.getUIContext(), REVIEW_FLOW_DELETE_SUCCESS_TEXT);
       this.reloadData();
     } catch (error) {
-      this.summary = ReviewProjectService.buildDefaultProjectSummary(previousItems);
-      this.applyFilters();
+      const restoredSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(previousItems);
+      restoredSummary.recordCount = previousRecordCount;
+      restoredSummary.stats.totalCount = previousRecordCount;
+      this.summary = restoredSummary;
+      this.filteredItems = previousItems;
       ToastService.show(this.getUIContext(), REVIEW_FLOW_DELETE_FAILED_TEXT);
       this.reloadData();
     } finally {
@@ -434,7 +493,7 @@ export struct ProjectDetailPage {
         .width('100%')
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
-      } else if (this.summary.recordCount === 0) {
+      } else if (this.summary.recordCount === 0 && !this.hasActiveFilters()) {
         Column() {
           EmptyState({
             title: '暂无复盘记录',
@@ -486,17 +545,35 @@ export struct ProjectDetailPage {
               edgeEffect: SwipeEdgeEffect.Spring
             })
           }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
-          ListItem() {
-            Column()
-              .height(LIBRARY_BOTTOM_CLEARANCE)
-              .width('100%')
-          }
+      ListItem() {
+        Column()
+          .height(this.isLoadingMore ? AppMetrics.space32 : 1)
+          .width('100%')
+      }
+      if (this.isLoadingMore) {
+        ListItem() {
+          Text('正在加载更多复盘')
+            .fontSize(AppTypography.caption)
+            .fontColor(AppColors.secondaryText)
+            .width('100%')
+            .textAlign(TextAlign.Center)
+            .padding({ bottom: AppMetrics.space16 })
+        }
+      }
+      ListItem() {
+        Column()
+          .height(LIBRARY_BOTTOM_CLEARANCE)
+          .width('100%')
+      }
         }
         .layoutWeight(1)
         .width('100%')
         .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
         .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: LIBRARY_LIST_TOP_GAP })
+        .onReachEnd(() => {
+          this.loadMoreItems();
+        })
       }
     }
     .width('100%')

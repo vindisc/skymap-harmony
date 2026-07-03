@@ -16,6 +16,7 @@ import {
 } from './ReviewCardExchangeSchema';
 import { MigrationResult, ReviewCardMigrationService } from './ReviewCardMigrationService';
 import { ReviewCardRdbListResult, ReviewCardRdbService } from './ReviewCardRdbService';
+import { ReviewListQuery } from './ReviewCardRdbModel';
 import { ReviewJsonBackupResult, ReviewJsonExportService } from './ReviewJsonExportService';
 import { ReviewLibraryRefreshService } from './ReviewLibraryRefreshService';
 
@@ -28,6 +29,18 @@ const REVIEW_JSON_BACKUP_DIR_NAME: string = 'review_exchange';
 export interface ReviewCardHistoryLoadResult {
   items: Array<ReviewCardHistoryItem>;
   diagnostics: ReviewCardHistoryDiagnostics;
+}
+
+export interface ReviewCardHistoryPageResult {
+  items: Array<ReviewCardHistoryItem>;
+  totalCount: number;
+}
+
+export interface ReviewCardHistoryPageQuery {
+  decision?: string;
+  keyword?: string;
+  limit: number;
+  offset: number;
 }
 
 export interface ReviewCardHistoryDiagnostics {
@@ -301,6 +314,55 @@ function createRdbWriteError(operationName: string, error: Error | Object | stri
   return new Error(`[ReviewCardHistoryService] RDB ${operationName}失败，已停止 Preferences 主索引回退：${error}`);
 }
 
+function normalizePageLimit(value: number): number {
+  return value > 0 ? Math.floor(value) : 5;
+}
+
+function normalizePageOffset(value: number): number {
+  return value > 0 ? Math.floor(value) : 0;
+}
+
+function createRdbPageQuery(query: ReviewCardHistoryPageQuery): ReviewListQuery {
+  const rdbQuery: ReviewListQuery = {
+    includeDeleted: false,
+    limit: normalizePageLimit(query.limit),
+    offset: normalizePageOffset(query.offset)
+  };
+  if (query.decision && query.decision.length > 0) {
+    rdbQuery.decision = query.decision;
+  }
+  if (query.keyword && query.keyword.trim().length > 0) {
+    rdbQuery.keyword = query.keyword.trim();
+  }
+  return rdbQuery;
+}
+
+function filterLegacyPageItems(
+  items: Array<ReviewCardHistoryItem>,
+  query: ReviewCardHistoryPageQuery
+): Array<ReviewCardHistoryItem> {
+  const keyword: string = query.keyword ? query.keyword.trim().toLocaleLowerCase() : '';
+  const decision: string = query.decision ? query.decision : '';
+  return items.filter((item: ReviewCardHistoryItem): boolean => {
+    if (decision.length > 0 && item.document.content.judgement !== decision) {
+      return false;
+    }
+    if (keyword.length === 0) {
+      return true;
+    }
+    return [
+      item.document.content.title,
+      item.document.imageUri,
+      item.document.content.visualFocus,
+      item.document.content.focusReason,
+      item.document.content.visualPath,
+      item.document.content.visibleFacts,
+      item.document.content.coreRelation,
+      item.document.content.currentBlocker
+    ].join('\n').toLocaleLowerCase().includes(keyword);
+  });
+}
+
 export class ReviewCardHistoryService {
   private static cachedItems: Array<ReviewCardHistoryItem> = [];
 
@@ -508,6 +570,39 @@ export class ReviewCardHistoryService {
     return undefined;
   }
 
+  private static async ensureRdbPageReady(context: common.UIAbilityContext): Promise<void> {
+    await ReviewCardRdbService.init(context);
+    const rdbTotalCount: number = await ReviewCardRdbService.countReviews(context);
+    if (rdbTotalCount > 0 || await ReviewCardHistoryService.isRdbMainIndexReady(context)) {
+      return;
+    }
+
+    const migrationSourceCount: number = await ReviewCardMigrationService.countPreferenceHistoryItems(context);
+    if (migrationSourceCount === 0) {
+      return;
+    }
+
+    const migrationResult: MigrationResult = await ReviewCardMigrationService.migrateFromPreferencesToRdb(context);
+    if (migrationResult.failedCount > 0) {
+      throw new Error(`RDB 分页迁移失败：${migrationResult.errors.join('; ')}`);
+    }
+    await ReviewCardHistoryService.markRdbMainIndexReady(context);
+  }
+
+  private static async loadPageFromLegacy(
+    context: common.UIAbilityContext,
+    query: ReviewCardHistoryPageQuery
+  ): Promise<ReviewCardHistoryPageResult> {
+    const result: ReviewCardHistoryLoadResult = await ReviewCardHistoryService.loadWithDiagnostics(context);
+    const filteredItems: Array<ReviewCardHistoryItem> = filterLegacyPageItems(result.items, query);
+    const offset: number = normalizePageOffset(query.offset);
+    const limit: number = normalizePageLimit(query.limit);
+    return {
+      items: filteredItems.slice(offset, offset + limit),
+      totalCount: filteredItems.length
+    };
+  }
+
   private static buildSavedItems(
     items: Array<ReviewCardHistoryItem>,
     document: ReviewCardDocument,
@@ -562,6 +657,33 @@ export class ReviewCardHistoryService {
   static async load(context: common.UIAbilityContext): Promise<Array<ReviewCardHistoryItem>> {
     const result: ReviewCardHistoryLoadResult = await ReviewCardHistoryService.loadWithDiagnostics(context);
     return result.items;
+  }
+
+  static async loadPage(
+    context: common.UIAbilityContext,
+    query: ReviewCardHistoryPageQuery
+  ): Promise<ReviewCardHistoryPageResult> {
+    try {
+      await ReviewCardHistoryService.ensureRdbPageReady(context);
+      const rdbQuery: ReviewListQuery = createRdbPageQuery(query);
+      const pageResult: ReviewCardRdbListResult = await ReviewCardRdbService.listReviewsWithDiagnostics(context, rdbQuery);
+      const totalCount: number = await ReviewCardRdbService.countReviews(context, {
+        includeDeleted: false,
+        decision: rdbQuery.decision,
+        keyword: rdbQuery.keyword
+      });
+      if (pageResult.invalidRowCount > 0) {
+        throw new Error(`RDB 分页 raw_document_json 解析失败：${pageResult.invalidRowCount}/${pageResult.rowCount}`);
+      }
+      ReviewCardHistoryService.rememberItems(pageResult.items);
+      return {
+        items: pageResult.items,
+        totalCount: totalCount
+      };
+    } catch (error) {
+      console.warn(`[ReviewCardHistoryService] RDB 分页读取失败，回退旧链路：${error}`);
+      return ReviewCardHistoryService.loadPageFromLegacy(context, query);
+    }
   }
 
   static formatDiagnostics(diagnostics: ReviewCardHistoryDiagnostics): string {
