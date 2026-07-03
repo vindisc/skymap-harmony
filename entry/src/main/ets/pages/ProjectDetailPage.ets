@@ -156,7 +156,7 @@ export struct ProjectDetailPage {
     if (this.libraryStats.total === 0) {
       return '0';
     }
-    return `成立 ${this.libraryStats.works}/${this.libraryStats.total}`;
+    return `已判断 ${this.libraryStats.works + this.libraryStats.notWorks}/${this.libraryStats.total}`;
   }
 
   private hasActiveFilters(): boolean {
