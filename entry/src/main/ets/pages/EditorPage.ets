@@ -44,6 +44,7 @@ const EDITOR_KEYBOARD_HEIGHT_SCROLL_DELAY: number = 48;
 const EDITOR_KEYBOARD_HEIGHT_CHANGE_THRESHOLD: number = 10;
 const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 4;
 const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 10;
+const EDITOR_PENDING_PHOTO_HEADER_TITLE_GAP: number = AppMetrics.space12;
 const EDITOR_PHOTO_MIN_HEIGHT: number = 172;
 const EDITOR_PHOTO_MAX_HEIGHT: number = 286;
 const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.30;
@@ -81,7 +82,6 @@ struct EditorPage {
   private scheduledScrollField: string = '';
   private scheduledScrollIntent: EditorFieldScrollIntent = EditorFieldScrollIntent.START;
   private shouldDiscardChanges: boolean = false;
-  private pendingPhotoId: string = '';
   @State title: string = DEFAULT_REVIEW_TITLE;
   @State visualFocus: string = '';
   @State focusReason: string = '';
@@ -101,6 +101,7 @@ struct EditorPage {
   @State keyboardHeight: number = 0;
   @State isSaving: boolean = false;
   @State isDirty: boolean = false;
+  @State pendingPhotoId: string = '';
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -342,9 +343,25 @@ struct EditorPage {
   }
 
   private getPhotoHeaderHeight(): number {
-    return EDITOR_PHOTO_HEADER_TOP_PADDING +
+    return this.getPhotoHeaderTopPadding() +
+      this.getPhotoHeaderTitleHeight() +
       this.getPhotoFrameHeight() +
       EDITOR_PHOTO_HEADER_BOTTOM_PADDING;
+  }
+
+  private shouldShowPhotoHeaderTitle(): boolean {
+    return this.pendingPhotoId.length > 0;
+  }
+
+  private getPhotoHeaderTopPadding(): number {
+    return this.shouldShowPhotoHeaderTitle() ? AppMetrics.pageTopPadding : EDITOR_PHOTO_HEADER_TOP_PADDING;
+  }
+
+  private getPhotoHeaderTitleHeight(): number {
+    if (!this.shouldShowPhotoHeaderTitle()) {
+      return 0;
+    }
+    return AppTypography.level1LineHeight + EDITOR_PENDING_PHOTO_HEADER_TITLE_GAP;
   }
 
   private estimateTextAreaHeight(field: string, value: string): number {
@@ -624,6 +641,17 @@ struct EditorPage {
   @Builder
   PhotoHeader() {
     Column() {
+      if (this.shouldShowPhotoHeaderTitle()) {
+        Text('待复盘照片')
+          .fontSize(AppTypography.level1)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.level1LineHeight)
+          .maxLines(1)
+          .width('100%')
+          .margin({ bottom: EDITOR_PENDING_PHOTO_HEADER_TITLE_GAP })
+      }
+
       Column() {
         PhotoWritingHero({
           imageUri: this.imageUri,
@@ -648,7 +676,7 @@ struct EditorPage {
     .padding({
       left: EDITOR_PAGE_HORIZONTAL_PADDING,
       right: EDITOR_PAGE_HORIZONTAL_PADDING,
-      top: EDITOR_PHOTO_HEADER_TOP_PADDING,
+      top: this.getPhotoHeaderTopPadding(),
       bottom: EDITOR_PHOTO_HEADER_BOTTOM_PADDING
     })
     .width('100%')
