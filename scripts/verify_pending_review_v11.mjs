@@ -111,7 +111,7 @@ assert(!homePageSource.includes('PendingReviewPhotoStore.addPhoto('),
   "this.LearningMetric('待复盘'",
   "this.LearningMetric('已完成'",
   "this.LearningMetric('完成率'",
-  "this.SectionTitle('复盘结果')",
+  "Text('复盘结果')",
   "Text('累计复盘')",
   "Text('最近 30 天')",
   "Text('判断分布')"

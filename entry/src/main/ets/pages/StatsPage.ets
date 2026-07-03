@@ -219,17 +219,6 @@ export struct StatsPage {
   }
 
   @Builder
-  SectionTitle(title: string) {
-    Text(title)
-      .fontSize(AppTypography.sectionTitle)
-      .fontWeight(FontWeight.Bold)
-      .fontColor(AppColors.text)
-      .lineHeight(AppTypography.sectionTitleLineHeight)
-      .width('100%')
-      .maxLines(1)
-  }
-
-  @Builder
   LearningOverviewCard() {
     Column({ space: AppMetrics.space12 }) {
       Row() {
@@ -284,6 +273,14 @@ export struct StatsPage {
   @Builder
   OverviewCard() {
     Column({ space: AppMetrics.space12 }) {
+      Text('复盘结果')
+        .fontSize(AppTypography.cardTitle)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.cardTitleLineHeight)
+        .width('100%')
+        .maxLines(1)
+
       Row({ space: AppMetrics.space12 }) {
         Row({ space: AppMetrics.space8 }) {
           Text(`${this.feedback.totalCount}`)
@@ -607,7 +604,6 @@ export struct StatsPage {
               this.LearningOverviewCard()
 
               if (this.hasStatsData()) {
-                this.SectionTitle('复盘结果')
                 this.OverviewCard()
                 this.Recent30DaysCard()
                 this.DistributionCard()
