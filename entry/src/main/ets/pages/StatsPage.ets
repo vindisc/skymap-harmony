@@ -9,8 +9,7 @@ import {
   ReviewProjectService,
   ReviewStatsBlockerItem,
   ReviewStatsDistributionItem,
-  ReviewStatsFeedback,
-  ReviewStatsRecentReviewItem
+  ReviewStatsFeedback
 } from '../services/ReviewProjectService';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
@@ -29,7 +28,6 @@ const STATS_CARD_MIN_HEIGHT: number = 104;
 const STATS_PROGRESS_HEIGHT: number = 10;
 const STATS_PROGRESS_RADIUS: number = 5;
 const STATS_CONTENT_TOP_GAP: number = AppMetrics.space10;
-const STATS_RECENT_REVIEW_FADE_WINDOW: number = 14 * 24 * 60 * 60 * 1000;
 
 @Component
 export struct StatsPage {
@@ -90,7 +88,7 @@ export struct StatsPage {
   }
 
   private hasLearningData(): boolean {
-    return this.learningStats.totalImportedCount > 0;
+    return this.resolveLearningTotalImportedCount() > 0;
   }
 
   private shouldShowStatsSkeleton(): boolean {
@@ -98,10 +96,19 @@ export struct StatsPage {
   }
 
   private resolveLearningCompletionRate(): string {
-    if (this.learningStats.totalImportedCount <= 0) {
+    const totalImportedCount: number = this.resolveLearningTotalImportedCount();
+    if (totalImportedCount <= 0) {
       return '--';
     }
-    return `${Math.floor(this.learningStats.reviewedCount * 100 / this.learningStats.totalImportedCount)}%`;
+    return `${Math.floor(this.resolveLearningCompletedCount() * 100 / totalImportedCount)}%`;
+  }
+
+  private resolveLearningTotalImportedCount(): number {
+    return this.learningStats.pendingCount + this.feedback.totalCount;
+  }
+
+  private resolveLearningCompletedCount(): number {
+    return this.feedback.totalCount;
   }
 
   private async openCreateFirstReview(): Promise<void> {
@@ -138,13 +145,6 @@ export struct StatsPage {
     return formatReviewTime(this.feedback.latestReviewTime).split(' ')[0];
   }
 
-  private resolveUpdatedDate(timestamp: number): string {
-    if (timestamp <= 0) {
-      return '时间待确认';
-    }
-    return formatReviewTime(timestamp);
-  }
-
   private resolveDistributionColor(key: string): string {
     if (key === 'works') {
       return AppColors.tagGreenText;
@@ -165,35 +165,11 @@ export struct StatsPage {
     return AppColors.primarySoft;
   }
 
-  private resolveReviewDecisionColor(value: string): string {
-    if (value === '成立') {
-      return AppColors.tagGreenText;
-    }
-    if (value === '不成立') {
-      return AppColors.tagAmberText;
-    }
-    return AppColors.primary;
-  }
-
   private resolveDistributionProgressWidth(item: ReviewStatsDistributionItem): string {
     if (item.count <= 0) {
       return '0%';
     }
     return `${Math.max(item.rate, 4)}%`;
-  }
-
-  private resolveRecentReviewOpacity(updatedAt: number): number {
-    if (updatedAt <= 0 || this.feedback.latestReviewTime <= 0) {
-      return 0.8;
-    }
-    const ageFromLatest: number = Math.max(0, this.feedback.latestReviewTime - updatedAt);
-    if (ageFromLatest <= STATS_RECENT_REVIEW_FADE_WINDOW / 3) {
-      return 1;
-    }
-    if (ageFromLatest <= STATS_RECENT_REVIEW_FADE_WINDOW) {
-      return 0.88;
-    }
-    return 0.74;
   }
 
   @Builder
@@ -285,12 +261,12 @@ export struct StatsPage {
 
       Row({ space: AppMetrics.space8 }) {
         this.LearningMetric('待复盘', `${this.learningStats.pendingCount}`, AppColors.tagAmberText, AppColors.tagAmber)
-        this.LearningMetric('累计导入', `${this.learningStats.totalImportedCount}`, AppColors.primary, AppColors.primarySoft)
+        this.LearningMetric('累计导入', `${this.resolveLearningTotalImportedCount()}`, AppColors.primary, AppColors.primarySoft)
       }
       .width('100%')
 
       Row({ space: AppMetrics.space8 }) {
-        this.LearningMetric('已完成', `${this.learningStats.reviewedCount}`, AppColors.tagGreenText, AppColors.tagGreen)
+        this.LearningMetric('已完成', `${this.resolveLearningCompletedCount()}`, AppColors.tagGreenText, AppColors.tagGreen)
         this.LearningMetric('完成率', this.resolveLearningCompletionRate(), AppColors.text, AppColors.surfaceMuted)
       }
       .width('100%')
@@ -309,7 +285,7 @@ export struct StatsPage {
   OverviewCard() {
     Column({ space: AppMetrics.space12 }) {
       Row({ space: AppMetrics.space12 }) {
-        Column({ space: 2 }) {
+        Row({ space: AppMetrics.space8 }) {
           Text(`${this.feedback.totalCount}`)
             .fontSize(AppTypography.statNumber)
             .fontWeight(FontWeight.Bold)
@@ -318,13 +294,13 @@ export struct StatsPage {
             .maxLines(1)
 
           Text('累计复盘')
-            .fontSize(AppTypography.body)
+            .fontSize(AppTypography.meta)
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.text)
-            .lineHeight(AppTypography.bodyLineHeight)
+            .lineHeight(AppTypography.metaLineHeight)
             .maxLines(1)
         }
-        .alignItems(HorizontalAlign.Start)
+        .alignItems(VerticalAlign.Center)
         .layoutWeight(1)
 
         Text(`成立率 ${this.feedback.worksRate}%`)
@@ -556,74 +532,6 @@ export struct StatsPage {
   }
 
   @Builder
-  RecentReviewRow(item: ReviewStatsRecentReviewItem) {
-    Row({ space: AppMetrics.space8 }) {
-      Column({ space: 4 }) {
-        Text(item.title)
-          .fontSize(AppTypography.body)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .lineHeight(AppTypography.bodyLineHeight)
-          .width('100%')
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-        Text(this.resolveUpdatedDate(item.updatedAt))
-          .fontSize(AppTypography.meta)
-          .fontColor(AppColors.mutedText)
-          .lineHeight(AppTypography.metaLineHeight)
-          .width('100%')
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-      }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-
-      Text(item.decision)
-        .fontSize(AppTypography.meta)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(this.resolveReviewDecisionColor(item.decision))
-        .lineHeight(AppTypography.metaLineHeight)
-        .padding({
-          left: AppMetrics.compactBadgePaddingHorizontal,
-          right: AppMetrics.compactBadgePaddingHorizontal,
-          top: AppMetrics.compactBadgePaddingVertical,
-          bottom: AppMetrics.compactBadgePaddingVertical
-        })
-        .borderRadius(AppMetrics.badgeRadius)
-        .backgroundColor(this.resolveDistributionBackground(item.decision === '成立' ? 'works' : item.decision === '不成立' ? 'notWorks' : 'uncertain'))
-        .maxLines(1)
-    }
-    .alignItems(VerticalAlign.Center)
-    .width('100%')
-    .padding({ top: 2, bottom: 2 })
-    .opacity(this.resolveRecentReviewOpacity(item.updatedAt))
-  }
-
-  @Builder
-  RecentReviewsCard() {
-    Column({ space: 10 }) {
-      Text('最近复盘')
-        .fontSize(AppTypography.cardTitle)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.text)
-        .lineHeight(AppTypography.cardTitleLineHeight)
-        .width('100%')
-
-      ForEach(this.feedback.recentReviews, (item: ReviewStatsRecentReviewItem) => {
-        this.RecentReviewRow(item)
-      }, (item: ReviewStatsRecentReviewItem) => item.key)
-    }
-    .alignItems(HorizontalAlign.Start)
-    .width('100%')
-    .padding(AppMetrics.cardPadding)
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceElevated)
-    .border({ width: 1, color: AppColors.border })
-    .shadow(ElevationTokens.subtle)
-  }
-
-  @Builder
   StatsSkeletonCard(height: number, firstLineWidth: string, secondLineWidth: string) {
     Column({ space: AppMetrics.space12 }) {
       SkeletonBlock({ blockWidth: firstLineWidth, blockHeight: 18, blockRadius: 9 })
@@ -704,7 +612,6 @@ export struct StatsPage {
                 this.Recent30DaysCard()
                 this.DistributionCard()
                 this.BlockersCard()
-                this.RecentReviewsCard()
               } else {
                 EmptyState({
                   title: this.hasLearningData() ? '还没有完成复盘' : '还没有复盘数据',

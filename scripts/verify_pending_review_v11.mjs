@@ -103,6 +103,9 @@ assert(!homePageSource.includes('PendingReviewPhotoStore.addPhoto('),
   'PendingReviewPhotoStore.getStats(context)',
   'ReviewCardHistoryService.load(context)',
   'ReviewProjectService.buildStatsFeedback(items)',
+  'resolveLearningTotalImportedCount()',
+  'return this.learningStats.pendingCount + this.feedback.totalCount;',
+  'return this.feedback.totalCount;',
   "Text('学习进度')",
   "this.LearningMetric('累计导入'",
   "this.LearningMetric('待复盘'",
@@ -116,6 +119,10 @@ assert(!homePageSource.includes('PendingReviewPhotoStore.addPhoto('),
 
 assert(!statsPageSource.includes('PendingReviewPhotoStore.getStats(context).then'),
   'Stats loading should await Pending stats independently before building Review stats.');
+assert(!statsPageSource.includes("Text('最近复盘')"),
+  'Stats page should not render the removed recent reviews module.');
+assert(!statsPageSource.includes('RecentReviewsCard()'),
+  'Stats page should remove the recent reviews card builder.');
 
 if (failed) {
   process.exit(1);
