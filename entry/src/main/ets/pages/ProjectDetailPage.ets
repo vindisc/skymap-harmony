@@ -8,7 +8,6 @@ import {
   EmptyState,
   PrimaryButton,
   ProjectReviewCard,
-  SecondaryButton,
   SkeletonBlock
 } from '../components/AppDesign';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
@@ -146,12 +145,6 @@ export struct ProjectDetailPage {
         this.isLoadingMore = false;
       }
     }
-  }
-
-  private clearFilters(): void {
-    this.searchText = '';
-    this.decisionFilter = 'all';
-    this.applyFilters();
   }
 
   private resolveResultCountText(): string {
@@ -455,18 +448,6 @@ export struct ProjectDetailPage {
           .scrollable(ScrollDirection.Horizontal)
           .scrollBar(BarState.Off)
 
-          if (this.hasActiveFilters()) {
-            Row() {
-              SecondaryButton({
-                label: '清空筛选',
-                onTap: () => {
-                  this.clearFilters();
-                }
-              })
-                .width(112)
-            }
-            .width('100%')
-          }
         }
         .margin({ top: LIBRARY_HEADER_CONTROL_GAP })
       }
@@ -520,7 +501,7 @@ export struct ProjectDetailPage {
         Column() {
           EmptyState({
             title: '没有找到匹配的复盘',
-            message: '换个关键词，或者清空当前筛选条件。'
+            message: '换个关键词，或点「全部」查看所有状态。'
           })
         }
         .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
