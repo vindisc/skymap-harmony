@@ -69,7 +69,7 @@ assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_UNREACHABLE_TEXT: stri
 assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_AUTH_FAILED_TEXT: string = '家庭存储账号或密码不正确，请检查设置'", 'ReviewFlowFeedback');
 
 assertIncludes(syncCenterSource, "title: '同步中心'", 'SyncCenterPage');
-assertIncludes(syncCenterSource, "label: this.isTesting ? '检查中…' : '检查家庭存储'", 'SyncCenterPage');
+assertIncludes(syncCenterSource, "secondaryLabel: this.isTesting ? '检查中…' : '检查家庭存储'", 'SyncCenterPage');
 assertIncludes(syncCenterSource, 'SettingsLinkRow({', 'SyncCenterPage');
 assertIncludes(homeStoragePageSource, "title: '家庭存储'", 'HomeStoragePage');
 assertIncludes(homeStoragePageSource, 'StatusSummary()', 'HomeStoragePage');

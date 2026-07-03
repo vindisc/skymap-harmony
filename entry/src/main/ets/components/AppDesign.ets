@@ -90,7 +90,7 @@ export class AppMetrics {
   static readonly pageTopPadding: number = 52;
   static readonly pageBottomPadding: number = 20;
   static readonly floatingDockPadding: number = 8;
-  static readonly floatingDockBottomPadding: number = 6;
+  static readonly floatingDockBottomPadding: number = 20;
   static readonly floatingDockTopMaskHeight: number = 6;
   static readonly floatingDockScrollClearance: number = 10;
   static readonly sectionGap: number = 20;
@@ -112,7 +112,7 @@ export class AppMetrics {
   static readonly comfortableBadgePaddingVertical: number = 6;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
   static readonly floatingDockPanelHeight: number = LayoutTokens.PrimaryButtonHeight + 16;
-  static readonly floatingDockReservedHeight: number = 72;
+  static readonly floatingDockReservedHeight: number = 74;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
   static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
   static readonly chipHeight: number = LayoutTokens.ChipHeight;
