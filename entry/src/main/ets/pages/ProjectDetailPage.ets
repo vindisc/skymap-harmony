@@ -26,6 +26,7 @@ import { ReviewProjectService } from '../services/ReviewProjectService';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
 import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
+import { LearningProgressFormService } from '../services/LearningProgressFormService';
 import {
   REVIEW_FLOW_DELETE_CONFIRM_MESSAGE,
   REVIEW_FLOW_DELETE_CONFIRM_TITLE,
@@ -53,6 +54,7 @@ const PENDING_REVIEW_FILTER: string = 'pending';
 export struct ProjectDetailPage {
   private loadRequestId: number = 0;
   @Prop @Watch('refreshReviewLibraryData') refreshToken: number = 0;
+  @Prop @Watch('refreshReviewLibraryData') initialFilter: string = 'all';
   @State summary: ReviewProjectSummary = createDefaultProjectSummary();
   @State filteredItems: Array<ReviewCardHistoryItem> = [];
   @State pendingItems: Array<PendingReviewPhoto> = [];
@@ -73,6 +75,7 @@ export struct ProjectDetailPage {
   }
 
   aboutToAppear(): void {
+    this.applyInitialFilter();
     this.reloadData();
   }
 
@@ -81,7 +84,14 @@ export struct ProjectDetailPage {
   }
 
   refreshReviewLibraryData(): void {
+    this.applyInitialFilter();
     this.reloadData();
+  }
+
+  private applyInitialFilter(): void {
+    if (this.initialFilter === PENDING_REVIEW_FILTER) {
+      this.decisionFilter = PENDING_REVIEW_FILTER;
+    }
   }
 
   private async reloadData(): Promise<void> {
@@ -279,6 +289,7 @@ export struct ProjectDetailPage {
     this.libraryStats.pendingCount = Math.max(0, this.libraryStats.pendingCount - 1);
     try {
       await PendingReviewPhotoStore.delete(this.getAbilityContext(), photo.id);
+      await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
       ToastService.show(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT);
       this.reloadData();
     } catch (error) {

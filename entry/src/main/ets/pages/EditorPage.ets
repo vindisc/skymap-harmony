@@ -14,6 +14,7 @@ import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
+import { LearningProgressFormService } from '../services/LearningProgressFormService';
 import {
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_PENDING_TEXT,
@@ -233,6 +234,7 @@ struct EditorPage {
     try {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
       await this.markPendingPhotoReviewedQuietly();
+      await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
       this.isDirty = false;
       ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
       this.getUIContext().getRouter().replaceUrl({ url: PREVIEW_PAGE }).catch((error: Error) => {

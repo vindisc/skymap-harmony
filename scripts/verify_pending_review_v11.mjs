@@ -100,12 +100,11 @@ assert(!homePageSource.includes('PendingReviewPhotoStore.addPhoto('),
 ].forEach((marker) => requireIncludes(editorPageSource, marker, 'Editor must save Review first and quietly mark Pending reviewed'));
 
 [
-  'PendingReviewPhotoStore.getStats(context)',
-  'ReviewCardHistoryService.load(context)',
-  'ReviewProjectService.buildStatsFeedback(items)',
+  'LearningProgressService.loadWithReviewItems(context)',
+  'ReviewProjectService.buildStatsFeedback(progressResult.reviewItems)',
   'resolveLearningTotalImportedCount()',
-  'return this.learningStats.pendingCount + this.feedback.totalCount;',
-  'return this.feedback.totalCount;',
+  'return this.learningStats.totalImportedCount;',
+  'return this.learningStats.completedCount;',
   "Text('学习进度')",
   "this.LearningMetric('累计导入'",
   "this.LearningMetric('待复盘'",

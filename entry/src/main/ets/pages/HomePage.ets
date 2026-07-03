@@ -24,6 +24,7 @@ import {
   ReviewCardHistoryLoadResult,
   ReviewCardHistoryService
 } from '../services/ReviewCardHistoryService';
+import { LearningProgressFormService } from '../services/LearningProgressFormService';
 import {
   applyHomeDashboardReloadFailure,
   applyHomeDashboardReloadSuccess,
@@ -257,6 +258,8 @@ export struct HomePage {
           : REVIEW_FLOW_PENDING_IMPORT_FAILED_TEXT);
         return;
       }
+
+      await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
 
       if (failedCount > 0) {
         ToastService.show(this.getUIContext(), `成功导入：${successCount}，失败：${failedCount}`);

@@ -30,7 +30,11 @@ assert(historyServiceSource.includes("notifyReviewLibraryChanged('review_exchang
 
 assert(appShellSource.includes('reviewLibraryRefreshToken'), 'AppShell must hold reviewLibraryRefreshToken.');
 assert(appShellSource.includes('ReviewLibraryRefreshService.getRefreshToken()'), 'AppShell must read the global refresh token.');
-assert(appShellSource.includes('ProjectDetailPage({ refreshToken: this.reviewLibraryRefreshToken })'), 'AppShell must pass token to ProjectDetailPage.');
+assert(
+  appShellSource.includes('ProjectDetailPage({ refreshToken: this.reviewLibraryRefreshToken') &&
+    appShellSource.includes('initialFilter: this.libraryInitialFilter'),
+  'AppShell must pass token to ProjectDetailPage.'
+);
 assert(appShellSource.includes('StatsPage({ refreshToken: this.reviewLibraryRefreshToken })'), 'AppShell must pass token to StatsPage.');
 assert(appShellSource.includes('HomePage({ refreshToken: this.homeRefreshToken + this.reviewLibraryRefreshToken })'), 'HomePage must refresh on review library changes.');
 assert(
@@ -47,7 +51,11 @@ assert(feedbackSource.includes("REVIEW_FLOW_DELETE_SUCCESS_TEXT: string = '复�
 assert(feedbackSource.includes("REVIEW_FLOW_DELETE_FAILED_TEXT: string = '删除失败，请重试'"), 'Delete failure copy constant must stay aligned.');
 assert(projectDetailSource.includes('this.reloadData();'), 'deleteHistory should reload after optimistic update.');
 assert(statsPageSource.includes("@Prop @Watch('refreshStatsData') refreshToken"), 'StatsPage must watch refreshToken.');
-assert(statsPageSource.includes('ReviewCardHistoryService.load'), 'StatsPage must load latest review history.');
+assert(
+  statsPageSource.includes('LearningProgressService.loadWithReviewItems(context)') &&
+    statsPageSource.includes('ReviewProjectService.buildStatsFeedback(progressResult.reviewItems)'),
+  'StatsPage must load latest review history through the shared learning progress source.'
+);
 assert(myPageSource.includes("@Prop @Watch('refreshPageData') refreshToken"), 'MyPage must still watch refreshToken.');
 assert(homePageSource.includes("@Prop @Watch('refreshHomeData') refreshToken"), 'HomePage must still watch refreshToken.');
 

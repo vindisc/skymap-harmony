@@ -17,6 +17,7 @@ import { ReviewCardStylePreset } from '../components/ReviewCardStylePreset';
 import { resolveLongFormExportCardHeight } from '../components/LongFormExportReviewCard';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
+import { LearningProgressFormService } from '../services/LearningProgressFormService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
 import { ReviewBundleExportResult, ReviewBundleExportService } from '../services/ReviewBundleExportService';
 import {
@@ -123,6 +124,7 @@ struct PreviewPage {
 
       this.document = ReviewCardStore.saveCurrentDocument(this.document);
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+      await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
       this.saveStateLabel = PreviewSaveState.SAVED;
     } catch (error) {
     }
@@ -175,6 +177,7 @@ struct PreviewPage {
     try {
       this.document = ReviewCardStore.saveCurrentDocument(this.document);
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
+      await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
       this.saveStateLabel = PreviewSaveState.SAVED;
       this.actionFeedbackText = REVIEW_FLOW_SAVE_SUCCESS_TEXT;
       ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);

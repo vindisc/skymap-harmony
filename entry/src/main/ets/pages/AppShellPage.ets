@@ -3,6 +3,11 @@ import { HomePage } from './HomePage';
 import { ProjectDetailPage } from './ProjectDetailPage';
 import { StatsPage } from './StatsPage';
 import { MyPage } from './MyPage';
+import { FormLaunchIntentService } from '../services/FormLaunchIntentService';
+import {
+  LEARNING_PROGRESS_WIDGET_ROUTE_HOME,
+  LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING
+} from '../services/LearningProgressFormService';
 import { ReviewLibraryRefreshService } from '../services/ReviewLibraryRefreshService';
 import { SettingsRefreshService } from '../services/SettingsRefreshService';
 import { MotionTokens } from '../theme/DesignTokens';
@@ -29,6 +34,8 @@ const ROOT_TABS: Array<RootTabItem> = [
 ];
 
 const TAB_PAGE_EXIT_DELAY: number = 90;
+const LIBRARY_INITIAL_FILTER_ALL: string = 'all';
+const LIBRARY_INITIAL_FILTER_PENDING: string = 'pending';
 
 @Entry
 @Component
@@ -44,13 +51,16 @@ struct AppShellPage {
   @State myRefreshToken: number = 0;
   @State reviewLibraryRefreshToken: number = ReviewLibraryRefreshService.getRefreshToken();
   @State settingsRefreshToken: number = SettingsRefreshService.getRefreshToken();
+  @State libraryInitialFilter: string = LIBRARY_INITIAL_FILTER_ALL;
   @State tabContentVisible: boolean = true;
 
   aboutToAppear(): void {
     SettingsRefreshService.subscribe(this.settingsRefreshListener);
+    this.applyFormLaunchIntent();
   }
 
   onPageShow(): void {
+    this.applyFormLaunchIntent();
     this.syncReviewLibraryRefreshToken();
     this.syncSettingsRefreshToken();
     this.refreshCurrentTabIfNeeded();
@@ -81,6 +91,24 @@ struct AppShellPage {
     }
   }
 
+  private applyFormLaunchIntent(): void {
+    const route: string = FormLaunchIntentService.consumeRoute();
+    if (route === LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING) {
+      this.libraryInitialFilter = LIBRARY_INITIAL_FILTER_PENDING;
+      this.currentTab = RootTabKey.LIBRARY;
+      this.reviewLibraryRefreshToken = ReviewLibraryRefreshService.getRefreshToken() + 1;
+      this.tabContentVisible = true;
+      return;
+    }
+
+    if (route === LEARNING_PROGRESS_WIDGET_ROUTE_HOME) {
+      this.libraryInitialFilter = LIBRARY_INITIAL_FILTER_ALL;
+      this.currentTab = RootTabKey.HOME;
+      this.homeRefreshToken += 1;
+      this.tabContentVisible = true;
+    }
+  }
+
   private isCurrentTab(key: RootTabKey): boolean {
     return this.currentTab === key;
   }
@@ -93,6 +121,9 @@ struct AppShellPage {
     this.tabContentVisible = false;
     setTimeout(() => {
       this.currentTab = key;
+      if (key !== RootTabKey.LIBRARY) {
+        this.libraryInitialFilter = LIBRARY_INITIAL_FILTER_ALL;
+      }
       this.syncReviewLibraryRefreshToken();
       this.syncSettingsRefreshToken();
       if (key === RootTabKey.HOME) {
@@ -149,7 +180,7 @@ struct AppShellPage {
     if (this.currentTab === RootTabKey.HOME) {
       HomePage({ refreshToken: this.homeRefreshToken + this.reviewLibraryRefreshToken })
     } else if (this.currentTab === RootTabKey.LIBRARY) {
-      ProjectDetailPage({ refreshToken: this.reviewLibraryRefreshToken })
+      ProjectDetailPage({ refreshToken: this.reviewLibraryRefreshToken, initialFilter: this.libraryInitialFilter })
     } else if (this.currentTab === RootTabKey.STATS) {
       StatsPage({ refreshToken: this.reviewLibraryRefreshToken })
     } else {

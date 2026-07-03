@@ -2,8 +2,6 @@ import common from '@ohos.app.ability.common';
 import { EDITOR_PAGE } from '../app/AppRouter';
 import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState, SkeletonBlock } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
-import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
-import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import {
   createEmptyReviewStatsFeedback,
   ReviewProjectService,
@@ -17,10 +15,11 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { REVIEW_FLOW_IMPORT_PENDING_TEXT } from '../services/ReviewFlowFeedback';
 import { ToastService } from '../services/ToastService';
 import {
-  createEmptyPendingReviewPhotoStats,
-  PendingReviewPhotoStats,
-  PendingReviewPhotoStore
-} from '../services/PendingReviewPhotoStore';
+  createEmptyLearningProgressSnapshot,
+  LearningProgressLoadResult,
+  LearningProgressService,
+  LearningProgressSnapshot
+} from '../services/LearningProgressService';
 
 const STATS_OVERVIEW_MIN_HEIGHT: number = 120;
 const STATS_LEARNING_OVERVIEW_MIN_HEIGHT: number = 132;
@@ -34,7 +33,7 @@ export struct StatsPage {
   private loadRequestId: number = 0;
   @Prop @Watch('refreshStatsData') refreshToken: number = 0;
   @State feedback: ReviewStatsFeedback = createEmptyReviewStatsFeedback();
-  @State learningStats: PendingReviewPhotoStats = createEmptyPendingReviewPhotoStats();
+  @State learningStats: LearningProgressSnapshot = createEmptyLearningProgressSnapshot();
   @State statsLoadFailed: boolean = false;
   @State isStatsLoading: boolean = false;
   @State isPickingPhoto: boolean = false;
@@ -61,17 +60,12 @@ export struct StatsPage {
     this.isStatsLoading = true;
     try {
       const context: common.UIAbilityContext = this.getAbilityContext();
-      const learningStats: PendingReviewPhotoStats = await PendingReviewPhotoStore.getStats(context)
-        .catch((error: Error): PendingReviewPhotoStats => {
-          console.error(`[StatsPage] 待复盘统计加载失败：${error.message}`);
-          return createEmptyPendingReviewPhotoStats();
-        });
-      const items: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
+      const progressResult: LearningProgressLoadResult = await LearningProgressService.loadWithReviewItems(context);
       if (requestId !== this.loadRequestId) {
         return;
       }
-      this.learningStats = learningStats;
-      this.feedback = ReviewProjectService.buildStatsFeedback(items);
+      this.learningStats = progressResult.snapshot;
+      this.feedback = ReviewProjectService.buildStatsFeedback(progressResult.reviewItems);
       this.statsLoadFailed = false;
       this.isStatsLoading = false;
     } catch (error) {
@@ -96,19 +90,15 @@ export struct StatsPage {
   }
 
   private resolveLearningCompletionRate(): string {
-    const totalImportedCount: number = this.resolveLearningTotalImportedCount();
-    if (totalImportedCount <= 0) {
-      return '--';
-    }
-    return `${Math.floor(this.resolveLearningCompletedCount() * 100 / totalImportedCount)}%`;
+    return this.learningStats.completionRateText;
   }
 
   private resolveLearningTotalImportedCount(): number {
-    return this.learningStats.pendingCount + this.feedback.totalCount;
+    return this.learningStats.totalImportedCount;
   }
 
   private resolveLearningCompletedCount(): number {
-    return this.feedback.totalCount;
+    return this.learningStats.completedCount;
   }
 
   private async openCreateFirstReview(): Promise<void> {
