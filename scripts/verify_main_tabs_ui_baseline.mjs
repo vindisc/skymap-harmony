@@ -74,8 +74,8 @@ baselineImagePaths.forEach((imagePath) => {
   'HomeHeroImageService.getDisplayImages',
   'this.heroImages.length > 1',
   'Swiper()',
-  '.autoPlay(this.shouldAutoplayHero())',
-  '.indicator(this.shouldShowHeroIndicator())',
+  '.autoPlay(this.shouldAutoplayHero() && !this.heroAutoplayPaused)',
+  '.indicator(this.resolveHeroIndicator())',
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
   'PrimaryButton({',
   "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'",
@@ -175,6 +175,7 @@ requireOrder(sources.my, 'this.SettingsSection()', 'this.AboutSection()', 'My pa
   "label: '我的', activeIcon:",
   '.fontSize(AppTypography.tabLabel)',
   '.height(AppMetrics.tabBarHeight)',
+  '.height(AppMetrics.tabBarShellHeight)',
   '.backgroundColor(AppColors.tabBarBackground)',
   '.expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])',
   'Divider()'

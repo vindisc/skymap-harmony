@@ -120,6 +120,7 @@ export class AppMetrics {
   static readonly toolbarButtonHeight: number = 44;
   static readonly toolbarButtonWidth: number = 80;
   static readonly tabBarHeight: number = LayoutTokens.TabBarHeight;
+  static readonly tabBarShellHeight: number = LayoutTokens.TabBarHeight + 20;
   static readonly tabBarItemHeight: number = LayoutTokens.TabBarItemHeight;
   static readonly tabIconSize: number = TypographyTokens.TabIcon;
   static readonly listThumbnailSize: number = LayoutTokens.ListThumbnailSize;
