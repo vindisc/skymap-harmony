@@ -58,10 +58,13 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
 
 [
   "Text(this.title)",
-  "this.MetricTile('待复盘'",
-  "this.MetricTile('累计导入'",
-  "this.MetricTile('已完成'",
-  "this.MetricTile('完成率'",
+  'Text(this.pendingCountText)',
+  "Text('待复盘')",
+  "Text('完成率')",
+  'Text(this.completionRateText)',
+  'resolveHintText()',
+  "'点击继续复盘'",
+  "'暂无待复盘'",
   'FormLink({',
   "abilityName: 'EntryAbility'",
   'targetRoute: this.targetRoute'
@@ -70,6 +73,9 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
 assert(!formPage.includes('Button('), 'LearningProgressMediumCard must not add card-level buttons.');
 assert(!formPage.includes("Text(`完成率 ${this.completionRateText}`)"),
   'LearningProgressMediumCard must not place completion rate in the title row.');
+assert(!formPage.includes('MetricTile('), 'LearningProgressMediumCard must not render the dense four-tile layout.');
+assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('已完成')"),
+  'LearningProgressMediumCard must only show pending count and completion rate on the small card.');
 
 [
   'PendingReviewPhotoStore.getStats(context)',
