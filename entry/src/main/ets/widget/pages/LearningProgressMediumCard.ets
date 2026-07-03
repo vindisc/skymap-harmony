@@ -6,6 +6,7 @@ const CARD_PRIMARY_SOFT: string = '#E7F2F6';
 const CARD_GREEN: string = '#DDEFE6';
 const CARD_BLUE: string = '#E4EEF4';
 const CARD_AMBER: string = '#EFE7DB';
+const CARD_COMPLETION: string = '#F1EADF';
 
 let learningProgressCardStorage: LocalStorage = new LocalStorage();
 
@@ -20,23 +21,27 @@ struct LearningProgressMediumCard {
   @LocalStorageProp('targetRoute') targetRoute: string = 'home';
 
   @Builder
-  StatRow(label: string, value: string, backgroundColor: string) {
-    Row() {
+  MetricTile(label: string, value: string, backgroundColor: string, valueColor: string = CARD_TEXT_PRIMARY) {
+    Column({ space: 2 }) {
+      Text(value)
+        .fontSize(20)
+        .lineHeight(22)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(valueColor)
+        .textAlign(TextAlign.Center)
+
       Text(label)
-        .fontSize(13)
+        .fontSize(10)
+        .lineHeight(12)
         .fontWeight(FontWeight.Medium)
         .fontColor(CARD_TEXT_SECONDARY)
-
-      Blank()
-
-      Text(value)
-        .fontSize(18)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(CARD_TEXT_PRIMARY)
+        .textAlign(TextAlign.Center)
     }
-    .width('100%')
-    .height(36)
-    .padding({ left: 14, right: 14 })
+    .justifyContent(FlexAlign.Center)
+    .alignItems(HorizontalAlign.Center)
+    .layoutWeight(1)
+    .height(46)
+    .padding({ left: 6, right: 6 })
     .borderRadius(10)
     .backgroundColor(backgroundColor)
   }
@@ -49,38 +54,34 @@ struct LearningProgressMediumCard {
         targetRoute: this.targetRoute
       }
     }) {
-      Column({ space: 10 }) {
-        Row() {
-          Text(this.title)
-            .fontSize(17)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(CARD_TEXT_PRIMARY)
-
-          Blank()
-
-          Text(`完成率 ${this.completionRateText}`)
-            .fontSize(12)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(CARD_PRIMARY)
-            .height(26)
-            .padding({ left: 10, right: 10 })
-            .borderRadius(13)
-            .backgroundColor(CARD_PRIMARY_SOFT)
-        }
-        .width('100%')
+      Column({ space: 8 }) {
+        Text(this.title)
+          .fontSize(18)
+          .lineHeight(24)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(CARD_TEXT_PRIMARY)
+          .textAlign(TextAlign.Start)
+          .width('100%')
 
         Column({ space: 8 }) {
-          this.StatRow('待复盘', this.pendingCountText, CARD_GREEN)
-          this.StatRow('累计导入', this.totalImportedCountText, CARD_BLUE)
-          this.StatRow('已完成', this.completedCountText, CARD_AMBER)
+          Row({ space: 8 }) {
+            this.MetricTile('待复盘', this.pendingCountText, CARD_GREEN)
+            this.MetricTile('累计导入', this.totalImportedCountText, CARD_BLUE)
+          }
+          .width('100%')
+
+          Row({ space: 8 }) {
+            this.MetricTile('已完成', this.completedCountText, CARD_AMBER)
+            this.MetricTile('完成率', this.completionRateText, CARD_COMPLETION, CARD_PRIMARY)
+          }
+          .width('100%')
         }
         .width('100%')
-        .layoutWeight(1)
-        .justifyContent(FlexAlign.Center)
+        .justifyContent(FlexAlign.Start)
       }
       .width('100%')
       .height('100%')
-      .padding(16)
+      .padding(12)
       .borderRadius(18)
       .backgroundColor(CARD_BACKGROUND)
     }

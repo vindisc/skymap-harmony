@@ -58,16 +58,18 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
 
 [
   "Text(this.title)",
-  "Text(`完成率 ${this.completionRateText}`)",
-  "this.StatRow('待复盘'",
-  "this.StatRow('累计导入'",
-  "this.StatRow('已完成'",
+  "this.MetricTile('待复盘'",
+  "this.MetricTile('累计导入'",
+  "this.MetricTile('已完成'",
+  "this.MetricTile('完成率'",
   'FormLink({',
   "abilityName: 'EntryAbility'",
   'targetRoute: this.targetRoute'
 ].forEach((token) => requireIncludes(formPage, token, 'LearningProgressMediumCard must match required content and click behavior'));
 
 assert(!formPage.includes('Button('), 'LearningProgressMediumCard must not add card-level buttons.');
+assert(!formPage.includes("Text(`完成率 ${this.completionRateText}`)"),
+  'LearningProgressMediumCard must not place completion rate in the title row.');
 
 [
   'PendingReviewPhotoStore.getStats(context)',
