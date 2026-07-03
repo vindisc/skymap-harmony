@@ -12,8 +12,8 @@ let failed = false;
 
 const requiredHomeTokens = [
   "title: '摄影复盘'",
-  "Text('从一张照片开始，练习判断')",
-  "Text('看见落点、路径和关系。')",
+  "Text('先看关系，再谈意义')",
+  "Text('摄影不是按下快门开始，而是从学会观看开始')",
   'Row({ space: HOME_METHOD_TAG_GAP })',
   '.justifyContent(FlexAlign.SpaceBetween)'
 ];

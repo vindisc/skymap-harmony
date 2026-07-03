@@ -44,7 +44,7 @@ const HOME_HERO_ASPECT_RATIO: number = 0.68;
 const HOME_SIDE_PADDING: number = AppMetrics.pagePadding;
 const HOME_HERO_TEXT_PADDING: number = 20;
 const HOME_HERO_RADIUS: number = AppMetrics.cardRadius;
-const HOME_HERO_TEXT_BOTTOM: number = 22;
+const HOME_HERO_TEXT_BOTTOM: number = 54;
 const HOME_METHOD_TAG_HEIGHT: number = 28;
 const HOME_METHOD_TAG_RADIUS: number = AppMetrics.capsuleRadius;
 const HOME_METHOD_TAG_GAP: number = 6;
@@ -328,7 +328,7 @@ export struct HomePage {
   @Builder
   HeroTextOverlay() {
     Column({ space: 6 }) {
-      Text('从一张照片开始，练习判断')
+      Text('先看关系，再谈意义')
         .fontSize(17)
         .fontWeight(700)
         .fontColor(AppColors.onPrimary)
@@ -336,7 +336,7 @@ export struct HomePage {
         .maxLines(2)
         .width('100%')
 
-      Text('看见落点、路径和关系。')
+      Text('摄影不是按下快门开始，而是从学会观看开始')
         .fontSize(13)
         .fontColor(AppColors.onPrimaryMuted)
         .lineHeight(17)

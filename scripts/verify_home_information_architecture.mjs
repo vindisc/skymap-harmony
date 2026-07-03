@@ -69,7 +69,7 @@ const primaryPageSources = [
 
 [
   "title: '摄影复盘'",
-  "Text('从一张照片开始，练习判断')",
+  "Text('先看关系，再谈意义')",
   'PrimaryButton({',
   "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'",
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
