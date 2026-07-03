@@ -13,10 +13,24 @@ export interface PickedPhotoResult {
   message: string;
 }
 
+export interface PickedPhotoItem {
+  imageUri: string;
+  imageWidth: number;
+  imageHeight: number;
+  imageSizeFallbackUsed: boolean;
+}
+
 export interface PickedPhotoListResult {
   success: boolean;
   cancelled: boolean;
   imageUris: Array<string>;
+  message: string;
+}
+
+export interface PickedPhotoDetailListResult {
+  success: boolean;
+  cancelled: boolean;
+  photos: Array<PickedPhotoItem>;
   message: string;
 }
 
@@ -45,6 +59,15 @@ function emptyListResult(cancelled: boolean, message: string): PickedPhotoListRe
     success: false,
     cancelled: cancelled,
     imageUris: [],
+    message: message
+  };
+}
+
+function emptyDetailListResult(cancelled: boolean, message: string): PickedPhotoDetailListResult {
+  return {
+    success: false,
+    cancelled: cancelled,
+    photos: [],
     message: message
   };
 }
@@ -107,6 +130,28 @@ export async function resolveDisplayImageSize(imageUri: string): Promise<Display
   }
 }
 
+async function resolvePickedPhotoItem(imageUri: string): Promise<PickedPhotoItem> {
+  try {
+    const size: DisplayImageSize = await resolveDisplayImageSize(imageUri);
+    if (size.width > 0 && size.height > 0) {
+      return {
+        imageUri: imageUri,
+        imageWidth: size.width,
+        imageHeight: size.height,
+        imageSizeFallbackUsed: false
+      };
+    }
+  } catch (error) {
+  }
+
+  return {
+    imageUri: imageUri,
+    imageWidth: FALLBACK_IMAGE_WIDTH,
+    imageHeight: FALLBACK_IMAGE_HEIGHT,
+    imageSizeFallbackUsed: true
+  };
+}
+
 export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
   try {
     const picker = new photoAccessHelper.PhotoViewPicker();
@@ -120,38 +165,14 @@ export async function pickSinglePhoto(): Promise<PickedPhotoResult> {
     }
 
     const imageUri: string = result.photoUris[0];
-    try {
-      const size: DisplayImageSize = await resolveDisplayImageSize(imageUri);
-      if (size.width > 0 && size.height > 0) {
-        return {
-          success: true,
-          cancelled: false,
-          imageUri: imageUri,
-          imageWidth: size.width,
-          imageHeight: size.height,
-          imageSizeFallbackUsed: false,
-          message: ''
-        };
-      }
-    } catch (error) {
-      return {
-        success: true,
-        cancelled: false,
-        imageUri: imageUri,
-        imageWidth: FALLBACK_IMAGE_WIDTH,
-        imageHeight: FALLBACK_IMAGE_HEIGHT,
-        imageSizeFallbackUsed: true,
-        message: ''
-      };
-    }
-
+    const photo: PickedPhotoItem = await resolvePickedPhotoItem(imageUri);
     return {
       success: true,
       cancelled: false,
-      imageUri: imageUri,
-      imageWidth: FALLBACK_IMAGE_WIDTH,
-      imageHeight: FALLBACK_IMAGE_HEIGHT,
-      imageSizeFallbackUsed: true,
+      imageUri: photo.imageUri,
+      imageWidth: photo.imageWidth,
+      imageHeight: photo.imageHeight,
+      imageSizeFallbackUsed: photo.imageSizeFallbackUsed,
       message: ''
     };
   } catch (error) {
@@ -179,5 +200,33 @@ export async function pickMultiplePhotos(maxSelectNumber: number = 9): Promise<P
     };
   } catch (error) {
     return emptyListResult(false, REVIEW_FLOW_IMPORT_FAILED_TEXT);
+  }
+}
+
+export async function pickMultiplePhotoDetails(maxSelectNumber: number = 30): Promise<PickedPhotoDetailListResult> {
+  try {
+    const picker = new photoAccessHelper.PhotoViewPicker();
+    const options = new photoAccessHelper.PhotoSelectOptions();
+    options.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE;
+    options.maxSelectNumber = Math.max(1, maxSelectNumber);
+
+    const result: photoAccessHelper.PhotoSelectResult = await picker.select(options);
+    if (result.photoUris.length <= 0) {
+      return emptyDetailListResult(true, '未选择照片');
+    }
+
+    const photos: Array<PickedPhotoItem> = [];
+    for (let index = 0; index < result.photoUris.length; index += 1) {
+      photos.push(await resolvePickedPhotoItem(result.photoUris[index]));
+    }
+
+    return {
+      success: true,
+      cancelled: false,
+      photos: photos,
+      message: ''
+    };
+  } catch (error) {
+    return emptyDetailListResult(false, REVIEW_FLOW_IMPORT_FAILED_TEXT);
   }
 }

@@ -4,7 +4,13 @@ import {
   EDITOR_PAGE
 } from '../app/AppRouter';
 import { ReviewCardStore } from '../services/ReviewCardStore';
-import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerService';
+import {
+  pickMultiplePhotoDetails,
+  pickSinglePhoto,
+  PickedPhotoDetailListResult,
+  PickedPhotoItem,
+  PickedPhotoResult
+} from '../services/PhotoPickerService';
 import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
 import {
   HomeHeroDisplayImage,
@@ -52,6 +58,7 @@ const HOME_METHOD_TAG_HEIGHT: number = 28;
 const HOME_METHOD_TAG_RADIUS: number = AppMetrics.capsuleRadius;
 const HOME_METHOD_TAG_GAP: number = 6;
 const HOME_HERO_INDICATOR_BOTTOM: number = 18;
+const HOME_PENDING_IMPORT_MAX_SELECT_NUMBER: number = 30;
 
 @Component
 export struct HomePage {
@@ -210,27 +217,48 @@ export struct HomePage {
     }
 
     this.isImportingPendingPhoto = true;
-    const result: PickedPhotoResult = await pickSinglePhoto();
-    this.isImportingPendingPhoto = false;
-
-    if (!result.success) {
-      if (!result.cancelled && result.message.length > 0) {
-        ToastService.show(this.getUIContext(), result.message);
-      }
-      return;
-    }
-
     try {
-      await PendingReviewPhotoStore.addPhoto(
-        this.getAbilityContext(),
-        result.imageUri,
-        result.imageWidth,
-        result.imageHeight,
-        result.imageSizeFallbackUsed
-      );
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_PENDING_IMPORT_SUCCESS_TEXT);
-    } catch (error) {
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_PENDING_IMPORT_FAILED_TEXT);
+      const result: PickedPhotoDetailListResult = await pickMultiplePhotoDetails(HOME_PENDING_IMPORT_MAX_SELECT_NUMBER);
+      if (!result.success) {
+        if (!result.cancelled && result.message.length > 0) {
+          ToastService.show(this.getUIContext(), result.message);
+        }
+        return;
+      }
+
+      let successCount: number = 0;
+      let failedCount: number = 0;
+      for (let index = 0; index < result.photos.length; index += 1) {
+        const photo: PickedPhotoItem = result.photos[index];
+        try {
+          await PendingReviewPhotoStore.addPhoto(
+            this.getAbilityContext(),
+            photo.imageUri,
+            photo.imageWidth,
+            photo.imageHeight,
+            photo.imageSizeFallbackUsed
+          );
+          successCount += 1;
+        } catch (error) {
+          failedCount += 1;
+        }
+      }
+
+      if (successCount <= 0) {
+        ToastService.show(this.getUIContext(), REVIEW_FLOW_PENDING_IMPORT_FAILED_TEXT);
+        return;
+      }
+
+      if (failedCount > 0) {
+        ToastService.show(this.getUIContext(), `已加入${successCount}张，${failedCount}张失败`);
+        return;
+      }
+
+      ToastService.show(this.getUIContext(), successCount === 1
+        ? REVIEW_FLOW_PENDING_IMPORT_SUCCESS_TEXT
+        : `已加入${successCount}张待复盘`);
+    } finally {
+      this.isImportingPendingPhoto = false;
     }
   }
 
@@ -482,7 +510,7 @@ export struct HomePage {
   @Builder
   ImportPendingButton() {
     SecondaryButton({
-      label: this.isImportingPendingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入待复盘',
+      label: this.isImportingPendingPhoto ? '正在加入待复盘…' : '导入待复盘',
       isDisabled: this.isPickingPhoto || this.isImportingPendingPhoto,
       onTap: () => {
         this.importPendingPhoto();
