@@ -215,6 +215,22 @@ export class PendingReviewPhotoStore {
     return photos;
   }
 
+  static async getOldestPending(context: common.UIAbilityContext): Promise<PendingReviewPhoto | undefined> {
+    const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
+    const resultSet: relationalStore.ResultSet = await store.querySql(
+      `SELECT * FROM ${PENDING_REVIEW_PHOTO_TABLE} WHERE status = ? ORDER BY import_time ASC LIMIT 1`,
+      [PendingReviewPhotoStatus.PENDING]
+    );
+    try {
+      if (!resultSet.goToFirstRow()) {
+        return undefined;
+      }
+      return rowFromResultSet(resultSet);
+    } finally {
+      resultSet.close();
+    }
+  }
+
   static async getById(context: common.UIAbilityContext, id: string): Promise<PendingReviewPhoto | undefined> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
     const resultSet: relationalStore.ResultSet = await store.querySql(

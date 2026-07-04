@@ -4,6 +4,7 @@ const TODAY_CARD_TEXT_SECONDARY: string = '#68707A';
 const TODAY_CARD_PRIMARY: string = '#356F80';
 const TODAY_CARD_PRIMARY_SOFT: string = '#DDEFE6';
 const TODAY_CARD_HINT_BACKGROUND: string = '#F1EADF';
+const TODAY_REVIEW_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
 let todayReviewCardStorage: LocalStorage = new LocalStorage();
 
@@ -23,7 +24,7 @@ struct TodayReviewCard {
   }
 
   private resolveHintText(): string {
-    return this.hasPendingReview() ? '点击继续' : '暂无待复盘';
+    return this.hasPendingReview() ? '继续复盘' : '暂无待复盘';
   }
 
   private openTargetRoute(): void {
@@ -32,7 +33,7 @@ struct TodayReviewCard {
       moduleName: 'entry',
       abilityName: 'EntryAbility',
       params: {
-        targetRoute: this.targetRoute
+        targetRoute: this.hasPendingReview() ? TODAY_REVIEW_DIRECT_TARGET_ROUTE : this.targetRoute
       }
     });
   }

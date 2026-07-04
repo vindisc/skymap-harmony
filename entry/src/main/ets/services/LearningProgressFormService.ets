@@ -13,6 +13,7 @@ const LEARNING_PROGRESS_FORM_IDS_KEY: string = 'formIds';
 
 export const LEARNING_PROGRESS_WIDGET_ROUTE_HOME: string = 'home';
 export const LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING: string = 'library_pending';
+export const LEARNING_PROGRESS_WIDGET_ROUTE_TODAY_REVIEW_DIRECT: string = 'today_review_direct';
 
 export interface LearningProgressFormData {
   title: string;

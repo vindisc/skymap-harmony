@@ -1,13 +1,18 @@
+import common from '@ohos.app.ability.common';
 import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { HomePage } from './HomePage';
 import { ProjectDetailPage } from './ProjectDetailPage';
 import { StatsPage } from './StatsPage';
 import { MyPage } from './MyPage';
+import { PendingReviewPhoto } from '../model/PendingReviewPhotoModel';
 import { FormLaunchIntentService } from '../services/FormLaunchIntentService';
 import {
   LEARNING_PROGRESS_WIDGET_ROUTE_HOME,
-  LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING
+  LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING,
+  LEARNING_PROGRESS_WIDGET_ROUTE_TODAY_REVIEW_DIRECT
 } from '../services/LearningProgressFormService';
+import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
+import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewLibraryRefreshService } from '../services/ReviewLibraryRefreshService';
 import { SettingsRefreshService } from '../services/SettingsRefreshService';
 import { MotionTokens } from '../theme/DesignTokens';
@@ -36,6 +41,7 @@ const ROOT_TABS: Array<RootTabItem> = [
 const TAB_PAGE_EXIT_DELAY: number = 90;
 const LIBRARY_INITIAL_FILTER_ALL: string = 'all';
 const LIBRARY_INITIAL_FILTER_PENDING: string = 'pending';
+const EDITOR_PAGE: string = 'pages/EditorPage';
 
 @Entry
 @Component
@@ -102,20 +108,58 @@ struct AppShellPage {
 
   private applyFormLaunchIntent(): void {
     const route: string = FormLaunchIntentService.consumeRoute();
+    if (route === LEARNING_PROGRESS_WIDGET_ROUTE_TODAY_REVIEW_DIRECT) {
+      this.openTodayReviewDirectly().catch((error: Error) => {
+        console.warn(`[AppShellPage] 今日复盘直达失败，进入待复盘列表：${error.message}`);
+        this.openPendingLibraryFromWidget();
+      });
+      return;
+    }
+
     if (route === LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING) {
-      this.libraryInitialFilter = LIBRARY_INITIAL_FILTER_PENDING;
-      this.currentTab = RootTabKey.LIBRARY;
-      this.reviewLibraryRefreshToken = ReviewLibraryRefreshService.getRefreshToken() + 1;
-      this.tabContentVisible = true;
+      this.openPendingLibraryFromWidget();
       return;
     }
 
     if (route === LEARNING_PROGRESS_WIDGET_ROUTE_HOME) {
-      this.libraryInitialFilter = LIBRARY_INITIAL_FILTER_ALL;
-      this.currentTab = RootTabKey.HOME;
-      this.homeRefreshToken += 1;
-      this.tabContentVisible = true;
+      this.openHomeFromWidget();
     }
+  }
+
+  private async openTodayReviewDirectly(): Promise<void> {
+    const photo: PendingReviewPhoto | undefined = await PendingReviewPhotoStore.getOldestPending(
+      this.getUIContext().getHostContext() as common.UIAbilityContext
+    );
+    if (!photo) {
+      this.openHomeFromWidget();
+      return;
+    }
+
+    ReviewCardStore.createPendingPhotoDraft(
+      photo.id,
+      photo.photoUri,
+      photo.width,
+      photo.height,
+      photo.orientation === 'unknown'
+    );
+    this.getUIContext().getRouter().pushUrl({ url: EDITOR_PAGE }).catch((error: Error) => {
+      console.error(`[AppShellPage] 打开今日复盘失败：${error.message}`);
+      this.openPendingLibraryFromWidget();
+    });
+  }
+
+  private openPendingLibraryFromWidget(): void {
+    this.libraryInitialFilter = LIBRARY_INITIAL_FILTER_PENDING;
+    this.currentTab = RootTabKey.LIBRARY;
+    this.reviewLibraryRefreshToken = ReviewLibraryRefreshService.getRefreshToken() + 1;
+    this.tabContentVisible = true;
+  }
+
+  private openHomeFromWidget(): void {
+    this.libraryInitialFilter = LIBRARY_INITIAL_FILTER_ALL;
+    this.currentTab = RootTabKey.HOME;
+    this.homeRefreshToken += 1;
+    this.tabContentVisible = true;
   }
 
   private isCurrentTab(key: RootTabKey): boolean {

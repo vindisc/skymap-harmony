@@ -58,6 +58,7 @@ assert(!homePageSource.includes('PendingReviewPhotoStore.addPhoto('),
 [
   'static async addPhotos',
   'static async listPending',
+  'static async getOldestPending',
   'static async getById',
   'static async countPending',
   'static async getStats',
@@ -65,6 +66,7 @@ assert(!homePageSource.includes('PendingReviewPhotoStore.addPhoto('),
   'static async updateLinkedReviewId',
   'static async delete',
   'COUNT(1) AS total_imported',
+  'ORDER BY import_time ASC LIMIT 1',
   'SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS pending_total',
   'SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS reviewed_total'
 ].forEach((marker) => requireIncludes(storeSource, marker, 'PendingReviewPhotoStore must cover V1.1 responsibilities'));
