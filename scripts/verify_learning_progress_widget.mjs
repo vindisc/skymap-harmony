@@ -99,6 +99,7 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   'LearningProgressSummary()',
   'Text(`${this.completedCountText} / ${this.totalImportedCountText}`)',
   "Text('已完成')",
+  'SUMMARY_CARD_PROGRESS_SOFT',
   '.layoutWeight(55)',
   '.layoutWeight(45)',
   '.height(68)',

@@ -3,6 +3,7 @@ const SUMMARY_CARD_TEXT_PRIMARY: string = '#171A1F';
 const SUMMARY_CARD_TEXT_SECONDARY: string = '#68707A';
 const SUMMARY_CARD_PRIMARY: string = '#356F80';
 const SUMMARY_CARD_PRIMARY_SOFT: string = '#DDEFE6';
+const SUMMARY_CARD_PROGRESS_SOFT: string = '#F3EFE5';
 const LEARNING_PROGRESS_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
 let learningProgressSummaryCardStorage: LocalStorage = new LocalStorage();
@@ -41,15 +42,15 @@ struct LearningProgressSummaryMediumCard {
   CompletionBadge() {
     Row({ space: 4 }) {
       Text('完成率')
-        .fontSize(11)
-        .lineHeight(15)
+        .fontSize(12)
+        .lineHeight(16)
         .fontWeight(FontWeight.Medium)
         .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
         .maxLines(1)
 
       Text(this.completionRateText)
-        .fontSize(13)
-        .lineHeight(17)
+        .fontSize(17)
+        .lineHeight(21)
         .fontWeight(FontWeight.Bold)
         .fontColor(SUMMARY_CARD_PRIMARY)
         .textAlign(TextAlign.End)
@@ -87,7 +88,7 @@ struct LearningProgressSummaryMediumCard {
 
   @Builder
   LearningProgressSummary() {
-    Column({ space: 4 }) {
+    Column({ space: 3 }) {
       Text('已完成')
         .fontSize(12)
         .lineHeight(16)
@@ -97,17 +98,19 @@ struct LearningProgressSummaryMediumCard {
         .maxLines(1)
 
       Text(`${this.completedCountText} / ${this.totalImportedCountText}`)
-        .fontSize(26)
-        .lineHeight(30)
+        .fontSize(27)
+        .lineHeight(31)
         .fontWeight(FontWeight.Bold)
         .fontColor(SUMMARY_CARD_PRIMARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
     }
     .width('100%')
-    .height(58)
+    .height(64)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
+    .borderRadius(14)
+    .backgroundColor(SUMMARY_CARD_PROGRESS_SOFT)
   }
 
   build() {
