@@ -3,9 +3,7 @@ const SUMMARY_CARD_TEXT_PRIMARY: string = '#171A1F';
 const SUMMARY_CARD_TEXT_SECONDARY: string = '#68707A';
 const SUMMARY_CARD_PRIMARY: string = '#356F80';
 const SUMMARY_CARD_PRIMARY_SOFT: string = '#DDEFE6';
-const SUMMARY_CARD_HINT_BACKGROUND: string = '#F1EADF';
 const SUMMARY_CARD_DIVIDER: string = '#E7DFD1';
-const SUMMARY_CARD_ACTION_BACKGROUND: string = '#F7F1E7';
 const LEARNING_PROGRESS_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
 let learningProgressSummaryCardStorage: LocalStorage = new LocalStorage();
@@ -48,15 +46,15 @@ struct LearningProgressSummaryMediumCard {
   CompletionBadge() {
     Row({ space: 4 }) {
       Text('完成率')
-        .fontSize(12)
-        .lineHeight(16)
+        .fontSize(11)
+        .lineHeight(15)
         .fontWeight(FontWeight.Medium)
         .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
         .maxLines(1)
 
       Text(this.completionRateText)
-        .fontSize(19)
-        .lineHeight(23)
+        .fontSize(13)
+        .lineHeight(17)
         .fontWeight(FontWeight.Bold)
         .fontColor(SUMMARY_CARD_PRIMARY)
         .textAlign(TextAlign.End)
@@ -67,25 +65,25 @@ struct LearningProgressSummaryMediumCard {
 
   @Builder
   PendingDashboard() {
-    Column({ space: 0 }) {
-      Text('待复盘')
-        .fontSize(12)
-        .lineHeight(16)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
-        .textAlign(TextAlign.Center)
-        .maxLines(1)
-
+    Column({ space: 2 }) {
       Text(this.pendingCountText)
-        .fontSize(50)
-        .lineHeight(52)
+        .fontSize(64)
+        .lineHeight(66)
         .fontWeight(FontWeight.Bold)
         .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
+
+      Text('待复盘')
+        .fontSize(13)
+        .lineHeight(17)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
+        .textAlign(TextAlign.Center)
+        .maxLines(1)
     }
-    .layoutWeight(1)
-    .height(66)
+    .width('100%')
+    .height(88)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .borderRadius(16)
@@ -93,42 +91,27 @@ struct LearningProgressSummaryMediumCard {
   }
 
   @Builder
-  ProgressRow(label: string, value: string) {
-    Row() {
-      Text(label)
+  LearningProgressSummary() {
+    Column({ space: 1 }) {
+      Text(`${this.completedCountText} / ${this.totalImportedCountText}`)
+        .fontSize(22)
+        .lineHeight(26)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(SUMMARY_CARD_PRIMARY)
+        .textAlign(TextAlign.Center)
+        .maxLines(1)
+
+      Text('已完成')
         .fontSize(12)
         .lineHeight(16)
         .fontWeight(FontWeight.Medium)
         .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
-        .maxLines(1)
-
-      Blank()
-
-      Text(value)
-        .fontSize(17)
-        .lineHeight(21)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(SUMMARY_CARD_PRIMARY)
-        .textAlign(TextAlign.End)
+        .textAlign(TextAlign.Center)
         .maxLines(1)
     }
     .width('100%')
-    .height(26)
-    .alignItems(VerticalAlign.Center)
-  }
-
-  @Builder
-  LearningProgressPanel() {
-    Column({ space: 2 }) {
-      this.ProgressRow('累计导入', this.totalImportedCountText)
-      this.ProgressRow('已完成', this.completedCountText)
-    }
-    .width(128)
-    .height(66)
-    .padding({ left: 10, right: 10, top: 6, bottom: 6 })
-    .justifyContent(FlexAlign.Center)
-    .borderRadius(14)
-    .backgroundColor(SUMMARY_CARD_HINT_BACKGROUND)
+    .height(42)
+    .alignItems(HorizontalAlign.Center)
   }
 
   @Builder
@@ -140,13 +123,11 @@ struct LearningProgressSummaryMediumCard {
       .fontColor(SUMMARY_CARD_PRIMARY)
       .textAlign(TextAlign.Center)
       .width('100%')
-      .height(24)
-      .borderRadius(12)
-      .backgroundColor(SUMMARY_CARD_ACTION_BACKGROUND)
+      .height(18)
   }
 
   build() {
-    Column({ space: 6 }) {
+    Column({ space: 5 }) {
       Row({ space: 10 }) {
         Text(this.title)
           .fontSize(18)
@@ -167,13 +148,9 @@ struct LearningProgressSummaryMediumCard {
         .color(SUMMARY_CARD_DIVIDER)
         .opacity(0.72)
 
-      Row({ space: 10 }) {
-        this.PendingDashboard()
+      this.PendingDashboard()
 
-        this.LearningProgressPanel()
-      }
-      .width('100%')
-      .alignItems(VerticalAlign.Center)
+      this.LearningProgressSummary()
 
       this.ActionHint()
     }

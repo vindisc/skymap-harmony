@@ -96,13 +96,12 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   'PendingDashboard()',
   "Text('待复盘')",
   'Text(this.pendingCountText)',
-  'LearningProgressPanel()',
-  "this.ProgressRow('累计导入', this.totalImportedCountText)",
-  "this.ProgressRow('已完成', this.completedCountText)",
+  'LearningProgressSummary()',
+  'Text(`${this.completedCountText} / ${this.totalImportedCountText}`)',
+  "Text('已完成')",
   'ActionHint()',
   "return this.hasPendingReview() ? '继续复盘 →' : '回到首页 →';",
   'CompletionBadge()',
-  'ProgressRow(',
   'LEARNING_PROGRESS_DIRECT_TARGET_ROUTE',
   'this.hasPendingReview() ? LEARNING_PROGRESS_DIRECT_TARGET_ROUTE : this.targetRoute',
   'postCardAction(this',
@@ -121,6 +120,13 @@ assert(!progressSummaryMediumPage.includes('MetricTile('),
 assert(!progressSummaryMediumPage.includes("MetricRow('待复盘'") &&
   !progressSummaryMediumPage.includes("this.ProgressRow('待复盘'"),
   'LearningProgressSummaryMediumCard must keep pending count as the dashboard hero, not a list row.');
+assert(!progressSummaryMediumPage.includes("Text('累计导入')") &&
+  !progressSummaryMediumPage.includes("ProgressRow('累计导入'") &&
+  !progressSummaryMediumPage.includes('LearningProgressPanel()'),
+  'LearningProgressSummaryMediumCard must express imported count only through completed / imported summary.');
+assert(!progressSummaryMediumPage.includes('SUMMARY_CARD_ACTION_BACKGROUND') &&
+  !progressSummaryMediumPage.includes('.backgroundColor(SUMMARY_CARD_ACTION_BACKGROUND)'),
+  'LearningProgressSummaryMediumCard action hint must not look like a button.');
 assert(!progressSummaryMediumPage.includes("Text('最近照片')") &&
   !progressSummaryMediumPage.includes('Chart') &&
   !progressSummaryMediumPage.includes('Progress('),
