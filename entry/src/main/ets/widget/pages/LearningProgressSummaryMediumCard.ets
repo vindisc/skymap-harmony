@@ -46,7 +46,7 @@ struct LearningProgressSummaryMediumCard {
   @Builder
   CompletionBadge() {
     Row({ space: 3 }) {
-      Text('完成率')
+      Text('完成')
         .fontSize(10)
         .lineHeight(14)
         .fontWeight(FontWeight.Medium)

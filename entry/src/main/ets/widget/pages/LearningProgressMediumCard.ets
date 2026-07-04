@@ -15,8 +15,12 @@ struct LearningProgressMediumCard {
   @LocalStorageProp('completionRateText') completionRateText: string = '--';
   @LocalStorageProp('targetRoute') targetRoute: string = 'home';
 
+  private hasPendingReview(): boolean {
+    return Number(this.pendingCountText) > 0;
+  }
+
   private resolveHintText(): string {
-    return Number(this.pendingCountText) > 0 ? '点击继续复盘' : '暂无待复盘';
+    return this.hasPendingReview() ? '继续复盘' : '暂无待复盘';
   }
 
   private openTargetRoute(): void {
@@ -32,8 +36,8 @@ struct LearningProgressMediumCard {
 
   @Builder
   CompletionBadge() {
-    Row({ space: 3 }) {
-      Text('完成率')
+    Row({ space: 2 }) {
+      Text('完成')
         .fontSize(10)
         .lineHeight(14)
         .fontWeight(FontWeight.Medium)
@@ -47,23 +51,24 @@ struct LearningProgressMediumCard {
         .fontColor(CARD_PRIMARY)
         .maxLines(1)
     }
-    .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-    .borderRadius(9)
+    .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+    .borderRadius(8)
     .backgroundColor('#F0F4F0')
     .alignItems(VerticalAlign.Center)
   }
 
   build() {
     Column({ space: 11 }) {
-      Row({ space: 10 }) {
+      Row({ space: 8 }) {
         Text(this.title)
-          .fontSize(18)
-          .lineHeight(22)
+          .fontSize(16)
+          .lineHeight(20)
           .fontWeight(FontWeight.Bold)
           .fontColor(CARD_TEXT_PRIMARY)
           .textAlign(TextAlign.Start)
           .layoutWeight(1)
           .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
 
         this.CompletionBadge()
       }
@@ -93,16 +98,29 @@ struct LearningProgressMediumCard {
       .borderRadius(14)
       .backgroundColor(CARD_PRIMARY_SOFT)
 
-      Text(this.resolveHintText())
-        .fontSize(12)
-        .lineHeight(16)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(CARD_PRIMARY)
-        .textAlign(TextAlign.Center)
-        .width('100%')
-        .height(28)
-        .borderRadius(14)
-        .backgroundColor(CARD_HINT_BACKGROUND)
+      Row({ space: 6 }) {
+        Text(this.resolveHintText())
+          .fontSize(13)
+          .lineHeight(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(this.hasPendingReview() ? '#FFFDF8' : CARD_TEXT_SECONDARY)
+          .maxLines(1)
+
+        if (this.hasPendingReview()) {
+          Text('→')
+            .fontSize(15)
+            .lineHeight(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#FFFDF8')
+            .maxLines(1)
+        }
+      }
+      .width('100%')
+      .height(30)
+      .justifyContent(FlexAlign.Center)
+      .alignItems(VerticalAlign.Center)
+      .borderRadius(12)
+      .backgroundColor(this.hasPendingReview() ? CARD_PRIMARY : CARD_HINT_BACKGROUND)
     }
     .width('100%')
     .height('100%')

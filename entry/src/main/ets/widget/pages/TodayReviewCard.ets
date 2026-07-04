@@ -2,7 +2,6 @@ const TODAY_CARD_BACKGROUND: string = '#FFFDF8';
 const TODAY_CARD_TEXT_PRIMARY: string = '#171A1F';
 const TODAY_CARD_TEXT_SECONDARY: string = '#68707A';
 const TODAY_CARD_PRIMARY: string = '#356F80';
-const TODAY_CARD_PRIMARY_SOFT: string = '#D5EDE3';
 const TODAY_CARD_HINT_BACKGROUND: string = '#F1EADF';
 const TODAY_REVIEW_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
@@ -76,15 +75,28 @@ struct TodayReviewCard {
             .textAlign(TextAlign.Center)
         }
 
-        Text(this.resolveHintText())
-          .fontSize(13)
-          .lineHeight(18)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(this.hasPendingReview() ? TODAY_CARD_PRIMARY : TODAY_CARD_TEXT_SECONDARY)
-          .textAlign(TextAlign.Center)
-          .padding({ left: 14, right: 14, top: 4, bottom: 4 })
-          .borderRadius(13)
-          .backgroundColor(this.hasPendingReview() ? TODAY_CARD_PRIMARY_SOFT : TODAY_CARD_HINT_BACKGROUND)
+        Row({ space: 6 }) {
+          Text(this.resolveHintText())
+            .fontSize(13)
+            .lineHeight(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.hasPendingReview() ? '#FFFDF8' : TODAY_CARD_TEXT_SECONDARY)
+            .maxLines(1)
+
+          if (this.hasPendingReview()) {
+            Text('→')
+              .fontSize(15)
+              .lineHeight(18)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#FFFDF8')
+              .maxLines(1)
+          }
+        }
+        .justifyContent(FlexAlign.Center)
+        .alignItems(VerticalAlign.Center)
+        .padding({ left: 16, right: 16, top: 6, bottom: 6 })
+        .borderRadius(12)
+        .backgroundColor(this.hasPendingReview() ? TODAY_CARD_PRIMARY : TODAY_CARD_HINT_BACKGROUND)
       }
       .width('100%')
       .layoutWeight(1)
