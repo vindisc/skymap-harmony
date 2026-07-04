@@ -93,11 +93,16 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   "Text(this.title)",
   'Text(this.completionRateText)',
   "Text('完成率')",
-  "this.MetricRow('待复盘', this.pendingCountText",
-  "this.MetricRow('累计导入', this.totalImportedCountText",
-  "this.MetricRow('已完成', this.completedCountText",
+  'PendingDashboard()',
+  "Text('待复盘')",
+  'Text(this.pendingCountText)',
+  'LearningProgressPanel()',
+  "this.ProgressRow('累计导入', this.totalImportedCountText)",
+  "this.ProgressRow('已完成', this.completedCountText)",
+  'ActionHint()',
+  "return this.hasPendingReview() ? '继续复盘 →' : '回到首页 →';",
   'CompletionBadge()',
-  'MetricRow(',
+  'ProgressRow(',
   'LEARNING_PROGRESS_DIRECT_TARGET_ROUTE',
   'this.hasPendingReview() ? LEARNING_PROGRESS_DIRECT_TARGET_ROUTE : this.targetRoute',
   'postCardAction(this',
@@ -113,6 +118,13 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
 assert(!progressSummaryMediumPage.includes('Button('), 'LearningProgressSummaryMediumCard must not add card-level buttons.');
 assert(!progressSummaryMediumPage.includes('MetricTile('),
   'LearningProgressSummaryMediumCard must not render the dense four-tile layout.');
+assert(!progressSummaryMediumPage.includes("MetricRow('待复盘'") &&
+  !progressSummaryMediumPage.includes("this.ProgressRow('待复盘'"),
+  'LearningProgressSummaryMediumCard must keep pending count as the dashboard hero, not a list row.');
+assert(!progressSummaryMediumPage.includes("Text('最近照片')") &&
+  !progressSummaryMediumPage.includes('Chart') &&
+  !progressSummaryMediumPage.includes('Progress('),
+  'LearningProgressSummaryMediumCard must not add photos, charts, trends, or progress widgets.');
 
 [
   "Text('今日复盘')",
