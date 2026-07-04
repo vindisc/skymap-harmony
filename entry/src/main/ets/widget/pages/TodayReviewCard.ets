@@ -2,7 +2,7 @@ const TODAY_CARD_BACKGROUND: string = '#FFFDF8';
 const TODAY_CARD_TEXT_PRIMARY: string = '#171A1F';
 const TODAY_CARD_TEXT_SECONDARY: string = '#68707A';
 const TODAY_CARD_PRIMARY: string = '#356F80';
-const TODAY_CARD_PRIMARY_SOFT: string = '#DDEFE6';
+const TODAY_CARD_PRIMARY_SOFT: string = '#D5EDE3';
 const TODAY_CARD_HINT_BACKGROUND: string = '#F1EADF';
 const TODAY_REVIEW_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
@@ -39,7 +39,7 @@ struct TodayReviewCard {
   }
 
   build() {
-    Column({ space: 12 }) {
+    Column({ space: 14 }) {
       Text('今日复盘')
         .fontSize(18)
         .lineHeight(24)
@@ -93,7 +93,7 @@ struct TodayReviewCard {
     }
     .width('100%')
     .height('100%')
-    .padding(12)
+    .padding(14)
     .borderRadius(18)
     .backgroundColor(TODAY_CARD_BACKGROUND)
     .onClick(() => {

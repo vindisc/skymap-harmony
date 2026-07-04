@@ -2,9 +2,9 @@ const SUMMARY_CARD_BACKGROUND: string = '#FFFDF8';
 const SUMMARY_CARD_TEXT_PRIMARY: string = '#171A1F';
 const SUMMARY_CARD_TEXT_SECONDARY: string = '#68707A';
 const SUMMARY_CARD_PRIMARY: string = '#356F80';
-const SUMMARY_CARD_PRIMARY_SOFT: string = '#DDEFE6';
+const SUMMARY_CARD_PRIMARY_SOFT: string = '#D5EDE3';
 const SUMMARY_CARD_PROGRESS_SOFT: string = '#EEF5EF';
-const SUMMARY_CARD_HINT_SOFT: string = '#F2F6F1';
+const SUMMARY_CARD_HINT_SOFT: string = '#E8EDE6';
 const LEARNING_PROGRESS_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
 let learningProgressSummaryCardStorage: LocalStorage = new LocalStorage();
@@ -76,8 +76,8 @@ struct LearningProgressSummaryMediumCard {
         .maxLines(1)
 
       Text(this.pendingCountText)
-        .fontSize(42)
-        .lineHeight(44)
+        .fontSize(38)
+        .lineHeight(42)
         .fontWeight(FontWeight.Bold)
         .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
         .textAlign(TextAlign.Center)
@@ -144,7 +144,7 @@ struct LearningProgressSummaryMediumCard {
   }
 
   build() {
-    Column({ space: 7 }) {
+    Column({ space: 10 }) {
       Row({ space: 10 }) {
         Text(this.title)
           .fontSize(18)
@@ -165,7 +165,7 @@ struct LearningProgressSummaryMediumCard {
         Column() {
           this.PendingDashboard()
         }
-        .layoutWeight(55)
+        .layoutWeight(50)
         .height(68)
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
@@ -173,7 +173,7 @@ struct LearningProgressSummaryMediumCard {
         Column() {
           this.LearningProgressSummary()
         }
-        .layoutWeight(45)
+        .layoutWeight(50)
         .height(68)
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
@@ -186,7 +186,7 @@ struct LearningProgressSummaryMediumCard {
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 12, right: 12, top: 10, bottom: 12 })
+    .padding({ left: 14, right: 14, top: 11, bottom: 12 })
     .borderRadius(18)
     .backgroundColor(SUMMARY_CARD_BACKGROUND)
     .onClick(() => {

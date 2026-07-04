@@ -2,7 +2,7 @@ const CARD_BACKGROUND: string = '#FFFDF8';
 const CARD_TEXT_PRIMARY: string = '#171A1F';
 const CARD_TEXT_SECONDARY: string = '#68707A';
 const CARD_PRIMARY: string = '#356F80';
-const CARD_PRIMARY_SOFT: string = '#DDEFE6';
+const CARD_PRIMARY_SOFT: string = '#D5EDE3';
 const CARD_HINT_BACKGROUND: string = '#F1EADF';
 
 let learningProgressCardStorage: LocalStorage = new LocalStorage();
@@ -31,7 +31,7 @@ struct LearningProgressMediumCard {
   }
 
   build() {
-    Column({ space: 7 }) {
+    Column({ space: 9 }) {
       Text(this.title)
         .fontSize(18)
         .lineHeight(24)
@@ -72,8 +72,8 @@ struct LearningProgressMediumCard {
         Blank()
 
         Text(this.completionRateText)
-          .fontSize(15)
-          .lineHeight(18)
+          .fontSize(17)
+          .lineHeight(21)
           .fontWeight(FontWeight.Bold)
           .fontColor(CARD_PRIMARY)
       }
@@ -82,19 +82,19 @@ struct LearningProgressMediumCard {
       .padding({ left: 2, right: 2 })
 
       Text(this.resolveHintText())
-        .fontSize(11)
-        .lineHeight(14)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(CARD_TEXT_SECONDARY)
+        .fontSize(12)
+        .lineHeight(16)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(CARD_PRIMARY)
         .textAlign(TextAlign.Center)
         .width('100%')
-        .height(20)
-        .borderRadius(10)
+        .height(28)
+        .borderRadius(14)
         .backgroundColor(CARD_HINT_BACKGROUND)
     }
     .width('100%')
     .height('100%')
-    .padding(12)
+    .padding(14)
     .borderRadius(18)
     .backgroundColor(CARD_BACKGROUND)
     .onClick(() => {
