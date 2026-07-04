@@ -3,7 +3,8 @@ const SUMMARY_CARD_TEXT_PRIMARY: string = '#171A1F';
 const SUMMARY_CARD_TEXT_SECONDARY: string = '#68707A';
 const SUMMARY_CARD_PRIMARY: string = '#356F80';
 const SUMMARY_CARD_PRIMARY_SOFT: string = '#DDEFE6';
-const SUMMARY_CARD_PROGRESS_SOFT: string = '#F3EFE5';
+const SUMMARY_CARD_PROGRESS_SOFT: string = '#EEF5EF';
+const SUMMARY_CARD_HINT_SOFT: string = '#F2F6F1';
 const LEARNING_PROGRESS_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
 let learningProgressSummaryCardStorage: LocalStorage = new LocalStorage();
@@ -25,6 +26,10 @@ struct LearningProgressSummaryMediumCard {
 
   private hasPendingReview(): boolean {
     return this.resolvePendingCount() > 0;
+  }
+
+  private resolveActionText(): string {
+    return this.hasPendingReview() ? '继续复盘' : '回到首页';
   }
 
   private openTargetRoute(): void {
@@ -63,8 +68,8 @@ struct LearningProgressSummaryMediumCard {
   PendingDashboard() {
     Column({ space: 2 }) {
       Text(this.pendingCountText)
-        .fontSize(46)
-        .lineHeight(48)
+        .fontSize(48)
+        .lineHeight(50)
         .fontWeight(FontWeight.Bold)
         .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
         .textAlign(TextAlign.Center)
@@ -113,8 +118,33 @@ struct LearningProgressSummaryMediumCard {
     .backgroundColor(SUMMARY_CARD_PROGRESS_SOFT)
   }
 
+  @Builder
+  ActionHint() {
+    Row({ space: 6 }) {
+      Text(this.resolveActionText())
+        .fontSize(14)
+        .lineHeight(18)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(SUMMARY_CARD_PRIMARY)
+        .maxLines(1)
+
+      Text('›')
+        .fontSize(18)
+        .lineHeight(20)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(SUMMARY_CARD_PRIMARY)
+        .maxLines(1)
+    }
+    .width('100%')
+    .height(24)
+    .justifyContent(FlexAlign.Center)
+    .alignItems(VerticalAlign.Center)
+    .borderRadius(12)
+    .backgroundColor(SUMMARY_CARD_HINT_SOFT)
+  }
+
   build() {
-    Column({ space: 5 }) {
+    Column({ space: 7 }) {
       Row({ space: 10 }) {
         Text(this.title)
           .fontSize(18)
@@ -151,10 +181,12 @@ struct LearningProgressSummaryMediumCard {
       .width('100%')
       .height(68)
       .alignItems(VerticalAlign.Center)
+
+      this.ActionHint()
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 12, right: 12, top: 10, bottom: 20 })
+    .padding({ left: 12, right: 12, top: 10, bottom: 12 })
     .borderRadius(18)
     .backgroundColor(SUMMARY_CARD_BACKGROUND)
     .onClick(() => {

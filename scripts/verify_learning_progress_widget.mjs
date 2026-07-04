@@ -100,10 +100,13 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   'Text(`${this.completedCountText} / ${this.totalImportedCountText}`)',
   "Text('已完成')",
   'SUMMARY_CARD_PROGRESS_SOFT',
+  'SUMMARY_CARD_HINT_SOFT',
   '.layoutWeight(55)',
   '.layoutWeight(45)',
   '.height(68)',
-  '.padding({ left: 12, right: 12, top: 10, bottom: 20 })',
+  'ActionHint()',
+  "return this.hasPendingReview() ? '继续复盘' : '回到首页';",
+  '.padding({ left: 12, right: 12, top: 10, bottom: 12 })',
   'CompletionBadge()',
   'LEARNING_PROGRESS_DIRECT_TARGET_ROUTE',
   'this.hasPendingReview() ? LEARNING_PROGRESS_DIRECT_TARGET_ROUTE : this.targetRoute',
@@ -130,10 +133,6 @@ assert(!progressSummaryMediumPage.includes("Text('累计导入')") &&
 assert(!progressSummaryMediumPage.includes('SUMMARY_CARD_ACTION_BACKGROUND') &&
   !progressSummaryMediumPage.includes('.backgroundColor(SUMMARY_CARD_ACTION_BACKGROUND)'),
   'LearningProgressSummaryMediumCard action hint must not look like a button.');
-assert(!progressSummaryMediumPage.includes('ActionHint()') &&
-  !progressSummaryMediumPage.includes("'继续复盘 →'") &&
-  !progressSummaryMediumPage.includes("'回到首页 →'"),
-  'LearningProgressSummaryMediumCard must reserve vertical space for the dashboard content instead of a bottom action hint.');
 assert(!progressSummaryMediumPage.includes('SUMMARY_CARD_DIVIDER') &&
   !progressSummaryMediumPage.includes('Divider()'),
   'LearningProgressSummaryMediumCard must avoid vertical crowding from divider rows.');
