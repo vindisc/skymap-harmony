@@ -21,6 +21,26 @@
       "updateDuration": 1
     },
     {
+      "name": "LearningProgressSummaryMediumCard",
+      "displayName": "学习进度",
+      "description": "学习进度中型服务卡片",
+      "src": "./ets/widget/pages/LearningProgressSummaryMediumCard.ets",
+      "uiSyntax": "arkts",
+      "window": {
+        "designWidth": 320,
+        "autoDesignWidth": true
+      },
+      "colorMode": "auto",
+      "isDefault": false,
+      "supportDimensions": [
+        "2*4"
+      ],
+      "defaultDimension": "2*4",
+      "updateEnabled": true,
+      "scheduledUpdateTime": "10:30",
+      "updateDuration": 1
+    },
+    {
       "name": "TodayReviewCard",
       "displayName": "今日复盘",
       "description": "今日复盘服务卡片",

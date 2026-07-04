@@ -21,6 +21,7 @@ const moduleConfig = read('entry/src/main/module.json5');
 const formConfig = read('entry/src/main/resources/base/profile/form_config.json');
 const formAbility = read('entry/src/main/ets/formability/LearningProgressFormAbility.ets');
 const formPage = read('entry/src/main/ets/widget/pages/LearningProgressMediumCard.ets');
+const progressSummaryMediumPage = read('entry/src/main/ets/widget/pages/LearningProgressSummaryMediumCard.ets');
 const todayReviewPage = read('entry/src/main/ets/widget/pages/TodayReviewCard.ets');
 const progressService = read('entry/src/main/ets/services/LearningProgressService.ets');
 const formService = read('entry/src/main/ets/services/LearningProgressFormService.ets');
@@ -44,12 +45,17 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
   '"LearningProgressMediumCard"',
   '"displayName": "摄影复盘卡"',
   '"src": "./ets/widget/pages/LearningProgressMediumCard.ets"',
+  '"LearningProgressSummaryMediumCard"',
+  '"displayName": "学习进度"',
+  '"src": "./ets/widget/pages/LearningProgressSummaryMediumCard.ets"',
   '"TodayReviewCard"',
   '"displayName": "今日复盘"',
   '"src": "./ets/widget/pages/TodayReviewCard.ets"',
   '"uiSyntax": "arkts"',
-  '"2*2"'
-].forEach((token) => requireIncludes(formConfig, token, 'form_config must expose learning progress and today review ArkTS cards'));
+  '"2*2"',
+  '"2*4"',
+  '"defaultDimension": "2*4"'
+].forEach((token) => requireIncludes(formConfig, token, 'form_config must expose small, medium, and today review ArkTS cards'));
 
 [
   'FormExtensionAbility',
@@ -82,6 +88,31 @@ assert(!formPage.includes("Text(`完成率 ${this.completionRateText}`)"),
 assert(!formPage.includes('MetricTile('), 'LearningProgressMediumCard must not render the dense four-tile layout.');
 assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('已完成')"),
   'LearningProgressMediumCard must only show pending count and completion rate on the small card.');
+
+[
+  "Text(this.title)",
+  'Text(this.completionRateText)',
+  "Text('完成率')",
+  "this.MetricRow('待复盘', this.pendingCountText",
+  "this.MetricRow('累计导入', this.totalImportedCountText",
+  "this.MetricRow('已完成', this.completedCountText",
+  'CompletionBadge()',
+  'MetricRow(',
+  'LEARNING_PROGRESS_DIRECT_TARGET_ROUTE',
+  'this.hasPendingReview() ? LEARNING_PROGRESS_DIRECT_TARGET_ROUTE : this.targetRoute',
+  'postCardAction(this',
+  '.onClick(() =>',
+  "moduleName: 'entry'",
+  "abilityName: 'EntryAbility'"
+].forEach((token) => requireIncludes(
+  progressSummaryMediumPage,
+  token,
+  'LearningProgressSummaryMediumCard must show complete learning progress and direct pending review clicks'
+));
+
+assert(!progressSummaryMediumPage.includes('Button('), 'LearningProgressSummaryMediumCard must not add card-level buttons.');
+assert(!progressSummaryMediumPage.includes('MetricTile('),
+  'LearningProgressSummaryMediumCard must not render the dense four-tile layout.');
 
 [
   "Text('今日复盘')",
