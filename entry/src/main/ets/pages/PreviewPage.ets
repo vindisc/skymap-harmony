@@ -611,7 +611,9 @@ struct PreviewPage {
               saveStateLabel: this.saveStateLabel
             })
           }
+          .justifyContent(FlexAlign.Start)
           .alignItems(HorizontalAlign.Start)
+          .constraintSize({ minHeight: '100%' })
           .padding({
             left: AppMetrics.pagePadding,
             right: AppMetrics.pagePadding,

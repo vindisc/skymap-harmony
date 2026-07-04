@@ -16,6 +16,7 @@ function assert(condition, message) {
 assert(!previewSource.includes('AppBottomSafeAreaFill()'), 'PreviewPage must not draw an extra standalone bottom safe-area strip.');
 assert(previewSource.includes('.backgroundColor(AppColors.pageBackground)\n      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])\n      .hitTestBehavior(HitTestMode.Transparent)'), 'Preview floating dock must own the bottom safe area background.');
 assert(previewSource.includes('.height(\'100%\')\n    .backgroundColor(AppColors.pageBackground)\n    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])'), 'Preview reading page must expand page background into bottom safe area.');
+assert(previewSource.includes('.justifyContent(FlexAlign.Start)\n          .alignItems(HorizontalAlign.Start)\n          .constraintSize({ minHeight: \'100%\' })'), 'Preview reading content must stay top-aligned when the record is shorter than the viewport.');
 assert(previewSource.includes('.height(\'100%\')\n    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])\n    .zIndex(10)'), 'Preview export menu sheet must cover the bottom safe area.');
 assert(previewSource.includes(".fontColor(this.isPressed('cancel-export') ? AppColors.onPrimary : AppColors.primary)"), 'Export sheet cancel button must use primary-colored text.');
 assert(previewSource.includes(".backgroundColor(this.isPressed('cancel-export') ? AppColors.primary : AppColors.primarySoft)"), 'Export sheet cancel button must use a visible primary-tinted background.');
