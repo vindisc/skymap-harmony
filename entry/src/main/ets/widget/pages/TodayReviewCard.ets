@@ -1,9 +1,13 @@
-const TODAY_CARD_BACKGROUND: string = '#FFFDF8';
-const TODAY_CARD_TEXT_PRIMARY: string = '#171A1F';
+const TODAY_CARD_BACKGROUND: string = '#FFFFFF';
+const TODAY_CARD_CONTENT_BACKGROUND: string = '#F8F6F1';
+const TODAY_CARD_TEXT_PRIMARY: string = '#0D1117';
 const TODAY_CARD_TEXT_SECONDARY: string = '#68707A';
-const TODAY_CARD_PRIMARY: string = '#356F80';
-const TODAY_CARD_HINT_BACKGROUND: string = '#F1EADF';
+const TODAY_CARD_THEME_COLOR: string = '#356F80';
 const TODAY_REVIEW_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
+
+// 圆角
+const TODAY_CARD_OUTER_RADIUS: number = 24;
+const TODAY_CARD_PADDING: number = 16;
 
 let todayReviewCardStorage: LocalStorage = new LocalStorage();
 
@@ -38,76 +42,67 @@ struct TodayReviewCard {
   }
 
   build() {
-    Column({ space: 14 }) {
-      Text('今日复盘')
-        .fontSize(18)
-        .lineHeight(24)
+    Column({ space: 0 }) {
+      // 标题居中
+      Text('今日待复盘')
+        .fontSize(15)
+        .lineHeight(20)
         .fontWeight(FontWeight.Bold)
         .fontColor(TODAY_CARD_TEXT_PRIMARY)
-        .textAlign(TextAlign.Start)
+        .textAlign(TextAlign.Center)
         .width('100%')
+        .maxLines(1)
+        .margin({ top: 2, bottom: 4 })
 
+      // 数字区域
       Column({ space: 8 }) {
-        if (this.hasPendingReview()) {
-          Row({ space: 8 }) {
-            Text(`${this.resolvePendingCount()}`)
-              .fontSize(46)
-              .lineHeight(50)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(TODAY_CARD_TEXT_PRIMARY)
-              .textAlign(TextAlign.Center)
-
-            Text('张待复盘')
-              .fontSize(14)
-              .lineHeight(18)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(TODAY_CARD_TEXT_SECONDARY)
-          }
-          .justifyContent(FlexAlign.Center)
-          .alignItems(VerticalAlign.Bottom)
-          .width('100%')
-        } else {
-          Text('已清空')
-            .fontSize(27)
-            .lineHeight(34)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(TODAY_CARD_PRIMARY)
-            .textAlign(TextAlign.Center)
-        }
-
-        Row({ space: 6 }) {
-          Text(this.resolveHintText())
-            .fontSize(13)
-            .lineHeight(18)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.hasPendingReview() ? '#FFFDF8' : TODAY_CARD_TEXT_SECONDARY)
-            .maxLines(1)
-
-          if (this.hasPendingReview()) {
-            Text('→')
-              .fontSize(15)
-              .lineHeight(18)
-              .fontWeight(FontWeight.Bold)
-              .fontColor('#FFFDF8')
-              .maxLines(1)
-          }
-        }
-        .justifyContent(FlexAlign.Center)
-        .alignItems(VerticalAlign.Center)
-        .padding({ left: 16, right: 16, top: 6, bottom: 6 })
-        .borderRadius(12)
-        .backgroundColor(this.hasPendingReview() ? TODAY_CARD_PRIMARY : TODAY_CARD_HINT_BACKGROUND)
+        // 数字
+        Text(`${this.resolvePendingCount()}`)
+          .fontSize(48)
+          .lineHeight(52)
+          .fontWeight(900)
+          .fontColor(TODAY_CARD_THEME_COLOR)
+          .letterSpacing(-2)
+          .textAlign(TextAlign.Center)
       }
       .width('100%')
-      .layoutWeight(1)
+      .margin({ top: 12 })
+
+      // 弹性空间
+      Blank()
+        .layoutWeight(1)
+
+      // 按钮
+      Row({ space: 6 }) {
+        Text(this.resolveHintText())
+          .fontSize(13)
+          .lineHeight(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(this.hasPendingReview() ? '#FFFDF8' : TODAY_CARD_TEXT_SECONDARY)
+          .maxLines(1)
+
+        if (this.hasPendingReview()) {
+          Text('→')
+            .fontSize(15)
+            .lineHeight(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#FFFDF8')
+            .maxLines(1)
+        }
+      }
       .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Center)
+      .alignItems(VerticalAlign.Center)
+      .padding({ left: 16, right: 16, top: 7, bottom: 7 })
+      .borderRadius(12)
+      .backgroundColor(this.hasPendingReview() ? TODAY_CARD_THEME_COLOR : '#F1EADF')
+      .margin({ bottom: 12 })
     }
     .width('100%')
     .height('100%')
-    .padding(14)
-    .borderRadius(18)
-    .backgroundColor(TODAY_CARD_BACKGROUND)
+    .padding(TODAY_CARD_PADDING)
+    .borderRadius(TODAY_CARD_OUTER_RADIUS)
+    .backgroundColor(TODAY_CARD_CONTENT_BACKGROUND)
+    .justifyContent(FlexAlign.Start)
     .onClick(() => {
       this.openTargetRoute();
     })

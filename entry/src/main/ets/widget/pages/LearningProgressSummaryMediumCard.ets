@@ -45,34 +45,20 @@ struct LearningProgressSummaryMediumCard {
 
   @Builder
   CompletionBadge() {
-    Row({ space: 3 }) {
-      Text('完成')
-        .fontSize(10)
-        .lineHeight(14)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
-        .maxLines(1)
-
-      Text(this.completionRateText)
-        .fontSize(14)
-        .lineHeight(18)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(SUMMARY_CARD_PRIMARY)
-        .textAlign(TextAlign.End)
-        .maxLines(1)
-    }
-    .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-    .borderRadius(9)
-    .backgroundColor('#F0F4F0')
-    .alignItems(VerticalAlign.Center)
+    Text(this.completionRateText)
+      .fontSize(13)
+      .lineHeight(17)
+      .fontWeight(FontWeight.Bold)
+      .fontColor(SUMMARY_CARD_PRIMARY)
+      .maxLines(1)
   }
 
   @Builder
   PendingDashboard() {
     Column({ space: 1 }) {
       Text(this.pendingCountText)
-        .fontSize(32)
-        .lineHeight(36)
+        .fontSize(28)
+        .lineHeight(32)
         .fontWeight(900)
         .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
         .textAlign(TextAlign.Center)
@@ -80,15 +66,15 @@ struct LearningProgressSummaryMediumCard {
         .letterSpacing(-1)
 
       Text('待复盘')
-        .fontSize(12)
-        .lineHeight(16)
+        .fontSize(11)
+        .lineHeight(15)
         .fontWeight(FontWeight.Medium)
         .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
     }
     .width('100%')
-    .height(64)
+    .height(56)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .borderRadius(14)
@@ -99,23 +85,23 @@ struct LearningProgressSummaryMediumCard {
   LearningProgressSummary() {
     Column({ space: 3 }) {
       Text('已完成')
-        .fontSize(12)
-        .lineHeight(16)
+        .fontSize(11)
+        .lineHeight(15)
         .fontWeight(FontWeight.Medium)
         .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
 
       Text(`${this.completedCountText} / ${this.totalImportedCountText}`)
-        .fontSize(28)
-        .lineHeight(32)
+        .fontSize(24)
+        .lineHeight(28)
         .fontWeight(FontWeight.Bold)
         .fontColor(SUMMARY_CARD_PRIMARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
     }
     .width('100%')
-    .height(64)
+    .height(56)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .borderRadius(14)
@@ -149,20 +135,24 @@ struct LearningProgressSummaryMediumCard {
 
   build() {
     Column({ space: 10 }) {
-      Row({ space: 10 }) {
+      Row({ space: 6 }) {
         Text(this.title)
-          .fontSize(18)
-          .lineHeight(22)
+          .fontSize(15)
+          .lineHeight(19)
           .fontWeight(FontWeight.Bold)
           .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
           .textAlign(TextAlign.Start)
           .layoutWeight(1)
           .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+        Text('完成 ')
+          .fontSize(10)
+          .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
 
         this.CompletionBadge()
       }
       .width('100%')
-      .height(22)
       .alignItems(VerticalAlign.Center)
 
       Row({ space: 10 }) {
@@ -170,7 +160,7 @@ struct LearningProgressSummaryMediumCard {
           this.PendingDashboard()
         }
         .layoutWeight(50)
-        .height(68)
+        .height(60)
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
 
@@ -178,19 +168,19 @@ struct LearningProgressSummaryMediumCard {
           this.LearningProgressSummary()
         }
         .layoutWeight(50)
-        .height(68)
+        .height(60)
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
       }
       .width('100%')
-      .height(68)
+      .height(60)
       .alignItems(VerticalAlign.Center)
 
       this.ActionHint()
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 14, right: 14, top: 11, bottom: 12 })
+    .padding({ left: 14, right: 14, top: 11, bottom: 20 })
     .borderRadius(18)
     .backgroundColor(SUMMARY_CARD_BACKGROUND)
     .onClick(() => {
