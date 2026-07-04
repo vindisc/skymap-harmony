@@ -3,7 +3,6 @@ const SUMMARY_CARD_TEXT_PRIMARY: string = '#171A1F';
 const SUMMARY_CARD_TEXT_SECONDARY: string = '#68707A';
 const SUMMARY_CARD_PRIMARY: string = '#356F80';
 const SUMMARY_CARD_PRIMARY_SOFT: string = '#DDEFE6';
-const SUMMARY_CARD_DIVIDER: string = '#E7DFD1';
 const LEARNING_PROGRESS_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
 let learningProgressSummaryCardStorage: LocalStorage = new LocalStorage();
@@ -25,10 +24,6 @@ struct LearningProgressSummaryMediumCard {
 
   private hasPendingReview(): boolean {
     return this.resolvePendingCount() > 0;
-  }
-
-  private resolveActionText(): string {
-    return this.hasPendingReview() ? '继续复盘 →' : '回到首页 →';
   }
 
   private openTargetRoute(): void {
@@ -67,8 +62,8 @@ struct LearningProgressSummaryMediumCard {
   PendingDashboard() {
     Column({ space: 2 }) {
       Text(this.pendingCountText)
-        .fontSize(64)
-        .lineHeight(66)
+        .fontSize(46)
+        .lineHeight(48)
         .fontWeight(FontWeight.Bold)
         .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
         .textAlign(TextAlign.Center)
@@ -83,24 +78,16 @@ struct LearningProgressSummaryMediumCard {
         .maxLines(1)
     }
     .width('100%')
-    .height(88)
+    .height(64)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
-    .borderRadius(16)
+    .borderRadius(14)
     .backgroundColor(SUMMARY_CARD_PRIMARY_SOFT)
   }
 
   @Builder
   LearningProgressSummary() {
-    Column({ space: 1 }) {
-      Text(`${this.completedCountText} / ${this.totalImportedCountText}`)
-        .fontSize(22)
-        .lineHeight(26)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(SUMMARY_CARD_PRIMARY)
-        .textAlign(TextAlign.Center)
-        .maxLines(1)
-
+    Column({ space: 4 }) {
       Text('已完成')
         .fontSize(12)
         .lineHeight(16)
@@ -108,22 +95,19 @@ struct LearningProgressSummaryMediumCard {
         .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
+
+      Text(`${this.completedCountText} / ${this.totalImportedCountText}`)
+        .fontSize(26)
+        .lineHeight(30)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(SUMMARY_CARD_PRIMARY)
+        .textAlign(TextAlign.Center)
+        .maxLines(1)
     }
     .width('100%')
-    .height(42)
+    .height(58)
+    .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
-  }
-
-  @Builder
-  ActionHint() {
-    Text(this.resolveActionText())
-      .fontSize(14)
-      .lineHeight(17)
-      .fontWeight(FontWeight.Bold)
-      .fontColor(SUMMARY_CARD_PRIMARY)
-      .textAlign(TextAlign.Center)
-      .width('100%')
-      .height(18)
   }
 
   build() {
@@ -141,22 +125,33 @@ struct LearningProgressSummaryMediumCard {
         this.CompletionBadge()
       }
       .width('100%')
+      .height(22)
       .alignItems(VerticalAlign.Center)
 
-      Divider()
-        .strokeWidth(1)
-        .color(SUMMARY_CARD_DIVIDER)
-        .opacity(0.72)
+      Row({ space: 10 }) {
+        Column() {
+          this.PendingDashboard()
+        }
+        .layoutWeight(55)
+        .height(68)
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
 
-      this.PendingDashboard()
-
-      this.LearningProgressSummary()
-
-      this.ActionHint()
+        Column() {
+          this.LearningProgressSummary()
+        }
+        .layoutWeight(45)
+        .height(68)
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+      }
+      .width('100%')
+      .height(68)
+      .alignItems(VerticalAlign.Center)
     }
     .width('100%')
     .height('100%')
-    .padding(12)
+    .padding({ left: 12, right: 12, top: 10, bottom: 20 })
     .borderRadius(18)
     .backgroundColor(SUMMARY_CARD_BACKGROUND)
     .onClick(() => {
