@@ -96,6 +96,7 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   'PendingDashboard()',
   "Text('待复盘')",
   'Text(this.pendingCountText)',
+  '.fontSize(42)',
   'LearningProgressSummary()',
   'Text(`${this.completedCountText} / ${this.totalImportedCountText}`)',
   "Text('已完成')",

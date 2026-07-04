@@ -66,20 +66,20 @@ struct LearningProgressSummaryMediumCard {
 
   @Builder
   PendingDashboard() {
-    Column({ space: 2 }) {
-      Text(this.pendingCountText)
-        .fontSize(48)
-        .lineHeight(50)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
+    Column({ space: 1 }) {
+      Text('待复盘')
+        .fontSize(12)
+        .lineHeight(16)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
 
-      Text('待复盘')
-        .fontSize(13)
-        .lineHeight(17)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
+      Text(this.pendingCountText)
+        .fontSize(42)
+        .lineHeight(44)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
     }
