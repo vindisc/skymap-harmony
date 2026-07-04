@@ -1,8 +1,8 @@
 const CARD_BACKGROUND: string = '#FFFDF8';
-const CARD_TEXT_PRIMARY: string = '#171A1F';
+const CARD_TEXT_PRIMARY: string = '#0D1117';
 const CARD_TEXT_SECONDARY: string = '#68707A';
 const CARD_PRIMARY: string = '#356F80';
-const CARD_PRIMARY_SOFT: string = '#D5EDE3';
+const CARD_PRIMARY_SOFT: string = '#D0E8DB';
 const CARD_HINT_BACKGROUND: string = '#F1EADF';
 
 let learningProgressCardStorage: LocalStorage = new LocalStorage();
@@ -30,23 +30,54 @@ struct LearningProgressMediumCard {
     });
   }
 
-  build() {
-    Column({ space: 9 }) {
-      Text(this.title)
-        .fontSize(18)
-        .lineHeight(24)
+  @Builder
+  CompletionBadge() {
+    Row({ space: 3 }) {
+      Text('完成率')
+        .fontSize(10)
+        .lineHeight(14)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(CARD_TEXT_SECONDARY)
+        .maxLines(1)
+
+      Text(this.completionRateText)
+        .fontSize(14)
+        .lineHeight(18)
         .fontWeight(FontWeight.Bold)
-        .fontColor(CARD_TEXT_PRIMARY)
-        .textAlign(TextAlign.Start)
-        .width('100%')
+        .fontColor(CARD_PRIMARY)
+        .maxLines(1)
+    }
+    .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+    .borderRadius(9)
+    .backgroundColor('#F0F4F0')
+    .alignItems(VerticalAlign.Center)
+  }
+
+  build() {
+    Column({ space: 11 }) {
+      Row({ space: 10 }) {
+        Text(this.title)
+          .fontSize(18)
+          .lineHeight(22)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(CARD_TEXT_PRIMARY)
+          .textAlign(TextAlign.Start)
+          .layoutWeight(1)
+          .maxLines(1)
+
+        this.CompletionBadge()
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
 
       Column({ space: 0 }) {
         Text(this.pendingCountText)
-          .fontSize(40)
-          .lineHeight(44)
-          .fontWeight(FontWeight.Bold)
+          .fontSize(36)
+          .lineHeight(40)
+          .fontWeight(900)
           .fontColor(CARD_TEXT_PRIMARY)
           .textAlign(TextAlign.Center)
+          .letterSpacing(-1)
 
         Text('待复盘')
           .fontSize(12)
@@ -61,25 +92,6 @@ struct LearningProgressMediumCard {
       .alignItems(HorizontalAlign.Center)
       .borderRadius(14)
       .backgroundColor(CARD_PRIMARY_SOFT)
-
-      Row() {
-        Text('完成率')
-          .fontSize(12)
-          .lineHeight(16)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(CARD_TEXT_SECONDARY)
-
-        Blank()
-
-        Text(this.completionRateText)
-          .fontSize(17)
-          .lineHeight(21)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(CARD_PRIMARY)
-      }
-      .width('100%')
-      .height(24)
-      .padding({ left: 2, right: 2 })
 
       Text(this.resolveHintText())
         .fontSize(12)

@@ -75,8 +75,11 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
   'resolveHintText()',
   "'点击继续复盘'",
   "'暂无待复盘'",
-  'Column({ space: 9 })',
-  '.fontSize(17)',
+  'CompletionBadge()',
+  'Column({ space: 11 })',
+  '.fontSize(36)',
+  '.fontWeight(900)',
+  '.letterSpacing(-1)',
   '.height(28)',
   '.borderRadius(14)',
   '.padding(14)',
@@ -88,8 +91,6 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
 ].forEach((token) => requireIncludes(formPage, token, 'LearningProgressMediumCard must match required content and click behavior'));
 
 assert(!formPage.includes('Button('), 'LearningProgressMediumCard must not add card-level buttons.');
-assert(!formPage.includes("Text(`完成率 ${this.completionRateText}`)"),
-  'LearningProgressMediumCard must not place completion rate in the title row.');
 assert(!formPage.includes('MetricTile('), 'LearningProgressMediumCard must not render the dense four-tile layout.');
 assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('已完成')"),
   'LearningProgressMediumCard must only show pending count and completion rate on the small card.');
@@ -101,19 +102,23 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   'PendingDashboard()',
   "Text('待复盘')",
   'Text(this.pendingCountText)',
-  '.fontSize(38)',
+  '.fontSize(32)',
+  '.fontWeight(900)',
+  '.letterSpacing(-1)',
   'LearningProgressSummary()',
   'Text(`${this.completedCountText} / ${this.totalImportedCountText}`)',
   "Text('已完成')",
   'SUMMARY_CARD_PROGRESS_SOFT',
-  'SUMMARY_CARD_HINT_SOFT',
-  "const SUMMARY_CARD_PRIMARY_SOFT: string = '#D5EDE3';",
-  "const SUMMARY_CARD_HINT_SOFT: string = '#E8EDE6';",
+  "const SUMMARY_CARD_PRIMARY_SOFT: string = '#D8EDE5';",
+  "const SUMMARY_CARD_PROGRESS_SOFT: string = '#E8F3EC';",
+  "const SUMMARY_CARD_ACTION_DISABLED: string = '#E7ECE5';",
   'Column({ space: 10 })',
   '.layoutWeight(50)',
   '.height(68)',
   'ActionHint()',
   "return this.hasPendingReview() ? '继续复盘' : '回到首页';",
+  "Text('→')",
+  ".backgroundColor(this.hasPendingReview() ? SUMMARY_CARD_PRIMARY : SUMMARY_CARD_ACTION_DISABLED)",
   '.padding({ left: 14, right: 14, top: 11, bottom: 12 })',
   'CompletionBadge()',
   'LEARNING_PROGRESS_DIRECT_TARGET_ROUTE',
@@ -138,9 +143,6 @@ assert(!progressSummaryMediumPage.includes("Text('累计导入')") &&
   !progressSummaryMediumPage.includes("ProgressRow('累计导入'") &&
   !progressSummaryMediumPage.includes('LearningProgressPanel()'),
   'LearningProgressSummaryMediumCard must express imported count only through completed / imported summary.');
-assert(!progressSummaryMediumPage.includes('SUMMARY_CARD_ACTION_BACKGROUND') &&
-  !progressSummaryMediumPage.includes('.backgroundColor(SUMMARY_CARD_ACTION_BACKGROUND)'),
-  'LearningProgressSummaryMediumCard action hint must not look like a button.');
 assert(!progressSummaryMediumPage.includes('SUMMARY_CARD_DIVIDER') &&
   !progressSummaryMediumPage.includes('Divider()'),
   'LearningProgressSummaryMediumCard must avoid vertical crowding from divider rows.');
