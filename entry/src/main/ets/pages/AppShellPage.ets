@@ -46,6 +46,9 @@ struct AppShellPage {
       this.myRefreshToken += 1;
     }
   };
+  private formLaunchIntentListener: () => void = (): void => {
+    this.applyFormLaunchIntent();
+  };
   @State currentTab: RootTabKey = RootTabKey.HOME;
   @State homeRefreshToken: number = 0;
   @State myRefreshToken: number = 0;
@@ -56,7 +59,13 @@ struct AppShellPage {
 
   aboutToAppear(): void {
     SettingsRefreshService.subscribe(this.settingsRefreshListener);
+    FormLaunchIntentService.subscribe(this.formLaunchIntentListener);
     this.applyFormLaunchIntent();
+  }
+
+  aboutToDisappear(): void {
+    SettingsRefreshService.unsubscribe(this.settingsRefreshListener);
+    FormLaunchIntentService.unsubscribe(this.formLaunchIntentListener);
   }
 
   onPageShow(): void {

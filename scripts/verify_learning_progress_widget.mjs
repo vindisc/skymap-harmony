@@ -69,7 +69,9 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
   'resolveHintText()',
   "'点击继续复盘'",
   "'暂无待复盘'",
-  'FormLink({',
+  'postCardAction(this',
+  '.onClick(() =>',
+  "moduleName: 'entry'",
   "abilityName: 'EntryAbility'",
   'targetRoute: this.targetRoute'
 ].forEach((token) => requireIncludes(formPage, token, 'LearningProgressMediumCard must match required content and click behavior'));
@@ -89,7 +91,9 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   "Text('张待复盘')",
   "Text('已清空')",
   "return this.hasPendingReview() ? '点击继续' : '暂无待复盘';",
-  'FormLink({',
+  'postCardAction(this',
+  '.onClick(() =>',
+  "moduleName: 'entry'",
   "abilityName: 'EntryAbility'"
 ].forEach((token) => requireIncludes(todayReviewPage, token, 'TodayReviewCard must render the action-driven pending review state'));
 
@@ -128,6 +132,8 @@ assert(!todayReviewPage.includes('completionRateText') &&
 
 [
   'FormLaunchIntentService.consumeRoute()',
+  'FormLaunchIntentService.subscribe(this.formLaunchIntentListener)',
+  'FormLaunchIntentService.unsubscribe(this.formLaunchIntentListener)',
   'LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING',
   'RootTabKey.LIBRARY',
   "ProjectDetailPage({ refreshToken: this.reviewLibraryRefreshToken, initialFilter: this.libraryInitialFilter })"
@@ -150,7 +156,9 @@ assert(!todayReviewPage.includes('completionRateText') &&
 [
   'LEARNING_PROGRESS_WIDGET_ROUTE_HOME',
   'LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING',
-  'consumeRoute()'
+  'consumeRoute()',
+  'subscribe(listener: FormLaunchIntentListener)',
+  'notifyListeners()'
 ].forEach((token) => requireIncludes(launchService, token, 'FormLaunchIntentService must keep launch targets explicit'));
 
 if (failed) {
