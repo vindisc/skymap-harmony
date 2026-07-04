@@ -42,7 +42,7 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
 
 [
   '"LearningProgressMediumCard"',
-  '"displayName": "摄影学习"',
+  '"displayName": "摄影复盘卡"',
   '"src": "./ets/widget/pages/LearningProgressMediumCard.ets"',
   '"TodayReviewCard"',
   '"displayName": "今日复盘"',
@@ -85,14 +85,17 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   "Text('今日复盘')",
   'pendingCountText',
   'targetRoute: this.targetRoute',
-  "return `待复盘 ${this.resolvePendingCount()} 张`;",
-  "return '今日已清空';",
+  "Text(`${this.resolvePendingCount()}`)",
+  "Text('张待复盘')",
+  "Text('已清空')",
   "return this.hasPendingReview() ? '点击继续' : '暂无待复盘';",
   'FormLink({',
   "abilityName: 'EntryAbility'"
 ].forEach((token) => requireIncludes(todayReviewPage, token, 'TodayReviewCard must render the action-driven pending review state'));
 
 assert(!todayReviewPage.includes('Button('), 'TodayReviewCard must not add card-level buttons.');
+assert(!todayReviewPage.includes('待复盘 ${this.resolvePendingCount()} 张'),
+  'TodayReviewCard must not squeeze pending count into one sentence.');
 assert(!todayReviewPage.includes('completionRateText') &&
   !todayReviewPage.includes('totalImportedCountText') &&
   !todayReviewPage.includes('completedCountText') &&

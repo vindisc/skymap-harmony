@@ -22,13 +22,6 @@ struct TodayReviewCard {
     return this.resolvePendingCount() > 0;
   }
 
-  private resolveMainText(): string {
-    if (this.hasPendingReview()) {
-      return `待复盘 ${this.resolvePendingCount()} 张`;
-    }
-    return '今日已清空';
-  }
-
   private resolveHintText(): string {
     return this.hasPendingReview() ? '点击继续' : '暂无待复盘';
   }
@@ -50,28 +43,48 @@ struct TodayReviewCard {
           .textAlign(TextAlign.Start)
           .width('100%')
 
-        Column({ space: 6 }) {
-          Text(this.resolveMainText())
-            .fontSize(this.hasPendingReview() ? 24 : 22)
-            .lineHeight(30)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.hasPendingReview() ? TODAY_CARD_TEXT_PRIMARY : TODAY_CARD_PRIMARY)
-            .textAlign(TextAlign.Center)
+        Column({ space: 8 }) {
+          if (this.hasPendingReview()) {
+            Row({ space: 8 }) {
+              Text(`${this.resolvePendingCount()}`)
+                .fontSize(46)
+                .lineHeight(50)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(TODAY_CARD_TEXT_PRIMARY)
+                .textAlign(TextAlign.Center)
+
+              Text('张待复盘')
+                .fontSize(14)
+                .lineHeight(18)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(TODAY_CARD_TEXT_SECONDARY)
+            }
+            .justifyContent(FlexAlign.Center)
+            .alignItems(VerticalAlign.Bottom)
+            .width('100%')
+          } else {
+            Text('已清空')
+              .fontSize(27)
+              .lineHeight(34)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(TODAY_CARD_PRIMARY)
+              .textAlign(TextAlign.Center)
+          }
 
           Text(this.resolveHintText())
             .fontSize(13)
             .lineHeight(18)
             .fontWeight(FontWeight.Medium)
-            .fontColor(TODAY_CARD_TEXT_SECONDARY)
+            .fontColor(this.hasPendingReview() ? TODAY_CARD_PRIMARY : TODAY_CARD_TEXT_SECONDARY)
             .textAlign(TextAlign.Center)
+            .padding({ left: 14, right: 14, top: 4, bottom: 4 })
+            .borderRadius(13)
+            .backgroundColor(this.hasPendingReview() ? TODAY_CARD_PRIMARY_SOFT : TODAY_CARD_HINT_BACKGROUND)
         }
         .width('100%')
         .layoutWeight(1)
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
-        .padding({ left: 12, right: 12, top: 12, bottom: 12 })
-        .borderRadius(14)
-        .backgroundColor(this.hasPendingReview() ? TODAY_CARD_PRIMARY_SOFT : TODAY_CARD_HINT_BACKGROUND)
       }
       .width('100%')
       .height('100%')
