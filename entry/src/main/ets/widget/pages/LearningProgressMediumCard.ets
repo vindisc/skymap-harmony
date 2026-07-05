@@ -1,9 +1,13 @@
-const CARD_BACKGROUND: string = '#FFFDF8';
+const CARD_BACKGROUND: string = '#FFFFFF';
+const CARD_CONTENT_BACKGROUND: string = '#F8F6F1';
 const CARD_TEXT_PRIMARY: string = '#0D1117';
 const CARD_TEXT_SECONDARY: string = '#68707A';
-const CARD_PRIMARY: string = '#356F80';
-const CARD_PRIMARY_SOFT: string = '#D0E8DB';
-const CARD_HINT_BACKGROUND: string = '#F1EADF';
+const CARD_THEME_COLOR: string = '#356F80';
+const CARD_THEME_SOFT: string = '#D8EDE5';
+
+// 圆角
+const LEARNING_CARD_OUTER_RADIUS: number = 24;
+const LEARNING_CARD_PADDING: number = 16;
 
 let learningProgressCardStorage: LocalStorage = new LocalStorage();
 
@@ -25,25 +29,22 @@ struct LearningProgressMediumCard {
 
   @Builder
   CompletionBadge() {
-    Row({ space: 2 }) {
-      Text('完成率')
-        .fontSize(10)
-        .lineHeight(14)
+    Row({ space: 4 }) {
+      Text('完成')
+        .fontSize(12)
+        .lineHeight(16)
         .fontWeight(FontWeight.Medium)
         .fontColor(CARD_TEXT_SECONDARY)
-        .maxLines(1)
 
       Text(this.completionRateText)
-        .fontSize(14)
-        .lineHeight(18)
+        .fontSize(16)
+        .lineHeight(20)
         .fontWeight(FontWeight.Bold)
-        .fontColor(CARD_PRIMARY)
-        .maxLines(1)
+        .fontColor(CARD_THEME_COLOR)
     }
-    .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-    .borderRadius(8)
-    .backgroundColor('#F0F4F0')
-    .alignItems(VerticalAlign.Center)
+    .padding(14)
+    .borderRadius(12)
+    .backgroundColor(CARD_THEME_SOFT)
   }
 
   private openTargetRoute(): void {
@@ -59,74 +60,64 @@ struct LearningProgressMediumCard {
 
   build() {
     Column({ space: 11 }) {
-      Row({ space: 8 }) {
-        Text(this.title)
-          .fontSize(16)
-          .lineHeight(20)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(CARD_TEXT_PRIMARY)
-          .textAlign(TextAlign.Start)
-          .layoutWeight(1)
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      Text(this.title)
+        .fontSize(16)
+        .lineHeight(20)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(CARD_TEXT_PRIMARY)
+        .textAlign(TextAlign.Start)
+        .width('100%')
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-        this.CompletionBadge()
-      }
-      .width('100%')
-      .alignItems(VerticalAlign.Center)
+      this.CompletionBadge()
 
-      Column({ space: 0 }) {
+      Column({ space: 8 }) {
         Text(this.pendingCountText)
           .fontSize(36)
           .lineHeight(40)
           .fontWeight(900)
-          .fontColor(CARD_TEXT_PRIMARY)
-          .textAlign(TextAlign.Center)
+          .fontColor(CARD_THEME_COLOR)
           .letterSpacing(-1)
+          .textAlign(TextAlign.Start)
+          .width('100%')
 
         Text('待复盘')
-          .fontSize(12)
-          .lineHeight(16)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(CARD_TEXT_SECONDARY)
-          .textAlign(TextAlign.Center)
-      }
-      .width('100%')
-      .height(66)
-      .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Center)
-      .borderRadius(14)
-      .backgroundColor(CARD_PRIMARY_SOFT)
-
-      Row({ space: 6 }) {
-        Text(this.resolveHintText())
           .fontSize(13)
           .lineHeight(18)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(this.hasPendingReview() ? '#FFFDF8' : CARD_TEXT_SECONDARY)
-          .maxLines(1)
+          .fontWeight(FontWeight.Regular)
+          .fontColor(CARD_TEXT_SECONDARY)
+          .textAlign(TextAlign.Start)
+          .width('100%')
 
-        if (this.hasPendingReview()) {
+        Row({ space: 6 }) {
+          Text(this.resolveHintText())
+            .fontSize(13)
+            .lineHeight(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.hasPendingReview() ? '#FFFDF8' : CARD_TEXT_SECONDARY)
+
           Text('→')
             .fontSize(15)
             .lineHeight(18)
             .fontWeight(FontWeight.Bold)
-            .fontColor('#FFFDF8')
-            .maxLines(1)
+            .fontColor(this.hasPendingReview() ? '#FFFDF8' : CARD_TEXT_SECONDARY)
         }
+        .height(30)
+        .padding(14)
+        .borderRadius(12)
+        .justifyContent(FlexAlign.Center)
+        .alignItems(VerticalAlign.Center)
+        .backgroundColor(this.hasPendingReview() ? CARD_THEME_COLOR : '#F1EADF')
       }
       .width('100%')
-      .height(30)
-      .justifyContent(FlexAlign.Center)
-      .alignItems(VerticalAlign.Center)
-      .borderRadius(12)
-      .backgroundColor(this.hasPendingReview() ? CARD_PRIMARY : CARD_HINT_BACKGROUND)
     }
     .width('100%')
     .height('100%')
-    .padding(14)
-    .borderRadius(18)
-    .backgroundColor(CARD_BACKGROUND)
+    .padding(LEARNING_CARD_PADDING)
+    .borderRadius(LEARNING_CARD_OUTER_RADIUS)
+    .backgroundColor(CARD_CONTENT_BACKGROUND)
+    .justifyContent(FlexAlign.Start)
     .onClick(() => {
       this.openTargetRoute();
     })
