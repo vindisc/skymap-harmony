@@ -125,14 +125,14 @@ assert(validationStartIndex >= 0 && validationStartIndex < availabilityIndex, 'v
 assert(availabilityIndex >= 0 && availabilityIndex < uploadStartIndex, 'v2 must check reachability before upload.');
 
 assertIncludes(previewSource, 'ReviewBundleOriginalPhotoExportService', 'PreviewPage');
-assertIncludes(previewSource, '@State isExportingOriginalPhotoBundle: boolean = false;', 'PreviewPage');
+assertIncludes(previewSource, 'ExportState.ORIGINAL', 'PreviewPage');
 assertIncludes(previewSource, 'exportOriginalPhotoReviewBundleToHomeStorage()', 'PreviewPage');
 assertIncludes(previewSource, "'导出复盘包（含原图）'", 'PreviewPage');
 assertIncludes(previewSource, "'包含原始照片和复盘数据，适合在 Mac 端继续处理。'", 'PreviewPage');
 assertIncludes(previewSource, "'导出复盘包'", 'PreviewPage');
 assertIncludes(previewSource, "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'", 'PreviewPage');
-assertIncludes(previewSource, "'导出 review.json'", 'PreviewPage');
 assertIncludes(previewSource, "'复制复盘数据'", 'PreviewPage');
+assertNotIncludes(previewSource, "'导出 review.json'", 'PreviewPage');
 
 for (const token of [
   "REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT: string = '正在导出含原图复盘包…'",

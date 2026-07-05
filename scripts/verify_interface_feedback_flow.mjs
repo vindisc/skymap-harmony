@@ -33,20 +33,21 @@ assert(editorSource.includes('REVIEW_FLOW_SAVE_PENDING_TEXT'), 'Editor save butt
 assert(editorSource.includes('REVIEW_FLOW_SAVE_SUCCESS_TEXT'), 'Editor should use shared save success copy.');
 assert(editorSource.includes('REVIEW_FLOW_SAVE_FAILED_TEXT'), 'Editor should use shared save failure copy.');
 
-assert(previewSource.includes('@State isExportingReviewJson'), 'Preview should track JSON export pending state.');
+assert(previewSource.includes('@State exportState: ExportState = ExportState.IDLE;'), 'Preview should track export state centrally.');
 assert(previewSource.includes('actionFeedbackText'), 'Preview should keep inline lightweight feedback text.');
 assert(previewSource.includes('markExportedQuietly'), 'Preview should separate export success from exported-state writeback.');
 assert(previewSource.includes('result.cancelled'), 'Preview should treat cancelled export separately from failed export.');
-assert(previewSource.includes('this.isSaving ||') && previewSource.includes('this.isExportingReviewBundle'), 'Preview busy gate should block repeated actions across save/export/bundle export.');
+assert(previewSource.includes('this.isSaving ||') && previewSource.includes('this.exportState !== ExportState.IDLE'), 'Preview busy gate should block repeated actions across save/export/bundle export.');
 assert(previewSource.includes('ExportSheetAction(label: string, description: string, isDisabled: boolean'), 'Preview export sheet actions should support descriptions and disabled state.');
-assert(previewSource.includes("this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {"), 'Preview primary action should export the image directly.');
+assert(previewSource.includes("this.ActionButton(this.exportState === ExportState.IMAGE ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {"), 'Preview primary action should export the image directly.');
 assert(previewSource.includes('this.MoreActionButton(this.isActionBusy(), () => {'), 'Preview should keep secondary export choices behind a More action.');
 assert(previewSource.includes('REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT'), 'Preview image export should use user-visible photo-library success copy.');
 assert(previewSource.includes('REVIEW_FLOW_EXPORT_SUCCESS_TEXT'), 'Preview should use shared export success copy.');
 assert(previewSource.includes('REVIEW_FLOW_EXPORT_FAILED_TEXT'), 'Preview should use shared export failure copy.');
 assert(previewSource.includes('@State pressedActionKey: string = \'\';'), 'Preview actions should keep shared pressed state.');
 assert(previewSource.includes('private updatePressedAction(event: TouchEvent, key: string, isDisabled: boolean): void'), 'Preview actions should share touch feedback handling.');
-assert(previewSource.includes('.shadow(ElevationTokens.high)'), 'Preview floating action bar should use high elevation token.');
+assert(previewSource.includes('.shadow(isDisabled ? ElevationTokens.none : (this.isPressed(label) ? ElevationTokens.subtle : ElevationTokens.low))'),
+  'Preview floating action bar should keep lightweight token-based button elevation.');
 assert(previewSource.includes('.scale({ x: this.isPressed(label) ? MotionTokens.scalePressed : 1'), 'Preview toolbar buttons should scale on press.');
 assert(previewSource.includes('.scale({ x: this.isPressed(label) ? MotionTokens.scaleSubtle : 1'), 'Preview export sheet rows should use subtle press scale.');
 assert(previewSource.includes('.animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })'), 'Preview press feedback should use motion tokens.');

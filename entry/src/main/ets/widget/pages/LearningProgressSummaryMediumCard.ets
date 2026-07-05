@@ -57,8 +57,8 @@ struct LearningProgressSummaryMediumCard {
   PendingDashboard() {
     Column({ space: 1 }) {
       Text(this.pendingCountText)
-        .fontSize(28)
-        .lineHeight(32)
+        .fontSize(32)
+        .lineHeight(36)
         .fontWeight(900)
         .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
         .textAlign(TextAlign.Center)
@@ -74,7 +74,7 @@ struct LearningProgressSummaryMediumCard {
         .maxLines(1)
     }
     .width('100%')
-    .height(56)
+    .height(68)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .borderRadius(14)
@@ -101,7 +101,7 @@ struct LearningProgressSummaryMediumCard {
         .maxLines(1)
     }
     .width('100%')
-    .height(56)
+    .height(68)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .borderRadius(14)
@@ -146,7 +146,7 @@ struct LearningProgressSummaryMediumCard {
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-        Text('完成 ')
+        Text('完成')
           .fontSize(10)
           .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
 
@@ -160,7 +160,7 @@ struct LearningProgressSummaryMediumCard {
           this.PendingDashboard()
         }
         .layoutWeight(50)
-        .height(60)
+        .height(68)
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
 
@@ -168,19 +168,19 @@ struct LearningProgressSummaryMediumCard {
           this.LearningProgressSummary()
         }
         .layoutWeight(50)
-        .height(60)
+        .height(68)
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
       }
       .width('100%')
-      .height(60)
+      .height(68)
       .alignItems(VerticalAlign.Center)
 
       this.ActionHint()
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 14, right: 14, top: 11, bottom: 20 })
+    .padding({ left: 14, right: 14, top: 11, bottom: 12 })
     .borderRadius(18)
     .backgroundColor(SUMMARY_CARD_BACKGROUND)
     .onClick(() => {

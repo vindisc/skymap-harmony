@@ -119,7 +119,6 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
   "title: '首页图片'",
   'HOME_HERO_IMAGE_PAGE',
   'HomeHeroImageService.listImages',
-  'router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });',
   "title: '同步中心'",
   "title: '家庭存储'"
 ].forEach((marker) => requireIncludes(sources.myPage, marker, 'MyPage missing current personal-center marker'));
@@ -143,24 +142,32 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
 
 [
   "this.ActionButton('编辑', false, this.isActionBusy(), () => {",
-  "this.ActionButton(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {",
+  "this.ActionButton(this.exportState === ExportState.IMAGE ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {",
   'this.MoreActionButton(this.isActionBusy(), () => {',
   '.height(AppMetrics.toolbarButtonHeight)',
-  "this.ExportSheetAction(this.isExportingReviewBundle ? '导出中…' : '导出复盘包'",
-  "this.ExportSheetAction(this.isExportingReviewJson ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出 review.json'",
+  "this.ExportSheetAction(this.exportState === ExportState.BUNDLE ? '导出中…' : '导出复盘包'",
   "this.ExportSheetAction('复制复盘数据'"
 ].forEach((marker) => requireIncludes(sources.previewPage, marker, 'PreviewPage missing current export action marker'));
 
 [
   "title: '同步中心'",
-  "label: this.isTesting ? '检查中…' : '检查家庭存储'",
-  "label: this.resolveStatus() === HomeStorageConfigStatus.COMPLETE ? '修改配置' : '配置'"
+  "secondaryLabel: this.isTesting ? '检查中…' : '检查家庭存储'",
+  "primaryLabel: this.resolveStatus() === HomeStorageConfigStatus.COMPLETE ? '修改配置' : '配置'"
 ].forEach((marker) => requireIncludes(sources.syncCenterPage, marker, 'SyncCenterPage missing current sync-center marker'));
 
 [
   "export const HOME_HERO_IMAGE_PAGE: string = 'pages/HomeHeroImagePage';",
   "export const SYNC_CENTER_PAGE: string = 'pages/SyncCenterPage';"
 ].forEach((marker) => requireIncludes(sources.appRouter, marker, 'AppRouter missing route'));
+
+[
+  'private openHomeHeroImage(): void {',
+  'HOME_HERO_IMAGE_PAGE',
+  'private openSyncCenter(): void {',
+  'SYNC_CENTER_PAGE',
+  "title: '首页图片'",
+  "title: '同步中心'"
+].forEach((marker) => requireIncludes(sources.myPage, marker, 'MyPage missing current personal-center marker'));
 
 [
   '"pages/HomeHeroImagePage"',

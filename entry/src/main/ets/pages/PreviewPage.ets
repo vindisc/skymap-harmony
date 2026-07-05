@@ -29,6 +29,7 @@ import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
   REVIEW_FLOW_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_EXPORT_PENDING_TEXT,
+  REVIEW_FLOW_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT,
@@ -219,7 +220,7 @@ struct PreviewPage {
       );
       if (result.savedToPhotoLibrary) {
         await this.markExportedQuietly(result.path);
-        this.actionFeedbackText = REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT;
+        this.actionFeedbackText = REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
         ToastService.show(this.getUIContext(), REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT);
       } else if (result.cancelled) {
         this.actionFeedbackText = '';

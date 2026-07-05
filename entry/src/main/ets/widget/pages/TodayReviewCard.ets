@@ -42,37 +42,46 @@ struct TodayReviewCard {
   }
 
   build() {
-    Column({ space: 0 }) {
-      // 标题居中
-      Text('今日待复盘')
-        .fontSize(15)
+    Column({ space: 14 }) {
+      Text('今日复盘')
+        .fontSize(16)
         .lineHeight(20)
         .fontWeight(FontWeight.Bold)
         .fontColor(TODAY_CARD_TEXT_PRIMARY)
-        .textAlign(TextAlign.Center)
+        .textAlign(TextAlign.Start)
         .width('100%')
         .maxLines(1)
-        .margin({ top: 2, bottom: 4 })
 
-      // 数字区域
       Column({ space: 8 }) {
-        // 数字
         Text(`${this.resolvePendingCount()}`)
-          .fontSize(48)
-          .lineHeight(52)
+          .fontSize(36)
+          .lineHeight(40)
           .fontWeight(900)
           .fontColor(TODAY_CARD_THEME_COLOR)
-          .letterSpacing(-2)
-          .textAlign(TextAlign.Center)
+          .letterSpacing(-1)
+          .textAlign(TextAlign.Start)
+          .width('100%')
+
+        if (this.hasPendingReview()) {
+          Text('张待复盘')
+            .fontSize(13)
+            .lineHeight(18)
+            .fontWeight(FontWeight.Regular)
+            .fontColor(TODAY_CARD_TEXT_SECONDARY)
+            .textAlign(TextAlign.Start)
+            .width('100%')
+        } else {
+          Text('已清空')
+            .fontSize(13)
+            .lineHeight(18)
+            .fontWeight(FontWeight.Regular)
+            .fontColor(TODAY_CARD_TEXT_SECONDARY)
+            .textAlign(TextAlign.Start)
+            .width('100%')
+        }
       }
       .width('100%')
-      .margin({ top: 12 })
 
-      // 弹性空间
-      Blank()
-        .layoutWeight(1)
-
-      // 按钮
       Row({ space: 6 }) {
         Text(this.resolveHintText())
           .fontSize(13)
@@ -90,12 +99,13 @@ struct TodayReviewCard {
             .maxLines(1)
         }
       }
+      .width('100%')
+      .height(30)
       .justifyContent(FlexAlign.Center)
       .alignItems(VerticalAlign.Center)
-      .padding({ left: 16, right: 16, top: 7, bottom: 7 })
+      .padding(14)
       .borderRadius(12)
       .backgroundColor(this.hasPendingReview() ? TODAY_CARD_THEME_COLOR : '#F1EADF')
-      .margin({ bottom: 12 })
     }
     .width('100%')
     .height('100%')

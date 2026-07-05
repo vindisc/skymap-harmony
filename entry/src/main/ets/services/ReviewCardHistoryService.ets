@@ -482,6 +482,26 @@ export class ReviewCardHistoryService {
     return backupItems;
   }
 
+  private static async recoverBackupItemsToRdbIfNeeded(
+    context: common.UIAbilityContext,
+    diagnostics: ReviewCardHistoryDiagnostics
+  ): Promise<Array<ReviewCardHistoryItem>> {
+    const store = await ReviewCardHistoryService.getStore(context);
+    const backupItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.loadBackupItemsOnce(
+      store,
+      diagnostics,
+      true
+    );
+    if (backupItems.length <= 0) {
+      return [];
+    }
+
+    await ReviewCardHistoryService.migrateRecoveredBackupItemsToRdb(context, backupItems);
+    diagnostics.persistedMergedHistory = true;
+    notifyReviewLibraryChanged('review_exchange_recovered_after_empty_rdb');
+    return backupItems;
+  }
+
   private static rememberItems(items: Array<ReviewCardHistoryItem>): Array<ReviewCardHistoryItem> {
     ReviewCardHistoryService.cachedItems = sortHistoryItems(
       items.map((item: ReviewCardHistoryItem): ReviewCardHistoryItem => {
@@ -567,6 +587,18 @@ export class ReviewCardHistoryService {
     }
 
     if (await ReviewCardHistoryService.isRdbMainIndexReady(context)) {
+      const recoveredBackupItems: Array<ReviewCardHistoryItem> =
+        await ReviewCardHistoryService.recoverBackupItemsToRdbIfNeeded(context, diagnostics);
+      if (recoveredBackupItems.length > 0) {
+        diagnostics.rdbPrimaryReadUsed = true;
+        const items: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems(recoveredBackupItems);
+        updateLatestDiagnostics(diagnostics, items);
+        return {
+          items: items,
+          diagnostics: diagnostics
+        };
+      }
+
       diagnostics.rdbPrimaryReadUsed = true;
       const items: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.rememberItems([]);
       updateLatestDiagnostics(diagnostics, items);

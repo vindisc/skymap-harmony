@@ -2,22 +2,32 @@ import fs from 'node:fs';
 
 const previewPageSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
 const exportServiceSource = fs.readFileSync('entry/src/main/ets/services/ReviewJsonExportService.ets', 'utf8');
+const readmeSource = fs.readFileSync('README.md', 'utf8');
+const mainFlowSource = fs.readFileSync('docs/mobile-main-flow.md', 'utf8');
 
 let failed = false;
 
-const requiredPreviewStrings = [
+const forbiddenPreviewStrings = [
   "this.ExportSheetAction('导出 JSON'",
   'private async exportReviewJson(): Promise<void>',
-  'ReviewCardHistoryService.markExported(context, this.document, result.path)',
-  "已导出 ${result.fileName}",
   'Text(this.lastReviewJsonExportMessage)'
 ];
 
-for (const token of requiredPreviewStrings) {
-  if (!previewPageSource.includes(token)) {
+for (const token of forbiddenPreviewStrings) {
+  if (previewPageSource.includes(token)) {
     failed = true;
-    console.error(`PreviewPage missing review.json export token: ${token}`);
+    console.error(`PreviewPage should keep review.json export hidden: ${token}`);
   }
+}
+
+if (readmeSource.includes('导出 `review.json`')) {
+  failed = true;
+  console.error('README should not describe review.json as a current user-facing export capability.');
+}
+
+if (mainFlowSource.includes('导出 `review.json`')) {
+  failed = true;
+  console.error('mobile-main-flow should not list review.json in the current export menu.');
 }
 
 const requiredServiceStrings = [
@@ -67,4 +77,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log(`review json export: ${namedFile}`);
+console.log(`review json backup/export service retained: ${namedFile}`);

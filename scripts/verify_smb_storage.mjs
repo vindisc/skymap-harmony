@@ -12,25 +12,24 @@ const moduleSource = fs.readFileSync('entry/src/main/module.json5', 'utf8');
 
 let failed = false;
 
-const requiredPreviewTokens = [
+const forbiddenPreviewTokens = [
   "this.ExportSheetAction(this.isUploadingHomeStorage ? '上传中...' : '上传家庭存储'",
   'private async uploadReviewJsonToHomeStorage(): Promise<void>',
   'HomeStorageService.uploadReviewJson(',
-  'ReviewCardHistoryService.markExported(context, this.document, result.remotePath)',
   "this.ExportSheetAction('导出 JSON'"
 ];
 
-for (const token of requiredPreviewTokens) {
-  if (!previewPageSource.includes(token)) {
+for (const token of forbiddenPreviewTokens) {
+  if (previewPageSource.includes(token)) {
     failed = true;
-    console.error(`PreviewPage missing SMB token: ${token}`);
+    console.error(`PreviewPage must not expose retired SMB token: ${token}`);
   }
 }
 
 const requiredSettingsTokens = [
   "Text('家庭存储')",
-  "router.pushUrl({ url: HOME_STORAGE_PAGE });",
-  "Text('SMB 与凭据')"
+  'getRouter().pushUrl({ url: HOME_STORAGE_PAGE })',
+  "Text('家庭存储')"
 ];
 
 for (const token of requiredSettingsTokens) {
@@ -59,12 +58,12 @@ for (const token of forbiddenSettingsTokens) {
 }
 
 const requiredHomeStoragePageTokens = [
-  "SettingsInput('SMB 地址或 IP'",
+  "SettingsInput('家庭存储地址或 IP'",
   "SettingsInput('共享目录'",
   "SettingsInput('目标路径'",
   "SettingsInput('用户名'",
   "SettingsInput('密码或凭据'",
-  '测试'
+  '检查'
 ];
 
 for (const token of requiredHomeStoragePageTokens) {
@@ -131,10 +130,10 @@ if (!syncCenterPageSource.includes("this.InfoRow('保存位置'") || !syncCenter
 const requiredHomeStorageTokens = [
   "const DEFAULT_REMOTE_DIRECTORY: string = '';",
   'HomeStorageSecretService.savePassword(normalized.password)',
-  "return '请先填写 SMB 地址或 IP';",
+  "return '请先填写家庭存储地址或 IP';",
   "return '请先填写共享目录';",
-  "message: '家庭存储连接成功'",
-  "message: '已上传家庭存储'",
+  "createOperationResult(true, `\\\\\\\\${normalized.smbHost}\\\\${normalized.smbShareName}`, '家庭存储连接成功')",
+  "createOperationResult(true, remotePath, '已上传家庭存储')",
   "message: '已上传共享根目录'",
   'let passwordSavedSecurely: boolean = false;',
   'await store.put(LEGACY_PASSWORD_KEY, normalized.password);',

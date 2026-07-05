@@ -37,7 +37,7 @@ assert(files.preview.includes('REVIEW_FLOW_EXPORT_PENDING_TEXT'), 'Preview expor
 assert(files.preview.includes('REVIEW_FLOW_EXPORT_SUCCESS_TEXT'), 'Preview export success toast must be present.');
 assert(files.preview.includes('REVIEW_FLOW_EXPORT_FAILED_TEXT'), 'Preview export failure toast must be present.');
 assert(files.preview.includes('result.cancelled'), 'Preview export flow should distinguish cancellation from failure.');
-assert(files.preview.includes('isExportingReviewJson'), 'Preview JSON export should keep its own pending state.');
+assert(files.preview.includes('exportState'), 'Preview should use a shared export state gate.');
 assert(files.preview.includes('ReviewCardHistoryService.markExported'), 'Preview export must mark exported state.');
 
 assert(files.library.includes('REVIEW_FLOW_DELETE_CONFIRM_TITLE'), 'Delete dialog title must match deletion scope.');

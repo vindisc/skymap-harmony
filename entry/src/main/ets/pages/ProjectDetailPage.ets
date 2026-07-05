@@ -207,6 +207,14 @@ export struct ProjectDetailPage {
     });
   }
 
+  private resolveVisibleReviewItems(): Array<ReviewCardHistoryItem> {
+    return ReviewProjectService.filterItems(
+      this.filteredItems,
+      this.searchText,
+      this.resolveDecisionQuery() ? this.resolveDecisionQuery() as string : 'all'
+    );
+  }
+
   private isPendingImageFailed(photoId: string): boolean {
     return this.pendingImageFailedIds.indexOf(photoId) >= 0;
   }
