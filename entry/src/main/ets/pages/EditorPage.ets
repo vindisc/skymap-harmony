@@ -28,17 +28,10 @@ import {
   PhotoWritingHero,
   PrimaryButton
 } from '../components/AppDesign';
-import { ReviewAssistantPanel } from '../components/ReviewAssistantPanel';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { estimateReviewTextLineCount, estimateReviewTextWrapUnitsPerLine } from '../utils/ReviewTextMetrics';
 import { ToastService } from '../services/ToastService';
 import { DialogService } from '../services/DialogService';
-import {
-  createEmptyReviewAssistantInsight,
-  ReviewAssistantDraftAction,
-  ReviewAssistantInsight,
-  ReviewAssistantService
-} from '../services/ReviewAssistantService';
 
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
@@ -109,7 +102,6 @@ struct EditorPage {
   @State isSaving: boolean = false;
   @State isDirty: boolean = false;
   @State pendingPhotoId: string = '';
-  @State assistantInsight: ReviewAssistantInsight = createEmptyReviewAssistantInsight();
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -139,7 +131,6 @@ struct EditorPage {
     this.currentBlocker = this.document.content.currentBlocker;
     this.isDirty = false;
     this.shouldDiscardChanges = false;
-    this.refreshAssistantInsight();
   }
 
   private disableSystemKeyboardAvoidance(): void {
@@ -541,62 +532,6 @@ struct EditorPage {
 
   private handleFieldChange(field: string): void {
     this.isDirty = true;
-    this.refreshAssistantInsight();
-  }
-
-  private refreshAssistantInsight(): void {
-    const nextDocument: ReviewCardDocument = createDefaultReviewCardDocument();
-    nextDocument.version = this.document.version;
-    nextDocument.projectId = this.document.projectId;
-    nextDocument.imageUri = this.document.imageUri;
-    nextDocument.imageWidth = this.document.imageWidth;
-    nextDocument.imageHeight = this.document.imageHeight;
-    nextDocument.imageSizeFallbackUsed = this.document.imageSizeFallbackUsed;
-    nextDocument.createdAt = this.document.createdAt;
-    nextDocument.updatedAt = this.document.updatedAt;
-    nextDocument.config = this.document.config;
-    nextDocument.content.title = this.title.length > 0 ? this.title : DEFAULT_REVIEW_TITLE;
-    nextDocument.content.visualFocus = this.visualFocus;
-    nextDocument.content.focusReason = this.focusReason;
-    nextDocument.content.visualPath = this.visualPath;
-    nextDocument.content.visibleFacts = this.visibleFacts;
-    nextDocument.content.coreRelation = this.coreRelation;
-    nextDocument.content.judgement = normalizeReviewJudgement(this.judgement);
-    nextDocument.content.extendedUnderstanding = this.extendedUnderstanding;
-    nextDocument.content.currentBlocker = this.currentBlocker;
-    this.assistantInsight = ReviewAssistantService.analyzeDocument(nextDocument);
-  }
-
-  private mergeAssistantText(currentValue: string, nextValue: string, replaceOnly: boolean = false): string {
-    if (replaceOnly || currentValue.trim().length === 0) {
-      return nextValue;
-    }
-    if (currentValue.includes(nextValue)) {
-      return currentValue;
-    }
-    return `${currentValue.trim()}\n${nextValue}`;
-  }
-
-  private applyAssistantDraft(action: ReviewAssistantDraftAction): void {
-    switch (action.targetField) {
-      case 'title':
-        this.title = action.text;
-        break;
-      case 'extendedUnderstanding':
-        this.extendedUnderstanding = this.mergeAssistantText(this.extendedUnderstanding, action.text);
-        break;
-      case 'currentBlocker':
-        this.currentBlocker = this.mergeAssistantText(this.currentBlocker, action.text);
-        break;
-      case 'judgement':
-        this.judgement = normalizeReviewJudgement(action.text);
-        break;
-      default:
-        return;
-    }
-    this.isDirty = true;
-    this.refreshAssistantInsight();
-    ToastService.show(this.getUIContext(), `${action.label}已带入`);
   }
 
   private handleFieldHeightChange(field: string, height: number): void {
@@ -733,15 +668,6 @@ struct EditorPage {
 
         Scroll(this.editorScroller) {
           Column({ space: AppMetrics.space16 }) {
-            ReviewAssistantPanel({
-              insight: this.assistantInsight,
-              onApplyDraft: (action: ReviewAssistantDraftAction) => {
-                this.applyAssistantDraft(action);
-              },
-              onFocusField: (field: string) => {
-                this.focusField(field);
-              }
-            })
             ReviewInputForm({
               title: $title,
               visualFocus: $visualFocus,
