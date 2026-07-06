@@ -8,10 +8,10 @@ const RHYTHM_REVIEW_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 const RHYTHM_CARD_PADDING: number = 16;
 const RHYTHM_CARD_RADIUS: number = 24;
 const RHYTHM_CARD_TITLE_SIZE: number = 15;
-const RHYTHM_CARD_STREAK_SIZE: number = 14;
-const RHYTHM_CARD_STREAK_LINE_HEIGHT: number = 18;
 const RHYTHM_CARD_DAY_SIZE: number = 54;
 const RHYTHM_CARD_DAY_LINE_HEIGHT: number = 58;
+const RHYTHM_CARD_DAY_UNIT_SIZE: number = 18;
+const RHYTHM_CARD_DAY_UNIT_LINE_HEIGHT: number = 24;
 const RHYTHM_CARD_ACTION_HEIGHT: number = 32;
 const RHYTHM_CARD_ACTION_RADIUS: number = 13;
 
@@ -46,7 +46,7 @@ struct ReviewRhythmCard {
 
   build() {
     Column({ space: 0 }) {
-      Text('复盘节奏')
+      Text('连续复盘')
         .fontSize(RHYTHM_CARD_TITLE_SIZE)
         .lineHeight(20)
         .fontWeight(FontWeight.Bold)
@@ -59,14 +59,7 @@ struct ReviewRhythmCard {
       Blank()
         .layoutWeight(1)
 
-      Row({ space: 6 }) {
-        Text('连续复盘')
-          .fontSize(RHYTHM_CARD_STREAK_SIZE)
-          .lineHeight(RHYTHM_CARD_STREAK_LINE_HEIGHT)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(RHYTHM_CARD_TEXT_PRIMARY)
-          .maxLines(1)
-
+      Row({ space: 7 }) {
         Text(`${this.resolveStreakDays()}`)
           .fontSize(RHYTHM_CARD_DAY_SIZE)
           .lineHeight(RHYTHM_CARD_DAY_LINE_HEIGHT)
@@ -75,15 +68,15 @@ struct ReviewRhythmCard {
           .letterSpacing(-2)
 
         Text('天')
-          .fontSize(RHYTHM_CARD_STREAK_SIZE)
-          .lineHeight(RHYTHM_CARD_STREAK_LINE_HEIGHT)
+          .fontSize(RHYTHM_CARD_DAY_UNIT_SIZE)
+          .lineHeight(RHYTHM_CARD_DAY_UNIT_LINE_HEIGHT)
           .fontWeight(FontWeight.Bold)
           .fontColor(RHYTHM_CARD_TEXT_PRIMARY)
           .maxLines(1)
       }
       .width('100%')
       .justifyContent(FlexAlign.Center)
-      .alignItems(VerticalAlign.Bottom)
+      .alignItems(VerticalAlign.Center)
 
       Blank()
         .layoutWeight(1)

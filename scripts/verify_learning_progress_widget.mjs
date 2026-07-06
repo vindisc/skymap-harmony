@@ -18,6 +18,10 @@ function requireIncludes(source, token, message) {
   assert(source.includes(token), `${message}: missing "${token}"`);
 }
 
+function countOccurrences(source, token) {
+  return source.split(token).length - 1;
+}
+
 const moduleConfig = read('entry/src/main/module.json5');
 const formConfig = read('entry/src/main/resources/base/profile/form_config.json');
 const formAbility = read('entry/src/main/ets/formability/LearningProgressFormAbility.ets');
@@ -257,7 +261,6 @@ assert(!todayReviewPage.includes('completionRateText') &&
   'TodayReviewCard must only show the pending action state.');
 
 [
-  "Text('复盘节奏')",
   "Text('连续复盘')",
   "Text(`${this.resolveStreakDays()}`)",
   "Text('天')",
@@ -267,11 +270,13 @@ assert(!todayReviewPage.includes('completionRateText') &&
   'RHYTHM_REVIEW_DIRECT_TARGET_ROUTE',
   'targetRoute: this.hasPendingReview() ? RHYTHM_REVIEW_DIRECT_TARGET_ROUTE : this.targetRoute',
   "const RHYTHM_CARD_BACKGROUND: string = '#F8F6F1';",
-  'const RHYTHM_CARD_STREAK_SIZE: number = 14;',
   'const RHYTHM_CARD_DAY_SIZE: number = 54;',
   'const RHYTHM_CARD_DAY_LINE_HEIGHT: number = 58;',
+  'const RHYTHM_CARD_DAY_UNIT_SIZE: number = 18;',
+  'const RHYTHM_CARD_DAY_UNIT_LINE_HEIGHT: number = 24;',
   'const RHYTHM_CARD_ACTION_HEIGHT: number = 32;',
   'const RHYTHM_CARD_RADIUS: number = 24;',
+  '.alignItems(VerticalAlign.Center)',
   '.backgroundColor(this.hasPendingReview() ? RHYTHM_CARD_ACCENT : RHYTHM_CARD_ACTION_DISABLED)',
   'postCardAction(this',
   '.onClick(() =>',
@@ -280,10 +285,13 @@ assert(!todayReviewPage.includes('completionRateText') &&
 ].forEach((token) => requireIncludes(rhythmReviewPage, token, 'ReviewRhythmCard must render the habit rhythm reminder'));
 
 assert(!rhythmReviewPage.includes('Button('), 'ReviewRhythmCard must not add card-level buttons.');
+assert(countOccurrences(rhythmReviewPage, "Text('连续复盘')") === 1,
+  'ReviewRhythmCard must use 连续复盘 only as the title, not repeat it in the body.');
 assert(!rhythmReviewPage.includes("Text('完成率')") &&
   !rhythmReviewPage.includes("Text('已完成')") &&
   !rhythmReviewPage.includes("Text('张待复盘')") &&
   !rhythmReviewPage.includes("Text('每天一张") &&
+  !rhythmReviewPage.includes("Text('复盘节奏')") &&
   !rhythmReviewPage.includes("Text('已连续复盘')") &&
   !rhythmReviewPage.includes("const RHYTHM_CARD_BACKGROUND: string = '#FFF3D6';"),
   'ReviewRhythmCard must stay focused on habit streak and action.');
