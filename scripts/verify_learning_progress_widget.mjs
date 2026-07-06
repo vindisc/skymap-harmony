@@ -70,23 +70,30 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
   "Text(this.title)",
   'Text(this.pendingCountText)',
   "Text('待复盘')",
-  "Text('完成')",
+  "Text('完成率')",
   'Text(this.completionRateText)',
   'hasPendingReview()',
   'resolveHintText()',
   "'继续复盘'",
   "'暂无待复盘'",
+  '2*2 小卡片要同时保留',
+  'const LEARNING_CARD_2X2_PADDING: number = 14;',
+  'const LEARNING_CARD_2X2_COLUMN_GAP: number = 11;',
+  'const LEARNING_CARD_2X2_METRIC_HEIGHT: number = 66;',
+  'const LEARNING_CARD_2X2_ACTION_HEIGHT: number = 30;',
   'CompletionBadge()',
-  'Column({ space: 11 })',
-  '.fontSize(16)',
+  'Column({ space: LEARNING_CARD_2X2_COLUMN_GAP })',
+  '.fontSize(LEARNING_CARD_2X2_TITLE_SIZE)',
+  '.layoutWeight(1)',
   '.textOverflow({ overflow: TextOverflow.Ellipsis })',
   '.fontSize(36)',
   '.fontWeight(900)',
   '.letterSpacing(-1)',
+  '.height(LEARNING_CARD_2X2_METRIC_HEIGHT)',
   "Text('→')",
-  '.height(30)',
+  '.height(LEARNING_CARD_2X2_ACTION_HEIGHT)',
   '.borderRadius(12)',
-  '.padding(14)',
+  '.padding(LEARNING_CARD_2X2_PADDING)',
   'postCardAction(this',
   '.onClick(() =>',
   "moduleName: 'entry'",
@@ -95,6 +102,13 @@ const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
 ].forEach((token) => requireIncludes(formPage, token, 'LearningProgressMediumCard must match required content and click behavior'));
 
 assert(!formPage.includes('Button('), 'LearningProgressMediumCard must not add card-level buttons.');
+assert(!formPage.includes('CARD_CONTENT_BACKGROUND') &&
+  !formPage.includes('LEARNING_CARD_PADDING') &&
+  !formPage.includes('LEARNING_CARD_OUTER_RADIUS'),
+  'LearningProgressMediumCard must not restore the old clipped 2*2 layout tokens.');
+assert(!formPage.includes("Text('完成')\n        .fontSize(12)") &&
+  !formPage.includes('.padding(14)\n    .borderRadius(12)'),
+  'LearningProgressMediumCard must keep the compact completion-rate badge and named 2*2 spacing constants.');
 assert(!formPage.includes('MetricTile('), 'LearningProgressMediumCard must not render the dense four-tile layout.');
 assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('已完成')"),
   'LearningProgressMediumCard must only show pending count and completion rate on the small card.');
@@ -180,10 +194,18 @@ assert(!progressSummaryMediumPage.includes("Text('最近照片')") &&
   "Text('张待复盘')",
   "Text('已清空')",
   "return this.hasPendingReview() ? '继续复盘' : '暂无待复盘';",
+  '今日复盘 2*2 小卡片必须让内容区接管剩余高度',
+  'const TODAY_CARD_2X2_PADDING: number = 14;',
+  'const TODAY_CARD_2X2_COLUMN_GAP: number = 14;',
+  'const TODAY_CARD_2X2_TITLE_SIZE: number = 18;',
+  'const TODAY_CARD_2X2_ACTION_VERTICAL_PADDING: number = 6;',
   "Text('→')",
-  'Column({ space: 14 })',
+  'Column({ space: TODAY_CARD_2X2_COLUMN_GAP })',
   "Text(`${this.resolvePendingCount()}`)",
-  '.padding(14)',
+  '.layoutWeight(1)',
+  'top: TODAY_CARD_2X2_ACTION_VERTICAL_PADDING',
+  'bottom: TODAY_CARD_2X2_ACTION_VERTICAL_PADDING',
+  '.padding(TODAY_CARD_2X2_PADDING)',
   'TODAY_REVIEW_DIRECT_TARGET_ROUTE',
   'postCardAction(this',
   '.onClick(() =>',
@@ -192,6 +214,12 @@ assert(!progressSummaryMediumPage.includes("Text('最近照片')") &&
 ].forEach((token) => requireIncludes(todayReviewPage, token, 'TodayReviewCard must render the action-driven pending review state'));
 
 assert(!todayReviewPage.includes('Button('), 'TodayReviewCard must not add card-level buttons.');
+assert(!todayReviewPage.includes('TODAY_CARD_CONTENT_BACKGROUND') &&
+  !todayReviewPage.includes('TODAY_CARD_PADDING') &&
+  !todayReviewPage.includes('TODAY_CARD_OUTER_RADIUS'),
+  'TodayReviewCard must not restore the old clipped 2*2 layout tokens.');
+assert(!todayReviewPage.includes('.width(\'100%\')\n      .height(30)\n      .justifyContent(FlexAlign.Center)'),
+  'TodayReviewCard must keep the action inside the flexible content area instead of pinning it to the card bottom.');
 assert(!todayReviewPage.includes('待复盘 ${this.resolvePendingCount()} 张'),
   'TodayReviewCard must not squeeze pending count into one sentence.');
 assert(!todayReviewPage.includes('completionRateText') &&
