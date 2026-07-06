@@ -24,6 +24,7 @@ const formAbility = read('entry/src/main/ets/formability/LearningProgressFormAbi
 const formPage = read('entry/src/main/ets/widget/pages/LearningProgressMediumCard.ets');
 const progressSummaryMediumPage = read('entry/src/main/ets/widget/pages/LearningProgressSummaryMediumCard.ets');
 const todayReviewPage = read('entry/src/main/ets/widget/pages/TodayReviewCard.ets');
+const rhythmReviewPage = read('entry/src/main/ets/widget/pages/ReviewRhythmCard.ets');
 const progressService = read('entry/src/main/ets/services/LearningProgressService.ets');
 const formService = read('entry/src/main/ets/services/LearningProgressFormService.ets');
 const launchService = read('entry/src/main/ets/services/FormLaunchIntentService.ets');
@@ -65,6 +66,9 @@ if (styleLockResult.status !== 0) {
   '"TodayReviewCard"',
   '"displayName": "今日复盘"',
   '"src": "./ets/widget/pages/TodayReviewCard.ets"',
+  '"ReviewRhythmCard"',
+  '"displayName": "复盘节奏"',
+  '"src": "./ets/widget/pages/ReviewRhythmCard.ets"',
   '"uiSyntax": "arkts"',
   '"2*2"',
   '"2*4"',
@@ -253,12 +257,42 @@ assert(!todayReviewPage.includes('completionRateText') &&
   'TodayReviewCard must only show the pending action state.');
 
 [
+  "Text('复盘节奏')",
+  "Text('已连续复盘')",
+  "Text(`${this.resolveStreakDays()}`)",
+  "Text('天')",
+  "Text('每天一张，手感就不会冷')",
+  "Text('去复盘')",
+  "Text('→')",
+  "@LocalStorageProp('reviewStreakDaysText') reviewStreakDaysText: string = '3';",
+  'RHYTHM_REVIEW_DIRECT_TARGET_ROUTE',
+  'targetRoute: this.hasPendingReview() ? RHYTHM_REVIEW_DIRECT_TARGET_ROUTE : this.targetRoute',
+  'const RHYTHM_CARD_ACTION_HEIGHT: number = 32;',
+  'const RHYTHM_CARD_RADIUS: number = 24;',
+  '.backgroundColor(this.hasPendingReview() ? RHYTHM_CARD_ACCENT : RHYTHM_CARD_ACTION_DISABLED)',
+  'postCardAction(this',
+  '.onClick(() =>',
+  "moduleName: 'entry'",
+  "abilityName: 'EntryAbility'"
+].forEach((token) => requireIncludes(rhythmReviewPage, token, 'ReviewRhythmCard must render the habit rhythm reminder'));
+
+assert(!rhythmReviewPage.includes('Button('), 'ReviewRhythmCard must not add card-level buttons.');
+assert(!rhythmReviewPage.includes("Text('完成率')") &&
+  !rhythmReviewPage.includes("Text('已完成')") &&
+  !rhythmReviewPage.includes("Text('张待复盘')"),
+  'ReviewRhythmCard must stay focused on habit streak and action.');
+
+[
   'PendingReviewPhotoStore.getStats(context)',
   'ReviewCardHistoryService.load(context)',
   'pendingStats.pendingCount',
   'reviewItems.length',
   'safePendingCount + safeCompletedCount',
-  "completionRateText: totalImportedCount <= 0"
+  "completionRateText: totalImportedCount <= 0",
+  'reviewStreakDays: number;',
+  'reviewStreakDays: 3',
+  'buildReviewStreakDays(reviewItems)',
+  'reviewStreakDays: Math.max(0, reviewStreakDays)'
 ].forEach((token) => requireIncludes(progressService, token, 'LearningProgressService must be the shared stats source'));
 
 [
@@ -267,7 +301,8 @@ assert(!todayReviewPage.includes('completionRateText') &&
   'LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING',
   'LEARNING_PROGRESS_WIDGET_ROUTE_TODAY_REVIEW_DIRECT',
   'LEARNING_PROGRESS_WIDGET_ROUTE_HOME',
-  "title: '摄影学习'"
+  "title: '摄影学习'",
+  'reviewStreakDaysText: `${snapshot.reviewStreakDays}`'
 ].forEach((token) => requireIncludes(formService, token, 'LearningProgressFormService must bind shared data to widget'));
 
 [

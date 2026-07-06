@@ -21,6 +21,7 @@ export interface LearningProgressFormData {
   totalImportedCountText: string;
   completedCountText: string;
   completionRateText: string;
+  reviewStreakDaysText: string;
   targetRoute: string;
 }
 
@@ -45,6 +46,7 @@ export class LearningProgressFormService {
       totalImportedCountText: `${snapshot.totalImportedCount}`,
       completedCountText: `${snapshot.completedCount}`,
       completionRateText: snapshot.completionRateText,
+      reviewStreakDaysText: `${snapshot.reviewStreakDays}`,
       targetRoute: snapshot.pendingCount > 0
         ? LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING
         : LEARNING_PROGRESS_WIDGET_ROUTE_HOME

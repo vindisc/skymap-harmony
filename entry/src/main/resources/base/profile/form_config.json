@@ -59,6 +59,26 @@
       "updateEnabled": true,
       "scheduledUpdateTime": "10:30",
       "updateDuration": 1
+    },
+    {
+      "name": "ReviewRhythmCard",
+      "displayName": "复盘节奏",
+      "description": "连续复盘习惯提醒卡",
+      "src": "./ets/widget/pages/ReviewRhythmCard.ets",
+      "uiSyntax": "arkts",
+      "window": {
+        "designWidth": 320,
+        "autoDesignWidth": true
+      },
+      "colorMode": "auto",
+      "isDefault": false,
+      "supportDimensions": [
+        "2*2"
+      ],
+      "defaultDimension": "2*2",
+      "updateEnabled": true,
+      "scheduledUpdateTime": "10:30",
+      "updateDuration": 1
     }
   ]
 }
