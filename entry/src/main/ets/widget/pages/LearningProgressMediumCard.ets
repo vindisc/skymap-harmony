@@ -2,6 +2,8 @@ const CARD_BACKGROUND: string = '#F8F6F1';
 const CARD_TEXT_PRIMARY: string = '#0D1117';
 const CARD_TEXT_SECONDARY: string = '#68707A';
 const CARD_PRIMARY: string = '#356F80';
+const CARD_BACKGROUND_STYLE_TEXTURE: string = 'texture';
+const CARD_TEXTURE_OPACITY: number = 0.36;
 
 // 2*2 左侧小卡片以截图为准：只展示“摄影学习 / 待复盘数量 / 待复盘”。
 // 不要再加完成率胶囊、底部按钮或指标底板；改这里时同步更新 verify_learning_progress_widget.mjs。
@@ -18,7 +20,12 @@ let learningProgressCardStorage: LocalStorage = new LocalStorage();
 struct LearningProgressMediumCard {
   @LocalStorageProp('title') title: string = '摄影学习';
   @LocalStorageProp('pendingCountText') pendingCountText: string = '0';
+  @LocalStorageProp('cardBackgroundStyle') cardBackgroundStyle: string = 'plain';
   @LocalStorageProp('targetRoute') targetRoute: string = 'home';
+
+  private useTextureBackground(): boolean {
+    return this.cardBackgroundStyle === CARD_BACKGROUND_STYLE_TEXTURE;
+  }
 
   private openTargetRoute(): void {
     postCardAction(this, {
@@ -32,48 +39,65 @@ struct LearningProgressMediumCard {
   }
 
   build() {
-    Column({ space: 0 }) {
-      Text(this.title)
-        .fontSize(LEARNING_CARD_2X2_TITLE_SIZE)
-        .lineHeight(20)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(CARD_TEXT_PRIMARY)
-        .textAlign(TextAlign.Center)
+    Stack() {
+      Column()
         .width('100%')
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
-        .margin({ top: 3 })
+        .height('100%')
+        .backgroundColor(CARD_BACKGROUND)
 
-      Blank()
-        .layoutWeight(1)
+      if (this.useTextureBackground()) {
+        Image($r('app.media.widget_card_texture'))
+          .width('100%')
+          .height('100%')
+          .objectFit(ImageFit.Cover)
+          .opacity(CARD_TEXTURE_OPACITY)
+      }
 
-      Column({ space: 8 }) {
-        Text(this.pendingCountText)
-          .fontSize(LEARNING_CARD_2X2_COUNT_SIZE)
-          .lineHeight(LEARNING_CARD_2X2_COUNT_LINE_HEIGHT)
-          .fontWeight(900)
-          .fontColor(CARD_PRIMARY)
-          .letterSpacing(-2)
+      Column({ space: 0 }) {
+        Text(this.title)
+          .fontSize(LEARNING_CARD_2X2_TITLE_SIZE)
+          .lineHeight(20)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(CARD_TEXT_PRIMARY)
           .textAlign(TextAlign.Center)
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .margin({ top: 3 })
 
-        Text('待复盘')
-          .fontSize(13)
-          .lineHeight(18)
-          .fontWeight(FontWeight.Regular)
-          .fontColor(CARD_TEXT_SECONDARY)
-          .textAlign(TextAlign.Center)
+        Blank()
+          .layoutWeight(1)
+
+        Column({ space: 8 }) {
+          Text(this.pendingCountText)
+            .fontSize(LEARNING_CARD_2X2_COUNT_SIZE)
+            .lineHeight(LEARNING_CARD_2X2_COUNT_LINE_HEIGHT)
+            .fontWeight(900)
+            .fontColor(CARD_PRIMARY)
+            .letterSpacing(-2)
+            .textAlign(TextAlign.Center)
+
+          Text('待复盘')
+            .fontSize(13)
+            .lineHeight(18)
+            .fontWeight(FontWeight.Regular)
+            .fontColor(CARD_TEXT_SECONDARY)
+            .textAlign(TextAlign.Center)
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Center)
+
+        Blank()
+          .layoutWeight(1)
       }
       .width('100%')
-      .alignItems(HorizontalAlign.Center)
-
-      Blank()
-        .layoutWeight(1)
+      .height('100%')
+      .padding(LEARNING_CARD_2X2_PADDING)
     }
     .width('100%')
     .height('100%')
-    .padding(LEARNING_CARD_2X2_PADDING)
     .borderRadius(LEARNING_CARD_2X2_RADIUS)
-    .backgroundColor(CARD_BACKGROUND)
+    .clip(true)
     .onClick(() => {
       this.openTargetRoute();
     })

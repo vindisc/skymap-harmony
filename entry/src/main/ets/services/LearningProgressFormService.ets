@@ -7,6 +7,10 @@ import {
   LearningProgressService,
   LearningProgressSnapshot
 } from './LearningProgressService';
+import {
+  REVIEW_WIDGET_CARD_BACKGROUND_PLAIN,
+  ReviewSettingsService
+} from './ReviewSettingsService';
 
 const LEARNING_PROGRESS_FORM_PREFERENCES: string = 'learning_progress_form_preferences';
 const LEARNING_PROGRESS_FORM_IDS_KEY: string = 'formIds';
@@ -22,6 +26,7 @@ export interface LearningProgressFormData {
   completedCountText: string;
   completionRateText: string;
   reviewStreakDaysText: string;
+  cardBackgroundStyle: string;
   targetRoute: string;
 }
 
@@ -39,7 +44,10 @@ function joinStoredFormIds(ids: Array<string>): string {
 }
 
 export class LearningProgressFormService {
-  static buildFormData(snapshot: LearningProgressSnapshot): LearningProgressFormData {
+  static buildFormData(
+    snapshot: LearningProgressSnapshot,
+    cardBackgroundStyle: string = REVIEW_WIDGET_CARD_BACKGROUND_PLAIN
+  ): LearningProgressFormData {
     return {
       title: '摄影学习',
       pendingCountText: `${snapshot.pendingCount}`,
@@ -47,14 +55,20 @@ export class LearningProgressFormService {
       completedCountText: `${snapshot.completedCount}`,
       completionRateText: snapshot.completionRateText,
       reviewStreakDaysText: `${snapshot.reviewStreakDays}`,
+      cardBackgroundStyle,
       targetRoute: snapshot.pendingCount > 0
         ? LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING
         : LEARNING_PROGRESS_WIDGET_ROUTE_HOME
     };
   }
 
-  static createBindingData(snapshot: LearningProgressSnapshot): formBindingData.FormBindingData {
-    return formBindingData.createFormBindingData(LearningProgressFormService.buildFormData(snapshot));
+  static createBindingData(
+    snapshot: LearningProgressSnapshot,
+    cardBackgroundStyle: string = REVIEW_WIDGET_CARD_BACKGROUND_PLAIN
+  ): formBindingData.FormBindingData {
+    return formBindingData.createFormBindingData(
+      LearningProgressFormService.buildFormData(snapshot, cardBackgroundStyle)
+    );
   }
 
   static createEmptyBindingData(): formBindingData.FormBindingData {
@@ -101,7 +115,9 @@ export class LearningProgressFormService {
       return;
     }
     const snapshot: LearningProgressSnapshot = await LearningProgressFormService.loadSnapshot(context);
-    await formProvider.updateForm(formId, LearningProgressFormService.createBindingData(snapshot));
+    const cardBackgroundStyle: string =
+      await ReviewSettingsService.loadWidgetCardBackgroundStyle(context as common.UIAbilityContext);
+    await formProvider.updateForm(formId, LearningProgressFormService.createBindingData(snapshot, cardBackgroundStyle));
   }
 
   static async refreshAllForms(context: common.Context): Promise<void> {
@@ -110,7 +126,10 @@ export class LearningProgressFormService {
       return;
     }
     const snapshot: LearningProgressSnapshot = await LearningProgressFormService.loadSnapshot(context);
-    const bindingData: formBindingData.FormBindingData = LearningProgressFormService.createBindingData(snapshot);
+    const cardBackgroundStyle: string =
+      await ReviewSettingsService.loadWidgetCardBackgroundStyle(context as common.UIAbilityContext);
+    const bindingData: formBindingData.FormBindingData =
+      LearningProgressFormService.createBindingData(snapshot, cardBackgroundStyle);
     for (let index = 0; index < ids.length; index += 1) {
       try {
         await formProvider.updateForm(ids[index], bindingData);

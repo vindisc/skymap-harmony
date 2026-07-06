@@ -39,6 +39,8 @@ const editorPage = read('entry/src/main/ets/pages/EditorPage.ets');
 const projectDetailPage = read('entry/src/main/ets/pages/ProjectDetailPage.ets');
 const previewPage = read('entry/src/main/ets/pages/PreviewPage.ets');
 const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
+const myPage = read('entry/src/main/ets/pages/MyPage.ets');
+const reviewSettingsService = read('entry/src/main/ets/services/ReviewSettingsService.ets');
 
 const styleLockResult = spawnSync(process.execPath, ['scripts/verify_widget_style_lock.mjs'], {
   encoding: 'utf8'
@@ -91,6 +93,9 @@ if (styleLockResult.status !== 0) {
 [
   "Text(this.title)",
   'Text(this.pendingCountText)',
+  "@LocalStorageProp('cardBackgroundStyle') cardBackgroundStyle: string = 'plain';",
+  'CARD_BACKGROUND_STYLE_TEXTURE',
+  "Image($r('app.media.widget_card_texture'))",
   "Text('待复盘')",
   '2*2 左侧小卡片以截图为准',
   'const LEARNING_CARD_2X2_PADDING: number = 16;',
@@ -138,6 +143,9 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
 [
   "Text(this.title)",
   'Text(this.completionRateText)',
+  "@LocalStorageProp('cardBackgroundStyle') cardBackgroundStyle: string = 'plain';",
+  'SUMMARY_CARD_BACKGROUND_STYLE_TEXTURE',
+  "Image($r('app.media.widget_card_texture'))",
   "Text('完成')",
   'PendingDashboard()',
   "Text('待复盘')",
@@ -212,6 +220,9 @@ assert(!progressSummaryMediumPage.includes("Text('最近照片')") &&
 [
   "Text('今日待复盘')",
   'pendingCountText',
+  "@LocalStorageProp('cardBackgroundStyle') cardBackgroundStyle: string = 'plain';",
+  'TODAY_CARD_BACKGROUND_STYLE_TEXTURE',
+  "Image($r('app.media.widget_card_texture'))",
   'this.hasPendingReview() ? TODAY_REVIEW_DIRECT_TARGET_ROUTE : this.targetRoute',
   "return this.hasPendingReview() ? '继续复盘' : '暂无待复盘';",
   '2*2 右侧小卡片以截图为准',
@@ -262,6 +273,9 @@ assert(!todayReviewPage.includes('completionRateText') &&
 
 [
   "Text('连续复盘')",
+  "@LocalStorageProp('cardBackgroundStyle') cardBackgroundStyle: string = 'plain';",
+  'RHYTHM_CARD_BACKGROUND_STYLE_TEXTURE',
+  "Image($r('app.media.widget_card_texture'))",
   "Text(`${this.resolveStreakDays()}`)",
   "Text('天')",
   "Text('去复盘')",
@@ -311,13 +325,36 @@ assert(!rhythmReviewPage.includes("Text('完成率')") &&
 
 [
   'LearningProgressService.load(context as common.UIAbilityContext)',
+  'ReviewSettingsService.loadWidgetCardBackgroundStyle(context as common.UIAbilityContext)',
   'formProvider.updateForm',
   'LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING',
   'LEARNING_PROGRESS_WIDGET_ROUTE_TODAY_REVIEW_DIRECT',
   'LEARNING_PROGRESS_WIDGET_ROUTE_HOME',
   "title: '摄影学习'",
+  'cardBackgroundStyle,',
   'reviewStreakDaysText: `${snapshot.reviewStreakDays}`'
 ].forEach((token) => requireIncludes(formService, token, 'LearningProgressFormService must bind shared data to widget'));
+
+[
+  'REVIEW_WIDGET_CARD_BACKGROUND_PLAIN',
+  'REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE',
+  'WIDGET_CARD_BACKGROUND_STYLE_KEY',
+  'loadWidgetCardBackgroundStyle',
+  'saveWidgetCardBackgroundStyle',
+  "SettingsRefreshService.notifySettingsChanged('widget_card_background_saved')",
+  'resolveWidgetCardBackgroundLabel'
+].forEach((token) => requireIncludes(reviewSettingsService, token, 'ReviewSettingsService must persist widget card background settings'));
+
+[
+  'widgetCardBackgroundStyle',
+  "Text('卡片背景')",
+  "this.WidgetBackgroundOption('白色', '当前样式', REVIEW_WIDGET_CARD_BACKGROUND_PLAIN, false)",
+  "this.WidgetBackgroundOption('纹理', '浅螺旋纹', REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE, true)",
+  'ReviewSettingsService.loadWidgetCardBackgroundStyle(context)',
+  'ReviewSettingsService.saveWidgetCardBackgroundStyle(context, style)',
+  'LearningProgressFormService.refreshAllForms(context)',
+  "Image($r('app.media.widget_card_texture'))"
+].forEach((token) => requireIncludes(myPage, token, 'MyPage must expose and apply widget card background settings'));
 
 [
   'FormLaunchIntentService.captureWant(want)',
