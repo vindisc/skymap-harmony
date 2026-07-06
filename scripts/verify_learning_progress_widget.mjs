@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 
 let failed = false;
 
@@ -33,6 +34,19 @@ const editorPage = read('entry/src/main/ets/pages/EditorPage.ets');
 const projectDetailPage = read('entry/src/main/ets/pages/ProjectDetailPage.ets');
 const previewPage = read('entry/src/main/ets/pages/PreviewPage.ets');
 const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
+
+const styleLockResult = spawnSync(process.execPath, ['scripts/verify_widget_style_lock.mjs'], {
+  encoding: 'utf8'
+});
+if (styleLockResult.status !== 0) {
+  failed = true;
+  if (styleLockResult.stdout.trim().length > 0) {
+    console.error(styleLockResult.stdout.trim());
+  }
+  if (styleLockResult.stderr.trim().length > 0) {
+    console.error(styleLockResult.stderr.trim());
+  }
+}
 
 [
   '"extensionAbilities"',
