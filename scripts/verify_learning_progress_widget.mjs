@@ -106,7 +106,16 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   'PendingDashboard()',
   "Text('待复盘')",
   'Text(this.pendingCountText)',
-  '.fontSize(32)',
+  '2*4 中型卡片在真机桌面里底部空间很紧',
+  'const SUMMARY_CARD_COLUMN_GAP: number = 9;',
+  'const SUMMARY_CARD_METRIC_ROW_HEIGHT: number = 56;',
+  'const SUMMARY_CARD_METRIC_TILE_HEIGHT: number = 50;',
+  'const SUMMARY_CARD_METRIC_NUMBER_SIZE: number = 26;',
+  'const SUMMARY_CARD_METRIC_LABEL_SIZE: number = 10;',
+  'const SUMMARY_CARD_PROGRESS_NUMBER_SIZE: number = 22;',
+  'const SUMMARY_CARD_ACTION_HEIGHT: number = 30;',
+  'const SUMMARY_CARD_BOTTOM_PADDING: number = 15;',
+  '.fontSize(SUMMARY_CARD_METRIC_NUMBER_SIZE)',
   '.fontWeight(900)',
   '.letterSpacing(-1)',
   'LearningProgressSummary()',
@@ -116,14 +125,19 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
   "const SUMMARY_CARD_PRIMARY_SOFT: string = '#D8EDE5';",
   "const SUMMARY_CARD_PROGRESS_SOFT: string = '#E8F3EC';",
   "const SUMMARY_CARD_ACTION_DISABLED: string = '#E7ECE5';",
-  'Column({ space: 10 })',
+  'Column({ space: SUMMARY_CARD_COLUMN_GAP })',
   '.layoutWeight(50)',
-  '.height(68)',
+  '.height(SUMMARY_CARD_METRIC_TILE_HEIGHT)',
+  '.height(SUMMARY_CARD_METRIC_ROW_HEIGHT)',
+  '.height(SUMMARY_CARD_ACTION_HEIGHT)',
   'ActionHint()',
   "return this.hasPendingReview() ? '继续复盘' : '回到首页';",
   "Text('→')",
   ".backgroundColor(this.hasPendingReview() ? SUMMARY_CARD_PRIMARY : SUMMARY_CARD_ACTION_DISABLED)",
-  '.padding({ left: 14, right: 14, top: 11, bottom: 12 })',
+  'left: SUMMARY_CARD_HORIZONTAL_PADDING',
+  'right: SUMMARY_CARD_HORIZONTAL_PADDING',
+  'top: SUMMARY_CARD_TOP_PADDING',
+  'bottom: SUMMARY_CARD_BOTTOM_PADDING',
   'CompletionBadge()',
   'LEARNING_PROGRESS_DIRECT_TARGET_ROUTE',
   'this.hasPendingReview() ? LEARNING_PROGRESS_DIRECT_TARGET_ROUTE : this.targetRoute',
@@ -138,6 +152,10 @@ assert(!formPage.includes("Text('累计导入')") && !formPage.includes("Text('�
 ));
 
 assert(!progressSummaryMediumPage.includes('Button('), 'LearningProgressSummaryMediumCard must not add card-level buttons.');
+assert(!progressSummaryMediumPage.includes('.height(68)'),
+  'LearningProgressSummaryMediumCard must not restore the too-tall metric row that pushes the bottom action down.');
+assert(!progressSummaryMediumPage.includes('.padding({ left: 14, right: 14, top: 11, bottom: 12 })'),
+  'LearningProgressSummaryMediumCard must keep named padding constants so the bottom action clearance is documented.');
 assert(!progressSummaryMediumPage.includes('MetricTile('),
   'LearningProgressSummaryMediumCard must not render the dense four-tile layout.');
 assert(!progressSummaryMediumPage.includes("MetricRow('待复盘'") &&

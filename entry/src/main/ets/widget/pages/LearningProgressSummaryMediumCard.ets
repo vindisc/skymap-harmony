@@ -7,6 +7,23 @@ const SUMMARY_CARD_PROGRESS_SOFT: string = '#E8F3EC';
 const SUMMARY_CARD_ACTION_DISABLED: string = '#E7ECE5';
 const LEARNING_PROGRESS_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
+// 2*4 中型卡片在真机桌面里底部空间很紧：上方两个指标块必须保持紧凑，
+// 给底部“继续复盘”留出呼吸感。调整这些值时同步更新 verify_learning_progress_widget.mjs。
+const SUMMARY_CARD_COLUMN_GAP: number = 9;
+const SUMMARY_CARD_METRIC_ROW_GAP: number = 10;
+const SUMMARY_CARD_METRIC_ROW_HEIGHT: number = 56;
+const SUMMARY_CARD_METRIC_TILE_HEIGHT: number = 50;
+const SUMMARY_CARD_METRIC_NUMBER_SIZE: number = 26;
+const SUMMARY_CARD_METRIC_NUMBER_LINE_HEIGHT: number = 30;
+const SUMMARY_CARD_METRIC_LABEL_SIZE: number = 10;
+const SUMMARY_CARD_METRIC_LABEL_LINE_HEIGHT: number = 14;
+const SUMMARY_CARD_PROGRESS_NUMBER_SIZE: number = 22;
+const SUMMARY_CARD_PROGRESS_NUMBER_LINE_HEIGHT: number = 26;
+const SUMMARY_CARD_ACTION_HEIGHT: number = 30;
+const SUMMARY_CARD_HORIZONTAL_PADDING: number = 14;
+const SUMMARY_CARD_TOP_PADDING: number = 11;
+const SUMMARY_CARD_BOTTOM_PADDING: number = 15;
+
 let learningProgressSummaryCardStorage: LocalStorage = new LocalStorage();
 
 @Entry(learningProgressSummaryCardStorage)
@@ -55,10 +72,10 @@ struct LearningProgressSummaryMediumCard {
 
   @Builder
   PendingDashboard() {
-    Column({ space: 1 }) {
+    Column({ space: 0 }) {
       Text(this.pendingCountText)
-        .fontSize(32)
-        .lineHeight(36)
+        .fontSize(SUMMARY_CARD_METRIC_NUMBER_SIZE)
+        .lineHeight(SUMMARY_CARD_METRIC_NUMBER_LINE_HEIGHT)
         .fontWeight(900)
         .fontColor(SUMMARY_CARD_TEXT_PRIMARY)
         .textAlign(TextAlign.Center)
@@ -66,15 +83,15 @@ struct LearningProgressSummaryMediumCard {
         .letterSpacing(-1)
 
       Text('待复盘')
-        .fontSize(11)
-        .lineHeight(15)
+        .fontSize(SUMMARY_CARD_METRIC_LABEL_SIZE)
+        .lineHeight(SUMMARY_CARD_METRIC_LABEL_LINE_HEIGHT)
         .fontWeight(FontWeight.Medium)
         .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
     }
     .width('100%')
-    .height(68)
+    .height(SUMMARY_CARD_METRIC_TILE_HEIGHT)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .borderRadius(14)
@@ -83,25 +100,25 @@ struct LearningProgressSummaryMediumCard {
 
   @Builder
   LearningProgressSummary() {
-    Column({ space: 3 }) {
+    Column({ space: 2 }) {
       Text('已完成')
-        .fontSize(11)
-        .lineHeight(15)
+        .fontSize(SUMMARY_CARD_METRIC_LABEL_SIZE)
+        .lineHeight(SUMMARY_CARD_METRIC_LABEL_LINE_HEIGHT)
         .fontWeight(FontWeight.Medium)
         .fontColor(SUMMARY_CARD_TEXT_SECONDARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
 
       Text(`${this.completedCountText} / ${this.totalImportedCountText}`)
-        .fontSize(24)
-        .lineHeight(28)
+        .fontSize(SUMMARY_CARD_PROGRESS_NUMBER_SIZE)
+        .lineHeight(SUMMARY_CARD_PROGRESS_NUMBER_LINE_HEIGHT)
         .fontWeight(FontWeight.Bold)
         .fontColor(SUMMARY_CARD_PRIMARY)
         .textAlign(TextAlign.Center)
         .maxLines(1)
     }
     .width('100%')
-    .height(68)
+    .height(SUMMARY_CARD_METRIC_TILE_HEIGHT)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .borderRadius(14)
@@ -126,7 +143,7 @@ struct LearningProgressSummaryMediumCard {
         .maxLines(1)
     }
     .width('100%')
-    .height(30)
+    .height(SUMMARY_CARD_ACTION_HEIGHT)
     .justifyContent(FlexAlign.Center)
     .alignItems(VerticalAlign.Center)
     .borderRadius(11)
@@ -134,7 +151,7 @@ struct LearningProgressSummaryMediumCard {
   }
 
   build() {
-    Column({ space: 10 }) {
+    Column({ space: SUMMARY_CARD_COLUMN_GAP }) {
       Row({ space: 6 }) {
         Text(this.title)
           .fontSize(15)
@@ -155,12 +172,12 @@ struct LearningProgressSummaryMediumCard {
       .width('100%')
       .alignItems(VerticalAlign.Center)
 
-      Row({ space: 10 }) {
+      Row({ space: SUMMARY_CARD_METRIC_ROW_GAP }) {
         Column() {
           this.PendingDashboard()
         }
         .layoutWeight(50)
-        .height(68)
+        .height(SUMMARY_CARD_METRIC_ROW_HEIGHT)
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
 
@@ -168,19 +185,24 @@ struct LearningProgressSummaryMediumCard {
           this.LearningProgressSummary()
         }
         .layoutWeight(50)
-        .height(68)
+        .height(SUMMARY_CARD_METRIC_ROW_HEIGHT)
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
       }
       .width('100%')
-      .height(68)
+      .height(SUMMARY_CARD_METRIC_ROW_HEIGHT)
       .alignItems(VerticalAlign.Center)
 
       this.ActionHint()
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 14, right: 14, top: 11, bottom: 12 })
+    .padding({
+      left: SUMMARY_CARD_HORIZONTAL_PADDING,
+      right: SUMMARY_CARD_HORIZONTAL_PADDING,
+      top: SUMMARY_CARD_TOP_PADDING,
+      bottom: SUMMARY_CARD_BOTTOM_PADDING
+    })
     .borderRadius(18)
     .backgroundColor(SUMMARY_CARD_BACKGROUND)
     .onClick(() => {
