@@ -258,15 +258,18 @@ assert(!todayReviewPage.includes('completionRateText') &&
 
 [
   "Text('复盘节奏')",
-  "Text('已连续复盘')",
+  "Text('连续复盘')",
   "Text(`${this.resolveStreakDays()}`)",
   "Text('天')",
-  "Text('每天一张，手感就不会冷')",
   "Text('去复盘')",
   "Text('→')",
   "@LocalStorageProp('reviewStreakDaysText') reviewStreakDaysText: string = '3';",
   'RHYTHM_REVIEW_DIRECT_TARGET_ROUTE',
   'targetRoute: this.hasPendingReview() ? RHYTHM_REVIEW_DIRECT_TARGET_ROUTE : this.targetRoute',
+  "const RHYTHM_CARD_BACKGROUND: string = '#F8F6F1';",
+  'const RHYTHM_CARD_STREAK_SIZE: number = 14;',
+  'const RHYTHM_CARD_DAY_SIZE: number = 54;',
+  'const RHYTHM_CARD_DAY_LINE_HEIGHT: number = 58;',
   'const RHYTHM_CARD_ACTION_HEIGHT: number = 32;',
   'const RHYTHM_CARD_RADIUS: number = 24;',
   '.backgroundColor(this.hasPendingReview() ? RHYTHM_CARD_ACCENT : RHYTHM_CARD_ACTION_DISABLED)',
@@ -279,7 +282,10 @@ assert(!todayReviewPage.includes('completionRateText') &&
 assert(!rhythmReviewPage.includes('Button('), 'ReviewRhythmCard must not add card-level buttons.');
 assert(!rhythmReviewPage.includes("Text('完成率')") &&
   !rhythmReviewPage.includes("Text('已完成')") &&
-  !rhythmReviewPage.includes("Text('张待复盘')"),
+  !rhythmReviewPage.includes("Text('张待复盘')") &&
+  !rhythmReviewPage.includes("Text('每天一张") &&
+  !rhythmReviewPage.includes("Text('已连续复盘')") &&
+  !rhythmReviewPage.includes("const RHYTHM_CARD_BACKGROUND: string = '#FFF3D6';"),
   'ReviewRhythmCard must stay focused on habit streak and action.');
 
 [

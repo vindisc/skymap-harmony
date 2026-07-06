@@ -1,16 +1,17 @@
-const RHYTHM_CARD_BACKGROUND: string = '#FFF3D6';
+const RHYTHM_CARD_BACKGROUND: string = '#F8F6F1';
 const RHYTHM_CARD_ACCENT: string = '#356F80';
-const RHYTHM_CARD_TEXT_PRIMARY: string = '#111419';
-const RHYTHM_CARD_TEXT_SECONDARY: string = '#6D604D';
-const RHYTHM_CARD_ACTION_DISABLED: string = '#F3E5C8';
+const RHYTHM_CARD_TEXT_PRIMARY: string = '#0D1117';
+const RHYTHM_CARD_TEXT_SECONDARY: string = '#68707A';
+const RHYTHM_CARD_ACTION_DISABLED: string = '#F1EADF';
 const RHYTHM_REVIEW_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
 const RHYTHM_CARD_PADDING: number = 16;
 const RHYTHM_CARD_RADIUS: number = 24;
 const RHYTHM_CARD_TITLE_SIZE: number = 15;
-const RHYTHM_CARD_STREAK_SIZE: number = 20;
-const RHYTHM_CARD_STREAK_LINE_HEIGHT: number = 26;
-const RHYTHM_CARD_DAY_SIZE: number = 34;
+const RHYTHM_CARD_STREAK_SIZE: number = 14;
+const RHYTHM_CARD_STREAK_LINE_HEIGHT: number = 18;
+const RHYTHM_CARD_DAY_SIZE: number = 54;
+const RHYTHM_CARD_DAY_LINE_HEIGHT: number = 58;
 const RHYTHM_CARD_ACTION_HEIGHT: number = 32;
 const RHYTHM_CARD_ACTION_RADIUS: number = 13;
 
@@ -58,8 +59,8 @@ struct ReviewRhythmCard {
       Blank()
         .layoutWeight(1)
 
-      Row({ space: 5 }) {
-        Text('已连续复盘')
+      Row({ space: 6 }) {
+        Text('连续复盘')
           .fontSize(RHYTHM_CARD_STREAK_SIZE)
           .lineHeight(RHYTHM_CARD_STREAK_LINE_HEIGHT)
           .fontWeight(FontWeight.Bold)
@@ -68,10 +69,10 @@ struct ReviewRhythmCard {
 
         Text(`${this.resolveStreakDays()}`)
           .fontSize(RHYTHM_CARD_DAY_SIZE)
-          .lineHeight(38)
+          .lineHeight(RHYTHM_CARD_DAY_LINE_HEIGHT)
           .fontWeight(900)
           .fontColor(RHYTHM_CARD_ACCENT)
-          .letterSpacing(-1)
+          .letterSpacing(-2)
 
         Text('天')
           .fontSize(RHYTHM_CARD_STREAK_SIZE)
@@ -83,16 +84,6 @@ struct ReviewRhythmCard {
       .width('100%')
       .justifyContent(FlexAlign.Center)
       .alignItems(VerticalAlign.Bottom)
-
-      Text('每天一张，手感就不会冷')
-        .fontSize(11)
-        .lineHeight(15)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(RHYTHM_CARD_TEXT_SECONDARY)
-        .textAlign(TextAlign.Center)
-        .width('100%')
-        .maxLines(1)
-        .margin({ top: 4 })
 
       Blank()
         .layoutWeight(1)
