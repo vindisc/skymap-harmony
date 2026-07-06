@@ -1,17 +1,20 @@
-const TODAY_CARD_BACKGROUND: string = '#FFFDF8';
-const TODAY_CARD_TEXT_PRIMARY: string = '#171A1F';
+const TODAY_CARD_BACKGROUND: string = '#F8F6F1';
+const TODAY_CARD_TEXT_PRIMARY: string = '#0D1117';
 const TODAY_CARD_TEXT_SECONDARY: string = '#68707A';
 const TODAY_CARD_PRIMARY: string = '#356F80';
-const TODAY_CARD_HINT_BACKGROUND: string = '#F1EADF';
+const TODAY_CARD_ACTION_DISABLED: string = '#F1EADF';
 const TODAY_REVIEW_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
 
-// 今日复盘 2*2 小卡片必须让内容区接管剩余高度，避免底部按钮被桌面裁切。
-// 不要回退成“数字和按钮顺序平铺”的贴底版；改这里时同步更新 verify_learning_progress_widget.mjs。
-const TODAY_CARD_2X2_PADDING: number = 14;
-const TODAY_CARD_2X2_RADIUS: number = 18;
-const TODAY_CARD_2X2_COLUMN_GAP: number = 14;
-const TODAY_CARD_2X2_TITLE_SIZE: number = 18;
-const TODAY_CARD_2X2_ACTION_VERTICAL_PADDING: number = 6;
+// 2*2 右侧小卡片以截图为准：标题为“今日待复盘”，中间大数字，底部保留可见按钮。
+// 不要回退成“张待复盘”说明文案或按钮贴底裁切结构；改这里时同步更新 verify_learning_progress_widget.mjs。
+const TODAY_CARD_2X2_PADDING: number = 16;
+const TODAY_CARD_2X2_RADIUS: number = 24;
+const TODAY_CARD_2X2_TITLE_SIZE: number = 15;
+const TODAY_CARD_2X2_COUNT_SIZE: number = 48;
+const TODAY_CARD_2X2_COUNT_LINE_HEIGHT: number = 52;
+const TODAY_CARD_2X2_ACTION_WIDTH: number = 116;
+const TODAY_CARD_2X2_ACTION_HEIGHT: number = 32;
+const TODAY_CARD_2X2_ACTION_RADIUS: number = 13;
 
 let todayReviewCardStorage: LocalStorage = new LocalStorage();
 
@@ -46,75 +49,54 @@ struct TodayReviewCard {
   }
 
   build() {
-    Column({ space: TODAY_CARD_2X2_COLUMN_GAP }) {
-      Text('今日复盘')
+    Column({ space: 0 }) {
+      Text('今日待复盘')
         .fontSize(TODAY_CARD_2X2_TITLE_SIZE)
-        .lineHeight(24)
+        .lineHeight(20)
         .fontWeight(FontWeight.Bold)
         .fontColor(TODAY_CARD_TEXT_PRIMARY)
-        .textAlign(TextAlign.Start)
+        .textAlign(TextAlign.Center)
         .width('100%')
+        .maxLines(1)
+        .margin({ top: 3 })
 
-      Column({ space: 8 }) {
+      Blank()
+        .layoutWeight(1)
+
+      Text(`${this.resolvePendingCount()}`)
+        .fontSize(TODAY_CARD_2X2_COUNT_SIZE)
+        .lineHeight(TODAY_CARD_2X2_COUNT_LINE_HEIGHT)
+        .fontWeight(900)
+        .fontColor(TODAY_CARD_PRIMARY)
+        .letterSpacing(-2)
+        .textAlign(TextAlign.Center)
+
+      Blank()
+        .layoutWeight(1)
+
+      Row({ space: 6 }) {
+        Text(this.resolveHintText())
+          .fontSize(13)
+          .lineHeight(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(this.hasPendingReview() ? '#FFFDF8' : TODAY_CARD_TEXT_SECONDARY)
+          .maxLines(1)
+
         if (this.hasPendingReview()) {
-          Row({ space: 8 }) {
-            Text(`${this.resolvePendingCount()}`)
-              .fontSize(46)
-              .lineHeight(50)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(TODAY_CARD_TEXT_PRIMARY)
-              .textAlign(TextAlign.Center)
-
-            Text('张待复盘')
-              .fontSize(14)
-              .lineHeight(18)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(TODAY_CARD_TEXT_SECONDARY)
-          }
-          .justifyContent(FlexAlign.Center)
-          .alignItems(VerticalAlign.Bottom)
-          .width('100%')
-        } else {
-          Text('已清空')
-            .fontSize(27)
-            .lineHeight(34)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(TODAY_CARD_PRIMARY)
-            .textAlign(TextAlign.Center)
-        }
-
-        Row({ space: 6 }) {
-          Text(this.resolveHintText())
-            .fontSize(13)
+          Text('→')
+            .fontSize(15)
             .lineHeight(18)
             .fontWeight(FontWeight.Bold)
-            .fontColor(this.hasPendingReview() ? '#FFFDF8' : TODAY_CARD_TEXT_SECONDARY)
+            .fontColor('#FFFDF8')
             .maxLines(1)
-
-          if (this.hasPendingReview()) {
-            Text('→')
-              .fontSize(15)
-              .lineHeight(18)
-              .fontWeight(FontWeight.Bold)
-              .fontColor('#FFFDF8')
-              .maxLines(1)
-          }
         }
-        .justifyContent(FlexAlign.Center)
-        .alignItems(VerticalAlign.Center)
-        .padding({
-          left: 16,
-          right: 16,
-          top: TODAY_CARD_2X2_ACTION_VERTICAL_PADDING,
-          bottom: TODAY_CARD_2X2_ACTION_VERTICAL_PADDING
-        })
-        .borderRadius(12)
-        .backgroundColor(this.hasPendingReview() ? TODAY_CARD_PRIMARY : TODAY_CARD_HINT_BACKGROUND)
       }
-      .width('100%')
-      .layoutWeight(1)
+      .width(TODAY_CARD_2X2_ACTION_WIDTH)
+      .height(TODAY_CARD_2X2_ACTION_HEIGHT)
       .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Center)
+      .alignItems(VerticalAlign.Center)
+      .borderRadius(TODAY_CARD_2X2_ACTION_RADIUS)
+      .backgroundColor(this.hasPendingReview() ? TODAY_CARD_PRIMARY : TODAY_CARD_ACTION_DISABLED)
     }
     .width('100%')
     .height('100%')
