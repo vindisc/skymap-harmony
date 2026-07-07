@@ -1,4 +1,4 @@
-# skymap-harmony 手机端主流程
+# skymap-photoreview 手机端主流程
 
 本文只描述当前 HarmonyOS 端已经落地的主流程。
 

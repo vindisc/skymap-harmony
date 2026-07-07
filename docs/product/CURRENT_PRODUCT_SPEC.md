@@ -1,6 +1,6 @@
 # 当前产品说明
 
-本文只描述当前 `skymap-harmony` 仓库已经落地的能力，不写未来路线图，不把 Mac 侧规划当作 Harmony 当前能力。
+本文只描述当前 `skymap-photoreview` 仓库已经落地的能力，不写未来路线图，不把 Mac 侧规划当作 Harmony 当前能力。
 
 ## 1. 项目定位
 

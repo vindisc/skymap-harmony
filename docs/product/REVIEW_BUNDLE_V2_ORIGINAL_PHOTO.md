@@ -72,7 +72,7 @@ v2 manifest 示例：
   "bundleId": "review-bundle-20260628-153000-xxxxxxxx",
   "createdAt": "2026-06-28T07:30:00.000Z",
   "updatedAt": "2026-06-28T07:30:00.000Z",
-  "sourceApp": "skymap-harmonyos",
+  "sourceApp": "skymap-photoreview",
   "sourceAppVersion": "0.1.0",
   "platform": "HarmonyOS",
   "reviewJsonPath": "review.json",

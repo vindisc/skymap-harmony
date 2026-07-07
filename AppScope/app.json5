@@ -1,6 +1,6 @@
 {
   "app": {
-    "bundleName": "com.skymap.harmony",
+    "bundleName": "com.skymap.photoreview",
     "vendor": "skymap",
     "versionCode": 3,
     "versionName": "0.1.0",

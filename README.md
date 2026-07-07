@@ -1,6 +1,6 @@
-# skymap-harmony
+# skymap-photoreview
 
-`skymap-harmony` 是一款 HarmonyOS 原生 ArkTS + ArkUI 摄影复盘应用，当前聚焦手机端单机闭环：导入照片、写复盘、保存回看、导出成品，以及把照片先收进待复盘列表。
+`skymap-photoreview` 是一款 HarmonyOS 原生 ArkTS + ArkUI 摄影复盘应用，当前聚焦手机端单机闭环：导入照片、写复盘、保存回看、导出成品，以及把照片先收进待复盘列表。
 
 代码是当前事实来源；本文只描述已经落地的实现。
 

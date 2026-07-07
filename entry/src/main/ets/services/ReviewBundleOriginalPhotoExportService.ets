@@ -85,7 +85,7 @@ interface ReviewBundleManifestV2 {
 }
 
 const LOCAL_BUNDLE_DIR_NAME: string = 'review_bundles';
-const SOURCE_APP: string = 'skymap-harmonyos';
+const SOURCE_APP: string = 'skymap-photoreview';
 const SOURCE_APP_VERSION: string = '0.1.0';
 const PLATFORM: string = 'HarmonyOS';
 const BUNDLE_TYPE: string = 'original-photo-review';
