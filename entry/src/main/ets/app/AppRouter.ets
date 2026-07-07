@@ -5,7 +5,7 @@ export const PREVIEW_PAGE: string = 'pages/PreviewPage';
 export const PROJECT_DETAIL_PAGE: string = 'pages/ProjectDetailPage';
 export const HOME_STORAGE_PAGE: string = 'pages/HomeStoragePage';
 export const HOME_HERO_IMAGE_PAGE: string = 'pages/HomeHeroImagePage';
+export const WIDGET_CARD_BACKGROUND_PAGE: string = 'pages/WidgetCardBackgroundPage';
 export const MY_PAGE: string = 'pages/MyPage';
 export const REVIEWER_PROFILE_PAGE: string = 'pages/ReviewerProfilePage';
 export const SYNC_CENTER_PAGE: string = 'pages/SyncCenterPage';
-

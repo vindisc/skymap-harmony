@@ -23,6 +23,8 @@ function countOccurrences(source, token) {
 }
 
 const moduleConfig = read('entry/src/main/module.json5');
+const mainPagesConfig = read('entry/src/main/resources/base/profile/main_pages.json');
+const appRouter = read('entry/src/main/ets/app/AppRouter.ets');
 const formConfig = read('entry/src/main/resources/base/profile/form_config.json');
 const formAbility = read('entry/src/main/ets/formability/LearningProgressFormAbility.ets');
 const formPage = read('entry/src/main/ets/widget/pages/LearningProgressMediumCard.ets');
@@ -40,6 +42,7 @@ const projectDetailPage = read('entry/src/main/ets/pages/ProjectDetailPage.ets')
 const previewPage = read('entry/src/main/ets/pages/PreviewPage.ets');
 const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
 const myPage = read('entry/src/main/ets/pages/MyPage.ets');
+const widgetCardBackgroundPage = read('entry/src/main/ets/pages/WidgetCardBackgroundPage.ets');
 const reviewSettingsService = read('entry/src/main/ets/services/ReviewSettingsService.ets');
 
 const styleLockResult = spawnSync(process.execPath, ['scripts/verify_widget_style_lock.mjs'], {
@@ -347,14 +350,27 @@ assert(!rhythmReviewPage.includes("Text('完成率')") &&
 
 [
   'widgetCardBackgroundStyle',
-  "Text('卡片背景')",
+  "title: '卡片背景'",
+  'WIDGET_CARD_BACKGROUND_PAGE',
+  'pushUrl({ url: WIDGET_CARD_BACKGROUND_PAGE })',
+  'ReviewSettingsService.loadWidgetCardBackgroundStyle(context)'
+].forEach((token) => requireIncludes(myPage, token, 'MyPage must expose widget card background as a secondary settings entry'));
+
+[
+  "export const WIDGET_CARD_BACKGROUND_PAGE: string = 'pages/WidgetCardBackgroundPage';",
+  '"pages/WidgetCardBackgroundPage"'
+].forEach((token) => requireIncludes(`${appRouter}\n${mainPagesConfig}`, token, 'Widget card background page must be registered'));
+
+[
+  'widgetCardBackgroundStyle',
+  "title: '卡片背景'",
   "this.WidgetBackgroundOption('白色', '当前样式', REVIEW_WIDGET_CARD_BACKGROUND_PLAIN, false)",
   "this.WidgetBackgroundOption('纹理', '浅螺旋纹', REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE, true)",
-  'ReviewSettingsService.loadWidgetCardBackgroundStyle(context)',
+  'ReviewSettingsService.loadWidgetCardBackgroundStyle(this.getAbilityContext())',
   'ReviewSettingsService.saveWidgetCardBackgroundStyle(context, style)',
   'LearningProgressFormService.refreshAllForms(context)',
   "Image($r('app.media.widget_card_texture'))"
-].forEach((token) => requireIncludes(myPage, token, 'MyPage must expose and apply widget card background settings'));
+].forEach((token) => requireIncludes(widgetCardBackgroundPage, token, 'WidgetCardBackgroundPage must apply widget card background settings'));
 
 [
   'FormLaunchIntentService.captureWant(want)',

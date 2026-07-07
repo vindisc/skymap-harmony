@@ -5,6 +5,7 @@
     "pages/PreviewPage",
     "pages/HomeStoragePage",
     "pages/HomeHeroImagePage",
+    "pages/WidgetCardBackgroundPage",
     "pages/ReviewerProfilePage",
     "pages/ReviewSettingsPage",
     "pages/SyncCenterPage"

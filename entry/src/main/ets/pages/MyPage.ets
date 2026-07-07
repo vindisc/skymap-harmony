@@ -1,5 +1,11 @@
 import common from '@ohos.app.ability.common';
-import { HOME_HERO_IMAGE_PAGE, HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE, SYNC_CENTER_PAGE } from '../app/AppRouter';
+import {
+  HOME_HERO_IMAGE_PAGE,
+  HOME_STORAGE_PAGE,
+  REVIEWER_PROFILE_PAGE,
+  SYNC_CENTER_PAGE,
+  WIDGET_CARD_BACKGROUND_PAGE
+} from '../app/AppRouter';
 import {
   AppColors,
   AppMetrics,
@@ -17,12 +23,7 @@ import {
 import { ENABLE_RDB_DIAGNOSTICS_ENTRY } from '../services/ReviewFlowFeedback';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { HomeHeroImageService } from '../services/HomeHeroImageService';
-import { LearningProgressFormService } from '../services/LearningProgressFormService';
-import {
-  REVIEW_WIDGET_CARD_BACKGROUND_PLAIN,
-  REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE,
-  ReviewSettingsService
-} from '../services/ReviewSettingsService';
+import { REVIEW_WIDGET_CARD_BACKGROUND_PLAIN, ReviewSettingsService } from '../services/ReviewSettingsService';
 import { ToastService } from '../services/ToastService';
 import { DialogService } from '../services/DialogService';
 
@@ -119,13 +120,6 @@ export struct MyPage {
     return this.homeHeroImageCount <= 0 ? '默认' : `${this.homeHeroImageCount} 张`;
   }
 
-  private resolveWidgetCardBackgroundSummary(): string {
-    if (this.widgetCardBackgroundStyle === REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE) {
-      return '浅色螺旋纹理，接近示例卡片质感';
-    }
-    return '当前白色背景，保持桌面卡片清爽';
-  }
-
   private resolveWidgetCardBackgroundBadge(): string {
     return ReviewSettingsService.resolveWidgetCardBackgroundLabel(this.widgetCardBackgroundStyle);
   }
@@ -207,27 +201,16 @@ export struct MyPage {
     });
   }
 
+  private openWidgetCardBackground(): void {
+    this.getUIContext().getRouter().pushUrl({ url: WIDGET_CARD_BACKGROUND_PAGE }).catch((error: Error) => {
+      console.error(`[MyPage] 打开卡片背景设置失败：${error.message}`);
+    });
+  }
+
   private openSyncCenter(): void {
     this.getUIContext().getRouter().pushUrl({ url: SYNC_CENTER_PAGE }).catch((error: Error) => {
       console.error(`[MyPage] 打开同步中心失败：${error.message}`);
     });
-  }
-
-  private async saveWidgetCardBackgroundStyle(style: string): Promise<void> {
-    if (style === this.widgetCardBackgroundStyle) {
-      return;
-    }
-
-    try {
-      const context = this.getAbilityContext();
-      const savedStyle: string = await ReviewSettingsService.saveWidgetCardBackgroundStyle(context, style);
-      this.widgetCardBackgroundStyle = savedStyle;
-      await LearningProgressFormService.refreshAllForms(context);
-      ToastService.show(this.getUIContext(), `卡片背景已切换为${this.resolveWidgetCardBackgroundBadge()}`);
-    } catch (error) {
-      console.error(`[MyPage] 保存卡片背景失败：${error}`);
-      ToastService.show(this.getUIContext(), '卡片背景保存失败，请重试');
-    }
   }
 
   private confirmRdbDeveloperDiagnostics(): void {
@@ -304,7 +287,15 @@ export struct MyPage {
         }
       })
 
-      this.WidgetCardBackgroundSettingsCard()
+      SettingsLinkRow({
+        title: '卡片背景',
+        status: this.resolveWidgetCardBackgroundBadge(),
+        tone: SettingsEntryTone.DEFAULT,
+        dense: true,
+        onTap: () => {
+          this.openWidgetCardBackground();
+        }
+      })
 
       SettingsLinkRow({
         title: '家庭存储',
@@ -329,128 +320,6 @@ export struct MyPage {
       })
     }
     .width('100%')
-  }
-
-  @Builder
-  WidgetCardBackgroundSettingsCard() {
-    Column({ space: AppMetrics.space12 }) {
-      Row({ space: AppMetrics.cardGap }) {
-        Column({ space: 4 }) {
-          Text('卡片背景')
-            .fontSize(AppTypography.body)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.text)
-            .lineHeight(AppTypography.bodyLineHeight)
-            .width('100%')
-            .maxLines(1)
-
-          Text(this.resolveWidgetCardBackgroundSummary())
-            .fontSize(AppTypography.caption)
-            .fontColor(AppColors.secondaryText)
-            .lineHeight(AppTypography.captionLineHeight)
-            .width('100%')
-            .maxLines(2)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-
-        Text(this.resolveWidgetCardBackgroundBadge())
-          .fontSize(AppTypography.meta)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.primary)
-          .lineHeight(AppTypography.metaLineHeight)
-          .padding({
-            left: AppMetrics.compactBadgePaddingHorizontal,
-            right: AppMetrics.compactBadgePaddingHorizontal,
-            top: AppMetrics.compactBadgePaddingVertical,
-            bottom: AppMetrics.compactBadgePaddingVertical
-          })
-          .borderRadius(AppMetrics.badgeRadius)
-          .backgroundColor(AppColors.primarySoft)
-          .maxLines(1)
-      }
-      .width('100%')
-      .alignItems(VerticalAlign.Center)
-
-      Row({ space: AppMetrics.space10 }) {
-        this.WidgetBackgroundOption('白色', '当前样式', REVIEW_WIDGET_CARD_BACKGROUND_PLAIN, false)
-        this.WidgetBackgroundOption('纹理', '浅螺旋纹', REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE, true)
-      }
-      .width('100%')
-    }
-    .alignItems(HorizontalAlign.Start)
-    .padding({
-      left: AppMetrics.cardPadding,
-      right: AppMetrics.cardPadding,
-      top: AppMetrics.space12,
-      bottom: AppMetrics.space12
-    })
-    .width('100%')
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.surfaceElevated)
-    .border({ width: 1, color: AppColors.border })
-    .shadow(ElevationTokens.subtle)
-  }
-
-  @Builder
-  WidgetBackgroundOption(title: string, subtitle: string, style: string, textured: boolean) {
-    Column({ space: 6 }) {
-      Stack() {
-        Column()
-          .width('100%')
-          .height('100%')
-          .backgroundColor(AppColors.surface)
-
-        if (textured) {
-          Image($r('app.media.widget_card_texture'))
-            .width('100%')
-            .height('100%')
-            .objectFit(ImageFit.Cover)
-            .opacity(0.46)
-            .hitTestBehavior(HitTestMode.None)
-        }
-
-        Text('Aa')
-          .fontSize(18)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.primary)
-      }
-      .width(58)
-      .height(42)
-      .borderRadius(14)
-      .clip(true)
-      .border({
-        width: 1,
-        color: this.widgetCardBackgroundStyle === style ? AppColors.primary : AppColors.border
-      })
-
-      Text(title)
-        .fontSize(AppTypography.meta)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(this.widgetCardBackgroundStyle === style ? AppColors.primary : AppColors.text)
-        .lineHeight(AppTypography.metaLineHeight)
-        .maxLines(1)
-
-      Text(subtitle)
-        .fontSize(10)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(14)
-        .maxLines(1)
-    }
-    .layoutWeight(1)
-    .height(104)
-    .justifyContent(FlexAlign.Center)
-    .alignItems(HorizontalAlign.Center)
-    .borderRadius(AppMetrics.inputRadius)
-    .backgroundColor(this.widgetCardBackgroundStyle === style ? AppColors.primarySoft : AppColors.surfaceTint)
-    .border({
-      width: this.widgetCardBackgroundStyle === style ? 1.5 : 1,
-      color: this.widgetCardBackgroundStyle === style ? AppColors.primary : AppColors.border
-    })
-    .onClick(() => {
-      this.saveWidgetCardBackgroundStyle(style);
-    })
   }
 
   @Builder
