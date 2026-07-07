@@ -18,6 +18,7 @@ import { resolveLongFormExportCardHeight } from '../components/LongFormExportRev
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { ReviewCardExportService, ReviewCardExportResult, REVIEW_CARD_EXPORT_ID } from '../services/ReviewCardExportService';
+import { ReviewJsonExportResult, ReviewJsonExportService } from '../services/ReviewJsonExportService';
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
@@ -37,6 +38,7 @@ struct PreviewPage {
   @State isExporting: boolean = false;
   @State isExportSnapshotMode: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
+  @State lastReviewJsonExportPath: string = '';
 
   private getAbilityContext(): common.UIAbilityContext {
     return getContext(this) as common.UIAbilityContext;
@@ -135,6 +137,17 @@ struct PreviewPage {
     }
   }
 
+  private async exportReviewJson(): Promise<void> {
+    const result: ReviewJsonExportResult = await ReviewJsonExportService.exportReviewJson(
+      this.getAbilityContext(),
+      this.document
+    );
+    if (result.success) {
+      this.lastReviewJsonExportPath = result.path;
+    }
+    promptAction.showToast({ message: result.message });
+  }
+
   private async waitForExportLayout(): Promise<void> {
     return new Promise<void>((resolve: () => void) => {
       setTimeout(() => {
@@ -206,6 +219,9 @@ struct PreviewPage {
           this.ActionButton('编辑', false, () => {
             router.replaceUrl({ url: EDITOR_PAGE });
           })
+          this.ActionButton('导出 review.json', false, () => {
+            this.exportReviewJson();
+          })
           this.ActionButton('复制复盘数据', false, () => {
             this.copyReviewData();
           })
@@ -218,6 +234,18 @@ struct PreviewPage {
       .alignItems(VerticalAlign.Center)
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space12, bottom: AppMetrics.space4 })
       .width('100%')
+
+      if (this.lastReviewJsonExportPath.length > 0) {
+        Row() {
+          Text(`review.json 已导出：${this.lastReviewJsonExportPath}，可传到 Mac 导入`)
+            .fontSize(AppTypography.caption)
+            .fontColor(AppColors.secondaryText)
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space8 })
+        .width('100%')
+      }
 
       Scroll() {
         Column() {
