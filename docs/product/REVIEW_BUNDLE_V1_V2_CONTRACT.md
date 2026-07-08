@@ -8,7 +8,7 @@
 
 | 协议 | 产品定位 | 必要资产 | Mac 行为 | HarmonyOS 行为 |
 | --- | --- | --- | --- | --- |
-| v1 成品图复盘包 | 归档、只读查看、跨端展示 | `review.json`、`exports/review-card.png`、`thumbnails/thumb.jpg`、`manifest.json` | 导入为只读成品图记录，不显示“打开为复盘卡” | 导出复盘内容和成品图到家庭存储 |
+| v1 成品图复盘包 | 归档、只读查看、跨端展示 | `review.json`、`thumb.jpg`、`manifest.json` | 导入为只读成品图记录，不显示“打开为复盘卡” | 导出复盘内容和 JPG 成品图到家庭存储 |
 | v2 原图复盘包 | 跨端接力、Mac 继续处理 | `review.json`、`assets/original/original.*`、`manifest.json` | 导入为原图复盘包，可显式打开为复盘卡 | 导出复盘内容和原图到家庭存储 |
 
 当前不包含自动同步、批量导入、双向同步、远端删除、冲突合并、云数据库或写回原 bundle。
@@ -19,21 +19,16 @@
 review_v1_sample/
 ├── manifest.json
 ├── review.json
-├── exports/
-│   └── review-card.png
-├── thumbnails/
-│   └── thumb.jpg
-└── assets/
-    └── README.md
+└── thumb.jpg
 ```
 
 v1 规则：
 
 - `bundleVersion` 为 `1`。
 - `originalPhoto.included` 为 `false`。
-- `exportedImages` 必须包含 `exports/review-card.png`。
-- `thumbnailPath` 指向 `thumbnails/thumb.jpg`。
-- Mac 只读预览 `review-card.png`，不得把它作为原图进入主编辑器。
+- `exportedImages` 必须包含 `thumb.jpg`。
+- `thumbnailPath` 指向 `thumb.jpg`。
+- Mac 只读预览 `thumb.jpg`，不得把它作为原图进入主编辑器。
 
 ## 三、v2 结构
 
@@ -61,7 +56,7 @@ v2 规则：
 - `originalPhoto.included` 为 `true`。
 - `originalPhoto.path` 指向 `assets/original/original.*`，文件必须存在且 size 大于 0。
 - `exportedImages` 必须存在，允许为空数组 `[]`。
-- v2 不要求、也不依赖 `exports/review-card.png`。
+- v2 不要求、也不依赖 v1 的成品图 JPG。
 - 原始文件名只保存在 `manifest.originalPhoto.fileName`；实际路径使用安全文件名。
 
 ## 四、Review JSON 冻结原则
@@ -122,9 +117,9 @@ manifest 可以描述资产路径、导出图、缩略图、原图文件名、MI
 ## 六、Mac 行为
 
 - v1 导入为只读成品图记录。
-- v1 中栏显示 `review-card.png`。
+- v1 中栏显示 `thumb.jpg`。
 - v1 不显示“打开为复盘卡”。
-- v1 `review-card.png` 不能进入主编辑器。
+- v1 `thumb.jpg` 不能进入主编辑器。
 - v2 导入为“原图复盘包”记录。
 - v2 中栏显示原图，右栏显示 `review.json` 内容。
 - v2 只有用户点击“打开为复盘卡”后才进入主编辑器。
@@ -135,11 +130,11 @@ manifest 可以描述资产路径、导出图、缩略图、原图文件名、MI
 ## 七、HarmonyOS 行为
 
 - v1 入口继续导出成品图复盘包。
-- v1 生成 `review-card.png`，并写入家庭存储。
+- v1 生成 `thumb.jpg` JPG 成品图，并写入家庭存储。
 - v2 入口导出“复盘包（含原图）”。
 - v2 必须复制原图到 `assets/original/original.*`，并写入家庭存储。
 - v2 原图不可读时失败提示用户重新选择照片。
-- v2 不生成 `review-card.png`，`exportedImages=[]` 合法。
+- v2 不生成 v1 成品图 JPG，`exportedImages=[]` 合法。
 - v1 / v2 用户文案必须清楚区分“成品图归档”和“含原图继续处理”。
 
 ## 八、当前不包含

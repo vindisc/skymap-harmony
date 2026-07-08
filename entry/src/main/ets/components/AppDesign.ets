@@ -20,7 +20,7 @@ import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
 const PAGE_BOTTOM_PADDING: number = 20;
 const SYSTEM_NAVIGATION_BAR_HEIGHT: number = 34;
-const FLOATING_DOCK_BOTTOM_PADDING: number = 20 + SYSTEM_NAVIGATION_BAR_HEIGHT;
+const FLOATING_DOCK_BOTTOM_PADDING: number = 20;
 const TAB_BAR_SAFE_AREA_HEIGHT: number = 0;
 
 export class AppColors {

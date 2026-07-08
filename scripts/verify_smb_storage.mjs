@@ -58,7 +58,7 @@ for (const token of forbiddenSettingsTokens) {
 }
 
 const requiredHomeStoragePageTokens = [
-  "SettingsInput('家庭存储地址或 IP'",
+  "SettingsInput('家庭存储地址'",
   "SettingsInput('共享目录'",
   "SettingsInput('目标路径'",
   "SettingsInput('用户名'",
@@ -138,7 +138,7 @@ if (!syncCenterPageSource.includes("this.InfoRow('保存位置'") || !syncCenter
 const requiredHomeStorageTokens = [
   "const DEFAULT_REMOTE_DIRECTORY: string = '';",
   'HomeStorageSecretService.savePassword(normalized.password)',
-  "return '请先填写家庭存储地址或 IP';",
+  "return '请先填写家庭存储地址';",
   "return '请先填写共享目录';",
   "return '请先填写密码';",
   "createOperationResult(true, `\\\\\\\\${normalized.smbHost}\\\\${normalized.smbShareName}`, '家庭存储连接成功')",

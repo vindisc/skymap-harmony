@@ -65,7 +65,7 @@ assertIncludes(contractDoc, '`bundleVersion` 为 `1`。', 'REVIEW_BUNDLE_V1_V2_C
 assertIncludes(contractDoc, 'v2 不替代 v1，v1 不废弃', 'REVIEW_BUNDLE_V1_V2_CONTRACT.md');
 assertIncludes(bundleServiceSource, 'bundleVersion: 1', 'ReviewBundleExportService v1 remains');
 assertIncludes(bundleServiceSource, 'included: false', 'ReviewBundleExportService v1 remains');
-assertIncludes(bundleServiceSource, 'remoteRelativePath: REVIEW_CARD_IMAGE_PATH', 'ReviewBundleExportService v1 exported image remains');
+assertIncludes(bundleServiceSource, 'remoteRelativePath: THUMBNAIL_PATH', 'ReviewBundleExportService v1 exported image remains');
 assertIncludes(originalPhotoExportSource, 'bundleVersion: 2', 'ReviewBundleOriginalPhotoExportService v2 export');
 assertIncludes(originalPhotoExportSource, "const BUNDLE_TYPE: string = 'original-photo-review'", 'ReviewBundleOriginalPhotoExportService v2 export');
 assertIncludes(originalPhotoExportSource, 'exportedImages: []', 'ReviewBundleOriginalPhotoExportService v2 export');

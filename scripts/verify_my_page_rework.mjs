@@ -110,7 +110,7 @@ assert(reviewerProfileSource.includes("primaryLabel: this.isSaving ? '保存中�
 
 assert(homeStorageSource.includes('CenterFeedbackOverlay()'), 'HomeStoragePage must show centered lightweight feedback.');
 assert(!homeStorageSource.includes('StatusSummary()'), 'HomeStoragePage must not show the redundant status summary.');
-assert(homeStorageSource.includes("'家庭存储地址或 IP'"), 'HomeStoragePage must keep connection fields.');
+assert(homeStorageSource.includes("'家庭存储地址'"), 'HomeStoragePage must keep connection fields.');
 assert(homeStorageSource.includes("primaryLabel: this.isSaving ? '保存中…' : '保存'"), 'HomeStoragePage save action must show loading state.');
 assert(homeStorageSource.includes("secondaryLabel: this.isTestingHomeStorage ? '检查中…' : '检查'"), 'HomeStoragePage check action must show loading state.');
 

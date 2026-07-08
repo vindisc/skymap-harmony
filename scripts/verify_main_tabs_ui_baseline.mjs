@@ -79,7 +79,7 @@ baselineImagePaths.forEach((imagePath) => {
   '.aspectRatio(HOME_HERO_ASPECT_RATIO)',
   'PrimaryButton({',
   "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'",
-  'bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding'
+  'bottom: AppMetrics.tabContentBottomPadding'
 ].forEach((marker) => requireIncludes(sources.home, marker, 'HomePage must keep hero config, carousel and tab clearance'));
 
 [
@@ -122,16 +122,17 @@ requireOrder(sources.library, 'this.SearchField()', "this.FilterChip('全部', '
 requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)", 'ProjectReviewCard({', 'Review library list should appear directly after filters.');
 
 [
-  "AppPageHeader({\n          title: '统计'",
-  'STATS_CONTENT_TOP_GAP',
+  "AppPageHeader({\n            title: '统计'",
+  'STATS_PAGE_TOP_PADDING',
+  'this.LearningOverviewCard()',
   'this.OverviewCard()',
   'this.Recent30DaysCard()',
   'this.DistributionCard()',
   'this.BlockersCard()',
-  'this.RecentReviewsCard()',
-  "EmptyState({\n              title: '还没有复盘数据'",
+  '还没有复盘数据',
   '完成第一张照片复盘后，这里会显示你的判断变化。',
-  'top: STATS_CONTENT_TOP_GAP'
+  'top: STATS_PAGE_TOP_PADDING',
+  ".height('100%')\n      .justifyContent(FlexAlign.Start)"
 ].forEach((marker) => requireIncludes(sources.stats, marker, 'Stats page must keep compact stats cards and empty-state-only guidance'));
 
 [

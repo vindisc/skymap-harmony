@@ -32,8 +32,13 @@ requireIncludes(sources.smbClient, 'private async writeFileFromPath(fileId: Arra
 requireIncludes(sources.homeStorageService, 'client.uploadFile(createSmbUploadFileOptions(', 'HomeStorageService');
 forbidIncludes(sources.homeStorageService, 'readLocalFileBytes(localPath)', 'HomeStorageService');
 requireIncludes(sources.exportService, 'await packer.release();', 'ReviewCardExportService');
+forbidIncludes(sources.exportService, 'BUNDLE_REVIEW_CARD_MIME_TYPE', 'ReviewCardExportService');
+forbidIncludes(sources.exportService, 'image/png', 'ReviewCardExportService');
 
 requireIncludes(sources.stats, 'build() {\n    Scroll() {', 'StatsPage');
+requireIncludes(sources.stats, 'const STATS_PAGE_TOP_PADDING: number = AppMetrics.space20;', 'StatsPage fixed top padding');
+requireIncludes(sources.stats, 'top: STATS_PAGE_TOP_PADDING', 'StatsPage fixed top padding');
+requireIncludes(sources.stats, ".height('100%')\n      .justifyContent(FlexAlign.Start)", 'StatsPage top alignment');
 forbidIncludes(sources.stats, '.layoutWeight(1)\n      .scrollBar(BarState.Off)\n      .edgeEffect(EdgeEffect.Spring)', 'StatsPage fixed lower scroll');
 
 requireIncludes(sources.homeStorage, 'CenterFeedbackOverlay()', 'HomeStoragePage');

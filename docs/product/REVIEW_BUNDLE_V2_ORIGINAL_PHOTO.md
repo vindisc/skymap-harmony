@@ -10,10 +10,10 @@ review bundle 现在分成两类：
 
 | 类型 | 定位 | 主要资产 | Mac 行为 |
 | --- | --- | --- | --- |
-| v1 成品图复盘包 | 归档、只读查看、跨端展示 | `review.json`、`exports/review-card.png`、`thumbnails/thumb.jpg` | 导入为 `readonlyExportReview`，展示导出的复盘成品图 |
+| v1 成品图复盘包 | 归档、只读查看、跨端展示 | `review.json`、`thumb.jpg` | 导入为 `readonlyExportReview`，展示导出的复盘 JPG 成品图 |
 | v2 原图复盘包 | 跨端接力、Mac 继续处理 | `review.json`、`assets/original/original.*`、可选缩略图 | 导入为 `originalPhotoReview`，保存原图和复盘内容，可显式打开为复盘卡 |
 
-v1 继续保留当前结构和语义。v2 第一版可以不包含 `exports/review-card.png`，但必须把原图文件复制进 bundle。
+v1 继续保留成品图归档语义，但只保留 JPG 成品图。v2 第一版可以不包含成品图，但必须把原图文件复制进 bundle。
 
 ## 二、目录结构
 
@@ -23,12 +23,7 @@ v1 结构保持不变：
 review_xxx/
 ├── manifest.json
 ├── review.json
-├── exports/
-│   └── review-card.png
-├── thumbnails/
-│   └── thumb.jpg
-└── assets/
-    └── README.md
+└── thumb.jpg
 ```
 
 v2 结构：
@@ -49,7 +44,7 @@ v2 第一版规则：
 
 - `manifest.json`、`review.json`、`assets/original/original.*` 是必要文件。
 - `thumbnails/thumb.jpg` 和 `assets/README.md` 是可选文件。
-- `exports/review-card.png` 可缺失。
+- v2 成品图可缺失。
 - `exportedImages` 字段仍保留，但允许为空数组。
 - 如果 `thumbnailPath` 写入 manifest，则对应文件必须存在。
 - 原图实际文件名使用安全 ASCII 名称，例如 `original.jpg`、`original.heic`、`original.png`。
@@ -106,7 +101,7 @@ v2 manifest 示例：
 - `originalPhoto.included` 必须为 `true`。
 - `originalPhoto.path` 必须非空且文件存在。
 - `thumbnailPath` 可缺失；如果存在，对应文件必须存在。
-- Mac Reader 必须同时识别 v1 和 v2，不能用 v1 的 `exports/review-card.png` 必填规则误判 v2。
+- Mac Reader 必须同时识别 v1 和 v2，不能用 v1 的成品图必填规则误判 v2。
 
 ## 四、Review JSON 边界
 
@@ -181,22 +176,22 @@ v2 日志应区分：
 
 Mac Reader 支持两类 bundle：
 
-- v1：`bundleVersion = 1`、`originalPhoto.included = false`、`exportedImages` 包含 `exports/review-card.png`。
+- v1：`bundleVersion = 1`、`originalPhoto.included = false`、`exportedImages` 包含 `thumb.jpg`。
 - v2：`bundleVersion = 2`、`bundleType = original-photo-review`、`originalPhoto.included = true`、`originalPhoto.path` 指向存在的原图文件，`exportedImages` 允许为空。
 
 Mac library 记录类型：
 
 | 类型 | 来源 | 资产 | 行为 |
 | --- | --- | --- | --- |
-| `readonlyExportReview` | v1 bundle | `review-card.png` | 只读预览成品图 |
+| `readonlyExportReview` | v1 bundle | `thumb.jpg` | 只读预览成品图 |
 | `originalPhotoReview` | v2 bundle | original photo | 原图预览 + 复盘内容，可点击“打开为复盘卡”恢复编辑 |
 
 v2 不能：
 
 - 当成 v1 只读成品图。
-- 要求必须有 `exports/review-card.png`。
+- 要求必须有 v1 成品图。
 - 因为 `exportedImages = []` 直接判定非法。
-- 把 original photo 当成 `review-card.png`。
+- 把 original photo 当成 v1 成品图。
 - 污染普通照片导入流程。
 
 Mac 端当前已支持 v2 导入和可编辑恢复入口。导入时只进入复盘库查看态；只有用户点击“打开为复盘卡”后，才把原图和 `review.json` 复盘字段恢复到主编辑器。Mac 不写回原 bundle，不自动同步。

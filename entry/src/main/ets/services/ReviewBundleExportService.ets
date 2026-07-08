@@ -28,7 +28,6 @@ interface ReviewBundlePaths {
   root: string;
   manifest: string;
   reviewJson: string;
-  reviewCardImage: string;
   thumbnail: string;
 }
 
@@ -83,7 +82,6 @@ const LOCAL_BUNDLE_DIR_NAME: string = 'review_bundles';
 const SOURCE_APP: string = 'skymap-photoreview';
 const SOURCE_APP_VERSION: string = '0.1.0';
 const PLATFORM: string = 'HarmonyOS';
-const REVIEW_CARD_IMAGE_PATH: string = 'review-card.png';
 const THUMBNAIL_PATH: string = 'thumb.jpg';
 
 function pad2(value: number): string {
@@ -183,7 +181,6 @@ function buildLocalPaths(context: common.UIAbilityContext, bundleDirectoryName: 
     root: root,
     manifest: `${root}/manifest.json`,
     reviewJson: `${root}/review.json`,
-    reviewCardImage: `${root}/${REVIEW_CARD_IMAGE_PATH}`,
     thumbnail: `${root}/${THUMBNAIL_PATH}`
   };
 }
@@ -199,7 +196,7 @@ function buildManifest(
   const reviewSummary = createReviewCardExchangeSchemaV1(document, reviewerText);
   const exportedImages: Array<ReviewBundleExportedImageManifest> = [
     {
-      path: REVIEW_CARD_IMAGE_PATH,
+      path: THUMBNAIL_PATH,
       type: 'review-card',
       width: exportWidth > 0 ? exportWidth : 0,
       height: exportHeight > 0 ? exportHeight : 0,
@@ -236,7 +233,6 @@ function buildManifest(
 function verifyBundle(paths: ReviewBundlePaths): void {
   assertFileExists(paths.manifest, 'manifest.json');
   assertFileExists(paths.reviewJson, 'review.json');
-  assertFileExists(paths.reviewCardImage, REVIEW_CARD_IMAGE_PATH);
   assertFileExists(paths.thumbnail, THUMBNAIL_PATH);
 
   const manifestText: string = fs.readTextSync(paths.manifest);
@@ -247,7 +243,8 @@ function verifyBundle(paths: ReviewBundlePaths): void {
     manifest.reviewJsonPath !== 'review.json' ||
     !Array.isArray(manifest.exportedImages) ||
     manifest.exportedImages.length === 0 ||
-    manifest.exportedImages[0].path !== REVIEW_CARD_IMAGE_PATH ||
+    manifest.exportedImages[0].path !== THUMBNAIL_PATH ||
+    manifest.thumbnailPath !== THUMBNAIL_PATH ||
     !manifest.originalPhoto ||
     manifest.originalPhoto.included !== false) {
     throw new Error('manifest.json 字段不完整');
@@ -260,7 +257,6 @@ function buildUploadFiles(paths: ReviewBundlePaths): Array<HomeStorageUploadFile
   return [
     { localPath: paths.manifest, remoteRelativePath: 'manifest.json' },
     { localPath: paths.reviewJson, remoteRelativePath: 'review.json' },
-    { localPath: paths.reviewCardImage, remoteRelativePath: REVIEW_CARD_IMAGE_PATH },
     { localPath: paths.thumbnail, remoteRelativePath: THUMBNAIL_PATH }
   ];
 }
@@ -305,7 +301,6 @@ export class ReviewBundleExportService {
       console.info(`[ReviewBundleExport] review_json_written path=${paths.reviewJson} bytes=${fileSize(paths.reviewJson)}`);
       const snapshotResult: ReviewCardBundleSnapshotResult = await ReviewCardExportService.exportBundleSnapshot(
         componentId,
-        paths.reviewCardImage,
         paths.thumbnail,
         onSnapshotReady
       );
@@ -321,8 +316,7 @@ export class ReviewBundleExportService {
           errorType: HomeStorageErrorType.UPLOAD_FAILED
         };
       }
-      console.info(`[ReviewBundleExport] review_card_written path=${paths.reviewCardImage} bytes=${fileSize(paths.reviewCardImage)}`);
-      console.info(`[ReviewBundleExport] thumbnail_written path=${paths.thumbnail} bytes=${fileSize(paths.thumbnail)}`);
+      console.info(`[ReviewBundleExport] review_jpg_written path=${paths.thumbnail} bytes=${fileSize(paths.thumbnail)}`);
 
       writeTextFile(paths.manifest, buildManifest(document, reviewerText, bundleId, dateParts, exportWidth, exportHeight));
       console.info(`[ReviewBundleExport] manifest_written path=${paths.manifest} bytes=${fileSize(paths.manifest)}`);

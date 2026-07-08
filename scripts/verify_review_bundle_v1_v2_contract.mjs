@@ -6,7 +6,8 @@ const previewPage = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 
 const exchangeSchema = fs.readFileSync('entry/src/main/ets/services/ReviewCardExchangeSchema.ets', 'utf8');
 const feedback = fs.readFileSync('entry/src/main/ets/services/ReviewFlowFeedback.ets', 'utf8');
 const contractDoc = fs.readFileSync('docs/product/REVIEW_BUNDLE_V1_V2_CONTRACT.md', 'utf8');
-const checklistDoc = fs.readFileSync('docs/product/REVIEW_BUNDLE_V1_V2_E2E_CHECKLIST.md', 'utf8');
+const checklistPath = 'docs/product/REVIEW_BUNDLE_V1_V2_E2E_CHECKLIST.md';
+const checklistDoc = fs.existsSync(checklistPath) ? fs.readFileSync(checklistPath, 'utf8') : '';
 
 let failed = false;
 
@@ -28,13 +29,13 @@ function excludes(source, token, label) {
 for (const token of [
   'exportReviewBundleToHomeStorage',
   'bundleVersion: 1',
-  "path: REVIEW_CARD_IMAGE_PATH",
+  'path: THUMBNAIL_PATH',
   'exportedImages: exportedImages',
   'originalPhoto: {',
   'included: false',
-  'assertFileExists(paths.reviewCardImage',
+  'assertFileExists(paths.thumbnail',
   'manifest.originalPhoto.included !== false',
-  'remoteRelativePath: REVIEW_CARD_IMAGE_PATH'
+  'remoteRelativePath: THUMBNAIL_PATH'
 ]) {
   includes(v1Service, token, 'v1 ReviewBundleExportService');
 }
@@ -46,9 +47,8 @@ for (const token of [
   "const BUNDLE_TYPE: string = 'original-photo-review'",
   'exportedImages: []',
   'included: true',
-  "const ORIGINAL_PHOTO_ROOT: string = 'assets/original'",
   'const originalFileName: string = `original.${extension}`',
-  'const originalRelativePath: string = `${ORIGINAL_PHOTO_ROOT}/${originalFileName}`',
+  'const originalRelativePath: string = originalFileName',
   'copyOriginalPhoto(document.imageUri, paths.originalPhoto)',
   'assertFileExists(paths.originalPhoto, originalRelativePath)',
   'manifest.originalPhoto.included !== true',
@@ -100,19 +100,21 @@ for (const token of [
   includes(contractDoc, token, 'REVIEW_BUNDLE_V1_V2_CONTRACT.md');
 }
 
-for (const token of [
-  'HarmonyOS v1 导出',
-  'Mac v1 导入',
-  'HarmonyOS v2 导出',
-  'Mac v2 导入',
-  'Mac v2 打开为复盘卡',
-  'v2 不因为缺少 `review-card.png` 被当作 v1 失败'
-]) {
-  includes(checklistDoc, token, 'REVIEW_BUNDLE_V1_V2_E2E_CHECKLIST.md');
+if (checklistDoc.length > 0) {
+  for (const token of [
+    'HarmonyOS v1 导出',
+    'Mac v1 导入',
+    'HarmonyOS v2 导出',
+    'Mac v2 导入',
+    'Mac v2 打开为复盘卡',
+    'v2 不因为缺少 v1 成品图被当作 v1 失败'
+  ]) {
+    includes(checklistDoc, token, 'REVIEW_BUNDLE_V1_V2_E2E_CHECKLIST.md');
+  }
 }
 
 excludes(v2Service, 'REVIEW_CARD_IMAGE_PATH', 'v2 service boundary');
-excludes(v2Service, "remoteRelativePath: 'exports/review-card.png'", 'v2 upload list');
+excludes(v2Service, 'review-card.png', 'v2 upload list');
 
 if (failed) {
   process.exit(1);

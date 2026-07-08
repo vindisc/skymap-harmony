@@ -21,7 +21,7 @@ const requiredBundleTokens = [
   'exportReviewBundleToHomeStorage',
   'bundleVersion: 1',
   "reviewJsonPath: 'review.json'",
-  "path: REVIEW_CARD_IMAGE_PATH",
+  'path: THUMBNAIL_PATH',
   'originalPhoto: {',
   'included: false',
   'review: {',
@@ -30,7 +30,6 @@ const requiredBundleTokens = [
   'const remoteDirectory: string = bundleDirectoryName;',
   "remoteRelativePath: 'manifest.json'",
   "remoteRelativePath: 'review.json'",
-  'remoteRelativePath: REVIEW_CARD_IMAGE_PATH',
   'remoteRelativePath: THUMBNAIL_PATH'
 ];
 
@@ -69,9 +68,12 @@ if (homeStorageSource.includes('readLocalFileBytes(localPath)')) {
 
 requireIncludes(exportServiceSource, 'export interface ReviewCardBundleSnapshotResult', 'ReviewCardExportService');
 requireIncludes(exportServiceSource, 'static async exportBundleSnapshot(', 'ReviewCardExportService');
-requireIncludes(exportServiceSource, "format: BUNDLE_REVIEW_CARD_MIME_TYPE", 'ReviewCardExportService');
 requireIncludes(exportServiceSource, "format: BUNDLE_THUMBNAIL_MIME_TYPE", 'ReviewCardExportService');
 requireIncludes(exportServiceSource, 'await packer.release();', 'ReviewCardExportService');
+if (exportServiceSource.includes('image/png') || exportServiceSource.includes('BUNDLE_REVIEW_CARD_MIME_TYPE')) {
+  failed = true;
+  console.error('ReviewCardExportService must not generate PNG for review bundle export.');
+}
 
 requireIncludes(previewPageSource, 'ReviewBundleExportService.exportReviewBundleToHomeStorage(', 'PreviewPage');
 requireIncludes(previewPageSource, "this.ExportSheetAction(this.exportState === ExportState.BUNDLE ? '导出中…' : '导出复盘包'", 'PreviewPage');

@@ -38,11 +38,15 @@ for (const token of requiredProjectServiceTokens) {
 
 const requiredStatsPageTokens = [
   "@Prop @Watch('refreshStatsData') refreshToken",
-  'ReviewCardHistoryService.load(this.getAbilityContext())',
-  'ReviewProjectService.buildStatsFeedback(items)',
-  "AppPageHeader({\n          title: '统计'",
-  'Scroll() {\n        Column({ space: AppMetrics.cardGap }) {',
-  'top: STATS_CONTENT_TOP_GAP',
+  'LearningProgressService.loadWithReviewItems(context)',
+  'ReviewProjectService.buildStatsFeedback(progressResult.reviewItems)',
+  "AppPageHeader({\n            title: '统计'",
+  'Scroll() {\n      Column({ space: AppMetrics.cardGap }) {',
+  'const STATS_PAGE_TOP_PADDING: number = AppMetrics.space20;',
+  'top: STATS_PAGE_TOP_PADDING',
+  ".height('100%')\n      .justifyContent(FlexAlign.Start)",
+  'LearningOverviewCard()',
+  "Text('学习进度')",
   '还没有复盘数据',
   '完成第一张照片复盘后，这里会显示你的判断变化。',
   '最近 30 天',
@@ -50,7 +54,6 @@ const requiredStatsPageTokens = [
   '判断分布',
   '最近卡点',
   '暂时还没有记录卡点。',
-  '最近复盘',
   'Stack({ alignContent: Alignment.Start })',
   "import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';",
   'this.OverviewMetric(',
@@ -59,10 +62,7 @@ const requiredStatsPageTokens = [
   '.shadow(ElevationTokens.subtle)',
   'resolveDistributionProgressWidth',
   'Math.max(item.rate, 4)',
-  '.animation({ duration: MotionTokens.durationStandard, curve: MotionTokens.curveDecelerate })',
-  'resolveRecentReviewOpacity',
-  'STATS_RECENT_REVIEW_FADE_WINDOW',
-  '.opacity(this.resolveRecentReviewOpacity(item.updatedAt))'
+  '.animation({ duration: MotionTokens.durationStandard, curve: MotionTokens.curveDecelerate })'
 ];
 
 for (const token of requiredStatsPageTokens) {

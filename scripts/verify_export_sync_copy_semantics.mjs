@@ -71,9 +71,9 @@ for (const [label, source] of ordinaryCopySources) {
   assertNotIncludes(source, '双向同步', label);
 }
 
-assertIncludes(homeStoragePageSource, "'家庭存储地址或 IP'", 'HomeStoragePage');
+assertIncludes(homeStoragePageSource, "'家庭存储地址'", 'HomeStoragePage');
 assertIncludes(homeStoragePageSource, "'连接端口'", 'HomeStoragePage');
-assertIncludes(homeStorageServiceSource, "return '请先填写家庭存储地址或 IP';", 'HomeStorageService');
+assertIncludes(homeStorageServiceSource, "return '请先填写家庭存储地址';", 'HomeStorageService');
 assertIncludes(homeStorageServiceSource, "return '连接端口需要在 1-65535 之间';", 'HomeStorageService');
 assertIncludes(homeStorageServiceSource, 'normalizeHomeStorageErrorMessage', 'HomeStorageService');
 

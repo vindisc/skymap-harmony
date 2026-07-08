@@ -626,7 +626,7 @@ export class HomeStorageService {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
     const port: number = parsePort(normalized.smbPort);
     if (normalized.smbHost.length === 0) {
-      return '请先填写家庭存储地址或 IP';
+      return '请先填写家庭存储地址';
     }
     if (port <= 0 || port > 65535) {
       return '连接端口需要在 1-65535 之间';

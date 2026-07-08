@@ -19,7 +19,7 @@ const requiredMarkers = [
   "return '请先填写目标路径';",
   "return '请先填写用户名';",
   "return '请先填写密码';",
-  "return '请先填写家庭存储地址或 IP';",
+  "return '请先填写家庭存储地址';",
   "return '连接端口需要在 1-65535 之间';"
 ];
 
@@ -106,7 +106,7 @@ function validateSettings(settings) {
   const normalized = normalizeSettings(settings);
   const port = parsePort(normalized.smbPort);
   if (normalized.smbHost.length === 0) {
-    return '请先填写家庭存储地址或 IP';
+    return '请先填写家庭存储地址';
   }
   if (port <= 0 || port > 65535) {
     return '连接端口需要在 1-65535 之间';
@@ -166,7 +166,7 @@ expectEqual(getConfigurationStatus(emptySettings), HomeStorageConfigStatus.EMPTY
 expectEqual(getConfigurationStatus(partialSettings), HomeStorageConfigStatus.PARTIAL, 'Partial settings should be 待完善');
 expectEqual(getConfigurationStatus(completeSettings), HomeStorageConfigStatus.COMPLETE, 'Complete settings should be 已配置');
 
-expectEqual(validateSettings(emptySettings), '请先填写家庭存储地址或 IP', 'Empty validation should start from host');
+expectEqual(validateSettings(emptySettings), '请先填写家庭存储地址', 'Empty validation should start from host');
 expectEqual(validateSettings({
   ...completeSettings,
   remoteDirectory: ''

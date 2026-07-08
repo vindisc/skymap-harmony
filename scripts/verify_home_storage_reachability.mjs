@@ -74,7 +74,7 @@ assertIncludes(syncCenterSource, 'SettingsLinkRow({', 'SyncCenterPage');
 assertIncludes(homeStoragePageSource, "title: '家庭存储'", 'HomeStoragePage');
 assertIncludes(homeStoragePageSource, 'CenterFeedbackOverlay()', 'HomeStoragePage');
 assertNotIncludes(homeStoragePageSource, 'StatusSummary()', 'HomeStoragePage');
-assertIncludes(homeStoragePageSource, "'家庭存储地址或 IP'", 'HomeStoragePage');
+assertIncludes(homeStoragePageSource, "'家庭存储地址'", 'HomeStoragePage');
 assertIncludes(reviewSettingsSource, "Text('连接与凭据')", 'ReviewSettingsPage');
 
 const ordinaryUserCopy = [

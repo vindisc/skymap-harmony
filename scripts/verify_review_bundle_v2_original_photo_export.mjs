@@ -34,9 +34,8 @@ for (const token of [
   "const BUNDLE_TYPE: string = 'original-photo-review'",
   'exportedImages: []',
   'included: true',
-  "const ORIGINAL_PHOTO_ROOT: string = 'assets/original'",
   'const originalFileName: string = `original.${extension}`',
-  'const originalRelativePath: string = `${ORIGINAL_PHOTO_ROOT}/${originalFileName}`',
+  'const originalRelativePath: string = originalFileName',
   'copyOriginalPhoto(document.imageUri, paths.originalPhoto)',
   'fs.openSync(sourceUri, fs.OpenMode.READ_ONLY)',
   'fs.copyFileSync(sourceFile.fd, targetFile.fd)',
@@ -103,7 +102,6 @@ for (const token of [
   "{ localPath: paths.manifest, remoteRelativePath: 'manifest.json' }",
   "{ localPath: paths.reviewJson, remoteRelativePath: 'review.json' }",
   '{ localPath: paths.originalPhoto, remoteRelativePath: originalRelativePath }',
-  "{ localPath: paths.assetsReadme, remoteRelativePath: ASSETS_README_PATH }"
 ]) {
   assertIncludes(v2ServiceSource, token, 'v2 upload file list');
 }
@@ -112,7 +110,7 @@ assertNotIncludes(v2ServiceSource, 'ReviewCardExportService', 'v2 service');
 assertNotIncludes(v2ServiceSource, 'REVIEW_CARD_IMAGE_PATH', 'v2 service');
 assertNotIncludes(v2ServiceSource, "thumbnailPath: 'thumbnails/thumb.jpg'", 'v2 manifest must not declare missing thumbnail');
 assertNotIncludes(v2ServiceSource, 'thumbnailPath: THUMBNAIL_PATH', 'v2 manifest must not declare missing thumbnail');
-assertNotIncludes(v2ServiceSource, "remoteRelativePath: 'exports/review-card.png'", 'v2 upload list');
+assertNotIncludes(v2ServiceSource, 'review-card.png', 'v2 upload list');
 
 const sourceCheckIndex = v2ServiceSource.indexOf('if (!hasOriginalSource)');
 const copyStartIndex = v2ServiceSource.indexOf('original_copy_start');
@@ -170,7 +168,7 @@ for (const forbidden of ['SMB', 'manifest', 'RDB', 'Preferences', 'URI', 'raw JS
 assertIncludes(v1ServiceSource, 'exportReviewBundleToHomeStorage', 'ReviewBundleExportService v1 remains');
 assertIncludes(v1ServiceSource, 'bundleVersion: 1', 'ReviewBundleExportService v1 remains');
 assertIncludes(v1ServiceSource, 'included: false', 'ReviewBundleExportService v1 remains');
-assertIncludes(v1ServiceSource, 'remoteRelativePath: REVIEW_CARD_IMAGE_PATH', 'ReviewBundleExportService v1 remains');
+assertIncludes(v1ServiceSource, 'remoteRelativePath: THUMBNAIL_PATH', 'ReviewBundleExportService v1 remains');
 assertIncludes(smbClientSource, 'SMB2_WRITE_CHUNK_SIZE', 'Smb2Client chunked upload');
 assertIncludes(smbClientSource, 'private async writeFileChunk(', 'Smb2Client chunked upload');
 assert(!exchangeSchemaSource.includes('bundleId'), 'Review JSON schema must not gain bundleId.');

@@ -16,7 +16,6 @@ export interface ReviewCardExportResult {
 
 export interface ReviewCardBundleSnapshotResult {
   success: boolean;
-  reviewCardPath: string;
   thumbnailPath: string;
   message: string;
 }
@@ -26,7 +25,6 @@ const EXPORT_DIR_NAME: string = 'review_exports';
 const EXPORT_TITLE_PREFIX: string = 'skymap-review-card';
 const EXPORT_EXTENSION: string = 'jpg';
 const EXPORT_MIME_TYPE: string = 'image/jpeg';
-const BUNDLE_REVIEW_CARD_MIME_TYPE: string = 'image/png';
 const BUNDLE_THUMBNAIL_MIME_TYPE: string = 'image/jpeg';
 
 function errorMessage(error: Error): string {
@@ -207,14 +205,12 @@ export class ReviewCardExportService {
 
   static async exportBundleSnapshot(
     componentId: string,
-    reviewCardPath: string,
     thumbnailPath: string,
     onSnapshotReady: () => void = () => {}
   ): Promise<ReviewCardBundleSnapshotResult> {
     if (ReviewCardExportService.isExporting) {
       return {
         success: false,
-        reviewCardPath: '',
         thumbnailPath: '',
         message: '正在导出，请稍候'
       };
@@ -226,25 +222,12 @@ export class ReviewCardExportService {
     try {
       pixelMap = await componentSnapshot.get(componentId);
       packer = image.createImagePacker();
-      const reviewCardData = await packer.packToData(pixelMap, {
-        format: BUNDLE_REVIEW_CARD_MIME_TYPE,
-        quality: 100
+      const thumbnailData = await packer.packToData(pixelMap, {
+        format: BUNDLE_THUMBNAIL_MIME_TYPE,
+        quality: 72
       });
-      assertImageBytes('review-card.png', reviewCardData);
-
-      writeImageToSandbox(reviewCardPath, reviewCardData);
-      try {
-        const thumbnailData = await packer.packToData(pixelMap, {
-          format: BUNDLE_THUMBNAIL_MIME_TYPE,
-          quality: 72
-        });
-        assertImageBytes('thumb.jpg', thumbnailData);
-        writeImageToSandbox(thumbnailPath, thumbnailData);
-      } catch (thumbnailError) {
-        const thumbnailErrorMessage: string = thumbnailError instanceof Error ? errorMessage(thumbnailError) : `${thumbnailError}`;
-        console.warn(`[ReviewBundleExport] thumbnail_jpeg_failed fallback=review-card path=${thumbnailPath} error=${thumbnailErrorMessage}`);
-        writeImageToSandbox(thumbnailPath, reviewCardData);
-      }
+      assertImageBytes('thumb.jpg', thumbnailData);
+      writeImageToSandbox(thumbnailPath, thumbnailData);
       try {
         onSnapshotReady();
       } catch (error) {
@@ -252,14 +235,12 @@ export class ReviewCardExportService {
 
       return {
         success: true,
-        reviewCardPath: reviewCardPath,
         thumbnailPath: thumbnailPath,
-        message: '已生成复盘包图片'
+        message: '已生成复盘包 JPG 图片'
       };
     } catch (error) {
       return {
         success: false,
-        reviewCardPath: '',
         thumbnailPath: '',
         message: `复盘包图片生成失败：${error instanceof Error ? errorMessage(error) : `${error}`}`
       };

@@ -27,6 +27,7 @@ const STATS_CARD_MIN_HEIGHT: number = 104;
 const STATS_PROGRESS_HEIGHT: number = 10;
 const STATS_PROGRESS_RADIUS: number = 5;
 const STATS_TITLE_CONTENT_GAP: number = AppMetrics.space10;
+const STATS_PAGE_TOP_PADDING: number = AppMetrics.space20;
 
 @Component
 export struct StatsPage {
@@ -606,10 +607,11 @@ export struct StatsPage {
       .padding({
         left: AppMetrics.pagePadding,
         right: AppMetrics.pagePadding,
-        top: AppMetrics.pageTopPadding,
+        top: STATS_PAGE_TOP_PADDING,
         bottom: AppMetrics.tabContentBottomPadding
       })
       .width('100%')
+      .height('100%')
       .justifyContent(FlexAlign.Start)
     }
       .width('100%')

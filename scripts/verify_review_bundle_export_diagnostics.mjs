@@ -30,9 +30,7 @@ for (const token of [
   '[ReviewBundleExport] start reviewId=',
   'local_directories_ready',
   'review_json_written',
-  'review_card_written',
-  'thumbnail_written',
-  'assets_readme_written',
+  'review_jpg_written',
   'manifest_written',
   'local_bundle_verified',
   'upload_finished',
@@ -71,15 +69,15 @@ for (const token of [
 }
 
 assertIncludes(exportServiceSource, 'assertImageBytes', 'ReviewCardExportService');
-assertIncludes(exportServiceSource, 'thumbnail_jpeg_failed fallback=review-card', 'ReviewCardExportService');
-assertIncludes(exportServiceSource, 'writeImageToSandbox(thumbnailPath, reviewCardData);', 'ReviewCardExportService');
+assertIncludes(exportServiceSource, "format: BUNDLE_THUMBNAIL_MIME_TYPE", 'ReviewCardExportService');
+assertIncludes(exportServiceSource, 'writeImageToSandbox(thumbnailPath, thumbnailData);', 'ReviewCardExportService');
+assertNotIncludes(exportServiceSource, 'image/png', 'ReviewCardExportService');
+assertNotIncludes(exportServiceSource, 'BUNDLE_REVIEW_CARD_MIME_TYPE', 'ReviewCardExportService');
 
 for (const relativePath of [
   "remoteRelativePath: 'manifest.json'",
   "remoteRelativePath: 'review.json'",
-  'remoteRelativePath: REVIEW_CARD_IMAGE_PATH',
-  'remoteRelativePath: THUMBNAIL_PATH',
-  'remoteRelativePath: ASSETS_README_PATH'
+  'remoteRelativePath: THUMBNAIL_PATH'
 ]) {
   assertIncludes(bundleServiceSource, relativePath, 'Review bundle upload file list');
 }
