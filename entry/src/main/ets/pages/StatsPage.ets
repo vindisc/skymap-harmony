@@ -27,6 +27,7 @@ const STATS_CARD_MIN_HEIGHT: number = 104;
 const STATS_PROGRESS_HEIGHT: number = 10;
 const STATS_PROGRESS_RADIUS: number = 5;
 const STATS_CONTENT_TOP_GAP: number = AppMetrics.space10;
+const STATS_HERO_HEIGHT: number = 78;
 
 @Component
 export struct StatsPage {
@@ -519,6 +520,63 @@ export struct StatsPage {
   }
 
   @Builder
+  StatsHeroMetric(label: string, value: string) {
+    Column({ space: 2 }) {
+      Text(value)
+        .fontSize(AppTypography.cardTitle)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.onPrimary)
+        .lineHeight(AppTypography.cardTitleLineHeight)
+        .maxLines(1)
+
+      Text(label)
+        .fontSize(AppTypography.meta)
+        .fontColor(AppColors.onPrimaryMuted)
+        .lineHeight(AppTypography.metaLineHeight)
+        .maxLines(1)
+    }
+    .alignItems(HorizontalAlign.Start)
+    .layoutWeight(1)
+  }
+
+  @Builder
+  StatsHeroPanel() {
+    Row() {
+      Column({ space: AppMetrics.space8 }) {
+        Text('复盘节奏')
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.onPrimary)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .maxLines(1)
+
+        Row({ space: AppMetrics.space16 }) {
+          this.StatsHeroMetric('总复盘', `${this.feedback.totalCount}`)
+          this.StatsHeroMetric('最近', this.resolveLatestReviewDate())
+          this.StatsHeroMetric('完成率', this.resolveLearningCompletionRate())
+        }
+        .width('100%')
+      }
+      .layoutWeight(1)
+    }
+    .alignItems(VerticalAlign.Center)
+    .width('100%')
+    .height(STATS_HERO_HEIGHT)
+    .padding({ left: AppMetrics.cardPadding, right: AppMetrics.cardPadding })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.primary)
+    .linearGradient({
+      angle: 135,
+      colors: [
+        [AppColors.primary, 0],
+        [AppColors.primaryPressed, 1]
+      ]
+    })
+    .shadow(ElevationTokens.medium)
+    .margin({ top: AppMetrics.space12 })
+  }
+
+  @Builder
   StatsSkeletonCard(height: number, firstLineWidth: string, secondLineWidth: string) {
     Column({ space: AppMetrics.space12 }) {
       SkeletonBlock({ blockWidth: firstLineWidth, blockHeight: 18, blockRadius: 9 })
@@ -568,6 +626,8 @@ export struct StatsPage {
         AppPageHeader({
           title: '统计'
         })
+
+        this.StatsHeroPanel()
       }
       .padding({
         left: AppMetrics.pagePadding,
