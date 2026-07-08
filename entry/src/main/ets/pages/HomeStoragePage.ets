@@ -22,7 +22,7 @@ import { ToastService } from '../services/ToastService';
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
-const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = 42;
+const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = AppMetrics.systemNavigationBarHeight + AppMetrics.space8;
 
 @Entry
 @Component

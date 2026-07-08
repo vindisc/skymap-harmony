@@ -552,7 +552,7 @@ export struct HomePage {
       left: 0,
       right: 0,
       top: AppMetrics.pageTopPadding,
-      bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding
+      bottom: AppMetrics.tabContentBottomPadding
     })
     .alignItems(HorizontalAlign.Start)
     .backgroundColor(AppColors.pageBackground)

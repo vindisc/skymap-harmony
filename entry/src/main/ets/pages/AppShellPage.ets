@@ -1,5 +1,5 @@
 import common from '@ohos.app.ability.common';
-import { AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
+import { AppBottomSafeAreaFill, AppColors, AppMetrics, AppTypography } from '../components/AppDesign';
 import { HomePage } from './HomePage';
 import { ProjectDetailPage } from './ProjectDetailPage';
 import { StatsPage } from './StatsPage';
@@ -276,6 +276,8 @@ struct AppShellPage {
           bottom: 4
         })
         .width('100%')
+
+        AppBottomSafeAreaFill({ fillColor: AppColors.tabBarBackground })
       }
       .width('100%')
       .height(AppMetrics.tabBarShellHeight)

@@ -619,7 +619,7 @@ export struct StatsPage {
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
           top: STATS_CONTENT_TOP_GAP,
-          bottom: AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding
+          bottom: AppMetrics.tabContentBottomPadding
         })
         .width('100%')
       }

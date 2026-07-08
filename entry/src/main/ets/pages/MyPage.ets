@@ -30,7 +30,7 @@ import { DialogService } from '../services/DialogService';
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
 const APP_BUILD_TEXT: string = 'Harmony Beta V1';
 const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;
-const MY_PAGE_BOTTOM_PADDING: number = AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space16;
+const MY_PAGE_BOTTOM_PADDING: number = AppMetrics.tabContentBottomPadding + AppMetrics.space16;
 
 @Component
 export struct MyPage {

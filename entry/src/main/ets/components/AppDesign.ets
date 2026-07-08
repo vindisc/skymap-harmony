@@ -18,6 +18,11 @@ import {
 } from '../theme/DesignTokens';
 import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 
+const PAGE_BOTTOM_PADDING: number = 20;
+const SYSTEM_NAVIGATION_BAR_HEIGHT: number = 34;
+const FLOATING_DOCK_BOTTOM_PADDING: number = 20 + SYSTEM_NAVIGATION_BAR_HEIGHT;
+const TAB_BAR_SAFE_AREA_HEIGHT: number = SYSTEM_NAVIGATION_BAR_HEIGHT;
+
 export class AppColors {
   static readonly pageBackground: string = '#F5F1E9';
   static readonly tabBarBackground: string = '#F7F3EC';
@@ -88,9 +93,10 @@ export class AppMetrics {
   static readonly space32: number = SpacingTokens.xxl;
   static readonly pagePadding: number = 16;
   static readonly pageTopPadding: number = 52;
-  static readonly pageBottomPadding: number = 20;
+  static readonly pageBottomPadding: number = PAGE_BOTTOM_PADDING;
+  static readonly systemNavigationBarHeight: number = SYSTEM_NAVIGATION_BAR_HEIGHT;
   static readonly floatingDockPadding: number = 8;
-  static readonly floatingDockBottomPadding: number = 20;
+  static readonly floatingDockBottomPadding: number = FLOATING_DOCK_BOTTOM_PADDING;
   static readonly floatingDockTopMaskHeight: number = 6;
   static readonly floatingDockScrollClearance: number = 10;
   static readonly sectionGap: number = 20;
@@ -112,7 +118,7 @@ export class AppMetrics {
   static readonly comfortableBadgePaddingVertical: number = 6;
   static readonly controlHeight: number = LayoutTokens.PrimaryButtonHeight;
   static readonly floatingDockPanelHeight: number = LayoutTokens.PrimaryButtonHeight + 16;
-  static readonly floatingDockReservedHeight: number = 74;
+  static readonly floatingDockReservedHeight: number = LayoutTokens.PrimaryButtonHeight + 16 + FLOATING_DOCK_BOTTOM_PADDING;
   static readonly searchHeight: number = LayoutTokens.SearchHeight;
   static readonly compactControlHeight: number = LayoutTokens.SecondaryButtonHeight;
   static readonly chipHeight: number = LayoutTokens.ChipHeight;
@@ -120,7 +126,9 @@ export class AppMetrics {
   static readonly toolbarButtonHeight: number = 44;
   static readonly toolbarButtonWidth: number = 80;
   static readonly tabBarHeight: number = LayoutTokens.TabBarHeight;
-  static readonly tabBarShellHeight: number = LayoutTokens.TabBarHeight + 20;
+  static readonly tabBarSafeAreaHeight: number = TAB_BAR_SAFE_AREA_HEIGHT;
+  static readonly tabBarShellHeight: number = LayoutTokens.TabBarHeight + 20 + TAB_BAR_SAFE_AREA_HEIGHT;
+  static readonly tabContentBottomPadding: number = LayoutTokens.TabBarHeight + 20 + TAB_BAR_SAFE_AREA_HEIGHT + PAGE_BOTTOM_PADDING;
   static readonly tabBarItemHeight: number = LayoutTokens.TabBarItemHeight;
   static readonly tabIconSize: number = TypographyTokens.TabIcon;
   static readonly listThumbnailSize: number = LayoutTokens.ListThumbnailSize;
@@ -186,11 +194,13 @@ export class AppTypography {
 
 @Component
 export struct AppBottomSafeAreaFill {
+  @Prop fillColor: string = AppColors.pageBackground;
+
   build() {
     Column()
       .width('100%')
       .height(1)
-      .backgroundColor(AppColors.pageBackground)
+      .backgroundColor(this.fillColor)
       .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
       .hitTestBehavior(HitTestMode.None)
   }

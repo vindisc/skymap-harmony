@@ -46,7 +46,7 @@ const DELETE_SWIPE_ACTION_WIDTH: number = 92;
 const DELETE_SWIPE_BUTTON_WIDTH: number = 68;
 const LIBRARY_HEADER_CONTROL_GAP: number = AppMetrics.space10;
 const LIBRARY_LIST_TOP_GAP: number = AppMetrics.space8;
-const LIBRARY_BOTTOM_CLEARANCE: number = AppMetrics.tabBarHeight + AppMetrics.pageBottomPadding + AppMetrics.space8;
+const LIBRARY_BOTTOM_CLEARANCE: number = AppMetrics.tabContentBottomPadding + AppMetrics.space8;
 const REVIEW_LIBRARY_PAGE_SIZE: number = 5;
 const PENDING_REVIEW_FILTER: string = 'pending';
 
@@ -711,7 +711,7 @@ export struct ProjectDetailPage {
         Column() {
           this.ReviewListSkeleton()
         }
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.tabContentBottomPadding })
         .width('100%')
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
@@ -722,7 +722,7 @@ export struct ProjectDetailPage {
             message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
           })
         }
-        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.space32 })
+        .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space24, bottom: AppMetrics.tabContentBottomPadding })
         .width('100%')
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)

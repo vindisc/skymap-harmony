@@ -36,7 +36,7 @@ import { DialogService } from '../services/DialogService';
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
 const EDITOR_VIEWPORT_FALLBACK_HEIGHT: number = 720;
-const EDITOR_KEYBOARD_BOTTOM_PADDING: number = 42;
+const EDITOR_KEYBOARD_BOTTOM_PADDING: number = AppMetrics.systemNavigationBarHeight + AppMetrics.space8;
 const EDITOR_FIELD_SAFE_TOP_GAP: number = 6;
 const EDITOR_FIELD_SAFE_BOTTOM_GAP: number = 34;
 const EDITOR_KEYBOARD_VISIBLE_RESERVE: number = 54;
