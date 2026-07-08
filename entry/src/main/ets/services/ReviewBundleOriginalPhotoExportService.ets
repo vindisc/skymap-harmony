@@ -28,9 +28,7 @@ interface ReviewBundleOriginalPhotoPaths {
   root: string;
   manifest: string;
   reviewJson: string;
-  originalDirectory: string;
   originalPhoto: string;
-  assetsReadme: string;
 }
 
 interface OriginalPhotoCopyResult {
@@ -89,8 +87,6 @@ const SOURCE_APP: string = 'skymap-photoreview';
 const SOURCE_APP_VERSION: string = '0.1.0';
 const PLATFORM: string = 'HarmonyOS';
 const BUNDLE_TYPE: string = 'original-photo-review';
-const ORIGINAL_PHOTO_ROOT: string = 'assets/original';
-const ASSETS_README_PATH: string = 'assets/README.md';
 const ORIGINAL_READ_FAILED_TEXT: string = '原始照片无法读取，请重新导入。';
 const ORIGINAL_COPY_FAILED_TEXT: string = '原始照片保存失败，请重试。';
 const ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT: string = '含原图复盘包导出失败，请重试。';
@@ -290,19 +286,8 @@ function buildLocalPaths(
     root: root,
     manifest: `${root}/manifest.json`,
     reviewJson: `${root}/review.json`,
-    originalDirectory: `${root}/${ORIGINAL_PHOTO_ROOT}`,
-    originalPhoto: `${root}/${ORIGINAL_PHOTO_ROOT}/${originalFileName}`,
-    assetsReadme: `${root}/${ASSETS_README_PATH}`
+    originalPhoto: `${root}/${originalFileName}`
   };
-}
-
-function buildAssetsReadme(): string {
-  return [
-    '# assets',
-    '',
-    'review bundle v2 包含原始照片副本。',
-    '原图位于 assets/original/，复盘内容仍由 review.json 表达。'
-  ].join('\n');
 }
 
 function createCopySuccessResult(): OriginalPhotoCopyResult {
@@ -430,7 +415,6 @@ function verifyBundle(paths: ReviewBundleOriginalPhotoPaths, originalRelativePat
   assertFileExists(paths.manifest, 'manifest.json');
   assertFileExists(paths.reviewJson, 'review.json');
   assertFileExists(paths.originalPhoto, originalRelativePath);
-  assertFileExists(paths.assetsReadme, 'assets/README.md');
 
   const manifestText: string = fs.readTextSync(paths.manifest);
   const manifest: ReviewBundleManifestV2 = JSON.parse(manifestText) as ReviewBundleManifestV2;
@@ -465,8 +449,7 @@ function buildUploadFiles(
   return [
     { localPath: paths.manifest, remoteRelativePath: 'manifest.json' },
     { localPath: paths.reviewJson, remoteRelativePath: 'review.json' },
-    { localPath: paths.originalPhoto, remoteRelativePath: originalRelativePath },
-    { localPath: paths.assetsReadme, remoteRelativePath: ASSETS_README_PATH }
+    { localPath: paths.originalPhoto, remoteRelativePath: originalRelativePath }
   ];
 }
 
@@ -493,9 +476,9 @@ export class ReviewBundleOriginalPhotoExportService {
     const bundleDirectoryName: string = sanitizeBundleName(`review_${dateParts.year}${dateParts.month}${dateParts.day}_${dateParts.hour}${dateParts.minute}${dateParts.second}_${safeHash(bundleId)}`);
     const extension: string = resolveSafeOriginalExtension(document);
     const originalFileName: string = `original.${extension}`;
-    const originalRelativePath: string = `${ORIGINAL_PHOTO_ROOT}/${originalFileName}`;
+    const originalRelativePath: string = originalFileName;
     const paths: ReviewBundleOriginalPhotoPaths = buildLocalPaths(context, bundleDirectoryName, originalFileName);
-    const remoteDirectory: string = `Skymap/ReviewBundles/${dateParts.year}/${dateParts.month}/${bundleDirectoryName}`;
+    const remoteDirectory: string = bundleDirectoryName;
     const reviewId: number = document.createdAt;
 
     try {
@@ -522,8 +505,6 @@ export class ReviewBundleOriginalPhotoExportService {
       }
 
       ensureDirectory(paths.root);
-      ensureDirectory(`${paths.root}/assets`);
-      ensureDirectory(paths.originalDirectory);
       console.info(`[ReviewBundleOriginalPhotoExport] local_directories_ready root=${paths.root}`);
 
       console.info(`[ReviewBundleOriginalPhotoExport] original_copy_start review_id=${reviewId} bundleId=${bundleId} target=${originalRelativePath} read_method=fs.openSync_read_only uri_scheme=${sourceUriScheme} uri_digest=${sourceUriDigest}`);
@@ -560,7 +541,6 @@ export class ReviewBundleOriginalPhotoExportService {
 
       writeTextFile(paths.reviewJson, stringifyReviewCardExchangeSchemaV1(document, reviewerText));
       console.info(`[ReviewBundleOriginalPhotoExport] review_json_write_success path=${paths.reviewJson} bytes=${fileSize(paths.reviewJson)}`);
-      writeTextFile(paths.assetsReadme, buildAssetsReadme());
       writeTextFile(paths.manifest, buildManifest(
         document,
         reviewerText,

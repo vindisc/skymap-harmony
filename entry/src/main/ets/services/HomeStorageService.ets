@@ -816,7 +816,9 @@ export class HomeStorageService {
       const subDirectory: string = parts.length > 1 ? parts.slice(0, parts.length - 1).join('/') : '';
       const fileRemoteDirectory: string = joinRemotePath(targetDirectory, subDirectory);
       console.info(`[HomeStorageService] bundle_upload_file index=${index + 1}/${files.length} relative=${entry.remoteRelativePath} directory=${fileRemoteDirectory} bytes=${fileSizeText(entry.localPath)}`);
-      const isOriginalUpload: boolean = entry.remoteRelativePath.indexOf('assets/original/') === 0;
+      const isOriginalUpload: boolean =
+        entry.remoteRelativePath.indexOf('assets/original/') === 0 ||
+          entry.remoteRelativePath.indexOf('original.') === 0;
       if (isOriginalUpload) {
         console.info(`[HomeStorageService] original_upload_start relative=${entry.remoteRelativePath} directory=${fileRemoteDirectory} bytes=${fileSizeText(entry.localPath)}`);
       }

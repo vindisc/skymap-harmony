@@ -30,7 +30,6 @@ interface ReviewBundlePaths {
   reviewJson: string;
   reviewCardImage: string;
   thumbnail: string;
-  assetsReadme: string;
 }
 
 interface ReviewBundleDateParts {
@@ -84,9 +83,8 @@ const LOCAL_BUNDLE_DIR_NAME: string = 'review_bundles';
 const SOURCE_APP: string = 'skymap-photoreview';
 const SOURCE_APP_VERSION: string = '0.1.0';
 const PLATFORM: string = 'HarmonyOS';
-const REVIEW_CARD_IMAGE_PATH: string = 'exports/review-card.png';
-const THUMBNAIL_PATH: string = 'thumbnails/thumb.jpg';
-const ASSETS_README_PATH: string = 'assets/README.md';
+const REVIEW_CARD_IMAGE_PATH: string = 'review-card.png';
+const THUMBNAIL_PATH: string = 'thumb.jpg';
 
 function pad2(value: number): string {
   return `${value}`.padStart(2, '0');
@@ -186,8 +184,7 @@ function buildLocalPaths(context: common.UIAbilityContext, bundleDirectoryName: 
     manifest: `${root}/manifest.json`,
     reviewJson: `${root}/review.json`,
     reviewCardImage: `${root}/${REVIEW_CARD_IMAGE_PATH}`,
-    thumbnail: `${root}/${THUMBNAIL_PATH}`,
-    assetsReadme: `${root}/${ASSETS_README_PATH}`
+    thumbnail: `${root}/${THUMBNAIL_PATH}`
   };
 }
 
@@ -236,21 +233,11 @@ function buildManifest(
   return JSON.stringify(manifest, null, 2);
 }
 
-function buildAssetsReadme(): string {
-  return [
-    '# assets',
-    '',
-    'review bundle v1 默认不打包原图。',
-    '本目录仅作为后续 originalPhoto.included=true 设计的占位目录。'
-  ].join('\n');
-}
-
 function verifyBundle(paths: ReviewBundlePaths): void {
   assertFileExists(paths.manifest, 'manifest.json');
   assertFileExists(paths.reviewJson, 'review.json');
-  assertFileExists(paths.reviewCardImage, 'exports/review-card.png');
-  assertFileExists(paths.thumbnail, 'thumbnails/thumb.jpg');
-  assertFileExists(paths.assetsReadme, 'assets/README.md');
+  assertFileExists(paths.reviewCardImage, REVIEW_CARD_IMAGE_PATH);
+  assertFileExists(paths.thumbnail, THUMBNAIL_PATH);
 
   const manifestText: string = fs.readTextSync(paths.manifest);
   const manifest: ReviewBundleManifestV1 = JSON.parse(manifestText) as ReviewBundleManifestV1;
@@ -274,8 +261,7 @@ function buildUploadFiles(paths: ReviewBundlePaths): Array<HomeStorageUploadFile
     { localPath: paths.manifest, remoteRelativePath: 'manifest.json' },
     { localPath: paths.reviewJson, remoteRelativePath: 'review.json' },
     { localPath: paths.reviewCardImage, remoteRelativePath: REVIEW_CARD_IMAGE_PATH },
-    { localPath: paths.thumbnail, remoteRelativePath: THUMBNAIL_PATH },
-    { localPath: paths.assetsReadme, remoteRelativePath: ASSETS_README_PATH }
+    { localPath: paths.thumbnail, remoteRelativePath: THUMBNAIL_PATH }
   ];
 }
 
@@ -294,7 +280,7 @@ export class ReviewBundleExportService {
     const bundleId: string = `review-bundle-${dateParts.year}${dateParts.month}${dateParts.day}-${dateParts.hour}${dateParts.minute}${dateParts.second}-${document.createdAt}-${safeHash(`${document.createdAt}-${document.updatedAt}-${createdAt}`)}`;
     const bundleDirectoryName: string = sanitizeBundleName(`review_${dateParts.year}${dateParts.month}${dateParts.day}_${dateParts.hour}${dateParts.minute}${dateParts.second}_${safeHash(bundleId)}`);
     const paths: ReviewBundlePaths = buildLocalPaths(context, bundleDirectoryName);
-    const remoteDirectory: string = `Skymap/ReviewBundles/${dateParts.year}/${dateParts.month}/${bundleDirectoryName}`;
+    const remoteDirectory: string = bundleDirectoryName;
 
     try {
       console.info(`[ReviewBundleExport] start reviewId=${document.createdAt} bundleId=${bundleId} local=${paths.root} remote=${remoteDirectory}`);
@@ -312,9 +298,7 @@ export class ReviewBundleExportService {
         };
       }
 
-      ensureDirectory(`${paths.root}/exports`);
-      ensureDirectory(`${paths.root}/thumbnails`);
-      ensureDirectory(`${paths.root}/assets`);
+      ensureDirectory(paths.root);
       console.info(`[ReviewBundleExport] local_directories_ready root=${paths.root}`);
 
       writeTextFile(paths.reviewJson, stringifyReviewCardExchangeSchemaV1(document, reviewerText));
@@ -340,8 +324,6 @@ export class ReviewBundleExportService {
       console.info(`[ReviewBundleExport] review_card_written path=${paths.reviewCardImage} bytes=${fileSize(paths.reviewCardImage)}`);
       console.info(`[ReviewBundleExport] thumbnail_written path=${paths.thumbnail} bytes=${fileSize(paths.thumbnail)}`);
 
-      writeTextFile(paths.assetsReadme, buildAssetsReadme());
-      console.info(`[ReviewBundleExport] assets_readme_written path=${paths.assetsReadme} bytes=${fileSize(paths.assetsReadme)}`);
       writeTextFile(paths.manifest, buildManifest(document, reviewerText, bundleId, dateParts, exportWidth, exportHeight));
       console.info(`[ReviewBundleExport] manifest_written path=${paths.manifest} bytes=${fileSize(paths.manifest)}`);
       verifyBundle(paths);
