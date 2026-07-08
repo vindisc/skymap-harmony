@@ -26,7 +26,6 @@ const STATS_LEARNING_OVERVIEW_MIN_HEIGHT: number = 132;
 const STATS_CARD_MIN_HEIGHT: number = 104;
 const STATS_PROGRESS_HEIGHT: number = 10;
 const STATS_PROGRESS_RADIUS: number = 5;
-const STATS_PAGE_TOP_PADDING: number = AppMetrics.space12;
 const STATS_TITLE_CONTENT_GAP: number = AppMetrics.space10;
 
 @Component
@@ -564,47 +563,54 @@ export struct StatsPage {
 
   build() {
     Column() {
+      Column({ space: STATS_TITLE_CONTENT_GAP }) {
+        AppPageHeader({
+          title: '统计'
+        })
+
+        this.LearningOverviewCard()
+      }
+      .padding({
+        left: AppMetrics.pagePadding,
+        right: AppMetrics.pagePadding,
+        top: AppMetrics.pageTopPadding,
+        bottom: 0
+      })
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+      .backgroundColor(AppColors.pageBackground)
+
       Scroll() {
-        Column() {
-          AppPageHeader({
-            title: '统计'
-          })
-
-          Column({ space: AppMetrics.cardGap }) {
-            this.LearningOverviewCard()
-
-            if (this.shouldShowStatsSkeleton()) {
-              this.StatsSkeleton()
-            } else if (this.statsLoadFailed) {
-              EmptyState({
-                title: '统计暂时无法刷新',
-                message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
-              })
-            } else if (this.hasStatsData()) {
-              this.OverviewCard()
-              this.Recent30DaysCard()
-              this.DistributionCard()
-              this.BlockersCard()
-            } else {
-              EmptyState({
-                title: this.hasLearningData() ? '还没有完成复盘' : '还没有复盘数据',
-                message: this.hasLearningData() ? '从待复盘照片进入编辑并保存后，这里会显示判断变化。' : '完成第一张照片复盘后，这里会显示你的判断变化。',
-                actionLabel: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '去创建第一条复盘',
-                isActionDisabled: this.isPickingPhoto,
-                onAction: () => {
-                  this.openCreateFirstReview();
-                }
-              })
-            }
+        Column({ space: AppMetrics.cardGap }) {
+          if (this.shouldShowStatsSkeleton()) {
+            this.StatsSkeleton()
+          } else if (this.statsLoadFailed) {
+            EmptyState({
+              title: '统计暂时无法刷新',
+              message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
+            })
+          } else if (this.hasStatsData()) {
+            this.OverviewCard()
+            this.Recent30DaysCard()
+            this.DistributionCard()
+            this.BlockersCard()
+          } else {
+            EmptyState({
+              title: this.hasLearningData() ? '还没有完成复盘' : '还没有复盘数据',
+              message: this.hasLearningData() ? '从待复盘照片进入编辑并保存后，这里会显示判断变化。' : '完成第一张照片复盘后，这里会显示你的判断变化。',
+              actionLabel: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '去创建第一条复盘',
+              isActionDisabled: this.isPickingPhoto,
+              onAction: () => {
+                this.openCreateFirstReview();
+              }
+            })
           }
-          .width('100%')
-          .margin({ top: STATS_TITLE_CONTENT_GAP })
         }
         .alignItems(HorizontalAlign.Start)
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: STATS_PAGE_TOP_PADDING,
+          top: AppMetrics.cardGap,
           bottom: AppMetrics.tabContentBottomPadding
         })
         .width('100%')
