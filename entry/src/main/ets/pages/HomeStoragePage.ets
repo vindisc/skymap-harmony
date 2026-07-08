@@ -19,7 +19,8 @@ import {
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
-const SETTINGS_FORM_TOP_OFFSET: number = 48;
+const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;
+const SETTINGS_FORM_TOP_OFFSET: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = AppMetrics.systemNavigationBarHeight + AppMetrics.space8;
 const SETTINGS_FEEDBACK_DISMISS_MS: number = 2200;
 
@@ -408,7 +409,7 @@ struct HomeStoragePage {
       AppBottomSafeAreaFill()
 
       Scroll(this.settingsScroller) {
-        Column({ space: AppMetrics.space24 }) {
+        Column({ space: SETTINGS_TITLE_FORM_GAP }) {
           this.Header()
 
           if (this.isSettingsLoaded) {

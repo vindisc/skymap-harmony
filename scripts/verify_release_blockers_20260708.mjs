@@ -36,12 +36,15 @@ forbidIncludes(sources.exportService, 'BUNDLE_REVIEW_CARD_MIME_TYPE', 'ReviewCar
 forbidIncludes(sources.exportService, 'image/png', 'ReviewCardExportService');
 
 requireIncludes(sources.stats, 'build() {\n    Scroll() {', 'StatsPage');
-requireIncludes(sources.stats, 'const STATS_PAGE_TOP_PADDING: number = AppMetrics.space20;', 'StatsPage fixed top padding');
+requireIncludes(sources.stats, 'const STATS_PAGE_TOP_PADDING: number = AppMetrics.pageTopPadding - AppMetrics.space8;', 'StatsPage fixed top padding');
 requireIncludes(sources.stats, 'top: STATS_PAGE_TOP_PADDING', 'StatsPage fixed top padding');
 requireIncludes(sources.stats, ".height('100%')\n      .justifyContent(FlexAlign.Start)", 'StatsPage top alignment');
 forbidIncludes(sources.stats, '.layoutWeight(1)\n      .scrollBar(BarState.Off)\n      .edgeEffect(EdgeEffect.Spring)', 'StatsPage fixed lower scroll');
 
 requireIncludes(sources.homeStorage, 'CenterFeedbackOverlay()', 'HomeStoragePage');
+requireIncludes(sources.homeStorage, 'const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;', 'HomeStoragePage compact title/form gap');
+requireIncludes(sources.homeStorage, 'Column({ space: SETTINGS_TITLE_FORM_GAP })', 'HomeStoragePage compact title/form gap');
+forbidIncludes(sources.homeStorage, "'家庭存储地址或 IP'", 'HomeStoragePage');
 forbidIncludes(sources.homeStorage, 'StatusSummary()', 'HomeStoragePage');
 forbidIncludes(sources.homeStorage, "SettingsInput('工作组或域'", 'HomeStoragePage');
 forbidIncludes(sources.homeStorage, "SettingsInput('密码或凭据'", 'HomeStoragePage');

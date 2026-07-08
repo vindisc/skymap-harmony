@@ -42,7 +42,7 @@ const requiredStatsPageTokens = [
   'ReviewProjectService.buildStatsFeedback(progressResult.reviewItems)',
   "AppPageHeader({\n            title: '统计'",
   'Scroll() {\n      Column({ space: AppMetrics.cardGap }) {',
-  'const STATS_PAGE_TOP_PADDING: number = AppMetrics.space20;',
+  'const STATS_PAGE_TOP_PADDING: number = AppMetrics.pageTopPadding - AppMetrics.space8;',
   'top: STATS_PAGE_TOP_PADDING',
   ".height('100%')\n      .justifyContent(FlexAlign.Start)",
   'LearningOverviewCard()',
