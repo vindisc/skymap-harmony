@@ -26,6 +26,7 @@ const STATS_LEARNING_OVERVIEW_MIN_HEIGHT: number = 132;
 const STATS_CARD_MIN_HEIGHT: number = 104;
 const STATS_PROGRESS_HEIGHT: number = 10;
 const STATS_PROGRESS_RADIUS: number = 5;
+const STATS_PAGE_TOP_PADDING: number = AppMetrics.space12;
 const STATS_TITLE_CONTENT_GAP: number = AppMetrics.space10;
 
 @Component
@@ -603,7 +604,7 @@ export struct StatsPage {
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: AppMetrics.pageTopPadding,
+          top: STATS_PAGE_TOP_PADDING,
           bottom: AppMetrics.tabContentBottomPadding
         })
         .width('100%')
