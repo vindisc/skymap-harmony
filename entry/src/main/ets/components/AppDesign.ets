@@ -21,7 +21,7 @@ import { ReviewPhotoBlock } from './ReviewPhotoBlock';
 const PAGE_BOTTOM_PADDING: number = 20;
 const SYSTEM_NAVIGATION_BAR_HEIGHT: number = 34;
 const FLOATING_DOCK_BOTTOM_PADDING: number = 20 + SYSTEM_NAVIGATION_BAR_HEIGHT;
-const TAB_BAR_SAFE_AREA_HEIGHT: number = SYSTEM_NAVIGATION_BAR_HEIGHT;
+const TAB_BAR_SAFE_AREA_HEIGHT: number = 0;
 
 export class AppColors {
   static readonly pageBackground: string = '#F5F1E9';
@@ -128,7 +128,8 @@ export class AppMetrics {
   static readonly tabBarHeight: number = LayoutTokens.TabBarHeight;
   static readonly tabBarSafeAreaHeight: number = TAB_BAR_SAFE_AREA_HEIGHT;
   static readonly tabBarShellHeight: number = LayoutTokens.TabBarHeight + 20 + TAB_BAR_SAFE_AREA_HEIGHT;
-  static readonly tabContentBottomPadding: number = LayoutTokens.TabBarHeight + 20 + TAB_BAR_SAFE_AREA_HEIGHT + PAGE_BOTTOM_PADDING;
+  static readonly tabContentBottomPadding: number =
+    LayoutTokens.TabBarHeight + 20 + SYSTEM_NAVIGATION_BAR_HEIGHT + PAGE_BOTTOM_PADDING;
   static readonly tabBarItemHeight: number = LayoutTokens.TabBarItemHeight;
   static readonly tabIconSize: number = TypographyTokens.TabIcon;
   static readonly listThumbnailSize: number = LayoutTokens.ListThumbnailSize;
