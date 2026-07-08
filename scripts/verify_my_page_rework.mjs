@@ -80,7 +80,7 @@ assert(myPageSource.includes('this.SettingsSection()'), 'MyPage must group setti
 assert(myPageSource.includes('this.AboutSection()'), 'MyPage must group app/developer entries.');
 assert(myPageSource.includes("title: '复盘人'"), 'MyPage must expose reviewer profile entry.');
 assert(myPageSource.includes("title: '首页图片'"), 'MyPage must expose home hero image entry.');
-assert(myPageSource.includes('router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });'), 'MyPage home hero entry must keep navigation.');
+assert(myPageSource.includes('pushUrl({ url: HOME_HERO_IMAGE_PAGE })'), 'MyPage home hero entry must keep navigation.');
 assert(myPageSource.includes('HomeHeroImageService.listImages'), 'MyPage must keep home hero status display.');
 assert(myPageSource.includes("title: '家庭存储'"), 'MyPage must expose home storage entry.');
 assert(myPageSource.includes("title: '同步中心'"), 'MyPage must expose sync center entry.');
@@ -105,16 +105,17 @@ for (const [name, source] of [
 }
 
 assert(reviewerProfileSource.includes("title: '复盘人'"), 'ReviewerProfilePage must keep its compact settings title.');
-assert(reviewerProfileSource.includes('this.resolvePreviewName()'), 'ReviewerProfilePage must show current state before editing.');
-assert(reviewerProfileSource.includes("label: this.isSaving ? '保存中…' : '保存'"), 'ReviewerProfilePage save button must show loading state.');
+assert(!reviewerProfileSource.includes('this.resolvePreviewName()'), 'ReviewerProfilePage must not keep the redundant preview card before editing.');
+assert(reviewerProfileSource.includes("primaryLabel: this.isSaving ? '保存中…' : '保存'"), 'ReviewerProfilePage save button must show loading state.');
 
-assert(homeStorageSource.includes('StatusSummary()'), 'HomeStoragePage must show a status summary.');
+assert(homeStorageSource.includes('CenterFeedbackOverlay()'), 'HomeStoragePage must show centered lightweight feedback.');
+assert(!homeStorageSource.includes('StatusSummary()'), 'HomeStoragePage must not show the redundant status summary.');
 assert(homeStorageSource.includes("'家庭存储地址或 IP'"), 'HomeStoragePage must keep connection fields.');
 assert(homeStorageSource.includes("primaryLabel: this.isSaving ? '保存中…' : '保存'"), 'HomeStoragePage save action must show loading state.');
 assert(homeStorageSource.includes("secondaryLabel: this.isTestingHomeStorage ? '检查中…' : '检查'"), 'HomeStoragePage check action must show loading state.');
 
 assert(syncCenterSource.includes('lastTestMessage'), 'SyncCenterPage must keep visible test feedback.');
-assert(syncCenterSource.includes("label: this.isTesting ? '检查中…' : '检查家庭存储'"), 'SyncCenterPage test button must show loading state.');
+assert(syncCenterSource.includes("secondaryLabel: this.isTesting ? '检查中…' : '检查家庭存储'"), 'SyncCenterPage test button must show loading state.');
 assert(syncCenterSource.includes('SettingsLinkRow({'), 'SyncCenterPage must show a compact status row.');
 assert(!homeStorageSource.includes(".height('100%')\n      .justifyContent(FlexAlign.Start)"), 'HomeStoragePage scroll content must not be fixed to viewport height.');
 

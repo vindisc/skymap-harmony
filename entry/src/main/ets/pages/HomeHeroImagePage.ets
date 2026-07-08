@@ -4,8 +4,7 @@ import {
   AppColors,
   AppMetrics,
   AppTypography,
-  SettingsPageHeader,
-  SettingsSectionHeader
+  SettingsPageHeader
 } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { pickMultiplePhotos, PickedPhotoListResult } from '../services/PhotoPickerService';
@@ -65,16 +64,6 @@ struct HomeHeroImagePage {
         this.isLoading = false;
       }
     }
-  }
-
-  private resolveStatusText(): string {
-    if (this.images.length <= 0) {
-      return '正在使用默认首页图';
-    }
-    if (this.images.length === 1) {
-      return '已设置 1 张首页图';
-    }
-    return `已设置 ${this.images.length} 张首页图，会自动轮播`;
   }
 
   private async addImages(): Promise<void> {
@@ -399,20 +388,6 @@ struct HomeHeroImagePage {
   @Builder
   ImageList() {
     Column({ space: AppMetrics.space8 }) {
-      Row({ space: AppMetrics.cardGap }) {
-        SettingsSectionHeader({
-          title: '已配置图片',
-          description: this.resolveStatusText()
-        })
-        .layoutWeight(1)
-
-        if (this.images.length > 0) {
-          this.ClearImagesAction()
-        }
-      }
-      .width('100%')
-      .alignItems(VerticalAlign.Center)
-
       this.DefaultImageRow()
 
       ForEach(this.images, (item: HomeHeroDisplayImage) => {
@@ -420,6 +395,14 @@ struct HomeHeroImagePage {
       }, (item: HomeHeroDisplayImage) => item.id)
 
       this.AddImageRow()
+
+      if (this.images.length > 0) {
+        Row() {
+          this.ClearImagesAction()
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.End)
+      }
     }
     .width('100%')
   }
@@ -429,7 +412,7 @@ struct HomeHeroImagePage {
       AppBottomSafeAreaFill()
 
       Scroll() {
-        Column({ space: AppMetrics.sectionGap }) {
+        Column({ space: AppMetrics.cardGap }) {
           SettingsPageHeader({
             title: '首页图片'
           })

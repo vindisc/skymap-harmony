@@ -80,22 +80,21 @@ assert(myPageSource.includes('top: AppMetrics.pageTopPadding'), 'MyPage scroll c
 assert(myPageSource.includes('bottom: MY_PAGE_BOTTOM_PADDING'), 'MyPage content must keep bottom padding for tab bar.');
 assert(myPageSource.includes(".height('100%')"), 'MyPage scroll region must fill the page content height.');
 assert(myPageSource.includes('.justifyContent(FlexAlign.Start)'), 'MyPage scroll content must stay pinned to the top.');
-assert(myPageSource.includes('router.pushUrl({ url: REVIEWER_PROFILE_PAGE });'), 'Reviewer profile entry navigation must remain.');
-assert(myPageSource.includes('router.pushUrl({ url: HOME_HERO_IMAGE_PAGE });'), 'Home hero entry navigation must remain.');
-assert(myPageSource.includes('router.pushUrl({ url: HOME_STORAGE_PAGE });'), 'Home storage entry navigation must remain.');
-assert(myPageSource.includes('router.pushUrl({ url: SYNC_CENTER_PAGE });'), 'Sync center entry navigation must remain.');
+assert(myPageSource.includes('pushUrl({ url: REVIEWER_PROFILE_PAGE })'), 'Reviewer profile entry navigation must remain.');
+assert(myPageSource.includes('pushUrl({ url: HOME_HERO_IMAGE_PAGE })'), 'Home hero entry navigation must remain.');
+assert(myPageSource.includes('pushUrl({ url: HOME_STORAGE_PAGE })'), 'Home storage entry navigation must remain.');
+assert(myPageSource.includes('pushUrl({ url: SYNC_CENTER_PAGE })'), 'Sync center entry navigation must remain.');
 assert(myPageSource.includes('HomeHeroImageService.listImages'), 'Home hero image status must remain visible in MyPage.');
 assert(myPageSource.includes('HomeStorageService.resolveEntryStatusLabel'), 'Home storage status mapping must remain visible in MyPage.');
 
 [
-  "AppPageHeader({\n          title: '统计'",
-  'ReviewCardHistoryService.load(this.getAbilityContext())',
-  'ReviewProjectService.buildStatsFeedback(items)',
+  "AppPageHeader({\n            title: '统计'",
+  'LearningProgressService.loadWithReviewItems(context)',
+  'ReviewProjectService.buildStatsFeedback(progressResult.reviewItems)',
   'OverviewCard()',
   '.fontSize(AppTypography.statNumber)',
   'this.OverviewMetric(',
-  'resolveDistributionProgressWidth',
-  'resolveRecentReviewOpacity'
+  'resolveDistributionProgressWidth'
 ].forEach((marker) => requireIncludes(statsPageSource, marker, 'StatsPage must keep review statistics'));
 
 [
@@ -107,7 +106,8 @@ assert(myPageSource.includes('HomeStorageService.resolveEntryStatusLabel'), 'Hom
 ].forEach((marker) => requireIncludes(appShellSource, marker, 'Bottom tab or MyPage refresh wiring changed unexpectedly'));
 
 requireIncludes(homeHeroPageSource, "title: '首页图片'", 'Home hero config page must remain registered and reachable');
-requireIncludes(homeStoragePageSource, 'StatusSummary()', 'Home storage page must remain intact');
+requireIncludes(homeStoragePageSource, 'CenterFeedbackOverlay()', 'Home storage page must keep centered feedback.');
+forbidIncludes(homeStoragePageSource, 'StatusSummary()', 'Home storage page must not restore redundant status summary');
 
 if (failed) {
   process.exit(1);

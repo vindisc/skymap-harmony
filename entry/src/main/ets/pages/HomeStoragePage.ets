@@ -6,23 +6,21 @@ import {
   AppColors,
   AppMetrics,
   AppTypography,
-  SettingsEntryTone,
-  SettingsLinkRow,
   SettingsPageHeader
 } from '../components/AppDesign';
 import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
+import { ElevationTokens } from '../theme/DesignTokens';
 import {
-  HomeStorageConfigStatus,
   HomeStorageOperationResult,
   HomeStorageService,
   HomeStorageSettings
 } from '../services/HomeStorageService';
-import { ToastService } from '../services/ToastService';
 
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = AppMetrics.systemNavigationBarHeight + AppMetrics.space8;
+const SETTINGS_FEEDBACK_DISMISS_MS: number = 2200;
 
 @Entry
 @Component
@@ -34,6 +32,7 @@ struct HomeStoragePage {
   private scrollRequestId: number = 0;
   private isPageAlive: boolean = false;
   private loadRequestId: number = 0;
+  private feedbackDismissTimer: number = -1;
   @State homeStorageHost: string = '';
   @State homeStoragePort: string = '';
   @State homeStorageShareName: string = '';
@@ -41,7 +40,6 @@ struct HomeStoragePage {
   @State homeStorageUsername: string = '';
   @State homeStoragePassword: string = '';
   @State homeStorageDomain: string = '';
-  @State persistedHomeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State isSettingsLoaded: boolean = false;
   @State isSaving: boolean = false;
   @State isTestingHomeStorage: boolean = false;
@@ -67,6 +65,7 @@ struct HomeStoragePage {
 
   aboutToDisappear(): void {
     this.isPageAlive = false;
+    this.clearFeedbackTimer();
     this.unregisterKeyboardHeightObserver();
     this.restoreSystemKeyboardAvoidance();
   }
@@ -129,7 +128,6 @@ struct HomeStoragePage {
       return;
     }
 
-    this.persistedHomeStorageSettings = homeStorageSettings;
     this.homeStorageHost = homeStorageSettings.smbHost;
     this.homeStoragePort = homeStorageSettings.smbPort;
     this.homeStorageShareName = homeStorageSettings.smbShareName;
@@ -177,15 +175,11 @@ struct HomeStoragePage {
         verifiedSettings.username !== this.homeStorageUsername ||
         verifiedSettings.smbDomain !== this.homeStorageDomain) {
         this.setActionFeedback('已保存，但回读不一致', 'warning');
-        ToastService.show(this.getUIContext(), '已保存，但回读结果与当前输入不一致');
         return;
       }
-      this.persistedHomeStorageSettings = verifiedSettings;
       this.setActionFeedback('已保存家庭存储设置', 'success');
-      ToastService.show(this.getUIContext(), '已保存家庭存储设置');
     } catch (error) {
       this.setActionFeedback('保存失败，请稍后重试', 'error');
-      ToastService.show(this.getUIContext(), '保存失败，请稍后重试');
     } finally {
       this.isSaving = false;
     }
@@ -200,7 +194,6 @@ struct HomeStoragePage {
     try {
       const result: HomeStorageOperationResult = await HomeStorageService.testConnection(this.currentHomeStorageSettings());
       this.setActionFeedback(result.message, result.success ? 'success' : 'error');
-      ToastService.show(this.getUIContext(), result.message);
     } finally {
       this.isTestingHomeStorage = false;
     }
@@ -242,50 +235,31 @@ struct HomeStoragePage {
     }, SETTINGS_INPUT_SCROLL_DELAY);
   }
 
-  private resolveHomeStorageStatus(): HomeStorageConfigStatus {
-    return HomeStorageService.getConfigurationStatus(this.persistedHomeStorageSettings);
-  }
-
   private clearActionFeedback(): void {
+    this.clearFeedbackTimer();
     this.actionFeedbackText = '';
     this.actionFeedbackLevel = 'neutral';
   }
 
   private setActionFeedback(message: string, level: string): void {
+    this.clearFeedbackTimer();
     this.actionFeedbackText = message;
     this.actionFeedbackLevel = level;
+    this.feedbackDismissTimer = setTimeout(() => {
+      this.clearActionFeedback();
+    }, SETTINGS_FEEDBACK_DISMISS_MS);
+  }
+
+  private clearFeedbackTimer(): void {
+    if (this.feedbackDismissTimer < 0) {
+      return;
+    }
+    clearTimeout(this.feedbackDismissTimer);
+    this.feedbackDismissTimer = -1;
   }
 
   private sanitizePort(value: string): string {
     return value.replace(/[^0-9]/g, '');
-  }
-
-  private resolveStatusTitle(): string {
-    if (!this.isSettingsLoaded) {
-      return '读取中';
-    }
-    return HomeStorageService.resolveConfigurationStatusLabel(this.resolveHomeStorageStatus());
-  }
-
-  private resolveStatusTone(): SettingsEntryTone {
-    const status: HomeStorageConfigStatus = this.resolveHomeStorageStatus();
-    if (status === HomeStorageConfigStatus.COMPLETE) {
-      return SettingsEntryTone.SUCCESS;
-    }
-    if (status === HomeStorageConfigStatus.PARTIAL) {
-      return SettingsEntryTone.WARNING;
-    }
-    return SettingsEntryTone.MUTED;
-  }
-
-  private resolveStorageSummary(): string {
-    if (!this.isSettingsLoaded) {
-      return '正在读取家庭存储设置';
-    }
-    if (this.resolveHomeStorageStatus() === HomeStorageConfigStatus.EMPTY) {
-      return '填写家庭存储地址、共享目录和账号后即可检查连接。';
-    }
-    return `${this.homeStorageHost || '地址未填'} · ${this.homeStorageShareName || '共享目录未填'}`;
   }
 
   private isActionDisabled(): boolean {
@@ -323,22 +297,6 @@ struct HomeStoragePage {
     SettingsPageHeader({
       title: '家庭存储'
     })
-  }
-
-  @Builder
-  StatusSummary() {
-    Column({ space: AppMetrics.space8 }) {
-      SettingsLinkRow({
-        title: this.resolveStatusTitle(),
-        value: this.resolveStorageSummary(),
-        status: this.resolveStatusTitle(),
-        tone: this.resolveStatusTone(),
-        showChevron: false,
-        onTap: () => {
-        }
-      })
-    }
-    .width('100%')
   }
 
   @Builder
@@ -387,19 +345,23 @@ struct HomeStoragePage {
   }
 
   @Builder
-  ActionFeedback() {
+  CenterFeedbackOverlay() {
     if (this.actionFeedbackText.length > 0) {
       Text(this.actionFeedbackText)
-        .fontSize(AppTypography.caption)
+        .fontSize(AppTypography.body)
+        .fontWeight(FontWeight.Medium)
         .fontColor(this.resolveFeedbackColor())
-        .lineHeight(AppTypography.captionLineHeight)
-        .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space8, bottom: AppMetrics.space8 })
-        .width('100%')
-        .borderRadius(AppMetrics.cardRadius)
+        .lineHeight(AppTypography.bodyLineHeight)
+        .textAlign(TextAlign.Center)
+        .padding({ left: AppMetrics.space20, right: AppMetrics.space20, top: AppMetrics.space12, bottom: AppMetrics.space12 })
+        .constraintSize({ minWidth: 168, maxWidth: 300 })
+        .borderRadius(AppMetrics.capsuleRadius)
         .backgroundColor(this.resolveFeedbackBackground())
         .border({ width: 1, color: this.actionFeedbackLevel === 'error' ? AppColors.danger : AppColors.border })
+        .shadow(ElevationTokens.medium)
         .maxLines(2)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
+        .zIndex(8)
     }
   }
 
@@ -431,15 +393,10 @@ struct HomeStoragePage {
         this.clearActionFeedback();
       }, false, 4)
 
-      this.SettingsInput('密码或凭据', this.homeStoragePassword, '密码', (value: string) => {
+      this.SettingsInput('密码', this.homeStoragePassword, '密码', (value: string) => {
         this.homeStoragePassword = value;
         this.clearActionFeedback();
       }, true, 5, InputType.Normal, true)
-
-      this.SettingsInput('工作组或域', this.homeStorageDomain, 'WORKGROUP', (value: string) => {
-        this.homeStorageDomain = value;
-        this.clearActionFeedback();
-      }, false, 6)
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
@@ -449,34 +406,53 @@ struct HomeStoragePage {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
 
-      Scroll(this.settingsScroller) {
-        Column({ space: AppMetrics.cardGap }) {
+      Column() {
+        Column() {
           this.Header()
-
-          this.StatusSummary()
-
-          this.ActionFeedback()
-
-          if (this.isSettingsLoaded) {
-            this.ConfigurationForm()
-          } else {
-            this.LoadingSettings()
-          }
         }
-        .alignItems(HorizontalAlign.Start)
         .width('100%')
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
           top: AppMetrics.pageTopPadding,
-          bottom: this.getSettingsBottomPadding()
+          bottom: AppMetrics.cardGap
         })
-        .justifyContent(FlexAlign.Start)
+        .backgroundColor(AppColors.pageBackground)
+        .zIndex(2)
+
+        Scroll(this.settingsScroller) {
+          Column({ space: AppMetrics.cardGap }) {
+            if (this.isSettingsLoaded) {
+              this.ConfigurationForm()
+            } else {
+              this.LoadingSettings()
+            }
+          }
+          .alignItems(HorizontalAlign.Start)
+          .width('100%')
+          .padding({
+            left: AppMetrics.pagePadding,
+            right: AppMetrics.pagePadding,
+            top: 0,
+            bottom: this.getSettingsBottomPadding()
+          })
+          .justifyContent(FlexAlign.Start)
+        }
+        .width('100%')
+        .layoutWeight(1)
+        .scrollBar(BarState.Off)
+        .backgroundColor(AppColors.pageBackground)
       }
       .width('100%')
       .height('100%')
-      .scrollBar(BarState.Off)
       .backgroundColor(AppColors.pageBackground)
+
+      Stack({ alignContent: Alignment.Center }) {
+        this.CenterFeedbackOverlay()
+      }
+      .width('100%')
+      .height('100%')
+      .hitTestBehavior(HitTestMode.None)
 
       if (!this.isKeyboardActive()) {
         SettingsActionBar({

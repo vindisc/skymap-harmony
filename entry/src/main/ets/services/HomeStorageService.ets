@@ -7,7 +7,7 @@ import {
   stringifyReviewCardExchangeSchemaV1
 } from './ReviewCardExchangeSchema';
 import { HomeStorageSecretService } from './HomeStorageSecretService';
-import { Smb2Client, Smb2UploadBytesOptions, Smb2UploadOptions } from './Smb2Client';
+import { Smb2Client, Smb2UploadBytesOptions, Smb2UploadFileOptions, Smb2UploadOptions } from './Smb2Client';
 import { SettingsRefreshService } from './SettingsRefreshService';
 
 const PREFERENCES_NAME: string = 'home_storage_settings';
@@ -174,6 +174,25 @@ function createSmbUploadBytesOptions(
   };
 }
 
+function createSmbUploadFileOptions(
+  settings: HomeStorageSettings,
+  remoteDirectory: string,
+  fileName: string,
+  localPath: string
+): Smb2UploadFileOptions {
+  return {
+    host: settings.smbHost,
+    port: parsePort(settings.smbPort),
+    shareName: settings.smbShareName,
+    remoteDirectory: remoteDirectory,
+    username: settings.username,
+    password: settings.password,
+    domain: settings.smbDomain,
+    fileName: fileName,
+    localPath: localPath
+  };
+}
+
 function resolveRemotePathText(settings: HomeStorageSettings, remoteDirectory: string, fileName: string): string {
   const directory: string = normalizeRemoteDirectory(remoteDirectory).replace(/\//g, '\\');
   const basePath: string = `\\\\${settings.smbHost}\\${settings.smbShareName}`;
@@ -197,24 +216,6 @@ function splitRemoteRelativePath(value: string): Array<string> {
     .split('/')
     .map((part: string): string => part.trim())
     .filter((part: string): boolean => part.length > 0);
-}
-
-function readLocalFileBytes(filePath: string): Array<number> {
-  const stat = fs.statSync(filePath);
-  const file = fs.openSync(filePath, fs.OpenMode.READ_ONLY);
-  const buffer = new ArrayBuffer(stat.size);
-  try {
-    fs.readSync(file.fd, buffer);
-  } finally {
-    fs.closeSync(file);
-  }
-
-  const view = new Uint8Array(buffer);
-  const result: Array<number> = [];
-  for (let index = 0; index < view.length; index += 1) {
-    result.push(view[index]);
-  }
-  return result;
 }
 
 function isMissingRemoteDirectoryError(message: string): boolean {
@@ -387,11 +388,11 @@ async function uploadFileBySmb(
   const byteSize: string = fileSizeText(localPath);
   console.info(`[HomeStorageService] file_upload_start local=${localPath} remoteDirectory=${remoteDirectory} file=${fileName} bytes=${byteSize}`);
   try {
-    const remotePath: string = await client.uploadBytes(createSmbUploadBytesOptions(
+    const remotePath: string = await client.uploadFile(createSmbUploadFileOptions(
       settings,
       remoteDirectory,
       fileName,
-      readLocalFileBytes(localPath)
+      localPath
     ));
     console.info(`[HomeStorageService] file_upload_success remote=${remotePath} bytes=${byteSize}`);
     return createOperationResult(true, remotePath, '已上传家庭存储');
@@ -640,7 +641,7 @@ export class HomeStorageService {
       return '请先填写用户名';
     }
     if (normalized.password.length === 0) {
-      return '请先填写密码或凭据';
+      return '请先填写密码';
     }
     return '';
   }

@@ -44,7 +44,7 @@ const forbiddenSettingsTokens = [
   "SettingsInput('共享目录'",
   "SettingsInput('目标路径'",
   "SettingsInput('用户名'",
-  "SettingsInput('密码或凭据'",
+  "SettingsInput('密码'",
   'HomeStorageService.saveSettings',
   'testHomeStorage',
   'homeStorageRemoteDirectory'
@@ -62,7 +62,7 @@ const requiredHomeStoragePageTokens = [
   "SettingsInput('共享目录'",
   "SettingsInput('目标路径'",
   "SettingsInput('用户名'",
-  "SettingsInput('密码或凭据'",
+  "SettingsInput('密码'",
   '检查'
 ];
 
@@ -102,10 +102,18 @@ if (!settingsFormSource.includes('.onChange((value: string) => {') ||
 if (!homeStoragePageSource.includes('InputType.Number') ||
   !homeStoragePageSource.includes('this.sanitizePort(value)') ||
   !homeStoragePageSource.includes('showsPasswordToggle: showsPasswordToggle') ||
+  !homeStoragePageSource.includes('CenterFeedbackOverlay()') ||
   !homeStoragePageSource.includes('this.setActionFeedback(result.message, result.success ?') ||
   !homeStoragePageSource.includes('this.clearActionFeedback();')) {
   failed = true;
-  console.error('HomeStoragePage must provide numeric port input, password visibility, inline operation feedback, and stale-feedback clearing.');
+  console.error('HomeStoragePage must provide numeric port input, password visibility, centered operation feedback, and stale-feedback clearing.');
+}
+
+if (homeStoragePageSource.includes("SettingsInput('工作组或域'") ||
+  homeStoragePageSource.includes('StatusSummary()') ||
+  homeStoragePageSource.includes('ToastService.show(this.getUIContext(), result.message)')) {
+  failed = true;
+  console.error('HomeStoragePage must hide workgroup/domain, remove status summary, and avoid duplicate toast feedback.');
 }
 
 if (!homeStoragePageSource.includes('@State isSettingsLoaded: boolean = false;') ||
@@ -132,6 +140,7 @@ const requiredHomeStorageTokens = [
   'HomeStorageSecretService.savePassword(normalized.password)',
   "return '请先填写家庭存储地址或 IP';",
   "return '请先填写共享目录';",
+  "return '请先填写密码';",
   "createOperationResult(true, `\\\\\\\\${normalized.smbHost}\\\\${normalized.smbShareName}`, '家庭存储连接成功')",
   "createOperationResult(true, remotePath, '已上传家庭存储')",
   "message: '已上传共享根目录'",
@@ -139,7 +148,8 @@ const requiredHomeStorageTokens = [
   'await store.put(LEGACY_PASSWORD_KEY, normalized.password);',
   'private static async loadSettingsSnapshot(store: preferences.Preferences): Promise<HomeStorageSettings | null> {',
   'await store.put(SETTINGS_SNAPSHOT_KEY, HomeStorageService.createSettingsSnapshot(normalized));',
-  "isMissingRemoteDirectoryError(primaryResult.message)"
+  "isMissingRemoteDirectoryError(primaryResult.message)",
+  'client.uploadFile(createSmbUploadFileOptions('
 ];
 
 for (const token of requiredHomeStorageTokens) {
@@ -169,7 +179,9 @@ const requiredSmbTokens = [
   'await this.ensureRemoteDirectory(options.remoteDirectory);',
   'private async createDirectory(remotePath: string): Promise<Array<number>>',
   'writeUInt32LE(body, 40, 0x00000021);',
-  'async uploadText(options: Smb2UploadOptions): Promise<string>'
+  'async uploadText(options: Smb2UploadOptions): Promise<string>',
+  'async uploadFile(options: Smb2UploadFileOptions): Promise<string>',
+  'private async writeFileFromPath(fileId: Array<number>, localPath: string, byteSize: number): Promise<void>'
 ];
 
 for (const token of requiredSmbTokens) {

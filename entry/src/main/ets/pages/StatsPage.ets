@@ -562,25 +562,18 @@ export struct StatsPage {
   }
 
   build() {
-    Column() {
-      Column({ space: STATS_TITLE_CONTENT_GAP }) {
-        AppPageHeader({
-          title: '统计'
-        })
+    Scroll() {
+      Column({ space: AppMetrics.cardGap }) {
+        Column({ space: STATS_TITLE_CONTENT_GAP }) {
+          AppPageHeader({
+            title: '统计'
+          })
 
-        this.LearningOverviewCard()
-      }
-      .padding({
-        left: AppMetrics.pagePadding,
-        right: AppMetrics.pagePadding,
-        top: AppMetrics.pageTopPadding,
-        bottom: 0
-      })
-      .width('100%')
-      .alignItems(HorizontalAlign.Start)
-      .backgroundColor(AppColors.pageBackground)
+          this.LearningOverviewCard()
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
 
-      Scroll() {
         Column({ space: AppMetrics.cardGap }) {
           if (this.shouldShowStatsSkeleton()) {
             this.StatsSkeleton()
@@ -607,21 +600,22 @@ export struct StatsPage {
           }
         }
         .alignItems(HorizontalAlign.Start)
-        .padding({
-          left: AppMetrics.pagePadding,
-          right: AppMetrics.pagePadding,
-          top: AppMetrics.cardGap,
-          bottom: AppMetrics.tabContentBottomPadding
-        })
         .width('100%')
       }
+      .alignItems(HorizontalAlign.Start)
+      .padding({
+        left: AppMetrics.pagePadding,
+        right: AppMetrics.pagePadding,
+        top: AppMetrics.pageTopPadding,
+        bottom: AppMetrics.tabContentBottomPadding
+      })
       .width('100%')
-      .layoutWeight(1)
+      .justifyContent(FlexAlign.Start)
+    }
+      .width('100%')
+      .height('100%')
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
-    }
-    .width('100%')
-    .height('100%')
-    .backgroundColor(AppColors.pageBackground)
+      .backgroundColor(AppColors.pageBackground)
   }
 }

@@ -18,7 +18,7 @@ const requiredMarkers = [
   "return '可用';",
   "return '请先填写目标路径';",
   "return '请先填写用户名';",
-  "return '请先填写密码或凭据';",
+  "return '请先填写密码';",
   "return '请先填写家庭存储地址或 IP';",
   "return '连接端口需要在 1-65535 之间';"
 ];
@@ -121,7 +121,7 @@ function validateSettings(settings) {
     return '请先填写用户名';
   }
   if (normalized.password.length === 0) {
-    return '请先填写密码或凭据';
+    return '请先填写密码';
   }
   return '';
 }
@@ -178,7 +178,7 @@ expectEqual(validateSettings({
 expectEqual(validateSettings({
   ...completeSettings,
   password: ''
-}), '请先填写密码或凭据', 'Missing password must block configuration');
+}), '请先填写密码', 'Missing password must block configuration');
 expectEqual(validateSettings(completeSettings), '', 'Complete settings should validate');
 
 expectEqual(getConfigurationStatus(emptySettings), HomeStorageConfigStatus.EMPTY, 'Cleared settings should return 未配置');

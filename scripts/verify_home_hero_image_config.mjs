@@ -88,12 +88,12 @@ const docsSource = read(files.docs);
   'HomeHeroImageService.getDisplayImages',
   'this.heroImages.length > 1',
   'Swiper()',
-  'this.HeroImageSlide(item)',
+  'this.HeroImageSlide(item, index)',
   'this.DefaultHeroImageSlide()',
-  '.autoPlay(this.shouldAutoplayHero())',
-  '.indicator(this.shouldShowHeroIndicator())',
+  '.autoPlay(this.shouldAutoplayHero() && !this.heroAutoplayPaused)',
+  '.indicator(this.resolveHeroIndicator())',
   '.loop(this.shouldShowHeroIndicator())',
-  '.indicatorStyle({',
+  'private resolveHeroIndicator(): DotIndicator | boolean',
   'this.skipFailedHeroImage(item.id)',
   'Image(item.uri)',
   "Image($r('app.media.home_review_hero'))",
@@ -130,13 +130,16 @@ const docsSource = read(files.docs);
   "Button(this.isClearing ? '清空中…' : '清空自定义')",
   "title: '删除这张图片？'",
   "title: '清空首页图片？'",
-  "promptAction.showToast({ message: '已恢复默认首页图片' })",
-  "promptAction.showToast({ message: '图片保存失败，请重试' })"
+  "ToastService.show(this.getUIContext(), '已恢复默认首页图片')",
+  "ToastService.show(this.getUIContext(), '图片保存失败，请重试')"
 ].forEach((marker) => requireIncludes(configPageSource, marker, 'HomeHeroImagePage missing UX marker'));
 
 [
   '@Builder\n  SummaryCard()',
   "subtitle: '管理首页展示图。'",
+  "title: '已配置图片'",
+  'resolveStatusText()',
+  'SettingsSectionHeader({',
   "label: '使用默认图片'",
   "label: this.isClearing ? '清空中…' : '清空图片'",
   "EmptyState({\n          title: '还没有自定义首页图'",

@@ -72,7 +72,8 @@ assertIncludes(syncCenterSource, "title: '同步中心'", 'SyncCenterPage');
 assertIncludes(syncCenterSource, "secondaryLabel: this.isTesting ? '检查中…' : '检查家庭存储'", 'SyncCenterPage');
 assertIncludes(syncCenterSource, 'SettingsLinkRow({', 'SyncCenterPage');
 assertIncludes(homeStoragePageSource, "title: '家庭存储'", 'HomeStoragePage');
-assertIncludes(homeStoragePageSource, 'StatusSummary()', 'HomeStoragePage');
+assertIncludes(homeStoragePageSource, 'CenterFeedbackOverlay()', 'HomeStoragePage');
+assertNotIncludes(homeStoragePageSource, 'StatusSummary()', 'HomeStoragePage');
 assertIncludes(homeStoragePageSource, "'家庭存储地址或 IP'", 'HomeStoragePage');
 assertIncludes(reviewSettingsSource, "Text('连接与凭据')", 'ReviewSettingsPage');
 

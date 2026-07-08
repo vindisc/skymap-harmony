@@ -1,3 +1,4 @@
+import fs from '@ohos.file.fs';
 import socket from '@ohos.net.socket';
 
 const SMB_PORT: number = 445;
@@ -54,6 +55,11 @@ export interface Smb2UploadOptions extends Smb2ConnectionOptions {
 export interface Smb2UploadBytesOptions extends Smb2ConnectionOptions {
   fileName: string;
   contentBytes: Array<number>;
+}
+
+export interface Smb2UploadFileOptions extends Smb2ConnectionOptions {
+  fileName: string;
+  localPath: string;
 }
 
 interface NtlmChallenge {
@@ -849,6 +855,30 @@ export class Smb2Client {
     }
   }
 
+  async uploadFile(options: Smb2UploadFileOptions): Promise<string> {
+    const byteSize: number = this.resolveLocalFileSize(options.localPath);
+    console.info(`[Smb2Client] upload_file_start host=${options.host} share=${options.shareName} directory=${normalizeRemoteDirectoryPath(options.remoteDirectory)} file=${options.fileName} bytes=${byteSize}`);
+    await this.open(options);
+    try {
+      await this.ensureRemoteDirectory(options.remoteDirectory);
+      const remotePath: string = normalizeRemoteFilePath(options.remoteDirectory, options.fileName);
+      const fileId: Array<number> = await this.createFile(remotePath);
+      try {
+        await this.writeFileFromPath(fileId, options.localPath, byteSize);
+      } finally {
+        await this.closeFile(fileId);
+      }
+      console.info(`[Smb2Client] upload_file_success path=${remotePath} bytes=${byteSize}`);
+      return `\\\\${options.host}\\${options.shareName}\\${remotePath}`;
+    } catch (error) {
+      const message: string = error instanceof Error ? describeError(error) : `${error}`;
+      console.error(`[Smb2Client] upload_file_failed file=${options.fileName} bytes=${byteSize} error=${message}`);
+      throw new Error(message);
+    } finally {
+      await this.safeDisconnect();
+    }
+  }
+
   async close(): Promise<void> {
     await this.transport.close();
   }
@@ -1074,6 +1104,52 @@ export class Smb2Client {
       if (data.length === 0) {
         break;
       }
+    }
+  }
+
+  private resolveLocalFileSize(localPath: string): number {
+    try {
+      return fs.statSync(localPath).size;
+    } catch (error) {
+      return -1;
+    }
+  }
+
+  private readChunkBytes(file: fs.File, length: number): Array<number> {
+    if (length <= 0) {
+      return [];
+    }
+
+    const buffer = new ArrayBuffer(length);
+    const readLength: number = fs.readSync(file.fd, buffer);
+    const view = new Uint8Array(buffer);
+    const result: Array<number> = [];
+    const actualLength: number = Math.max(0, Math.min(readLength, view.length));
+    for (let index = 0; index < actualLength; index += 1) {
+      result.push(view[index]);
+    }
+    return result;
+  }
+
+  private async writeFileFromPath(fileId: Array<number>, localPath: string, byteSize: number): Promise<void> {
+    const file = fs.openSync(localPath, fs.OpenMode.READ_ONLY);
+    try {
+      let offset: number = 0;
+      let chunkIndex: number = 0;
+      const totalBytes: number = Math.max(0, byteSize);
+      const totalChunks: number = Math.max(1, Math.ceil(totalBytes / SMB2_WRITE_CHUNK_SIZE));
+      while (offset < totalBytes || (totalBytes === 0 && chunkIndex === 0)) {
+        const expectedLength: number = totalBytes === 0 ? 0 : Math.min(SMB2_WRITE_CHUNK_SIZE, totalBytes - offset);
+        const chunk: Array<number> = this.readChunkBytes(file, expectedLength);
+        await this.writeFileChunk(fileId, chunk, offset, chunkIndex + 1, totalChunks);
+        offset += chunk.length;
+        chunkIndex += 1;
+        if (totalBytes === 0 || chunk.length <= 0) {
+          break;
+        }
+      }
+    } finally {
+      fs.closeSync(file);
     }
   }
 

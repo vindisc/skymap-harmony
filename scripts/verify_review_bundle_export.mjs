@@ -27,12 +27,11 @@ const requiredBundleTokens = [
   'review: {',
   'stringifyReviewCardExchangeSchemaV1(document, reviewerText)',
   'verifyBundle(paths)',
-  'Skymap/ReviewBundles/${dateParts.year}/${dateParts.month}/${bundleDirectoryName}',
+  'const remoteDirectory: string = bundleDirectoryName;',
   "remoteRelativePath: 'manifest.json'",
   "remoteRelativePath: 'review.json'",
   'remoteRelativePath: REVIEW_CARD_IMAGE_PATH',
-  'remoteRelativePath: THUMBNAIL_PATH',
-  'remoteRelativePath: ASSETS_README_PATH'
+  'remoteRelativePath: THUMBNAIL_PATH'
 ];
 
 for (const token of requiredBundleTokens) {
@@ -56,15 +55,23 @@ for (const token of forbiddenBundleTokens) {
 requireIncludes(smbClientSource, 'export interface Smb2UploadBytesOptions', 'Smb2Client');
 requireIncludes(smbClientSource, 'async uploadBytes(options: Smb2UploadBytesOptions): Promise<string>', 'Smb2Client');
 requireIncludes(smbClientSource, 'await this.writeFile(fileId, options.contentBytes);', 'Smb2Client');
+requireIncludes(smbClientSource, 'export interface Smb2UploadFileOptions', 'Smb2Client');
+requireIncludes(smbClientSource, 'async uploadFile(options: Smb2UploadFileOptions): Promise<string>', 'Smb2Client');
+requireIncludes(smbClientSource, 'private async writeFileFromPath(fileId: Array<number>, localPath: string, byteSize: number): Promise<void>', 'Smb2Client');
 requireIncludes(homeStorageSource, 'export interface HomeStorageUploadFileEntry', 'HomeStorageService');
 requireIncludes(homeStorageSource, 'static async uploadFilesToDirectory(', 'HomeStorageService');
-requireIncludes(homeStorageSource, 'readLocalFileBytes(localPath)', 'HomeStorageService');
+requireIncludes(homeStorageSource, 'client.uploadFile(createSmbUploadFileOptions(', 'HomeStorageService');
 requireIncludes(homeStorageSource, 'await HomeStorageService.markLastUploadedAt(context, Date.now());', 'HomeStorageService');
+if (homeStorageSource.includes('readLocalFileBytes(localPath)')) {
+  failed = true;
+  console.error('HomeStorageService must not read full export files into memory before SMB upload.');
+}
 
 requireIncludes(exportServiceSource, 'export interface ReviewCardBundleSnapshotResult', 'ReviewCardExportService');
 requireIncludes(exportServiceSource, 'static async exportBundleSnapshot(', 'ReviewCardExportService');
 requireIncludes(exportServiceSource, "format: BUNDLE_REVIEW_CARD_MIME_TYPE", 'ReviewCardExportService');
 requireIncludes(exportServiceSource, "format: BUNDLE_THUMBNAIL_MIME_TYPE", 'ReviewCardExportService');
+requireIncludes(exportServiceSource, 'await packer.release();', 'ReviewCardExportService');
 
 requireIncludes(previewPageSource, 'ReviewBundleExportService.exportReviewBundleToHomeStorage(', 'PreviewPage');
 requireIncludes(previewPageSource, "this.ExportSheetAction(this.exportState === ExportState.BUNDLE ? '导出中…' : '导出复盘包'", 'PreviewPage');

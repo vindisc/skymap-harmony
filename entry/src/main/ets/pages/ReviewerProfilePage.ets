@@ -28,11 +28,6 @@ struct ReviewerProfilePage {
     this.reviewerName = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
   }
 
-  private resolvePreviewName(): string {
-    const name = this.reviewerName.trim();
-    return name.length > 0 ? name : '未设置';
-  }
-
   private async saveReviewerName(): Promise<void> {
     if (this.isSaving) {
       return;
@@ -69,24 +64,6 @@ struct ReviewerProfilePage {
           SettingsPageHeader({
             title: '复盘人'
           })
-
-          Column({ space: AppMetrics.space8 }) {
-            Column({ space: 4 }) {
-              Text(this.resolvePreviewName())
-                .fontSize(AppTypography.cardTitle)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(AppColors.text)
-                .lineHeight(AppTypography.cardTitleLineHeight)
-                .width('100%')
-            }
-            .alignItems(HorizontalAlign.Start)
-            .padding(AppMetrics.cardPadding)
-            .width('100%')
-            .borderRadius(AppMetrics.cardRadius)
-            .backgroundColor(AppColors.surface)
-            .border({ width: 1, color: AppColors.border })
-          }
-          .width('100%')
 
           Column({ space: AppMetrics.cardGap }) {
             TextInput({ text: this.reviewerName, placeholder: '可留空' })

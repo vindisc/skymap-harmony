@@ -11,6 +11,7 @@ export struct SettingsTextInput {
   @Prop inputType: InputType = InputType.Normal;
   @State isPasswordVisible: boolean = false;
   @State isFocused: boolean = false;
+  @State shouldIgnoreToggleEmptyChange: boolean = false;
   onChange: (value: string) => void = () => {};
   onFocusInput: () => void = () => {};
   onBlurInput: () => void = () => {};
@@ -44,6 +45,9 @@ export struct SettingsTextInput {
           .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
           .layoutWeight(1)
           .onChange((value: string) => {
+            if (this.shouldIgnoreToggleEmptyChange && value.length === 0 && this.text.length > 0) {
+              return;
+            }
             this.onChange(value);
           })
           .onFocus(() => {
@@ -73,7 +77,11 @@ export struct SettingsTextInput {
             .border({ width: 1, color: AppColors.border })
             .stateEffect(true)
             .onClick(() => {
+              this.shouldIgnoreToggleEmptyChange = true;
               this.isPasswordVisible = !this.isPasswordVisible;
+              setTimeout(() => {
+                this.shouldIgnoreToggleEmptyChange = false;
+              }, 120);
             })
         }
       }

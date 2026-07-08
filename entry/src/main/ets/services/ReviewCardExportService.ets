@@ -141,10 +141,11 @@ export class ReviewCardExportService {
 
     ReviewCardExportService.isExporting = true;
     let pixelMap: image.PixelMap | undefined = undefined;
+    let packer: image.ImagePacker | undefined = undefined;
     let backupPath: string = '';
     try {
       pixelMap = await componentSnapshot.get(componentId);
-      const packer = image.createImagePacker();
+      packer = image.createImagePacker();
       const data = await packer.packToData(pixelMap, {
         format: EXPORT_MIME_TYPE,
         quality: 95
@@ -188,8 +189,17 @@ export class ReviewCardExportService {
         message: '导出失败，请稍后重试'
       };
     } finally {
+      if (packer) {
+        try {
+          await packer.release();
+        } catch (error) {
+        }
+      }
       if (pixelMap) {
-        await pixelMap.release();
+        try {
+          await pixelMap.release();
+        } catch (error) {
+        }
       }
       ReviewCardExportService.isExporting = false;
     }
@@ -212,9 +222,10 @@ export class ReviewCardExportService {
 
     ReviewCardExportService.isExporting = true;
     let pixelMap: image.PixelMap | undefined = undefined;
+    let packer: image.ImagePacker | undefined = undefined;
     try {
       pixelMap = await componentSnapshot.get(componentId);
-      const packer = image.createImagePacker();
+      packer = image.createImagePacker();
       const reviewCardData = await packer.packToData(pixelMap, {
         format: BUNDLE_REVIEW_CARD_MIME_TYPE,
         quality: 100
@@ -253,8 +264,17 @@ export class ReviewCardExportService {
         message: `复盘包图片生成失败：${error instanceof Error ? errorMessage(error) : `${error}`}`
       };
     } finally {
+      if (packer) {
+        try {
+          await packer.release();
+        } catch (error) {
+        }
+      }
       if (pixelMap) {
-        await pixelMap.release();
+        try {
+          await pixelMap.release();
+        } catch (error) {
+        }
       }
       ReviewCardExportService.isExporting = false;
     }
