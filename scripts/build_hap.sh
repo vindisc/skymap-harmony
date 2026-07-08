@@ -34,6 +34,6 @@ fi
 exec "$HVIGOR_BIN" \
   --mode module \
   -p module=entry \
-  -p product=default \
+  -p product=release \
   assembleHap \
   --no-daemon
