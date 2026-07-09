@@ -43,7 +43,9 @@ forbidIncludes(sources.stats, '.layoutWeight(1)\n      .scrollBar(BarState.Off)\
 
 requireIncludes(sources.homeStorage, 'CenterFeedbackOverlay()', 'HomeStoragePage');
 requireIncludes(sources.homeStorage, 'const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;', 'HomeStoragePage compact title/form gap');
-requireIncludes(sources.homeStorage, 'Column({ space: SETTINGS_TITLE_FORM_GAP })', 'HomeStoragePage compact title/form gap');
+requireIncludes(sources.homeStorage, 'bottom: SETTINGS_TITLE_FORM_GAP', 'HomeStoragePage compact title/form gap');
+requireIncludes(sources.homeStorage, 'Scroll(this.settingsScroller)', 'HomeStoragePage form scroll');
+requireIncludes(sources.homeStorage, '.layoutWeight(1)', 'HomeStoragePage form scroll');
 forbidIncludes(sources.homeStorage, "'家庭存储地址或 IP'", 'HomeStoragePage');
 forbidIncludes(sources.homeStorage, 'StatusSummary()', 'HomeStoragePage');
 forbidIncludes(sources.homeStorage, "SettingsInput('工作组或域'", 'HomeStoragePage');

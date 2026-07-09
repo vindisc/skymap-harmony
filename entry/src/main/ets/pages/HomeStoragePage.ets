@@ -20,7 +20,6 @@ const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
 const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;
-const SETTINGS_FORM_TOP_OFFSET: number = 32;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = AppMetrics.systemNavigationBarHeight + AppMetrics.space8;
 const SETTINGS_FEEDBACK_DISMISS_MS: number = 2200;
 
@@ -228,7 +227,7 @@ struct HomeStoragePage {
 
       this.settingsScroller.scrollTo({
         xOffset: 0,
-        yOffset: Math.max(0, SETTINGS_FORM_TOP_OFFSET + index * SETTINGS_INPUT_BLOCK_HEIGHT - SETTINGS_INPUT_SAFE_TOP_GAP),
+        yOffset: Math.max(0, index * SETTINGS_INPUT_BLOCK_HEIGHT - SETTINGS_INPUT_SAFE_TOP_GAP),
         animation: {
           duration: 240,
           curve: Curve.EaseOut
@@ -408,29 +407,47 @@ struct HomeStoragePage {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
 
-      Scroll(this.settingsScroller) {
-        Column({ space: SETTINGS_TITLE_FORM_GAP }) {
+      Column() {
+        Column() {
           this.Header()
-
-          if (this.isSettingsLoaded) {
-            this.ConfigurationForm()
-          } else {
-            this.LoadingSettings()
-          }
         }
-        .alignItems(HorizontalAlign.Start)
         .width('100%')
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
           top: AppMetrics.pageTopPadding,
-          bottom: this.getSettingsBottomPadding()
+          bottom: SETTINGS_TITLE_FORM_GAP
         })
+        .alignItems(HorizontalAlign.Start)
         .justifyContent(FlexAlign.Start)
+
+        Scroll(this.settingsScroller) {
+          Column({ space: AppMetrics.cardGap }) {
+            if (this.isSettingsLoaded) {
+              this.ConfigurationForm()
+            } else {
+              this.LoadingSettings()
+            }
+          }
+          .alignItems(HorizontalAlign.Start)
+          .width('100%')
+          .padding({
+            left: AppMetrics.pagePadding,
+            right: AppMetrics.pagePadding,
+            top: 0,
+            bottom: this.getSettingsBottomPadding()
+          })
+          .justifyContent(FlexAlign.Start)
+        }
+        .width('100%')
+        .layoutWeight(1)
+        .scrollBar(BarState.Off)
+        .backgroundColor(AppColors.pageBackground)
       }
       .width('100%')
       .height('100%')
-      .scrollBar(BarState.Off)
+      .alignItems(HorizontalAlign.Start)
+      .justifyContent(FlexAlign.Start)
       .backgroundColor(AppColors.pageBackground)
 
       Stack({ alignContent: Alignment.Center }) {
