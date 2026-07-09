@@ -407,47 +407,29 @@ struct HomeStoragePage {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
 
-      Column() {
-        Column() {
+      Scroll(this.settingsScroller) {
+        Column({ space: SETTINGS_TITLE_FORM_GAP }) {
           this.Header()
+
+          if (this.isSettingsLoaded) {
+            this.ConfigurationForm()
+          } else {
+            this.LoadingSettings()
+          }
         }
+        .alignItems(HorizontalAlign.Start)
         .width('100%')
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
           top: AppMetrics.pageTopPadding,
-          bottom: SETTINGS_TITLE_FORM_GAP
+          bottom: this.getSettingsBottomPadding()
         })
-        .alignItems(HorizontalAlign.Start)
         .justifyContent(FlexAlign.Start)
-
-        Scroll(this.settingsScroller) {
-          Column({ space: AppMetrics.cardGap }) {
-            if (this.isSettingsLoaded) {
-              this.ConfigurationForm()
-            } else {
-              this.LoadingSettings()
-            }
-          }
-          .alignItems(HorizontalAlign.Start)
-          .width('100%')
-          .padding({
-            left: AppMetrics.pagePadding,
-            right: AppMetrics.pagePadding,
-            top: 0,
-            bottom: this.getSettingsBottomPadding()
-          })
-          .justifyContent(FlexAlign.Start)
-        }
-        .width('100%')
-        .layoutWeight(1)
-        .scrollBar(BarState.Off)
-        .backgroundColor(AppColors.pageBackground)
       }
       .width('100%')
       .height('100%')
-      .alignItems(HorizontalAlign.Start)
-      .justifyContent(FlexAlign.Start)
+      .scrollBar(BarState.Off)
       .backgroundColor(AppColors.pageBackground)
 
       Stack({ alignContent: Alignment.Center }) {

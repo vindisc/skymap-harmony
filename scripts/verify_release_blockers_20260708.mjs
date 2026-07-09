@@ -43,9 +43,11 @@ forbidIncludes(sources.stats, '.layoutWeight(1)\n      .scrollBar(BarState.Off)\
 
 requireIncludes(sources.homeStorage, 'CenterFeedbackOverlay()', 'HomeStoragePage');
 requireIncludes(sources.homeStorage, 'const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;', 'HomeStoragePage compact title/form gap');
-requireIncludes(sources.homeStorage, 'bottom: SETTINGS_TITLE_FORM_GAP', 'HomeStoragePage compact title/form gap');
-requireIncludes(sources.homeStorage, 'Scroll(this.settingsScroller)', 'HomeStoragePage form scroll');
-requireIncludes(sources.homeStorage, '.layoutWeight(1)', 'HomeStoragePage form scroll');
+requireIncludes(sources.homeStorage, 'Column({ space: SETTINGS_TITLE_FORM_GAP })', 'HomeStoragePage unified top-aligned scroll content');
+requireIncludes(sources.homeStorage, 'top: AppMetrics.pageTopPadding', 'HomeStoragePage compact title/form gap');
+requireIncludes(sources.homeStorage, 'bottom: this.getSettingsBottomPadding()', 'HomeStoragePage bottom action clearance');
+requireIncludes(sources.homeStorage, 'Scroll(this.settingsScroller)', 'HomeStoragePage unified scroll');
+forbidIncludes(sources.homeStorage, '.layoutWeight(1)', 'HomeStoragePage must not put the form in a remaining-height scroll region');
 forbidIncludes(sources.homeStorage, "'家庭存储地址或 IP'", 'HomeStoragePage');
 forbidIncludes(sources.homeStorage, 'StatusSummary()', 'HomeStoragePage');
 forbidIncludes(sources.homeStorage, "SettingsInput('工作组或域'", 'HomeStoragePage');
