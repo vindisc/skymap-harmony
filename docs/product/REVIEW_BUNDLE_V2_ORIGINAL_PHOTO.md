@@ -140,7 +140,7 @@ Review JSON v1 字段冻结。v2 不新增、删除、重命名或改变 `review
 
 ## 五、HarmonyOS 导出规则
 
-HarmonyOS 后续新增入口：
+HarmonyOS 当前导出入口：
 
 1. `导出复盘包`
    - 使用 v1。
@@ -170,7 +170,7 @@ v2 日志应区分：
 - `review_json_write_failed`
 - `bundle_v2_upload_failed`
 
-本阶段暂不要求 HarmonyOS 真实 v2 导出闭环；当前 v1 导出不得被替换或破坏。
+当前 HarmonyOS 已支持 v2 含原图复盘包导出；v1 成品图复盘包仍保留，不得被 v2 替换或破坏。
 
 ## 六、Mac 导入规则
 
@@ -196,13 +196,13 @@ v2 不能：
 
 Mac 端当前已支持 v2 导入和可编辑恢复入口。导入时只进入复盘库查看态；只有用户点击“打开为复盘卡”后，才把原图和 `review.json` 复盘字段恢复到主编辑器。Mac 不写回原 bundle，不自动同步。
 
-## 七、本轮交付边界
+## 七、当前交付边界
 
 已进入当前范围：
 
 - 新增 v2 协议文档。
 - 双端产品文档保持同步。
-- HarmonyOS 增加 v2 设计和导出验证脚本，保护 v1 不被替换。
+- HarmonyOS 增加 v2 导出实现和验证脚本，保护 v1 不被替换。
 - Mac Reader、Import、Readonly Preview 和 Original Photo Restore 使用 v2 fixture 回归。
 - Mac v2 原图复盘包可打开为复盘卡。
 

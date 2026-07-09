@@ -40,7 +40,7 @@ for (const token of [
   '`originalPhotoReview`',
   '因为 `exportedImages = []` 直接判定非法',
   'Mac 端当前已支持 v2 导入和可编辑恢复入口',
-  'HarmonyOS 增加 v2 设计和导出验证脚本',
+  'HarmonyOS 增加 v2 导出实现和验证脚本',
   'Mac v2 原图复盘包可打开为复盘卡',
   'RDB 表结构变更',
   'Review JSON 字段变更',
