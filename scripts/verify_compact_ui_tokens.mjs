@@ -206,7 +206,8 @@ assertIncludes(appDesignSource, '@State isPressed: boolean = false;', 'Shared in
 assertIncludes(appDesignSource, '.scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })',
   'Shared cards and settings rows must keep subtle press feedback.');
 assertIncludes(reviewerProfileSource, '.justifyContent(FlexAlign.Start)', 'ReviewerProfilePage must explicitly top-align content.');
-assertIncludes(homeStorageSource, 'top: AppMetrics.pageTopPadding', 'HomeStoragePage must use shared top padding.');
+assertIncludes(homeStorageSource, 'const HOME_STORAGE_PAGE_TOP_PADDING: number = 0;', 'HomeStoragePage must remove the extra top spacer.');
+assertIncludes(homeStorageSource, 'top: HOME_STORAGE_PAGE_TOP_PADDING', 'HomeStoragePage must pin settings content to the top.');
 assertIncludes(previewPageSource, '.shadow(ElevationTokens.high)', 'Preview floating action bar must use high elevation.');
 assertIncludes(previewPageSource, '@State pressedActionKey: string = \'\';', 'Preview actions must keep explicit press feedback state.');
 assertIncludes(editorPageSource, '.shadow(ElevationTokens.medium)', 'Editor photo header must keep medium elevation.');

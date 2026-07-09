@@ -43,8 +43,9 @@ forbidIncludes(sources.stats, '.layoutWeight(1)\n      .scrollBar(BarState.Off)\
 
 requireIncludes(sources.homeStorage, 'CenterFeedbackOverlay()', 'HomeStoragePage');
 requireIncludes(sources.homeStorage, 'const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;', 'HomeStoragePage compact title/form gap');
+requireIncludes(sources.homeStorage, 'const HOME_STORAGE_PAGE_TOP_PADDING: number = 0;', 'HomeStoragePage top-pinned settings content');
 requireIncludes(sources.homeStorage, 'Column({ space: SETTINGS_TITLE_FORM_GAP })', 'HomeStoragePage unified top-aligned scroll content');
-requireIncludes(sources.homeStorage, 'top: AppMetrics.pageTopPadding', 'HomeStoragePage compact title/form gap');
+requireIncludes(sources.homeStorage, 'top: HOME_STORAGE_PAGE_TOP_PADDING', 'HomeStoragePage top-pinned settings content');
 requireIncludes(sources.homeStorage, 'bottom: this.getSettingsBottomPadding()', 'HomeStoragePage bottom action clearance');
 requireIncludes(sources.homeStorage, 'Scroll(this.settingsScroller)', 'HomeStoragePage unified scroll');
 forbidIncludes(sources.homeStorage, '.layoutWeight(1)', 'HomeStoragePage must not put the form in a remaining-height scroll region');

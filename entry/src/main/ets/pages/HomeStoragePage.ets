@@ -20,6 +20,7 @@ const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
 const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;
+const HOME_STORAGE_PAGE_TOP_PADDING: number = 0;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = AppMetrics.systemNavigationBarHeight + AppMetrics.space8;
 const SETTINGS_FEEDBACK_DISMISS_MS: number = 2200;
 
@@ -422,7 +423,7 @@ struct HomeStoragePage {
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: AppMetrics.pageTopPadding,
+          top: HOME_STORAGE_PAGE_TOP_PADDING,
           bottom: this.getSettingsBottomPadding()
         })
         .justifyContent(FlexAlign.Start)
