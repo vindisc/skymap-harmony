@@ -409,30 +409,35 @@ struct HomeStoragePage {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
 
-      Scroll(this.settingsScroller) {
-        Column({ space: SETTINGS_TITLE_FORM_GAP }) {
-          this.Header()
+      Column() {
+        this.Header()
 
-          if (this.isSettingsLoaded) {
-            this.ConfigurationForm()
-          } else {
-            this.LoadingSettings()
+        Scroll(this.settingsScroller) {
+          Column({ space: AppMetrics.cardGap }) {
+            if (this.isSettingsLoaded) {
+              this.ConfigurationForm()
+            } else {
+              this.LoadingSettings()
+            }
           }
+          .alignItems(HorizontalAlign.Start)
+          .width('100%')
+          .padding({ top: SETTINGS_TITLE_FORM_GAP, bottom: this.getSettingsBottomPadding() })
+          .justifyContent(FlexAlign.Start)
         }
-        .alignItems(HorizontalAlign.Start)
         .width('100%')
-        .padding({
-          left: AppMetrics.pagePadding,
-          right: AppMetrics.pagePadding,
-          top: HOME_STORAGE_PAGE_TOP_PADDING,
-          bottom: this.getSettingsBottomPadding()
-        })
-        .justifyContent(FlexAlign.Start)
+        .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
       }
+      .alignItems(HorizontalAlign.Start)
       .width('100%')
       .height('100%')
-      .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.Spring)
+      .padding({
+        left: AppMetrics.pagePadding,
+        right: AppMetrics.pagePadding,
+        top: HOME_STORAGE_PAGE_TOP_PADDING,
+        bottom: 0
+      })
       .backgroundColor(AppColors.pageBackground)
       .translate({ y: HOME_STORAGE_ROUTE_TOP_COMPENSATION })
 

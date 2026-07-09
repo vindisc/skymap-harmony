@@ -9,15 +9,13 @@ export struct SettingsTextInput {
   @Prop isPassword: boolean = false;
   @Prop showsPasswordToggle: boolean = false;
   @Prop inputType: InputType = InputType.Normal;
-  @State isPasswordVisible: boolean = false;
   @State isFocused: boolean = false;
-  @State shouldIgnoreToggleEmptyChange: boolean = false;
   onChange: (value: string) => void = () => {};
   onFocusInput: () => void = () => {};
   onBlurInput: () => void = () => {};
 
   private resolveInputType(): InputType {
-    if (this.isPassword && !this.isPasswordVisible) {
+    if (this.isPassword) {
       return InputType.Password;
     }
     return this.inputType;
@@ -35,6 +33,7 @@ export struct SettingsTextInput {
       Row({ space: AppMetrics.space8 }) {
         TextInput({ text: this.text, placeholder: this.placeholder })
           .type(this.resolveInputType())
+          .showPasswordIcon(this.showsPasswordToggle)
           .height(AppMetrics.controlHeight)
           .maxLines(1)
           .borderRadius(AppMetrics.buttonRadius)
@@ -45,9 +44,6 @@ export struct SettingsTextInput {
           .padding({ left: AppMetrics.space16, right: AppMetrics.space16 })
           .layoutWeight(1)
           .onChange((value: string) => {
-            if (this.shouldIgnoreToggleEmptyChange && value.length === 0 && this.text.length > 0) {
-              return;
-            }
             this.onChange(value);
           })
           .onFocus(() => {
@@ -62,28 +58,6 @@ export struct SettingsTextInput {
               this.onBlurInput();
             });
           })
-
-        if (this.showsPasswordToggle) {
-          Button(this.isPasswordVisible ? '隐藏' : '显示')
-            .height(32)
-            .constraintSize({ minWidth: 52 })
-            .padding({ left: 10, right: 10 })
-            .margin({ right: 8 })
-            .borderRadius(10)
-            .fontSize(AppTypography.caption)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.primary)
-            .backgroundColor(AppColors.primarySoft)
-            .border({ width: 1, color: AppColors.border })
-            .stateEffect(true)
-            .onClick(() => {
-              this.shouldIgnoreToggleEmptyChange = true;
-              this.isPasswordVisible = !this.isPasswordVisible;
-              setTimeout(() => {
-                this.shouldIgnoreToggleEmptyChange = false;
-              }, 120);
-            })
-        }
       }
       .alignItems(VerticalAlign.Center)
       .width('100%')

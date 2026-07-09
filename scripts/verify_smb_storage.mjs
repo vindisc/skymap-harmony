@@ -92,7 +92,7 @@ if (!homeStoragePageSource.includes('onPageShow(): void {') ||
 if (!settingsFormSource.includes('.onChange((value: string) => {') ||
   !settingsFormSource.includes('this.onChange(value);') ||
   !settingsFormSource.includes('@Prop showsPasswordToggle: boolean = false;') ||
-  !settingsFormSource.includes('this.isPasswordVisible ?') ||
+  !settingsFormSource.includes('.showPasswordIcon(this.showsPasswordToggle)') ||
   !homeStoragePageSource.includes('SettingsTextInput({') ||
   !settingsPageSource.includes('SettingsTextInput({')) {
   failed = true;
