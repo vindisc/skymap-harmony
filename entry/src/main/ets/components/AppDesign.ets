@@ -93,8 +93,6 @@ export class AppMetrics {
   static readonly space32: number = SpacingTokens.xxl;
   static readonly pagePadding: number = 16;
   static readonly pageTopPadding: number = 52;
-  static readonly settingsSubpageTopPadding: number = 0;
-  static readonly settingsSubpageTopCompensation: number = 0 - SpacingTokens.xl;
   static readonly pageBottomPadding: number = PAGE_BOTTOM_PADDING;
   static readonly systemNavigationBarHeight: number = SYSTEM_NAVIGATION_BAR_HEIGHT;
   static readonly floatingDockPadding: number = 8;

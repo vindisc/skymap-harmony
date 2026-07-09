@@ -424,7 +424,7 @@ struct HomeHeroImagePage {
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: AppMetrics.settingsSubpageTopPadding,
+          top: AppMetrics.pageTopPadding,
           bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
         })
         .height('100%')
@@ -435,7 +435,6 @@ struct HomeHeroImagePage {
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
       .backgroundColor(AppColors.pageBackground)
-      .translate({ y: AppMetrics.settingsSubpageTopCompensation })
     }
     .width('100%')
     .height('100%')

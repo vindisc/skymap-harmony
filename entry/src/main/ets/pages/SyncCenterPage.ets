@@ -205,7 +205,7 @@ struct SyncCenterPage {
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: AppMetrics.settingsSubpageTopPadding,
+          top: AppMetrics.pageTopPadding,
           bottom: AppMetrics.floatingDockReservedHeight + AppMetrics.floatingDockScrollClearance
         })
         .width('100%')
@@ -218,7 +218,6 @@ struct SyncCenterPage {
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
       .backgroundColor(AppColors.pageBackground)
-      .translate({ y: AppMetrics.settingsSubpageTopCompensation })
 
       this.ActionBar()
     }
