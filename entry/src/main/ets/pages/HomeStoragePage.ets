@@ -21,7 +21,6 @@ const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
 const SETTINGS_INPUT_SAFE_TOP_GAP: number = 36;
 const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;
 const HOME_STORAGE_PAGE_TOP_PADDING: number = AppMetrics.pageTopPadding;
-const HOME_STORAGE_ROUTE_TOP_COMPENSATION: number = 0 - AppMetrics.space24;
 const SETTINGS_KEYBOARD_BOTTOM_PADDING: number = AppMetrics.systemNavigationBarHeight + AppMetrics.space8;
 const SETTINGS_FEEDBACK_DISMISS_MS: number = 2200;
 
@@ -439,7 +438,6 @@ struct HomeStoragePage {
         bottom: 0
       })
       .backgroundColor(AppColors.pageBackground)
-      .translate({ y: HOME_STORAGE_ROUTE_TOP_COMPENSATION })
 
       Stack({ alignContent: Alignment.Center }) {
         this.CenterFeedbackOverlay()

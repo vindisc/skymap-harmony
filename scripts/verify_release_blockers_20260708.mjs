@@ -47,10 +47,10 @@ requireIncludes(sources.homeStorage, 'CenterFeedbackOverlay()', 'HomeStoragePage
 requireIncludes(sources.homeStorage, 'const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;', 'HomeStoragePage compact title/form gap');
 requireIncludes(sources.homeStorage, 'Column() {\n        this.Header()\n\n        Scroll(this.settingsScroller)', 'HomeStoragePage fixed title above form scroll');
 requireIncludes(sources.homeStorage, 'const HOME_STORAGE_PAGE_TOP_PADDING: number = AppMetrics.pageTopPadding;', 'HomeStoragePage fixed title safe top padding');
-requireIncludes(sources.homeStorage, 'const HOME_STORAGE_ROUTE_TOP_COMPENSATION: number = 0 - AppMetrics.space24;', 'HomeStoragePage route top compensation');
 requireIncludes(sources.homeStorage, 'top: HOME_STORAGE_PAGE_TOP_PADDING', 'HomeStoragePage fixed title safe top padding');
 requireIncludes(sources.homeStorage, '.padding({ top: SETTINGS_TITLE_FORM_GAP, bottom: this.getSettingsBottomPadding() })', 'HomeStoragePage scroll-only keyboard clearance');
-requireIncludes(sources.homeStorage, '.translate({ y: HOME_STORAGE_ROUTE_TOP_COMPENSATION })', 'HomeStoragePage route top compensation');
+forbidIncludes(sources.homeStorage, 'HOME_STORAGE_ROUTE_TOP_COMPENSATION', 'HomeStoragePage fixed title must not use route top compensation');
+forbidIncludes(sources.homeStorage, '.translate({ y:', 'HomeStoragePage fixed title must not be shifted into the status bar');
 forbidIncludes(sources.homeStorage, 'Scroll(this.settingsScroller) {\n        Column({ space: SETTINGS_TITLE_FORM_GAP }) {\n          this.Header()', 'HomeStoragePage title must not move with form scroll');
 for (const [name, source] of [
   ['ReviewerProfilePage', sources.reviewer],
