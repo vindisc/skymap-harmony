@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 const sources = {
+  appDesign: fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8'),
   homeStorage: fs.readFileSync('entry/src/main/ets/pages/HomeStoragePage.ets', 'utf8'),
   homeStorageService: fs.readFileSync('entry/src/main/ets/services/HomeStorageService.ets', 'utf8'),
   settingsForm: fs.readFileSync('entry/src/main/ets/components/SettingsForm.ets', 'utf8'),
@@ -8,7 +9,9 @@ const sources = {
   exportService: fs.readFileSync('entry/src/main/ets/services/ReviewCardExportService.ets', 'utf8'),
   stats: fs.readFileSync('entry/src/main/ets/pages/StatsPage.ets', 'utf8'),
   reviewer: fs.readFileSync('entry/src/main/ets/pages/ReviewerProfilePage.ets', 'utf8'),
-  homeHero: fs.readFileSync('entry/src/main/ets/pages/HomeHeroImagePage.ets', 'utf8')
+  homeHero: fs.readFileSync('entry/src/main/ets/pages/HomeHeroImagePage.ets', 'utf8'),
+  widgetCardBackground: fs.readFileSync('entry/src/main/ets/pages/WidgetCardBackgroundPage.ets', 'utf8'),
+  syncCenter: fs.readFileSync('entry/src/main/ets/pages/SyncCenterPage.ets', 'utf8')
 };
 
 let failed = false;
@@ -43,11 +46,19 @@ forbidIncludes(sources.stats, '.layoutWeight(1)\n      .scrollBar(BarState.Off)\
 
 requireIncludes(sources.homeStorage, 'CenterFeedbackOverlay()', 'HomeStoragePage');
 requireIncludes(sources.homeStorage, 'const SETTINGS_TITLE_FORM_GAP: number = AppMetrics.space8;', 'HomeStoragePage compact title/form gap');
-requireIncludes(sources.homeStorage, 'const HOME_STORAGE_PAGE_TOP_PADDING: number = 0;', 'HomeStoragePage top-pinned settings content');
-requireIncludes(sources.homeStorage, 'const HOME_STORAGE_ROUTE_TOP_COMPENSATION: number = 0 - AppMetrics.space24;', 'HomeStoragePage route top compensation');
 requireIncludes(sources.homeStorage, 'Column({ space: SETTINGS_TITLE_FORM_GAP })', 'HomeStoragePage unified top-aligned scroll content');
-requireIncludes(sources.homeStorage, 'top: HOME_STORAGE_PAGE_TOP_PADDING', 'HomeStoragePage top-pinned settings content');
-requireIncludes(sources.homeStorage, '.translate({ y: HOME_STORAGE_ROUTE_TOP_COMPENSATION })', 'HomeStoragePage route top compensation');
+requireIncludes(sources.appDesign, 'static readonly settingsSubpageTopPadding: number = 0;', 'Shared settings subpage top padding');
+requireIncludes(sources.appDesign, 'static readonly settingsSubpageTopCompensation: number = 0 - SpacingTokens.xl;', 'Shared settings subpage top compensation');
+for (const [name, source] of [
+  ['HomeStoragePage', sources.homeStorage],
+  ['ReviewerProfilePage', sources.reviewer],
+  ['HomeHeroImagePage', sources.homeHero],
+  ['WidgetCardBackgroundPage', sources.widgetCardBackground],
+  ['SyncCenterPage', sources.syncCenter]
+]) {
+  requireIncludes(source, 'top: AppMetrics.settingsSubpageTopPadding', `${name} shared settings subpage top padding`);
+  requireIncludes(source, '.translate({ y: AppMetrics.settingsSubpageTopCompensation })', `${name} shared settings subpage top compensation`);
+}
 requireIncludes(sources.homeStorage, 'bottom: this.getSettingsBottomPadding()', 'HomeStoragePage bottom action clearance');
 requireIncludes(sources.homeStorage, 'Scroll(this.settingsScroller)', 'HomeStoragePage unified scroll');
 forbidIncludes(sources.homeStorage, '.layoutWeight(1)', 'HomeStoragePage must not put the form in a remaining-height scroll region');

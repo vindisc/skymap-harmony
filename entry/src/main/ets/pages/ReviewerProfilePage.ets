@@ -90,7 +90,7 @@ struct ReviewerProfilePage {
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: AppMetrics.pageTopPadding,
+          top: AppMetrics.settingsSubpageTopPadding,
           bottom: AppMetrics.floatingDockReservedHeight + AppMetrics.floatingDockScrollClearance
         })
         .height('100%')
@@ -101,6 +101,7 @@ struct ReviewerProfilePage {
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
       .backgroundColor(AppColors.pageBackground)
+      .translate({ y: AppMetrics.settingsSubpageTopCompensation })
 
       this.ActionBar()
     }
