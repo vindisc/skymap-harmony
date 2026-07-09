@@ -166,6 +166,7 @@ struct WidgetCardBackgroundPage {
       .width('100%')
       .height('100%')
       .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
       .backgroundColor(AppColors.pageBackground)
     }
     .width('100%')

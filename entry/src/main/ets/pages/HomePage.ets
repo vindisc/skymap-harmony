@@ -324,6 +324,7 @@ export struct HomePage {
       .interval(this.heroIntervalSeconds * 1000)
       .indicator(this.resolveHeroIndicator())
       .loop(this.shouldShowHeroIndicator())
+      .effectMode(EdgeEffect.Spring)
       .curve(MotionTokens.curveDecelerate)
       .onChange((index: number) => {
         this.activeHeroIndex = index;

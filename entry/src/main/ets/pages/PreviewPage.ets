@@ -625,6 +625,7 @@ struct PreviewPage {
         }
         .layoutWeight(1)
         .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
       }
       .alignItems(HorizontalAlign.Start)
       .height('100%')

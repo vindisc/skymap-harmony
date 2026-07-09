@@ -297,6 +297,7 @@ struct ReviewSettingsPage {
           .width('100%')
           .padding({ top: AppMetrics.space32, bottom: this.getSettingsBottomPadding() })
         }
+        .edgeEffect(EdgeEffect.Spring)
       }
       .alignItems(HorizontalAlign.Start)
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.pageTopPadding, bottom: 0 })

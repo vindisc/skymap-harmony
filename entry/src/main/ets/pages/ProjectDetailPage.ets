@@ -699,6 +699,7 @@ export struct ProjectDetailPage {
           .height(AppMetrics.filterChipHeight)
           .scrollable(ScrollDirection.Horizontal)
           .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.Spring)
 
         }
         .margin({ top: LIBRARY_HEADER_CONTROL_GAP })
