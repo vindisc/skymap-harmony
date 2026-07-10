@@ -87,12 +87,13 @@ entry/build/default/outputs/default/entry-default-signed.hap
 
 ## 4. 待补充文档
 
-以下文档当前还缺，不阻塞本次已提审版本，但建议下一版补齐：
+以下文档已在 [`docs/release/README.md`](./release/README.md) 中补齐或留出模板：
 
 | 优先级 | 文档 | 目的 |
 | --- | --- | --- |
-| P0 | 发布配置与签名材料隔离说明 | 明确哪些文件可提交、哪些只允许本机保存 |
-| P0 | 审核反馈处理记录 | 华为审核通过 / 驳回后沉淀问题、修复和复提步骤 |
+| P0 | [`docs/release/SIGNING_MATERIALS.md`](./release/SIGNING_MATERIALS.md) | 明确哪些文件可提交、哪些只允许本机保存 |
+| P0 | [`docs/release/REVIEW_FEEDBACK_TEMPLATE.md`](./release/REVIEW_FEEDBACK_TEMPLATE.md) | 华为审核通过 / 驳回后沉淀问题、修复和复提步骤 |
+| P0 | [`docs/release/HAP_ARCHIVE_LOG.md`](./release/HAP_ARCHIVE_LOG.md) | 审核通过后的 HAP 归档记录和 `v0.1.0` tag 步骤 |
 | P1 | 家庭存储同步设计 | 区分当前手动导出、下一版同步队列、失败重试和冲突处理 |
 | P1 | 发布资产归档规范 | 说明图标、截图、HAP、证书中间文件和审核素材如何保存 |
 | P2 | 复盘包导入回流计划 | 说明 HarmonyOS 端未来是否需要读取 v1 / v2 复盘包 |

@@ -72,6 +72,7 @@ bash scripts/build_hap.sh
 - [docs/product/README.md](./docs/product/README.md)：当前保留的正式产品文档索引
 - [docs/AUDIT_CLEANUP_SUMMARY.md](./docs/AUDIT_CLEANUP_SUMMARY.md)：本轮文档审计与收口记录
 - [docs/RELEASE_CLOSURE_20260709.md](./docs/RELEASE_CLOSURE_20260709.md)：0.1.0 提审后版本收口、发布 / 测试切换和下一版优先级
+- [docs/release/README.md](./docs/release/README.md)：发布工程卫生、签名材料隔离、审核反馈模板和 HAP 归档记录
 
 ## 当前不承诺
 
