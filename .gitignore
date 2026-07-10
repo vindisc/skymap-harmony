@@ -21,6 +21,7 @@ oh_modules/
 *.csr
 *.der
 local.properties
+build-profile.local.json5
 release-assets/appgallery-screenshots/
 release-assets/signing/
 release-assets/packages/

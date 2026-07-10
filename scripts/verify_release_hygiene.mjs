@@ -11,6 +11,8 @@ const requiredFiles = [
   'docs/RELEASE_CLOSURE_20260709.md',
   'release-assets/README.md',
   'scripts/audit_workspace_hygiene.mjs',
+  'scripts/manage_signing_profile.mjs',
+  'scripts/verify_signing_mode_workflow.mjs',
   'README.md'
 ];
 
@@ -43,6 +45,7 @@ for (const token of [
   '*.jks',
   '*.keystore',
   '*.key',
+  'build-profile.local.json5',
   'release-assets/appgallery-screenshots/',
   'release-assets/signing/',
   'release-assets/packages/',
@@ -69,11 +72,12 @@ for (const token of [
 
 const signingDoc = readText('docs/release/SIGNING_MATERIALS.md');
 for (const token of [
-  'products[0].signingConfig',
-  '提审 / 发布态必须指向 `release`',
+  'build-profile.local.json5',
+  'bash scripts/build_hap.sh --signing release',
+  '自动恢复无签名基线',
   '禁止提交',
   'release-assets/signing/',
-  'git status --short'
+  '凭据处置'
 ]) {
   assert(signingDoc.includes(token), `SIGNING_MATERIALS.md missing token: ${token}`);
 }
@@ -138,6 +142,17 @@ if (workspaceAudit.stderr) {
   process.stderr.write(workspaceAudit.stderr);
 }
 assert(workspaceAudit.status === 0, 'Workspace hygiene audit must pass');
+
+const signingWorkflow = spawnSync(process.execPath, ['scripts/verify_signing_mode_workflow.mjs'], {
+  encoding: 'utf8'
+});
+if (signingWorkflow.stdout) {
+  process.stdout.write(signingWorkflow.stdout);
+}
+if (signingWorkflow.stderr) {
+  process.stderr.write(signingWorkflow.stderr);
+}
+assert(signingWorkflow.status === 0, 'Signing mode workflow verification must pass');
 
 if (failed) {
   process.exit(1);

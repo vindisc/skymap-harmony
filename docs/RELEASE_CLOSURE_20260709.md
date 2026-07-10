@@ -51,22 +51,22 @@
 
 ## 3. 发布 / 测试切换说明
 
-当前仓库的发布开关集中在根目录 `build-profile.json5`。
+当前仓库的 `build-profile.json5` 已净化为无签名基线；本机签名配置保存在被忽略的 `build-profile.local.json5`，由构建脚本临时加载并自动恢复。
 
 ### 发布或提审前
 
 发布态必须满足：
 
-- `products[0].signingConfig` 指向 `release`。
-- `signingConfigs` 中启用 `release` 签名配置。
+- `bash scripts/build_hap.sh --status` 显示本机存在 `release` 签名。
+- 本机 `build-profile.local.json5` 的 release 材料文件存在且已完成凭据轮换。
 - `AppScope/app.json5` 中 `versionCode`、`versionName` 已确认对应本次提审版本。
 - 使用仓库脚本打包：
 
 ```bash
-bash scripts/build_hap.sh
+bash scripts/build_hap.sh --signing release
 ```
 
-当前脚本固定构建 `entry` 模块、`default` product，并执行 `assembleHap`。构建产物通常位于：
+脚本固定构建 `entry` 模块、`default` product，并按签名模式选择 `debug/release` buildMode 后执行 `assembleHap`。构建产物通常位于：
 
 ```text
 entry/build/default/outputs/default/entry-default-signed.hap
@@ -85,12 +85,12 @@ entry/build/default/outputs/default/entry-default-signed.hap
 
 推荐做法：
 
-- 在 DevEco Studio 中使用本机自动生成的调试签名配置。
-- 或在 `build-profile.json5` 中切换到本机 debug / default signingConfig。
-- 本机 debug 证书、profile、p12 路径和密码不要提交。
-- 测试结束准备提审时，再把 `products[0].signingConfig` 切回 `release` 并重新打包验证。
+- 无签名验证直接执行 `bash scripts/build_hap.sh`。
+- 真机调试执行 `bash scripts/build_hap.sh --signing debug`，使用本机 debug / default signingConfig。
+- 本机 debug 证书、profile、p12 路径和密码只放在 `build-profile.local.json5`，不要提交。
+- 发布构建显式执行 `bash scripts/build_hap.sh --signing release`；脚本结束后自动恢复无签名基线。
 
-当前仓库没有独立 `test` product；“测试态”实际指本机调试签名或 DevEco 自动签名。下一版建议把 `debug / release` 切换脚本化，减少手工改错风险。
+当前仓库没有独立 `test` product；“测试态”使用 `default` product + `debug` buildMode。签名切换已经脚本化，不再要求人工修改被跟踪配置。
 
 ## 4. 待补充文档
 
@@ -109,7 +109,7 @@ entry/build/default/outputs/default/entry-default-signed.hap
 
 ### P0：发布工程卫生
 
-- 把发布签名、调试签名、测试签名的切换流程固化成文档或脚本。
+- 已完成：发布、调试和无签名构建切换脚本化，仓库配置保持无签名基线。
 - 已完成：忽略 `.DS_Store`、发布截图、安装包、提审附件和签名中间文件，并加入自动门禁。
 - 审核通过后打 `v0.1.0` 标签，并记录 HAP 文件名、构建时间、版本号和提交 hash。
 - 如果审核驳回，优先形成“审核反馈 -> 修复点 -> 验证脚本 -> 复提说明”的闭环。
@@ -134,7 +134,7 @@ entry/build/default/outputs/default/entry-default-signed.hap
 
 ## 6. 当前风险
 
-- 当前发布 / 测试切换依赖人工改 `build-profile.json5`，容易忘记切回 release 或误提交 debug 材料。
+- 本机签名配置曾通过 `skip-worktree` 隐藏；全部 Git 提交扫描未发现敏感字段，当前已迁移到忽略文件并禁止再次隐藏索引状态。
 - 当前工作区仍有下一版本 UI 改动；它们属于独立工作集，发布资产门禁不会自动提交或删除这些内容。
 - 本机仍可保留被忽略的截图、证书和签名中间文件；它们不等于正式归档，发布时仍需写入受控归档并更新 `HAP_ARCHIVE_LOG.md`。
 - 当前家庭存储仍是手动配置与导出能力，不是自动同步产品。

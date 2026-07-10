@@ -2,10 +2,103 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DEVECO_APP_HOME="/Applications/DevEco-Studio.app/Contents"
 DEVECO_SDK_HOME_DEFAULT="${DEVECO_APP_HOME}/sdk"
 DEVECO_JAVA_HOME_DEFAULT="${DEVECO_APP_HOME}/jbr/Contents/Home"
 HVIGOR_BIN="${DEVECO_APP_HOME}/tools/hvigor/bin/hvigorw"
+SIGNING_MODE="${SKYMAP_SIGNING_MODE:-unsigned}"
+SHOW_STATUS=false
+
+usage() {
+  cat <<'EOF'
+用法：bash scripts/build_hap.sh [--signing unsigned|debug|release] [--status]
+
+  --signing unsigned  使用仓库净化配置构建，不加载本机签名（默认）
+  --signing debug     临时加载 build-profile.local.json5 的 debug/default 签名
+  --signing release   临时加载 build-profile.local.json5 的 release 签名
+  --status            只显示仓库签名状态和本机可用模式
+EOF
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --signing)
+      if [ "$#" -lt 2 ]; then
+        usage >&2
+        exit 2
+      fi
+      SIGNING_MODE="$2"
+      shift 2
+      ;;
+    --status)
+      SHOW_STATUS=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "未知参数：$1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [[ ! "$SIGNING_MODE" =~ ^(unsigned|debug|release)$ ]]; then
+  echo "不支持的签名模式：$SIGNING_MODE" >&2
+  usage >&2
+  exit 2
+fi
+
+cd "$REPO_ROOT"
+
+if [ "$SHOW_STATUS" = true ]; then
+  node scripts/manage_signing_profile.mjs status
+  exit 0
+fi
+
+node scripts/manage_signing_profile.mjs assert-safe
+
+PROFILE_BACKUP=""
+
+restore_profile() {
+  if [ -n "$PROFILE_BACKUP" ] && [ -f "$PROFILE_BACKUP" ]; then
+    cp "$PROFILE_BACKUP" build-profile.json5
+    rm -f "$PROFILE_BACKUP"
+    PROFILE_BACKUP=""
+    echo "已恢复仓库 build-profile.json5。"
+  fi
+}
+
+cleanup_on_exit() {
+  local status=$?
+  trap - EXIT
+  restore_profile
+  exit "$status"
+}
+
+trap cleanup_on_exit EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+if [ "$SIGNING_MODE" != "unsigned" ]; then
+  PROFILE_BACKUP="$(mktemp "${TMPDIR:-/tmp}/skymap-build-profile.XXXXXX")"
+  cp build-profile.json5 "$PROFILE_BACKUP"
+  node scripts/manage_signing_profile.mjs activate "$SIGNING_MODE"
+fi
+
+if [ "$SIGNING_MODE" = "release" ]; then
+  BUILD_MODE="release"
+else
+  BUILD_MODE="debug"
+fi
+
+echo "构建模式：${BUILD_MODE}；签名模式：${SIGNING_MODE}"
 
 export DEVECO_SDK_HOME="${DEVECO_SDK_HOME:-$DEVECO_SDK_HOME_DEFAULT}"
 export JAVA_HOME="${JAVA_HOME:-$DEVECO_JAVA_HOME_DEFAULT}"
@@ -31,9 +124,10 @@ fi
 # 避免 DevEco Studio 中遗留的 daemon 继续复用错误 SDK 环境。
 "$HVIGOR_BIN" --stop-daemon >/dev/null 2>&1 || true
 
-exec "$HVIGOR_BIN" \
+"$HVIGOR_BIN" \
   --mode module \
   -p module=entry \
   -p product=default \
+  -p buildMode="$BUILD_MODE" \
   assembleHap \
   --no-daemon
