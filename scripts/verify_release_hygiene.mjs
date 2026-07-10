@@ -49,7 +49,7 @@ for (const token of [
   'SIGNING_MATERIALS.md',
   'REVIEW_FEEDBACK_TEMPLATE.md',
   'HAP_ARCHIVE_LOG.md',
-  '不提前创建 `v0.1.0` tag'
+  '当前 `0.1.0` 已通过华为审核'
 ]) {
   assert(releaseReadme.includes(token), `docs/release/README.md missing token: ${token}`);
 }
@@ -70,7 +70,8 @@ for (const token of [
   '审核状态',
   '审核反馈原文',
   '复提说明',
-  '等待华为审核结果'
+  '审核状态：\n- 通过',
+  '华为已经审核通过'
 ]) {
   assert(reviewTemplate.includes(token), `REVIEW_FEEDBACK_TEMPLATE.md missing token: ${token}`);
 }
@@ -79,8 +80,8 @@ const hapLog = readText('docs/release/HAP_ARCHIVE_LOG.md');
 for (const token of [
   'git tag -a v0.1.0',
   'git push origin v0.1.0',
-  '等待华为审核结果',
-  '当前不提前创建 tag'
+  '华为审核通过',
+  '华为审核结果 | 通过'
 ]) {
   assert(hapLog.includes(token), `HAP_ARCHIVE_LOG.md missing token: ${token}`);
 }
