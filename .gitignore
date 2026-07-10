@@ -14,8 +14,17 @@ oh_modules/
 *.p7b
 *.cer
 *.pem
+*.profile
+*.jks
+*.keystore
+*.key
+*.csr
+*.der
 local.properties
 release-assets/appgallery-screenshots/
 release-assets/signing/
+release-assets/packages/
+release-assets/submissions/
+release-assets/private/
 release-assets/*.pem
 release-assets/*.p7b

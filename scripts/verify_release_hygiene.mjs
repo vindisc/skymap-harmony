@@ -1,12 +1,16 @@
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 
 const requiredFiles = [
   '.gitignore',
   'docs/release/README.md',
   'docs/release/SIGNING_MATERIALS.md',
+  'docs/release/ASSET_ARCHIVE_POLICY.md',
   'docs/release/REVIEW_FEEDBACK_TEMPLATE.md',
   'docs/release/HAP_ARCHIVE_LOG.md',
   'docs/RELEASE_CLOSURE_20260709.md',
+  'release-assets/README.md',
+  'scripts/audit_workspace_hygiene.mjs',
   'README.md'
 ];
 
@@ -35,8 +39,15 @@ for (const token of [
   '*.p7b',
   '*.cer',
   '*.pem',
+  '*.profile',
+  '*.jks',
+  '*.keystore',
+  '*.key',
   'release-assets/appgallery-screenshots/',
   'release-assets/signing/',
+  'release-assets/packages/',
+  'release-assets/submissions/',
+  'release-assets/private/',
   'release-assets/*.pem',
   'release-assets/*.p7b'
 ]) {
@@ -49,6 +60,8 @@ for (const token of [
   'SIGNING_MATERIALS.md',
   'REVIEW_FEEDBACK_TEMPLATE.md',
   'HAP_ARCHIVE_LOG.md',
+  'ASSET_ARCHIVE_POLICY.md',
+  'audit_workspace_hygiene.mjs',
   '当前 `0.1.0` 已通过华为审核'
 ]) {
   assert(releaseReadme.includes(token), `docs/release/README.md missing token: ${token}`);
@@ -91,6 +104,40 @@ assert(readme.includes('docs/release/README.md'), 'README should link to release
 
 const closure = readText('docs/RELEASE_CLOSURE_20260709.md');
 assert(closure.includes('docs/release/README.md'), 'Release closure should link to release hygiene docs');
+
+const archivePolicy = readText('docs/release/ASSET_ARCHIVE_POLICY.md');
+for (const token of [
+  '资产分层',
+  '受控发布归档',
+  'HAP_ARCHIVE_LOG.md',
+  'audit_workspace_hygiene.mjs',
+  '不用 `git add -f`'
+]) {
+  assert(archivePolicy.includes(token), `ASSET_ARCHIVE_POLICY.md missing token: ${token}`);
+}
+
+const releaseAssetsReadme = readText('release-assets/README.md');
+for (const token of [
+  '当前允许跟踪',
+  '仅本机或发布归档保存',
+  'appgallery-screenshots/',
+  'signing/',
+  'packages/',
+  'submissions/'
+]) {
+  assert(releaseAssetsReadme.includes(token), `release-assets/README.md missing token: ${token}`);
+}
+
+const workspaceAudit = spawnSync(process.execPath, ['scripts/audit_workspace_hygiene.mjs'], {
+  encoding: 'utf8'
+});
+if (workspaceAudit.stdout) {
+  process.stdout.write(workspaceAudit.stdout);
+}
+if (workspaceAudit.stderr) {
+  process.stderr.write(workspaceAudit.stderr);
+}
+assert(workspaceAudit.status === 0, 'Workspace hygiene audit must pass');
 
 if (failed) {
   process.exit(1);

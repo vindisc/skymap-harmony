@@ -42,6 +42,13 @@
 - `release-assets/` 下生成图、截图、签名中间材料：建议建立单独发布资产归档规则，避免误提交。
 - 发布证书、profile、签名材料：建议下一版把可公开配置和私有材料彻底分离。
 
+2026-07-10 补充：上述发布资产与工作区卫生项已完成规则化收口。
+
+- 新增 `docs/release/ASSET_ARCHIVE_POLICY.md` 和 `release-assets/README.md`，明确公开资产允许清单与仓库外归档规则。
+- `.gitignore` 已覆盖截图、安装包、提审附件、证书、profile、keystore、私钥和签名中间文件。
+- `scripts/audit_workspace_hygiene.mjs` 会阻止敏感资产被跟踪、未忽略或本机 `build-profile.json5` 改动混入发布检查。
+- 根目录 UI 草案保留原位置，并通过本仓库本机 `.git/info/exclude` 隔离，不进入正式文档或提交范围。
+
 ## 3. 发布 / 测试切换说明
 
 当前仓库的发布开关集中在根目录 `build-profile.json5`。
@@ -95,7 +102,7 @@ entry/build/default/outputs/default/entry-default-signed.hap
 | P0 | [`docs/release/REVIEW_FEEDBACK_TEMPLATE.md`](./release/REVIEW_FEEDBACK_TEMPLATE.md) | 华为审核通过 / 驳回后沉淀问题、修复和复提步骤 |
 | P0 | [`docs/release/HAP_ARCHIVE_LOG.md`](./release/HAP_ARCHIVE_LOG.md) | 审核通过后的 HAP 归档记录和 `v0.1.0` tag 步骤 |
 | P1 | 家庭存储同步设计 | 区分当前手动导出、下一版同步队列、失败重试和冲突处理 |
-| P1 | 发布资产归档规范 | 说明图标、截图、HAP、证书中间文件和审核素材如何保存 |
+| P1 | [`docs/release/ASSET_ARCHIVE_POLICY.md`](./release/ASSET_ARCHIVE_POLICY.md) | 图标、截图、HAP、证书中间文件和审核素材归档规范，已完成 |
 | P2 | 复盘包导入回流计划 | 说明 HarmonyOS 端未来是否需要读取 v1 / v2 复盘包 |
 
 ## 5. 下一版本建议优先级
@@ -103,7 +110,7 @@ entry/build/default/outputs/default/entry-default-signed.hap
 ### P0：发布工程卫生
 
 - 把发布签名、调试签名、测试签名的切换流程固化成文档或脚本。
-- 清理或忽略 `.DS_Store`、发布截图、签名中间文件等易误提交资产。
+- 已完成：忽略 `.DS_Store`、发布截图、安装包、提审附件和签名中间文件，并加入自动门禁。
 - 审核通过后打 `v0.1.0` 标签，并记录 HAP 文件名、构建时间、版本号和提交 hash。
 - 如果审核驳回，优先形成“审核反馈 -> 修复点 -> 验证脚本 -> 复提说明”的闭环。
 
@@ -128,6 +135,7 @@ entry/build/default/outputs/default/entry-default-signed.hap
 ## 6. 当前风险
 
 - 当前发布 / 测试切换依赖人工改 `build-profile.json5`，容易忘记切回 release 或误提交 debug 材料。
-- 当前工作区有未提交代码改动和未跟踪发布资产；本轮文档提交不应包含这些文件。
+- 当前工作区仍有下一版本 UI 改动；它们属于独立工作集，发布资产门禁不会自动提交或删除这些内容。
+- 本机仍可保留被忽略的截图、证书和签名中间文件；它们不等于正式归档，发布时仍需写入受控归档并更新 `HAP_ARCHIVE_LOG.md`。
 - 当前家庭存储仍是手动配置与导出能力，不是自动同步产品。
 - 当前审核通过状态来自人工上下文，仓库无法直接验证华为后台记录；正式归档以 `docs/release/HAP_ARCHIVE_LOG.md` 为准。

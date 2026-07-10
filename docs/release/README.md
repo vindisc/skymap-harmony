@@ -14,6 +14,9 @@
 - `HAP_ARCHIVE_LOG.md`
   - 审核通过后的 HAP 归档记录
   - `v0.1.0` tag 创建和推送步骤
+- `ASSET_ARCHIVE_POLICY.md`
+  - 图标、截图、HAP、签名材料和提审附件的归档边界
+  - Git 可跟踪资产清单和发布前检查流程
 
 ## 当前原则
 
@@ -21,7 +24,8 @@
 - 创建 `v0.1.0` tag 前，必须先记录 HAP、提交 hash、构建时间和签名状态。
 - 审核驳回时先填写审核反馈记录，再做修复、验证、提交和复提。
 - 发布证书、profile、p12、pem、截图草稿和签名中间文件不进入 Git。
-- 已跟踪的 AppGallery 图标资产继续保留；新截图和临时发布材料进入 `release-assets/` 后默认不提交。
+- `release-assets/README.md` 与四个已公开 AppGallery 图标是当前唯一允许跟踪的发布资产。
+- 新截图、HAP、提审附件和临时发布材料进入本机归档目录后默认不提交。
 
 ## 常用检查
 
@@ -29,6 +33,7 @@
 
 ```bash
 git status --short
+node scripts/audit_workspace_hygiene.mjs
 node scripts/verify_release_hygiene.mjs
 ```
 
