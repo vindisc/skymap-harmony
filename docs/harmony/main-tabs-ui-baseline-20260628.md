@@ -4,6 +4,8 @@
 
 结论：这版四 Tab 已进入 UI 收口基线。除非出现功能阻断、可访问性问题、底部遮挡、明显文字溢出或回归，不建议继续开启 HarmonyOS UI 小修。
 
+权威边界：这些截图用于约束四个主 Tab 的结构、密度和视觉方向，不作为后续提交的逐像素发布证明。当前生产基线以华为审核通过的安装包、Git 标签 `v0.1.0` 和提交 `bd4fcda` 为准；所有后续 UI 变更按 [UI 收口规则](./UI_CLOSURE_RULES.md) 执行。
+
 ## 基线截图
 
 | Tab | 截图 | 文件 |
@@ -59,8 +61,13 @@
 后续改动如果触达四个主 Tab、`AppShellPage`、`AppDesign` 或 `DesignTokens`，至少运行：
 
 ```bash
+node scripts/verify_ui_closure.mjs
+```
+
+如果统一门禁失败，可先单独定位主 Tab 和“我的”页约束：
+
+```bash
 node scripts/verify_main_tabs_ui_baseline.mjs
-node scripts/verify_page_description_cleanup.mjs
 node scripts/verify_my_page_information_architecture.mjs
 ```
 
