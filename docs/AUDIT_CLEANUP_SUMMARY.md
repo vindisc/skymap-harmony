@@ -94,11 +94,13 @@
   - `导入待复盘`
 - 待复盘当前支持多选导入，不再保留“待复盘不支持批量导入”的旧说法
 
-## 7. 当前代码与文档仍有风险点
+## 7. 文档边界风险（2026-07-10 已闭环）
 
-- 复盘包相关文档仍保留 v1 / v2 命名，因为当前代码确实存在这两条导出链路；如果后续只保留一条，需要再次收口命名。
-- `review-card-exchange-schema.md` 仍带有跨端协议语境，虽然当前字段定义有效，但若以后协议层再精简，需同步收口。
-- `docs/harmony/main-tabs-ui-baseline-20260628.md` 属于验收基线快照，不是产品需求文档；如果 UI 结构再次调整，需要更新截图或移除。
+- v1 / v2 只表示 Review Bundle 容器版本，`review.json` 单独固定为 `Review JSON Schema v1`，两条版本轴已在总索引和主契约中分离。
+- `review-card-exchange-schema.md` 已收口为 HarmonyOS 当前生成字段契约；Mac 等消费端行为只作为兼容约束，不再写成当前仓库已实现能力。
+- `docs/harmony/main-tabs-ui-baseline-20260628.md` 已明确为带日期的验收快照，并补充结构变更后的替换规则。
+- `docs/README.md` 作为唯一总入口，明确当前实现、协议、UI 快照和历史记录的权威顺序。
+- `scripts/verify_product_docs_cleanup.mjs` 对上述角色声明和版本关系执行自动校验。
 
 ## 8. 后续建议继续冻结或收回的能力
 

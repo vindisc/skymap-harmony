@@ -2,7 +2,9 @@
 
 日期：2026-06-28
 
-本文定义 review bundle v2 的产品边界、文件结构和双端接力规则。v2 是新增的“原图复盘包”，用于把 HarmonyOS 端的原始照片和 `review.json` 一起交给 Mac 端，为后续 Mac 可编辑复盘恢复打基础。v2 不替代 v1，不修改 Review JSON v1 字段，不引入云同步、自动同步、批量导入、双向同步、远端删除或冲突自动合并。
+文档角色：本文是 Review Bundle v2 含原图导出实现的专项补充。v1 / v2 的共同结构和兼容规则以 [`REVIEW_BUNDLE_V1_V2_CONTRACT.md`](./REVIEW_BUNDLE_V1_V2_CONTRACT.md) 为唯一权威基线；两者冲突时以主契约和当前代码为准。
+
+v2 是新增的“原图复盘包”，用于把 HarmonyOS 端的原始照片和 `review.json` 一起交给兼容消费端。v2 不替代 v1，仍使用 `Review JSON Schema v1`，不修改 Review JSON v1 字段，也不引入云同步、自动同步、批量导入、双向同步、远端删除或冲突自动合并。本文描述的 Mac 行为是消费端兼容约束，不代表本仓库实现或验证了 Mac 功能。
 
 ## 一、产品定位
 

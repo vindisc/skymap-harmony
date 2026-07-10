@@ -68,12 +68,13 @@ bash scripts/build_hap.sh
 
 ## 当前文档入口
 
+- [docs/README.md](./docs/README.md)：文档总导航、权威顺序、版本轴和跨端边界
 - [docs/mobile-main-flow.md](./docs/mobile-main-flow.md)：当前手机端主流程
 - [docs/product/README.md](./docs/product/README.md)：当前保留的正式产品文档索引
-- [docs/AUDIT_CLEANUP_SUMMARY.md](./docs/AUDIT_CLEANUP_SUMMARY.md)：本轮文档审计与收口记录
-- [docs/RELEASE_CLOSURE_20260709.md](./docs/RELEASE_CLOSURE_20260709.md)：0.1.0 提审后版本收口、发布 / 测试切换和下一版优先级
 - [docs/release/README.md](./docs/release/README.md)：发布工程卫生、签名材料隔离、审核反馈模板和 HAP 归档记录
 - [docs/harmony/UI_CLOSURE_RULES.md](./docs/harmony/UI_CLOSURE_RULES.md)：UI 冻结边界、变更准入、真机验收矩阵和统一门禁
+
+历史审计和版本收口记录从 `docs/README.md` 进入，不作为当前产品能力说明。
 
 ## 当前不承诺
 

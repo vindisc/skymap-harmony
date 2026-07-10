@@ -2,11 +2,13 @@
 
 日期：2026-06-28
 
-本文是 Mac 与 HarmonyOS 共同遵守的 review bundle 双协议基线。v1 是成品图复盘包，v2 是原图复盘包；v2 不替代 v1，v1 不废弃。Review JSON 字段继续冻结，bundle 级信息只放在 `manifest.json`。
+文档角色：本文是 Review Bundle v1 / v2 文件结构和兼容规则的唯一权威基线。v1 是成品图复盘包，v2 是原图复盘包；v2 不替代 v1，v1 不废弃。HarmonyOS 导出行为由本仓库代码与校验负责，Mac 行为属于消费端兼容约束，需在消费端仓库单独验证。
+
+版本关系：Review Bundle v1 和 v2 当前都使用 `Review JSON Schema v1`。Bundle 版本只描述容器和资产结构，Review JSON Schema 版本只描述 `review.json` 字段；bundle 级信息只放在 `manifest.json`。Review JSON 字段继续冻结。应用版本、Bundle 版本和 Review JSON Schema 版本彼此独立。
 
 ## 一、概览
 
-| 协议 | 产品定位 | 必要资产 | Mac 行为 | HarmonyOS 行为 |
+| 协议 | 产品定位 | 必要资产 | 跨端消费约束 | HarmonyOS 当前行为 |
 | --- | --- | --- | --- | --- |
 | v1 成品图复盘包 | 归档、只读查看、跨端展示 | `review.json`、`thumb.jpg`、`manifest.json` | 导入为只读成品图记录，不显示“打开为复盘卡” | 导出复盘内容和 JPG 成品图到家庭存储 |
 | v2 原图复盘包 | 跨端接力、Mac 继续处理 | `review.json`、`assets/original/original.*`、`manifest.json` | 导入为原图复盘包，可显式打开为复盘卡 | 导出复盘内容和原图到家庭存储 |

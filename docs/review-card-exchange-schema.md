@@ -1,12 +1,25 @@
-# ReviewCardExchangeSchema v1
+# Review JSON Schema v1 字段契约
 
-`ReviewCardExchangeSchema v1` 用于在 HarmonyOS 手机端、Mac 端边框 App 和 GPT 交流之间传递一次摄影复盘的结构化字段。本协议只描述复盘字段 JSON，不包含云同步、文件导入导出、二维码、账号或导出图片版式。
+文档角色：本文件记录 HarmonyOS 当前生成的 `ReviewCardExchangeSchema v1` 字段契约。代码事实来源是 `entry/src/main/ets/services/ReviewCardExchangeSchema.ets`；本文件不定义复盘包目录、云同步、账号、导出图片版式，也不声明任何消费端已经实现的功能。
+
+`Review JSON Schema v1` 只描述一次摄影复盘的结构化正文。它可以作为独立复制内容、沙箱备份正文或 Review Bundle v1 / v2 中的 `review.json`。
+
+## 与复盘包版本的关系
+
+- Review Bundle v1 使用 Review JSON Schema v1。
+- Review Bundle v2 仍使用 Review JSON Schema v1。
+- `bundleVersion` 写在 `manifest.json`，不得写进 `review.json`。
+- Bundle 版本升级不代表 Review JSON Schema 升级。
+
+复盘包容器规则以 [`REVIEW_BUNDLE_V1_V2_CONTRACT.md`](./product/REVIEW_BUNDLE_V1_V2_CONTRACT.md) 为唯一权威基线。
 
 ## 使用场景
 
-1. 白天在 HarmonyOS 手机端完成摄影复盘。
-2. 在阅读页点击「复制复盘数据」，复制 pretty print JSON，并只显示 Toast「已复制复盘数据」。
-3. 晚上粘贴到 Mac 端边框 App 继续排版导出，或直接发给 GPT 交流。
+1. HarmonyOS 在预览页复制 pretty print JSON。
+2. HarmonyOS 将同一字段结构写入沙箱备份或家庭存储。
+3. HarmonyOS 导出 Review Bundle v1 / v2 时，将其作为 `review.json` 正文。
+
+其他应用可以消费这份 JSON，但消费端兼容性必须在对应仓库验证，不能从本文推导为 HarmonyOS 当前能力。
 
 ## 字段定义
 
