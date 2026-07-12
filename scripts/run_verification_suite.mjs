@@ -34,6 +34,7 @@ const smokeScripts = [
   'verify_review_library_rdb_main_write.mjs',
   'verify_review_library_rdb_migration.mjs',
   'verify_review_library_refresh_flow.mjs',
+  'verify_review_library_backup_restore.mjs',
   'verify_review_library_v11.mjs',
   'verify_review_project_service_tests.mjs',
   'verify_scroll_edge_feedback.mjs',

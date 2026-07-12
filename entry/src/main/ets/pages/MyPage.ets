@@ -24,8 +24,14 @@ import { ENABLE_RDB_DIAGNOSTICS_ENTRY } from '../services/ReviewFlowFeedback';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { HomeHeroImageService } from '../services/HomeHeroImageService';
 import { REVIEW_WIDGET_CARD_BACKGROUND_PLAIN, ReviewSettingsService } from '../services/ReviewSettingsService';
-import { ToastService } from '../services/ToastService';
+import { ToastService, ToastTone } from '../services/ToastService';
 import { DialogService } from '../services/DialogService';
+import {
+  ReviewLibraryBackupExportResult,
+  ReviewLibraryBackupInspection,
+  ReviewLibraryBackupRestoreResult,
+  ReviewLibraryBackupService
+} from '../services/ReviewLibraryBackupService';
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
 const APP_BUILD_TEXT: string = 'Harmony Beta V1';
@@ -40,6 +46,8 @@ export struct MyPage {
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State homeHeroImageCount: number = 0;
   @State widgetCardBackgroundStyle: string = REVIEW_WIDGET_CARD_BACKGROUND_PLAIN;
+  @State backupItemTotal: number = 0;
+  @State isBackupActionRunning: boolean = false;
   @State isRdbDiagnosticsRunning: boolean = false;
   @State rdbDiagnosticsSummary: string = '未运行';
   @State rdbDiagnosticsStatus: string = '开发';
@@ -84,6 +92,92 @@ export struct MyPage {
     this.homeHeroImageCount = (await HomeHeroImageService.listImages(context)).length;
     if (requestId !== this.loadRequestId) {
       return;
+    }
+
+    this.backupItemTotal = await ReviewLibraryBackupService.countBackupItems(context);
+    if (requestId !== this.loadRequestId) {
+      return;
+    }
+  }
+
+  private formatBackupTime(timestamp: number): string {
+    const date = new Date(timestamp);
+    const pad = (value: number): string => `${value}`.padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  private async exportLibraryBackup(): Promise<void> {
+    if (this.isBackupActionRunning) {
+      return;
+    }
+    this.isBackupActionRunning = true;
+    try {
+      const result: ReviewLibraryBackupExportResult =
+        await ReviewLibraryBackupService.exportToUserFile(this.getAbilityContext());
+      if (result.success) {
+        ToastService.success(this.getUIContext(), result.message);
+      } else if (!result.cancelled) {
+        ToastService.error(this.getUIContext(), result.message);
+      }
+    } catch (error) {
+      ToastService.error(this.getUIContext(), `备份失败：${error}`);
+    } finally {
+      this.isBackupActionRunning = false;
+    }
+  }
+
+  private async selectLibraryBackup(): Promise<void> {
+    if (this.isBackupActionRunning) {
+      return;
+    }
+    this.isBackupActionRunning = true;
+    try {
+      const inspection: ReviewLibraryBackupInspection =
+        await ReviewLibraryBackupService.selectAndInspectBackup(this.getAbilityContext());
+      if (!inspection.success) {
+        if (!inspection.cancelled) {
+          ToastService.error(this.getUIContext(), inspection.message);
+        }
+        return;
+      }
+      DialogService.confirm(this.getUIContext(), {
+        title: `恢复 ${inspection.itemCount} 条复盘？`,
+        message: `备份时间：${this.formatBackupTime(inspection.createdAt)}\n恢复后会替换当前 ${this.backupItemTotal} 条复盘。原图和家庭存储密码不在备份中。`,
+        cancelText: '取消',
+        confirmText: '确认恢复',
+        onConfirm: () => {
+          this.restoreLibraryBackup(inspection);
+        }
+      });
+    } catch (error) {
+      ToastService.error(this.getUIContext(), `读取备份失败：${error}`);
+    } finally {
+      this.isBackupActionRunning = false;
+    }
+  }
+
+  private async restoreLibraryBackup(inspection: ReviewLibraryBackupInspection): Promise<void> {
+    if (this.isBackupActionRunning) {
+      return;
+    }
+    this.isBackupActionRunning = true;
+    try {
+      const result: ReviewLibraryBackupRestoreResult =
+        await ReviewLibraryBackupService.restoreInspectedBackup(this.getAbilityContext(), inspection);
+      if (!result.success) {
+        ToastService.error(this.getUIContext(), result.message);
+        return;
+      }
+      ToastService.byTone(
+        this.getUIContext(),
+        result.message,
+        result.settingsRestored ? ToastTone.SUCCESS : ToastTone.WARNING
+      );
+      await this.reloadData();
+    } catch (error) {
+      ToastService.error(this.getUIContext(), `恢复失败，当前数据未被替换：${error}`);
+    } finally {
+      this.isBackupActionRunning = false;
     }
   }
 
@@ -323,6 +417,42 @@ export struct MyPage {
   }
 
   @Builder
+  DataProtectionSection() {
+    Column({ space: AppMetrics.cardGap }) {
+      Text('数据保护')
+        .fontSize(AppTypography.meta)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.metaLineHeight)
+        .width('100%')
+
+      SettingsLinkRow({
+        title: '备份全部复盘',
+        value: '保存到手机文件，卸载应用后仍可使用',
+        status: this.isBackupActionRunning ? '处理中' : `${this.backupItemTotal} 条`,
+        tone: this.backupItemTotal > 0 ? SettingsEntryTone.SUCCESS : SettingsEntryTone.MUTED,
+        dense: true,
+        onTap: () => {
+          this.exportLibraryBackup();
+        }
+      })
+
+      SettingsLinkRow({
+        title: '从备份恢复',
+        value: '校验通过后整体恢复复盘和常用设置',
+        status: this.isBackupActionRunning ? '处理中' : '选择文件',
+        tone: SettingsEntryTone.DEFAULT,
+        dense: true,
+        onTap: () => {
+          this.selectLibraryBackup();
+        }
+      })
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+  }
+
+  @Builder
   AboutSection() {
     Column({ space: AppMetrics.cardGap }) {
       this.VersionInfoCard()
@@ -442,6 +572,8 @@ export struct MyPage {
 
           Column({ space: AppMetrics.sectionGap }) {
             this.SettingsSection()
+
+            this.DataProtectionSection()
 
             this.AboutSection()
           }

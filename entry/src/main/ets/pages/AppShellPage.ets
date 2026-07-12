@@ -16,6 +16,14 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewLibraryRefreshService } from '../services/ReviewLibraryRefreshService';
 import { SettingsRefreshService } from '../services/SettingsRefreshService';
 import { MotionTokens } from '../theme/DesignTokens';
+import { DialogService } from '../services/DialogService';
+import { ToastService, ToastTone } from '../services/ToastService';
+import { DebugLaunchScenarioService } from '../services/DebugLaunchScenarioService';
+import {
+  ReviewLibraryBackupInspection,
+  ReviewLibraryBackupRestoreResult,
+  ReviewLibraryBackupService
+} from '../services/ReviewLibraryBackupService';
 
 enum RootTabKey {
   HOME = 'home',
@@ -62,11 +70,87 @@ struct AppShellPage {
   @State settingsRefreshToken: number = SettingsRefreshService.getRefreshToken();
   @State libraryInitialFilter: string = LIBRARY_INITIAL_FILTER_ALL;
   @State tabContentVisible: boolean = true;
+  private firstRestoreGuideChecked: boolean = false;
 
   aboutToAppear(): void {
     SettingsRefreshService.subscribe(this.settingsRefreshListener);
     FormLaunchIntentService.subscribe(this.formLaunchIntentListener);
     this.applyFormLaunchIntent();
+    this.offerFirstLaunchRestore();
+  }
+
+  private async offerFirstLaunchRestore(): Promise<void> {
+    if (this.firstRestoreGuideChecked || DebugLaunchScenarioService.isAutomatedTestLaunch()) {
+      return;
+    }
+    this.firstRestoreGuideChecked = true;
+    try {
+      const shouldOffer: boolean = await ReviewLibraryBackupService.shouldOfferFirstLaunchRestore(
+        this.getUIContext().getHostContext() as common.UIAbilityContext
+      );
+      if (!shouldOffer) {
+        return;
+      }
+      DialogService.confirm(this.getUIContext(), {
+        title: '恢复以前的复盘？',
+        message: '本机还没有复盘记录。如果你保存过见遇完整备份，可以现在恢复；也可以稍后到“我的”中操作。',
+        cancelText: '稍后',
+        confirmText: '选择备份',
+        onConfirm: () => {
+          this.selectFirstLaunchBackup();
+        }
+      });
+    } catch (error) {
+      console.warn(`[AppShellPage] 首次恢复引导检查失败：${error}`);
+    }
+  }
+
+  private async selectFirstLaunchBackup(): Promise<void> {
+    try {
+      const inspection: ReviewLibraryBackupInspection = await ReviewLibraryBackupService.selectAndInspectBackup(
+        this.getUIContext().getHostContext() as common.UIAbilityContext
+      );
+      if (!inspection.success) {
+        if (!inspection.cancelled) {
+          ToastService.error(this.getUIContext(), inspection.message);
+        }
+        return;
+      }
+      DialogService.confirm(this.getUIContext(), {
+        title: `恢复 ${inspection.itemCount} 条复盘？`,
+        message: '备份已通过完整性校验。恢复会写入全部复盘和常用设置，不包含原图和家庭存储密码。',
+        cancelText: '取消',
+        confirmText: '确认恢复',
+        onConfirm: () => {
+          this.restoreFirstLaunchBackup(inspection);
+        }
+      });
+    } catch (error) {
+      ToastService.error(this.getUIContext(), `读取备份失败：${error}`);
+    }
+  }
+
+  private async restoreFirstLaunchBackup(inspection: ReviewLibraryBackupInspection): Promise<void> {
+    try {
+      const result: ReviewLibraryBackupRestoreResult = await ReviewLibraryBackupService.restoreInspectedBackup(
+        this.getUIContext().getHostContext() as common.UIAbilityContext,
+        inspection
+      );
+      if (!result.success) {
+        ToastService.error(this.getUIContext(), result.message);
+        return;
+      }
+      ToastService.byTone(
+        this.getUIContext(),
+        result.message,
+        result.settingsRestored ? ToastTone.SUCCESS : ToastTone.WARNING
+      );
+      this.syncReviewLibraryRefreshToken();
+      this.syncSettingsRefreshToken();
+      this.homeRefreshToken += 1;
+    } catch (error) {
+      ToastService.error(this.getUIContext(), `恢复失败，当前数据未被替换：${error}`);
+    }
   }
 
   aboutToDisappear(): void {

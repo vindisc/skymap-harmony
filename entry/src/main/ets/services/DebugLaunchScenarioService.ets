@@ -47,6 +47,7 @@ export enum DebugTestScenario {
 
 export class DebugLaunchScenarioService {
   private static pendingInitialPage: string = '';
+  private static automatedTestLaunch: boolean = false;
 
   static captureWant(want: Want | undefined, isDebugBuild: boolean): void {
     if (!isDebugBuild) {
@@ -54,6 +55,7 @@ export class DebugLaunchScenarioService {
     }
     const scenarioValue: Object | undefined = want?.parameters?.[DEBUG_TEST_SCENARIO_KEY];
     const scenario: string = `${scenarioValue ?? ''}`;
+    DebugLaunchScenarioService.automatedTestLaunch = scenario.length > 0;
     DebugLaunchScenarioService.pendingInitialPage = DebugLaunchScenarioService.resolveDirectPage(scenario);
     if (DebugLaunchScenarioService.pendingInitialPage.length > 0) {
       DebugLaunchScenarioService.prepareDraft(scenario);
@@ -70,6 +72,10 @@ export class DebugLaunchScenarioService {
     const page: string = DebugLaunchScenarioService.pendingInitialPage;
     DebugLaunchScenarioService.pendingInitialPage = '';
     return page;
+  }
+
+  static isAutomatedTestLaunch(): boolean {
+    return DebugLaunchScenarioService.automatedTestLaunch;
   }
 
   private static resolveRoute(scenario: string): string {

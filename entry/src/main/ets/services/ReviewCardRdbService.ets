@@ -28,6 +28,11 @@ export interface ReviewCardRdbListResult {
   invalidRowCount: number;
 }
 
+export interface ReviewCardRdbReplacementItem {
+  reviewId: string;
+  item: ReviewCardHistoryItem;
+}
+
 function normalizeLimit(value: number | undefined): number {
   if (typeof value === 'number' && value > 0) {
     return Math.floor(value);
@@ -276,6 +281,30 @@ export class ReviewCardRdbService {
   static async clearAll(context: common.UIAbilityContext): Promise<void> {
     const store: relationalStore.RdbStore = await ReviewCardRdbService.getInitializedStore(context);
     await store.executeSql(`DELETE FROM ${REVIEW_LIBRARY_RDB_TABLE}`);
+  }
+
+  static async replaceAllReviews(
+    context: common.UIAbilityContext,
+    replacements: Array<ReviewCardRdbReplacementItem>
+  ): Promise<void> {
+    const store: relationalStore.RdbStore = await ReviewCardRdbService.getInitializedStore(context);
+    const transaction: relationalStore.Transaction = await store.createTransaction();
+    try {
+      await transaction.delete(new relationalStore.RdbPredicates(REVIEW_LIBRARY_RDB_TABLE));
+      for (let index = 0; index < replacements.length; index += 1) {
+        const replacement: ReviewCardRdbReplacementItem = replacements[index];
+        const row: ReviewCardRdbRow = ReviewCardRdbMapper.toRow(replacement.item, replacement.reviewId);
+        await transaction.insert(
+          REVIEW_LIBRARY_RDB_TABLE,
+          ReviewCardRdbMapper.toValuesBucket(row),
+          relationalStore.ConflictResolution.ON_CONFLICT_ABORT
+        );
+      }
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error(`恢复事务失败：${error}`);
+    }
   }
 
   private static async getInitializedStore(context: common.UIAbilityContext): Promise<relationalStore.RdbStore> {

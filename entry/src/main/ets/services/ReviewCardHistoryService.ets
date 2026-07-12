@@ -17,6 +17,7 @@ import {
 } from './ReviewCardExchangeSchema';
 import { MigrationResult, ReviewCardMigrationService } from './ReviewCardMigrationService';
 import { ReviewCardRdbListResult, ReviewCardRdbService } from './ReviewCardRdbService';
+import { ReviewCardRdbReplacementItem } from './ReviewCardRdbService';
 import { ReviewCardRdbMapper, ReviewLibraryStats, ReviewListQuery } from './ReviewCardRdbModel';
 import { ReviewJsonBackupResult, ReviewJsonExportService } from './ReviewJsonExportService';
 import { ReviewLibraryRefreshService } from './ReviewLibraryRefreshService';
@@ -876,6 +877,28 @@ export class ReviewCardHistoryService {
     }
   }
 
+  static async replaceAllFromBackup(
+    context: common.UIAbilityContext,
+    replacements: Array<ReviewCardRdbReplacementItem>
+  ): Promise<Array<ReviewCardHistoryItem>> {
+    await ReviewCardRdbService.replaceAllReviews(context, replacements);
+    try {
+      await ReviewCardHistoryService.markRdbMainIndexReady(context);
+    } catch (error) {
+      console.warn(`[ReviewCardHistoryService] 恢复已提交，RDB 主索引标记写入失败：${error}`);
+    }
+    ReviewCardHistoryService.clearRecoverableBackups(context);
+
+    const restoredItems: Array<ReviewCardHistoryItem> = [];
+    for (let index = 0; index < replacements.length; index += 1) {
+      const item: ReviewCardHistoryItem = replacements[index].item;
+      restoredItems.push(createHistoryItem(item.document, item.exportedPath));
+      await ReviewCardHistoryService.writeRecoverableBackup(context, item.document);
+    }
+    ReviewLibraryRefreshService.notifyReviewLibraryChanged('library_backup_restored');
+    return ReviewCardHistoryService.rememberItems(restoredItems);
+  }
+
   private static async writeRecoverableBackup(
     context: common.UIAbilityContext,
     document: ReviewCardDocument
@@ -903,6 +926,20 @@ export class ReviewCardHistoryService {
       ReviewJsonExportService.deleteSandboxReviewJsonBackup(context, document);
     } catch (error) {
       console.warn(`[ReviewCardHistoryService] review_exchange 备份删除异常：${error}`);
+    }
+  }
+
+  private static clearRecoverableBackups(context: common.UIAbilityContext): void {
+    const directory: string = `${context.filesDir}/${REVIEW_JSON_BACKUP_DIR_NAME}`;
+    try {
+      const fileNames: Array<string> = fs.listFileSync(directory);
+      fileNames.forEach((fileName: string): void => {
+        try {
+          fs.unlinkSync(`${directory}/${fileName}`);
+        } catch (error) {
+        }
+      });
+    } catch (error) {
     }
   }
 }
