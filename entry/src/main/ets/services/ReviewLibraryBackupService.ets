@@ -236,7 +236,9 @@ export class ReviewLibraryBackupService {
     };
     const fileName: string = `见遇完整备份-${formatTimestamp(now)}.${REVIEW_LIBRARY_BACKUP_EXTENSION}`;
     const sandboxPath: string = `${context.cacheDir}/${fileName}`;
-    writeTextFile(sandboxPath, JSON.stringify(envelope, null, 2));
+    const verifyPath: string = `${context.cacheDir}/verify-${fileName}`;
+    const envelopeText: string = JSON.stringify(envelope, null, 2);
+    writeTextFile(sandboxPath, envelopeText);
     try {
       const documentPicker = new picker.DocumentViewPicker(context);
       const selectedUris: Array<string> = await documentPicker.save({
@@ -253,6 +255,11 @@ export class ReviewLibraryBackupService {
         };
       }
       copyFile(sandboxPath, selectedUris[0]);
+      copyFile(selectedUris[0], verifyPath);
+      const savedText: string = fs.readTextSync(verifyPath);
+      if (savedText !== envelopeText) {
+        throw new Error('备份文件写入校验失败，请更换保存位置后重试');
+      }
       const result: ReviewLibraryBackupExportResult = {
         success: true,
         cancelled: false,
@@ -266,13 +273,17 @@ export class ReviewLibraryBackupService {
         fs.unlinkSync(sandboxPath);
       } catch (error) {
       }
+      try {
+        fs.unlinkSync(verifyPath);
+      } catch (error) {
+      }
     }
   }
 
   static async selectAndInspectBackup(context: common.UIAbilityContext): Promise<ReviewLibraryBackupInspection> {
     const documentPicker = new picker.DocumentViewPicker(context);
+    // 部分手机文件选择器会隐藏自定义后缀，文件合法性统一由下方内容校验判定。
     const selectedUris: Array<string> = await documentPicker.select({
-      fileSuffixFilters: ['见遇备份|jybackup,json'],
       maxSelectNumber: 1
     });
     if (selectedUris.length <= 0) {

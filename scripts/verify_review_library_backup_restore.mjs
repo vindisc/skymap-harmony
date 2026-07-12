@@ -57,6 +57,8 @@ assert(backupSource.includes("'SHA-256'"), '备份必须使用 SHA-256 完整性
 assert(backupSource.includes('DocumentViewPicker(context)'), '备份和恢复必须通过系统文件选择器。');
 assert(backupSource.includes('documentPicker.save({'), '备份必须保存到用户选择的外部文件。');
 assert(backupSource.includes('documentPicker.select({'), '恢复必须由用户选择备份文件。');
+assert(!backupSource.includes('fileSuffixFilters:'), '恢复选择器不得用自定义后缀过滤隐藏备份文件。');
+assert(backupSource.includes('savedText !== envelopeText'), '备份完成前必须回读校验目标文件。');
 assert(backupSource.includes('expectedChecksum !== envelope.checksum'), '恢复前必须校验 checksum。');
 assert(backupSource.includes('payload.reviewCount !== payload.reviews.length'), '恢复前必须校验记录数量。');
 assert(backupSource.includes('usedIds.has(record.reviewId)'), '恢复前必须拒绝重复复盘 ID。');
