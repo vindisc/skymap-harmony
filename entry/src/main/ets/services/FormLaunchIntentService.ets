@@ -9,6 +9,11 @@ const FORM_LAUNCH_TARGET_ROUTE_KEY: string = 'targetRoute';
 
 type FormLaunchIntentListener = () => void;
 
+export enum IntentRouteSource {
+  FORM = 'form',
+  XIAOYI = 'xiaoyi'
+}
+
 export class FormLaunchIntentService {
   private static pendingRoute: string = '';
   private static listeners: Array<FormLaunchIntentListener> = [];
@@ -16,12 +21,11 @@ export class FormLaunchIntentService {
   static captureWant(want: Want | undefined): void {
     const routeValue: Object | undefined = want?.parameters?.[FORM_LAUNCH_TARGET_ROUTE_KEY];
     const route: string = `${routeValue ?? ''}`;
-    if (route === LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING ||
-      route === LEARNING_PROGRESS_WIDGET_ROUTE_HOME ||
-      route === LEARNING_PROGRESS_WIDGET_ROUTE_TODAY_REVIEW_DIRECT) {
-      FormLaunchIntentService.pendingRoute = route;
-      FormLaunchIntentService.notifyListeners();
-    }
+    FormLaunchIntentService.captureRoute(route, IntentRouteSource.FORM);
+  }
+
+  static captureRouteFromIntent(route: string, source: IntentRouteSource): void {
+    FormLaunchIntentService.captureRoute(route, source);
   }
 
   static consumeRoute(): string {
@@ -46,5 +50,19 @@ export class FormLaunchIntentService {
     FormLaunchIntentService.listeners.forEach((listener: FormLaunchIntentListener): void => {
       listener();
     });
+  }
+
+  private static captureRoute(route: string, source: IntentRouteSource): void {
+    if (source !== IntentRouteSource.FORM && source !== IntentRouteSource.XIAOYI) {
+      return;
+    }
+    if (route !== LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING &&
+      route !== LEARNING_PROGRESS_WIDGET_ROUTE_HOME &&
+      route !== LEARNING_PROGRESS_WIDGET_ROUTE_TODAY_REVIEW_DIRECT) {
+      return;
+    }
+    FormLaunchIntentService.pendingRoute = route;
+    console.info(`[FormLaunchIntentService] captured route from ${source}`);
+    FormLaunchIntentService.notifyListeners();
   }
 }
