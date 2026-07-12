@@ -3,6 +3,7 @@
 .ohpm/
 build/
 entry/build/
+entry/.test/
 oh_modules/
 .DS_Store
 **/.DS_Store
@@ -29,3 +30,4 @@ release-assets/submissions/
 release-assets/private/
 release-assets/*.pem
 release-assets/*.p7b
+test-artifacts/

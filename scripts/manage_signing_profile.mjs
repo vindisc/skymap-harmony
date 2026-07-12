@@ -177,6 +177,23 @@ function activate(requestedMode) {
   console.log(`已临时启用 ${requestedMode} 签名；构建结束后必须恢复仓库配置。`);
 }
 
+function deactivate() {
+  const profile = readProfile(trackedProfilePath, '仓库 build-profile.json5');
+  if (profile?.app && Object.hasOwn(profile.app, 'signingConfigs')) {
+    delete profile.app.signingConfigs;
+  }
+  const products = profile?.app?.products;
+  if (Array.isArray(products)) {
+    products.forEach((product) => {
+      if (product && Object.hasOwn(product, 'signingConfig')) {
+        delete product.signingConfig;
+      }
+    });
+  }
+  fs.writeFileSync(trackedProfilePath, `${JSON.stringify(profile, null, 2)}\n`);
+  console.log('已临时停用签名；构建结束后必须恢复原配置。');
+}
+
 const [command = 'status', mode] = process.argv.slice(2);
 
 if (command === 'assert-safe') {
@@ -200,6 +217,8 @@ if (command === 'assert-safe') {
     fail('用法：node scripts/manage_signing_profile.mjs activate <debug|release>');
   }
   activate(mode);
+} else if (command === 'deactivate') {
+  deactivate();
 } else {
-  fail('支持命令：status、assert-safe、verify-local、activate。');
+  fail('支持命令：status、assert-safe、verify-local、activate、deactivate。');
 }

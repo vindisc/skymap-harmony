@@ -11,7 +11,8 @@ type FormLaunchIntentListener = () => void;
 
 export enum IntentRouteSource {
   FORM = 'form',
-  XIAOYI = 'xiaoyi'
+  XIAOYI = 'xiaoyi',
+  TEST = 'test'
 }
 
 export class FormLaunchIntentService {
@@ -53,7 +54,9 @@ export class FormLaunchIntentService {
   }
 
   private static captureRoute(route: string, source: IntentRouteSource): void {
-    if (source !== IntentRouteSource.FORM && source !== IntentRouteSource.XIAOYI) {
+    if (source !== IntentRouteSource.FORM &&
+      source !== IntentRouteSource.XIAOYI &&
+      source !== IntentRouteSource.TEST) {
       return;
     }
     if (route !== LEARNING_PROGRESS_WIDGET_ROUTE_LIBRARY_PENDING &&
