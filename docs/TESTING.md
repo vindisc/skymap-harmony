@@ -31,19 +31,22 @@ bash scripts/test_app.sh --all
 bash scripts/test_app.sh --device
 ```
 
-设备模式会继续执行签名，因此需要可用的本机 Debug 签名。脚本会安装应用，依次
-启动 `home`、`pending`、`today` 三个 Debug 测试场景，
-并把截图和 hilog 放到 `test-artifacts/device-smoke/`。多个设备同时连接时，通过
-`SKYMAP_HDC_TARGET` 指定设备。
+设备模式会先检查设备连接，再执行 Hypium 主链路测试和签名，因此需要可用的本机
+Debug 签名。随后脚本会安装应用，依次覆盖首页、待复盘、今日复盘、横竖方图
+编辑/预览、长文本预览以及六个设置页，并把截图、截图报告和 hilog 放到
+`test-artifacts/device-smoke/`。多个设备同时连接时，通过 `SKYMAP_HDC_TARGET` 指定设备。
 
-`testScenario` 只在 Debug 包中生效，不清理或写入用户业务数据。`today` 场景沿用
-真实待复盘数据；没有待复盘照片时会回到首页。
+`testScenario` 只在 Debug 包中生效，横竖方图和长文本样例只写入内存。Hypium 的
+“编辑并保存”用例会在当前测试安装中写入一条标题为“UI 自动化完整链路”的复盘，
+建议使用专用测试设备并按需清理应用数据。`today` 场景沿用真实待复盘数据；没有
+待复盘照片时会回到首页。
 
 ## UI 自动化
 
-首批 Hypium 用例位于 `entry/src/ohosTest/ets/test/`，覆盖根导航、统计页和我的页。
-在 DevEco Studio 中选择对应测试文件或目录后运行 `Run Tests`。设备接入后，可将
-该测试包接入 DevEco Testing 或 CI 的 on-device test 流程。
+Hypium 用例位于 `entry/src/ohosTest/ets/test/`，覆盖根导航、待复盘路由、编辑保存到
+预览、预览导出菜单、长文本状态、统计页、我的页和六个设置页面。日常可直接执行
+`bash scripts/test_app.sh --device`；也可以在 DevEco Studio 中选择对应测试目录后运行
+`Run Tests`。
 
 ## 测试边界
 

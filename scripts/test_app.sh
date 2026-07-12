@@ -39,7 +39,7 @@ usage() {
   默认       执行稳定冒烟校验并构建 Debug HAP
   --quick    仅执行校验脚本，不构建
   --all      执行全部发布门禁校验
-  --device   验证和构建完成后，在已连接设备上执行路由冒烟
+  --device   在已连接设备上执行 Hypium 链路测试和 UI 截图矩阵
 EOF
 }
 
@@ -70,6 +70,11 @@ while [ "$#" -gt 0 ]; do
 done
 
 cd "$REPO_ROOT"
+
+if [ "$RUN_DEVICE" = true ]; then
+  bash scripts/smoke_device.sh --check-only
+fi
+
 node scripts/run_verification_suite.mjs --suite "$VERIFICATION_SUITE"
 
 if [ "$RUN_BUILD" = true ]; then
@@ -99,6 +104,13 @@ if [ "$RUN_BUILD" = true ]; then
 fi
 
 if [ "$RUN_DEVICE" = true ]; then
+  "$HVIGOR_BIN" \
+    --mode module \
+    -p module=entry \
+    -p product=default \
+    -p buildMode=debug \
+    onDeviceTest \
+    --no-daemon
   bash scripts/smoke_device.sh
 fi
 

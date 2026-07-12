@@ -11,6 +11,32 @@ ABILITY_NAME="EntryAbility"
 MODULE_NAME="entry"
 OUTPUT_DIR="$REPO_ROOT/test-artifacts/device-smoke"
 SIGNED_HAP="$REPO_ROOT/entry/build/default/outputs/default/entry-default-signed.hap"
+CHECK_ONLY=false
+SCENARIOS=(
+  home
+  pending
+  today
+  editor_horizontal
+  editor_vertical
+  editor_square
+  preview_horizontal
+  preview_vertical
+  preview_square
+  preview_long_text
+  reviewer_profile
+  home_hero_settings
+  widget_card_settings
+  home_storage
+  review_settings
+  sync_center
+)
+
+if [ "${1:-}" = "--check-only" ]; then
+  CHECK_ONLY=true
+elif [ "$#" -gt 0 ]; then
+  echo "未知参数：$1" >&2
+  exit 2
+fi
 
 if [ ! -x "$HDC" ]; then
   echo "未找到 hdc：$HDC" >&2
@@ -55,6 +81,11 @@ else
   HDC_COMMAND=("$HDC")
 fi
 
+if [ "$CHECK_ONLY" = true ]; then
+  echo "HarmonyOS 测试设备已连接。"
+  exit 0
+fi
+
 if [ ! -f "$SIGNED_HAP" ]; then
   echo "未找到可安装的 Debug 签名包：$SIGNED_HAP" >&2
   echo "请先配置本机 debug 签名并构建。" >&2
@@ -80,9 +111,28 @@ launch_scenario() {
   fi
 }
 
-launch_scenario home
-launch_scenario pending
-launch_scenario today
+for scenario in "${SCENARIOS[@]}"; do
+  launch_scenario "$scenario"
+done
 
 "${HDC_COMMAND[@]}" shell hilog -x > "$OUTPUT_DIR/hilog.txt" 2>/dev/null || true
+
+REPORT_PATH="$OUTPUT_DIR/report.md"
+{
+  echo "# 见遇 UI 冒烟截图"
+  echo
+  echo "生成时间：$(date '+%Y-%m-%d %H:%M:%S')"
+  echo
+  for scenario in "${SCENARIOS[@]}"; do
+    echo "## $scenario"
+    echo
+    if [ -s "$OUTPUT_DIR/${scenario}.jpeg" ]; then
+      echo "![${scenario}](./${scenario}.jpeg)"
+    else
+      echo "截图缺失"
+    fi
+    echo
+  done
+} > "$REPORT_PATH"
+
 echo "设备冒烟完成，产物目录：$OUTPUT_DIR"
