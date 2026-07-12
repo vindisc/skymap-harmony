@@ -55,6 +55,9 @@ requireIncludes(testScript, 'VERIFICATION_SUITE="all"', 'test_app.sh full verifi
 requireIncludes(testScript, 'onDeviceTest', 'test_app.sh Hypium device entry');
 requireIncludes(testScript, 'zulu-11.jdk', 'test_app.sh compatible signing JDK');
 requireIncludes(testScript, 'SKYMAP_DEVICE_JAVA_HOME', 'test_app.sh explicit device JDK override');
+requireIncludes(testScript, 'RUN_HYPIUM=false', 'test_app.sh safe default');
+requireIncludes(testScript, 'SKYMAP_ALLOW_DATA_RESET', 'test_app.sh destructive test confirmation');
+requireIncludes(testScript, 'onDeviceTest 会卸载应用并清空全部应用数据', 'test_app.sh data loss warning');
 requireIncludes(deviceScript, '--ps testScenario', 'smoke_device.sh debug scenario entry');
 requireIncludes(deviceScript, '--check-only', 'smoke_device.sh device preflight');
 requireIncludes(deviceScript, 'Connected', 'smoke_device.sh online device guard');

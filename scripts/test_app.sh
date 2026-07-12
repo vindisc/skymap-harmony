@@ -9,6 +9,7 @@ HVIGOR_BIN="${DEVECO_APP_HOME}/tools/hvigor/bin/hvigorw"
 DEVICE_JAVA_HOME_DEFAULT="/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home"
 RUN_BUILD=true
 RUN_DEVICE=false
+RUN_HYPIUM=false
 VERIFICATION_SUITE="smoke"
 PROFILE_BACKUP=""
 
@@ -35,12 +36,13 @@ trap 'exit 143' TERM
 
 usage() {
   cat <<'EOF'
-用法：bash scripts/test_app.sh [--quick] [--all] [--device]
+用法：bash scripts/test_app.sh [--quick] [--all] [--device] [--ui-test]
 
   默认       执行稳定冒烟校验并构建 Debug HAP
   --quick    仅执行校验脚本，不构建
   --all      执行全部发布门禁校验
-  --device   在已连接设备上执行 Hypium 链路测试和 UI 截图矩阵
+  --device   保留应用数据，执行覆盖安装和 UI 截图矩阵
+  --ui-test  会卸载应用并清空数据，仅在专用测试设备执行 Hypium
 EOF
 }
 
@@ -52,6 +54,11 @@ while [ "$#" -gt 0 ]; do
       ;;
     --device)
       RUN_DEVICE=true
+      shift
+      ;;
+    --ui-test)
+      RUN_DEVICE=true
+      RUN_HYPIUM=true
       shift
       ;;
     --all)
@@ -71,6 +78,12 @@ while [ "$#" -gt 0 ]; do
 done
 
 cd "$REPO_ROOT"
+
+if [ "$RUN_HYPIUM" = true ] && [ "${SKYMAP_ALLOW_DATA_RESET:-}" != "1" ]; then
+  echo "已阻止破坏性 UI 测试：onDeviceTest 会卸载应用并清空全部应用数据。" >&2
+  echo "请仅在专用测试设备执行：SKYMAP_ALLOW_DATA_RESET=1 bash scripts/test_app.sh --ui-test" >&2
+  exit 2
+fi
 
 if [ "$RUN_DEVICE" = true ]; then
   bash scripts/smoke_device.sh --check-only
@@ -113,7 +126,7 @@ if [ "$RUN_BUILD" = true ]; then
   restore_profile
 fi
 
-if [ "$RUN_DEVICE" = true ]; then
+if [ "$RUN_HYPIUM" = true ]; then
   "$HVIGOR_BIN" \
     --mode module \
     -p module=entry \
@@ -121,6 +134,9 @@ if [ "$RUN_DEVICE" = true ]; then
     -p buildMode=debug \
     onDeviceTest \
     --no-daemon
+fi
+
+if [ "$RUN_DEVICE" = true ]; then
   bash scripts/smoke_device.sh
 fi
 
