@@ -57,6 +57,10 @@ Hypium 用例位于 `entry/src/ohosTest/ets/test/`，覆盖根导航、待复盘
 SKYMAP_ALLOW_DATA_RESET=1 bash scripts/test_app.sh --ui-test
 ```
 
+Hypium 完成或中途失败后，脚本都会卸载带测试模块的应用，再安装正常签名的完整
+Debug HAP 并启动首页，避免设备长期停留在测试安装状态。如果恢复阶段设备掉线，
+脚本会保留失败状态并提示重新连接设备。
+
 日常 UI 回归只执行保数据的 `bash scripts/test_app.sh --device`。
 
 ## 测试边界

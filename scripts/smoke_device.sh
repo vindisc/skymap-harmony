@@ -12,6 +12,7 @@ MODULE_NAME="entry"
 OUTPUT_DIR="$REPO_ROOT/test-artifacts/device-smoke"
 SIGNED_HAP="$REPO_ROOT/entry/build/default/outputs/default/entry-default-signed.hap"
 CHECK_ONLY=false
+RESTORE_APP=false
 SCENARIOS=(
   home
   pending
@@ -33,6 +34,8 @@ SCENARIOS=(
 
 if [ "${1:-}" = "--check-only" ]; then
   CHECK_ONLY=true
+elif [ "${1:-}" = "--restore-app" ]; then
+  RESTORE_APP=true
 elif [ "$#" -gt 0 ]; then
   echo "未知参数：$1" >&2
   exit 2
@@ -103,10 +106,36 @@ if [ "$CHECK_ONLY" = true ]; then
   exit 0
 fi
 
+if [ "$RESTORE_APP" = true ] && [ "${SKYMAP_ALLOW_DATA_RESET:-}" != "1" ]; then
+  echo "已阻止卸载应用：恢复完整应用会清空当前应用数据。" >&2
+  exit 2
+fi
+
 if [ ! -f "$SIGNED_HAP" ]; then
   echo "未找到可安装的 Debug 签名包：$SIGNED_HAP" >&2
   echo "请先配置本机 debug 签名并构建。" >&2
   exit 1
+fi
+
+if [ "$RESTORE_APP" = true ]; then
+  echo "卸载测试应用..."
+  "${HDC_COMMAND[@]}" uninstall "$BUNDLE_NAME"
+  echo "安装完整 Debug HAP..."
+  "${HDC_COMMAND[@]}" install -r "$SIGNED_HAP"
+  LAUNCH_OUTPUT="$("${HDC_COMMAND[@]}" shell aa start \
+    -a "$ABILITY_NAME" \
+    -b "$BUNDLE_NAME" \
+    -m "$MODULE_NAME" 2>&1)"
+  printf '%s\n' "$LAUNCH_OUTPUT"
+  case "$LAUNCH_OUTPUT" in
+    *"failed to start ability"*)
+      echo "完整应用已安装；设备仍处于锁屏状态，请解锁后手动启动。"
+      ;;
+    *)
+      echo "完整应用已安装并启动。"
+      ;;
+  esac
+  exit 0
 fi
 
 echo "安装 Debug HAP..."

@@ -12,6 +12,7 @@ RUN_DEVICE=false
 RUN_HYPIUM=false
 VERIFICATION_SUITE="smoke"
 PROFILE_BACKUP=""
+UI_TEST_INSTALLATION_DIRTY=false
 
 restore_profile() {
   if [ -n "$PROFILE_BACKUP" ] && [ -f "$PROFILE_BACKUP" ]; then
@@ -22,10 +23,26 @@ restore_profile() {
   fi
 }
 
+restore_full_app_after_ui_test() {
+  if [ "$UI_TEST_INSTALLATION_DIRTY" = false ]; then
+    return 0
+  fi
+  echo "正在移除测试安装并恢复完整应用..."
+  if bash scripts/smoke_device.sh --restore-app; then
+    UI_TEST_INSTALLATION_DIRTY=false
+    return 0
+  fi
+  echo "完整应用恢复失败，请保持设备在线后重试。" >&2
+  return 1
+}
+
 cleanup_on_exit() {
   local status=$?
   trap - EXIT
   restore_profile
+  if ! restore_full_app_after_ui_test && [ "$status" -eq 0 ]; then
+    status=1
+  fi
   exit "$status"
 }
 
@@ -127,6 +144,7 @@ if [ "$RUN_BUILD" = true ]; then
 fi
 
 if [ "$RUN_HYPIUM" = true ]; then
+  UI_TEST_INSTALLATION_DIRTY=true
   "$HVIGOR_BIN" \
     --mode module \
     -p module=entry \
@@ -134,6 +152,7 @@ if [ "$RUN_HYPIUM" = true ]; then
     -p buildMode=debug \
     onDeviceTest \
     --no-daemon
+  restore_full_app_after_ui_test
 fi
 
 if [ "$RUN_DEVICE" = true ]; then
