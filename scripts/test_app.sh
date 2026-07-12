@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DEVECO_APP_HOME="/Applications/DevEco-Studio.app/Contents"
 HVIGOR_BIN="${DEVECO_APP_HOME}/tools/hvigor/bin/hvigorw"
+DEVICE_JAVA_HOME_DEFAULT="/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home"
 RUN_BUILD=true
 RUN_DEVICE=false
 VERIFICATION_SUITE="smoke"
@@ -79,7 +80,11 @@ node scripts/run_verification_suite.mjs --suite "$VERIFICATION_SUITE"
 
 if [ "$RUN_BUILD" = true ]; then
   export DEVECO_SDK_HOME="${DEVECO_SDK_HOME:-${DEVECO_APP_HOME}/sdk}"
-  export JAVA_HOME="${JAVA_HOME:-${DEVECO_APP_HOME}/jbr/Contents/Home}"
+  if [ -z "${JAVA_HOME:-}" ] && [ "$RUN_DEVICE" = true ] && [ -x "$DEVICE_JAVA_HOME_DEFAULT/bin/java" ]; then
+    export JAVA_HOME="$DEVICE_JAVA_HOME_DEFAULT"
+  else
+    export JAVA_HOME="${JAVA_HOME:-${DEVECO_APP_HOME}/jbr/Contents/Home}"
+  fi
   export PATH="$JAVA_HOME/bin:$PATH"
 
   if [ ! -x "$HVIGOR_BIN" ]; then

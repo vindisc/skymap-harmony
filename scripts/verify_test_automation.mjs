@@ -53,8 +53,10 @@ requireIncludes(testScript, 'assembleHap', 'test_app.sh standard build entry');
 requireIncludes(testScript, 'restore_profile', 'test_app.sh signing restoration');
 requireIncludes(testScript, 'VERIFICATION_SUITE="all"', 'test_app.sh full verification option');
 requireIncludes(testScript, 'onDeviceTest', 'test_app.sh Hypium device entry');
+requireIncludes(testScript, 'zulu-11.jdk', 'test_app.sh compatible signing JDK');
 requireIncludes(deviceScript, '--ps testScenario', 'smoke_device.sh debug scenario entry');
 requireIncludes(deviceScript, '--check-only', 'smoke_device.sh device preflight');
+requireIncludes(deviceScript, 'Connected', 'smoke_device.sh online device guard');
 requireIncludes(deviceScript, 'preview_long_text', 'smoke_device.sh visual state matrix');
 requireIncludes(deviceScript, 'report.md', 'smoke_device.sh visual report');
 

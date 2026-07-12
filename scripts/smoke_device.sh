@@ -46,7 +46,7 @@ fi
 mkdir -p "$OUTPUT_DIR"
 
 TARGET_FILE="$(mktemp "${TMPDIR:-/tmp}/skymap-hdc-targets.XXXXXX")"
-"$HDC" list targets > "$TARGET_FILE" 2>/dev/null &
+"$HDC" list targets -v > "$TARGET_FILE" 2>/dev/null &
 HDC_LIST_PID=$!
 for _ in {1..32}; do
   if ! kill -0 "$HDC_LIST_PID" 2>/dev/null; then
@@ -62,17 +62,34 @@ if kill -0 "$HDC_LIST_PID" 2>/dev/null; then
   exit 1
 fi
 wait "$HDC_LIST_PID" 2>/dev/null || true
-TARGETS="$(sed -e '/^$/d' -e '/^\[Empty\]$/d' "$TARGET_FILE")"
+TARGETS_VERBOSE="$(sed -e '/^$/d' -e '/^\[Empty\]$/d' "$TARGET_FILE")"
 rm -f "$TARGET_FILE"
-TARGET_COUNT="$(printf '%s\n' "$TARGETS" | sed '/^$/d' | wc -l | tr -d ' ')"
+TARGET_COUNT="$(printf '%s\n' "$TARGETS_VERBOSE" | sed '/^$/d' | wc -l | tr -d ' ')"
 if [ "$TARGET_COUNT" -eq 0 ]; then
   echo "没有检测到 HarmonyOS 设备。请先连接真机或启动模拟器。" >&2
   exit 1
 fi
-if [ "$TARGET_COUNT" -gt 1 ] && [ -z "${SKYMAP_HDC_TARGET:-}" ]; then
-  echo "检测到多个设备，请设置 SKYMAP_HDC_TARGET 后重试：" >&2
-  printf '%s\n' "$TARGETS" >&2
-  exit 1
+if [ -n "${SKYMAP_HDC_TARGET:-}" ]; then
+  SELECTED_TARGET_STATE="$(printf '%s\n' "$TARGETS_VERBOSE" | awk -v target="$SKYMAP_HDC_TARGET" '$1 == target { print $3; exit }')"
+  if [ "$SELECTED_TARGET_STATE" != "Connected" ]; then
+    echo "指定设备不可用：$SKYMAP_HDC_TARGET（状态：${SELECTED_TARGET_STATE:-未找到}）。" >&2
+    printf '%s\n' "$TARGETS_VERBOSE" >&2
+    exit 1
+  fi
+else
+  ONLINE_TARGETS="$(printf '%s\n' "$TARGETS_VERBOSE" | awk '$3 == "Connected" { print $1 }')"
+  ONLINE_TARGET_COUNT="$(printf '%s\n' "$ONLINE_TARGETS" | sed '/^$/d' | wc -l | tr -d ' ')"
+  if [ "$ONLINE_TARGET_COUNT" -eq 0 ]; then
+    echo "检测到 HarmonyOS 设备，但当前不是 Connected 状态：" >&2
+    printf '%s\n' "$TARGETS_VERBOSE" >&2
+    echo "请解锁设备，确认 USB 调试授权并重新插拔数据线后重试。" >&2
+    exit 1
+  fi
+  if [ "$ONLINE_TARGET_COUNT" -gt 1 ]; then
+    echo "检测到多个在线设备，请设置 SKYMAP_HDC_TARGET 后重试：" >&2
+    printf '%s\n' "$TARGETS_VERBOSE" >&2
+    exit 1
+  fi
 fi
 
 if [ -n "${SKYMAP_HDC_TARGET:-}" ]; then
