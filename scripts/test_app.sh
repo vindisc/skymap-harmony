@@ -80,12 +80,17 @@ node scripts/run_verification_suite.mjs --suite "$VERIFICATION_SUITE"
 
 if [ "$RUN_BUILD" = true ]; then
   export DEVECO_SDK_HOME="${DEVECO_SDK_HOME:-${DEVECO_APP_HOME}/sdk}"
-  if [ -z "${JAVA_HOME:-}" ] && [ "$RUN_DEVICE" = true ] && [ -x "$DEVICE_JAVA_HOME_DEFAULT/bin/java" ]; then
-    export JAVA_HOME="$DEVICE_JAVA_HOME_DEFAULT"
+  if [ "$RUN_DEVICE" = true ]; then
+    export JAVA_HOME="${SKYMAP_DEVICE_JAVA_HOME:-$DEVICE_JAVA_HOME_DEFAULT}"
   else
     export JAVA_HOME="${JAVA_HOME:-${DEVECO_APP_HOME}/jbr/Contents/Home}"
   fi
   export PATH="$JAVA_HOME/bin:$PATH"
+
+  if [ ! -x "$JAVA_HOME/bin/java" ]; then
+    echo "JAVA_HOME 无效：$JAVA_HOME" >&2
+    exit 1
+  fi
 
   if [ ! -x "$HVIGOR_BIN" ]; then
     echo "未找到 hvigorw：$HVIGOR_BIN" >&2

@@ -35,8 +35,9 @@ bash scripts/test_app.sh --device
 Debug 签名。随后脚本会安装应用，依次覆盖首页、待复盘、今日复盘、横竖方图
 编辑/预览、长文本预览以及六个设置页，并把截图、截图报告和 hilog 放到
 `test-artifacts/device-smoke/`。多个设备同时连接时，通过 `SKYMAP_HDC_TARGET` 指定设备。
-设备模式在未显式设置 `JAVA_HOME` 时优先使用本机 Zulu 11，以兼容当前 Debug p12；
-设备必须处于 `Connected` 状态，仅能枚举到 `Offline` 设备时会在构建前终止。
+设备模式固定使用本机 Zulu 11，以兼容当前 Debug p12，不受终端已有 `JAVA_HOME`
+影响；如需更换，仅通过 `SKYMAP_DEVICE_JAVA_HOME` 显式指定。设备必须处于
+`Connected` 状态，仅能枚举到 `Offline` 设备时会在构建前终止。
 
 `testScenario` 只在 Debug 包中生效，横竖方图和长文本样例只写入内存。Hypium 的
 “编辑并保存”用例会在当前测试安装中写入一条标题为“UI 自动化完整链路”的复盘，

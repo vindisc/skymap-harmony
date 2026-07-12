@@ -54,6 +54,7 @@ requireIncludes(testScript, 'restore_profile', 'test_app.sh signing restoration'
 requireIncludes(testScript, 'VERIFICATION_SUITE="all"', 'test_app.sh full verification option');
 requireIncludes(testScript, 'onDeviceTest', 'test_app.sh Hypium device entry');
 requireIncludes(testScript, 'zulu-11.jdk', 'test_app.sh compatible signing JDK');
+requireIncludes(testScript, 'SKYMAP_DEVICE_JAVA_HOME', 'test_app.sh explicit device JDK override');
 requireIncludes(deviceScript, '--ps testScenario', 'smoke_device.sh debug scenario entry');
 requireIncludes(deviceScript, '--check-only', 'smoke_device.sh device preflight');
 requireIncludes(deviceScript, 'Connected', 'smoke_device.sh online device guard');
