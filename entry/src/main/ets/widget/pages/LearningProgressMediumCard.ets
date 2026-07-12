@@ -1,9 +1,9 @@
+import { WidgetCardBackground } from '../../components/WidgetCardBackground';
+
 const CARD_BACKGROUND: string = '#F8F6F1';
 const CARD_TEXT_PRIMARY: string = '#0D1117';
 const CARD_TEXT_SECONDARY: string = '#68707A';
 const CARD_PRIMARY: string = '#356F80';
-const CARD_BACKGROUND_STYLE_TEXTURE: string = 'texture';
-const CARD_TEXTURE_OPACITY: number = 0.36;
 
 // 2*2 左侧小卡片以截图为准：只展示“摄影学习 / 待复盘数量 / 待复盘”。
 // 不要再加完成率胶囊、底部按钮或指标底板；改这里时同步更新 verify_learning_progress_widget.mjs。
@@ -23,10 +23,6 @@ struct LearningProgressMediumCard {
   @LocalStorageProp('cardBackgroundStyle') cardBackgroundStyle: string = 'plain';
   @LocalStorageProp('targetRoute') targetRoute: string = 'home';
 
-  private useTextureBackground(): boolean {
-    return this.cardBackgroundStyle === CARD_BACKGROUND_STYLE_TEXTURE;
-  }
-
   private openTargetRoute(): void {
     postCardAction(this, {
       action: 'router',
@@ -40,18 +36,11 @@ struct LearningProgressMediumCard {
 
   build() {
     Stack() {
-      Column()
-        .width('100%')
-        .height('100%')
-        .backgroundColor(CARD_BACKGROUND)
-
-      if (this.useTextureBackground()) {
-        Image($r('app.media.widget_card_texture'))
-          .width('100%')
-          .height('100%')
-          .objectFit(ImageFit.Cover)
-          .opacity(CARD_TEXTURE_OPACITY)
-      }
+      WidgetCardBackground({
+        style: this.cardBackgroundStyle,
+        baseColor: CARD_BACKGROUND,
+        layout: 'square'
+      })
 
       Column({ space: 0 }) {
         Text(this.title)

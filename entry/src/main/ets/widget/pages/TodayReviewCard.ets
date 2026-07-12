@@ -1,11 +1,11 @@
+import { WidgetCardBackground } from '../../components/WidgetCardBackground';
+
 const TODAY_CARD_BACKGROUND: string = '#F8F6F1';
 const TODAY_CARD_TEXT_PRIMARY: string = '#0D1117';
 const TODAY_CARD_TEXT_SECONDARY: string = '#68707A';
 const TODAY_CARD_PRIMARY: string = '#356F80';
 const TODAY_CARD_ACTION_DISABLED: string = '#F1EADF';
 const TODAY_REVIEW_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
-const TODAY_CARD_BACKGROUND_STYLE_TEXTURE: string = 'texture';
-const TODAY_CARD_TEXTURE_OPACITY: number = 0.36;
 
 // 2*2 右侧小卡片以截图为准：标题为“今日待复盘”，中间大数字，底部保留可见按钮。
 // 不要回退成“张待复盘”说明文案或按钮贴底裁切结构；改这里时同步更新 verify_learning_progress_widget.mjs。
@@ -26,10 +26,6 @@ struct TodayReviewCard {
   @LocalStorageProp('pendingCountText') pendingCountText: string = '0';
   @LocalStorageProp('cardBackgroundStyle') cardBackgroundStyle: string = 'plain';
   @LocalStorageProp('targetRoute') targetRoute: string = 'home';
-
-  private useTextureBackground(): boolean {
-    return this.cardBackgroundStyle === TODAY_CARD_BACKGROUND_STYLE_TEXTURE;
-  }
 
   private resolvePendingCount(): number {
     const count: number = Number(this.pendingCountText);
@@ -57,18 +53,11 @@ struct TodayReviewCard {
 
   build() {
     Stack() {
-      Column()
-        .width('100%')
-        .height('100%')
-        .backgroundColor(TODAY_CARD_BACKGROUND)
-
-      if (this.useTextureBackground()) {
-        Image($r('app.media.widget_card_texture'))
-          .width('100%')
-          .height('100%')
-          .objectFit(ImageFit.Cover)
-          .opacity(TODAY_CARD_TEXTURE_OPACITY)
-      }
+      WidgetCardBackground({
+        style: this.cardBackgroundStyle,
+        baseColor: TODAY_CARD_BACKGROUND,
+        layout: 'square'
+      })
 
       Column({ space: 0 }) {
         Text('今日待复盘')

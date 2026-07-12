@@ -1,11 +1,11 @@
+import { WidgetCardBackground } from '../../components/WidgetCardBackground';
+
 const RHYTHM_CARD_BACKGROUND: string = '#F8F6F1';
 const RHYTHM_CARD_ACCENT: string = '#356F80';
 const RHYTHM_CARD_TEXT_PRIMARY: string = '#0D1117';
 const RHYTHM_CARD_TEXT_SECONDARY: string = '#68707A';
 const RHYTHM_CARD_ACTION_DISABLED: string = '#F1EADF';
 const RHYTHM_REVIEW_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
-const RHYTHM_CARD_BACKGROUND_STYLE_TEXTURE: string = 'texture';
-const RHYTHM_CARD_TEXTURE_OPACITY: number = 0.36;
 
 const RHYTHM_CARD_PADDING: number = 16;
 const RHYTHM_CARD_RADIUS: number = 24;
@@ -26,10 +26,6 @@ struct ReviewRhythmCard {
   @LocalStorageProp('pendingCountText') pendingCountText: string = '0';
   @LocalStorageProp('cardBackgroundStyle') cardBackgroundStyle: string = 'plain';
   @LocalStorageProp('targetRoute') targetRoute: string = 'home';
-
-  private useTextureBackground(): boolean {
-    return this.cardBackgroundStyle === RHYTHM_CARD_BACKGROUND_STYLE_TEXTURE;
-  }
 
   private resolveStreakDays(): number {
     const count: number = Number(this.reviewStreakDaysText);
@@ -53,18 +49,11 @@ struct ReviewRhythmCard {
 
   build() {
     Stack() {
-      Column()
-        .width('100%')
-        .height('100%')
-        .backgroundColor(RHYTHM_CARD_BACKGROUND)
-
-      if (this.useTextureBackground()) {
-        Image($r('app.media.widget_card_texture'))
-          .width('100%')
-          .height('100%')
-          .objectFit(ImageFit.Cover)
-          .opacity(RHYTHM_CARD_TEXTURE_OPACITY)
-      }
+      WidgetCardBackground({
+        style: this.cardBackgroundStyle,
+        baseColor: RHYTHM_CARD_BACKGROUND,
+        layout: 'square'
+      })
 
       Column({ space: 0 }) {
         Text('连续复盘')

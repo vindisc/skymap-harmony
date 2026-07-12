@@ -5,9 +5,12 @@ import { SettingsRefreshService } from './SettingsRefreshService';
 const PREFERENCES_NAME: string = 'review_settings';
 const REVIEWER_NAME_KEY: string = 'reviewer_name';
 const WIDGET_CARD_BACKGROUND_STYLE_KEY: string = 'widget_card_background_style';
+const SHATTER_ANIMATION_ENABLED_KEY: string = 'shatter_animation_enabled';
 
 export const REVIEW_WIDGET_CARD_BACKGROUND_PLAIN: string = 'plain';
-export const REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE: string = 'texture';
+export const REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN: string = 'huiwen';
+export const REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN_CORNER: string = 'huiwen_corner';
+export const SHATTER_ANIMATION_DEFAULT: boolean = true;
 
 function normalizeReviewerName(value: string | undefined): string {
   if (typeof value !== 'string') {
@@ -18,8 +21,13 @@ function normalizeReviewerName(value: string | undefined): string {
 }
 
 function normalizeWidgetCardBackgroundStyle(value: string | undefined): string {
-  if (value === REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE) {
-    return REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE;
+  const supportedStyles: Array<string> = [
+    REVIEW_WIDGET_CARD_BACKGROUND_PLAIN,
+    REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN,
+    REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN_CORNER
+  ];
+  if (value !== undefined && supportedStyles.includes(value)) {
+    return value;
   }
   return REVIEW_WIDGET_CARD_BACKGROUND_PLAIN;
 }
@@ -74,6 +82,31 @@ export class ReviewSettingsService {
   }
 
   static resolveWidgetCardBackgroundLabel(style: string): string {
-    return normalizeWidgetCardBackgroundStyle(style) === REVIEW_WIDGET_CARD_BACKGROUND_TEXTURE ? '纹理' : '白色';
+    const normalizedStyle: string = normalizeWidgetCardBackgroundStyle(style);
+    if (normalizedStyle === REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN) {
+      return '密集回纹';
+    }
+    if (normalizedStyle === REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN_CORNER) {
+      return '回纹角花';
+    }
+    return '素纸';
+  }
+
+  static async loadShatterAnimationEnabled(context: common.UIAbilityContext): Promise<boolean> {
+    try {
+      const store = await ReviewSettingsService.getStore(context);
+      const rawValue = await store.get(SHATTER_ANIMATION_ENABLED_KEY, SHATTER_ANIMATION_DEFAULT ? 'true' : 'false');
+      return String(rawValue) !== 'false';
+    } catch (error) {
+      return SHATTER_ANIMATION_DEFAULT;
+    }
+  }
+
+  static async saveShatterAnimationEnabled(context: common.UIAbilityContext, enabled: boolean): Promise<boolean> {
+    const store = await ReviewSettingsService.getStore(context);
+    await store.put(SHATTER_ANIMATION_ENABLED_KEY, enabled ? 'true' : 'false');
+    await store.flush();
+    SettingsRefreshService.notifySettingsChanged('shatter_animation_saved');
+    return enabled;
   }
 }

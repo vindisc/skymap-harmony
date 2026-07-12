@@ -5,17 +5,17 @@ const lockedCards = [
   {
     name: '2*2 左侧摄影学习小卡',
     path: 'entry/src/main/ets/widget/pages/LearningProgressMediumCard.ets',
-    sha256: '4c03f98dd9812d13d7af068251be9bc1073417b96fcd0e53242afcf50f95e15b'
+    sha256: '41e06783116bb2adf98ff65dad33457c1d09a7fd58d1139746bcf22d50b1bc1e'
   },
   {
     name: '2*2 右侧今日待复盘小卡',
     path: 'entry/src/main/ets/widget/pages/TodayReviewCard.ets',
-    sha256: '42b8977eb7a454fad975776d1fe99c4e44b85c020360378df5efd7429f297400'
+    sha256: '2bd9d16cbcd3fcb51d6472ba93988c0820259b353f6eb6732842410e35cf224a'
   },
   {
     name: '2*4 学习进度中型卡',
     path: 'entry/src/main/ets/widget/pages/LearningProgressSummaryMediumCard.ets',
-    sha256: 'bd0def0d29999d34f342cbf8d1cdf58199fa19a3aaed36c86862e3fb2e260871'
+    sha256: 'a0703c19a580a94c6d776686ff4523559ceb487297b128dd796e8e07831bf503'
   }
 ];
 

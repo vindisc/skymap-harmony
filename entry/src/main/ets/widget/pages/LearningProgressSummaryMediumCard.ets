@@ -1,3 +1,5 @@
+import { WidgetCardBackground } from '../../components/WidgetCardBackground';
+
 const SUMMARY_CARD_BACKGROUND: string = '#FFFDF8';
 const SUMMARY_CARD_TEXT_PRIMARY: string = '#0D1117';
 const SUMMARY_CARD_TEXT_SECONDARY: string = '#68707A';
@@ -6,8 +8,6 @@ const SUMMARY_CARD_PRIMARY_SOFT: string = '#D8EDE5';
 const SUMMARY_CARD_PROGRESS_SOFT: string = '#E8F3EC';
 const SUMMARY_CARD_ACTION_DISABLED: string = '#E7ECE5';
 const LEARNING_PROGRESS_DIRECT_TARGET_ROUTE: string = 'today_review_direct';
-const SUMMARY_CARD_BACKGROUND_STYLE_TEXTURE: string = 'texture';
-const SUMMARY_CARD_TEXTURE_OPACITY: number = 0.3;
 
 // 2*4 中型卡片在真机桌面里底部空间很紧：上方两个指标块必须保持紧凑，
 // 给底部“继续复盘”留出呼吸感。调整这些值时同步更新 verify_learning_progress_widget.mjs。
@@ -38,10 +38,6 @@ struct LearningProgressSummaryMediumCard {
   @LocalStorageProp('completionRateText') completionRateText: string = '--';
   @LocalStorageProp('cardBackgroundStyle') cardBackgroundStyle: string = 'plain';
   @LocalStorageProp('targetRoute') targetRoute: string = 'home';
-
-  private useTextureBackground(): boolean {
-    return this.cardBackgroundStyle === SUMMARY_CARD_BACKGROUND_STYLE_TEXTURE;
-  }
 
   private resolvePendingCount(): number {
     const count: number = Number(this.pendingCountText);
@@ -159,18 +155,11 @@ struct LearningProgressSummaryMediumCard {
 
   build() {
     Stack() {
-      Column()
-        .width('100%')
-        .height('100%')
-        .backgroundColor(SUMMARY_CARD_BACKGROUND)
-
-      if (this.useTextureBackground()) {
-        Image($r('app.media.widget_card_texture'))
-          .width('100%')
-          .height('100%')
-          .objectFit(ImageFit.Cover)
-          .opacity(SUMMARY_CARD_TEXTURE_OPACITY)
-      }
+      WidgetCardBackground({
+        style: this.cardBackgroundStyle,
+        baseColor: SUMMARY_CARD_BACKGROUND,
+        layout: 'wide'
+      })
 
       Column({ space: SUMMARY_CARD_COLUMN_GAP }) {
         Row({ space: 6 }) {

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <g fill="none" stroke="#356F80" stroke-linecap="square" stroke-linejoin="miter">
+    <g>
+      <path d="M14 54V14H54" stroke-width="1.25" stroke-opacity="0.12"/>
+      <path d="M22 54V22H46V29H32V46H26V34H40V40H36V37" stroke-width="1.15" stroke-opacity="0.11"/>
+      <path d="M40 14V25H49V18H44V21H46" stroke-width="1.05" stroke-opacity="0.1"/>
+    </g>
+    <g transform="translate(240 0) scale(-1 1)">
+      <path d="M14 54V14H54" stroke-width="1.25" stroke-opacity="0.12"/>
+      <path d="M22 54V22H46V29H32V46H26V34H40V40H36V37" stroke-width="1.15" stroke-opacity="0.11"/>
+      <path d="M40 14V25H49V18H44V21H46" stroke-width="1.05" stroke-opacity="0.1"/>
+    </g>
+    <g transform="translate(0 240) scale(1 -1)">
+      <path d="M14 54V14H54" stroke-width="1.25" stroke-opacity="0.12"/>
+      <path d="M22 54V22H46V29H32V46H26V34H40V40H36V37" stroke-width="1.15" stroke-opacity="0.11"/>
+      <path d="M40 14V25H49V18H44V21H46" stroke-width="1.05" stroke-opacity="0.1"/>
+    </g>
+    <g transform="translate(240 240) scale(-1 -1)">
+      <path d="M14 54V14H54" stroke-width="1.25" stroke-opacity="0.12"/>
+      <path d="M22 54V22H46V29H32V46H26V34H40V40H36V37" stroke-width="1.15" stroke-opacity="0.11"/>
+      <path d="M40 14V25H49V18H44V21H46" stroke-width="1.05" stroke-opacity="0.1"/>
+    </g>
+  </g>
+</svg>
