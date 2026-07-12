@@ -140,9 +140,12 @@ export struct MyPage {
         }
         return;
       }
+      const imageSummary: string = inspection.missingImageCount > 0
+        ? `包含 ${inspection.imageCount} 张照片；旧版备份另有 ${inspection.missingImageCount} 张未包含。`
+        : `包含 ${inspection.imageCount} 张照片。`;
       DialogService.confirm(this.getUIContext(), {
         title: `恢复 ${inspection.itemCount} 条复盘？`,
-        message: `备份时间：${this.formatBackupTime(inspection.createdAt)}\n恢复后会替换当前 ${this.backupItemTotal} 条复盘。原图和家庭存储密码不在备份中。`,
+        message: `已选择 ${inspection.fileCount} 个备份，最新备份时间：${this.formatBackupTime(inspection.createdAt)}。${imageSummary}\n恢复后会替换当前 ${this.backupItemTotal} 条复盘，家庭存储密码不会恢复。`,
         cancelText: '取消',
         confirmText: '确认恢复',
         onConfirm: () => {
@@ -419,16 +422,9 @@ export struct MyPage {
   @Builder
   DataProtectionSection() {
     Column({ space: AppMetrics.cardGap }) {
-      Text('数据保护')
-        .fontSize(AppTypography.meta)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.metaLineHeight)
-        .width('100%')
-
       SettingsLinkRow({
         title: '备份全部复盘',
-        value: '保存到手机文件，卸载应用后仍可使用',
+        value: '复盘与原图保存到手机文件，卸载后仍可恢复',
         status: this.isBackupActionRunning ? '处理中' : `${this.backupItemTotal} 条`,
         tone: this.backupItemTotal > 0 ? SettingsEntryTone.SUCCESS : SettingsEntryTone.MUTED,
         dense: true,
@@ -439,7 +435,7 @@ export struct MyPage {
 
       SettingsLinkRow({
         title: '从备份恢复',
-        value: '校验通过后整体恢复复盘和常用设置',
+        value: '支持多选备份，去重合并后整体恢复',
         status: this.isBackupActionRunning ? '处理中' : '选择文件',
         tone: SettingsEntryTone.DEFAULT,
         dense: true,

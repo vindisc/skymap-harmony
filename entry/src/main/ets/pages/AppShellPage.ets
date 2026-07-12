@@ -116,9 +116,12 @@ struct AppShellPage {
         }
         return;
       }
+      const imageSummary: string = inspection.missingImageCount > 0
+        ? `包含 ${inspection.imageCount} 张照片，旧版备份另有 ${inspection.missingImageCount} 张未包含。`
+        : `包含 ${inspection.imageCount} 张照片。`;
       DialogService.confirm(this.getUIContext(), {
         title: `恢复 ${inspection.itemCount} 条复盘？`,
-        message: '备份已通过完整性校验。恢复会写入全部复盘和常用设置，不包含原图和家庭存储密码。',
+        message: `已合并 ${inspection.fileCount} 个备份并通过完整性校验，${imageSummary}家庭存储密码不会恢复。`,
         cancelText: '取消',
         confirmText: '确认恢复',
         onConfirm: () => {
