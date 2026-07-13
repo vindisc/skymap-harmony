@@ -2,6 +2,7 @@ import common from '@ohos.app.ability.common';
 import {
   HOME_HERO_IMAGE_PAGE,
   HOME_STORAGE_PAGE,
+  MOTION_SETTINGS_PAGE,
   REVIEWER_PROFILE_PAGE,
   SYNC_CENTER_PAGE,
   WIDGET_CARD_BACKGROUND_PAGE
@@ -23,7 +24,11 @@ import {
 import { ENABLE_RDB_DIAGNOSTICS_ENTRY } from '../services/ReviewFlowFeedback';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { HomeHeroImageService } from '../services/HomeHeroImageService';
-import { REVIEW_WIDGET_CARD_BACKGROUND_PLAIN, ReviewSettingsService } from '../services/ReviewSettingsService';
+import {
+  MotionQuality,
+  REVIEW_WIDGET_CARD_BACKGROUND_PLAIN,
+  ReviewSettingsService
+} from '../services/ReviewSettingsService';
 import { ToastService, ToastTone } from '../services/ToastService';
 import { DialogService } from '../services/DialogService';
 import {
@@ -47,6 +52,7 @@ export struct MyPage {
   @State homeHeroImageCount: number = 0;
   @State widgetCardBackgroundStyle: string = REVIEW_WIDGET_CARD_BACKGROUND_PLAIN;
   @State backupItemTotal: number = 0;
+  @State motionQuality: MotionQuality = MotionQuality.FULL;
   @State isBackupActionRunning: boolean = false;
   @State isRdbDiagnosticsRunning: boolean = false;
   @State rdbDiagnosticsSummary: string = '未运行';
@@ -90,6 +96,11 @@ export struct MyPage {
     }
 
     this.homeHeroImageCount = (await HomeHeroImageService.listImages(context)).length;
+    if (requestId !== this.loadRequestId) {
+      return;
+    }
+
+    this.motionQuality = await ReviewSettingsService.loadMotionQuality(context);
     if (requestId !== this.loadRequestId) {
       return;
     }
@@ -298,6 +309,12 @@ export struct MyPage {
     });
   }
 
+  private openMotionSettings(): void {
+    this.getUIContext().getRouter().pushUrl({ url: MOTION_SETTINGS_PAGE }).catch((error: Error) => {
+      console.error(`[MyPage] 打开显示与动效设置失败：${error.message}`);
+    });
+  }
+
   private openWidgetCardBackground(): void {
     this.getUIContext().getRouter().pushUrl({ url: WIDGET_CARD_BACKGROUND_PAGE }).catch((error: Error) => {
       console.error(`[MyPage] 打开卡片背景设置失败：${error.message}`);
@@ -391,6 +408,17 @@ export struct MyPage {
         dense: true,
         onTap: () => {
           this.openWidgetCardBackground();
+        }
+      })
+
+      SettingsLinkRow({
+        title: '显示与动效',
+        value: '里程碑动画与页面转场的强度',
+        status: ReviewSettingsService.resolveMotionQualityLabel(this.motionQuality),
+        tone: SettingsEntryTone.DEFAULT,
+        dense: true,
+        onTap: () => {
+          this.openMotionSettings();
         }
       })
 

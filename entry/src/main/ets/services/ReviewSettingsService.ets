@@ -6,11 +6,28 @@ const PREFERENCES_NAME: string = 'review_settings';
 const REVIEWER_NAME_KEY: string = 'reviewer_name';
 const WIDGET_CARD_BACKGROUND_STYLE_KEY: string = 'widget_card_background_style';
 const SHATTER_ANIMATION_ENABLED_KEY: string = 'shatter_animation_enabled';
+const MOTION_QUALITY_KEY: string = 'motion_quality';
 
 export const REVIEW_WIDGET_CARD_BACKGROUND_PLAIN: string = 'plain';
 export const REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN: string = 'huiwen';
 export const REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN_CORNER: string = 'huiwen_corner';
 export const SHATTER_ANIMATION_DEFAULT: boolean = true;
+
+export enum MotionQuality {
+  FULL = 'full',
+  CALM = 'calm',
+  MINIMAL = 'minimal'
+}
+
+function normalizeMotionQuality(value: string | undefined): MotionQuality {
+  if (value === MotionQuality.CALM) {
+    return MotionQuality.CALM;
+  }
+  if (value === MotionQuality.MINIMAL) {
+    return MotionQuality.MINIMAL;
+  }
+  return MotionQuality.FULL;
+}
 
 function normalizeReviewerName(value: string | undefined): string {
   if (typeof value !== 'string') {
@@ -108,5 +125,37 @@ export class ReviewSettingsService {
     await store.flush();
     SettingsRefreshService.notifySettingsChanged('shatter_animation_saved');
     return enabled;
+  }
+
+  static async loadMotionQuality(context: common.UIAbilityContext): Promise<MotionQuality> {
+    try {
+      const store = await ReviewSettingsService.getStore(context);
+      const rawValue = await store.get(MOTION_QUALITY_KEY, MotionQuality.FULL);
+      return normalizeMotionQuality(String(rawValue));
+    } catch (error) {
+      return MotionQuality.FULL;
+    }
+  }
+
+  static async saveMotionQuality(
+    context: common.UIAbilityContext,
+    value: MotionQuality
+  ): Promise<MotionQuality> {
+    const normalizedValue: MotionQuality = normalizeMotionQuality(value);
+    const store = await ReviewSettingsService.getStore(context);
+    await store.put(MOTION_QUALITY_KEY, normalizedValue);
+    await store.flush();
+    SettingsRefreshService.notifySettingsChanged('motion_quality_saved');
+    return normalizedValue;
+  }
+
+  static resolveMotionQualityLabel(value: MotionQuality): string {
+    if (value === MotionQuality.CALM) {
+      return '舒缓';
+    }
+    if (value === MotionQuality.MINIMAL) {
+      return '最少';
+    }
+    return '完整';
   }
 }

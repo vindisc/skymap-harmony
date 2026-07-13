@@ -8,6 +8,7 @@
     "pages/WidgetCardBackgroundPage",
     "pages/ReviewerProfilePage",
     "pages/ReviewSettingsPage",
-    "pages/SyncCenterPage"
+    "pages/SyncCenterPage",
+    "pages/MotionSettingsPage"
   ]
 }

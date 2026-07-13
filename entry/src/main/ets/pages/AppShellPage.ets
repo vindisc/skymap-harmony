@@ -16,6 +16,7 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewLibraryRefreshService } from '../services/ReviewLibraryRefreshService';
 import { SettingsRefreshService } from '../services/SettingsRefreshService';
 import { MotionTokens } from '../theme/DesignTokens';
+import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 import { DialogService } from '../services/DialogService';
 import { ToastService, ToastTone } from '../services/ToastService';
 import { DebugLaunchScenarioService } from '../services/DebugLaunchScenarioService';
@@ -46,7 +47,7 @@ const ROOT_TABS: Array<RootTabItem> = [
   { key: RootTabKey.MY, label: '我的', activeIcon: $r('app.media.tab_user_active'), inactiveIcon: $r('app.media.tab_user') }
 ];
 
-const TAB_PAGE_EXIT_DELAY: number = 90;
+const TAB_PAGE_EXIT_DELAY: number = MotionTokens.durationStaggerLong;
 const LIBRARY_INITIAL_FILTER_ALL: string = 'all';
 const LIBRARY_INITIAL_FILTER_PENDING: string = 'pending';
 const EDITOR_PAGE: string = 'pages/EditorPage';
@@ -70,6 +71,9 @@ struct AppShellPage {
   @State settingsRefreshToken: number = SettingsRefreshService.getRefreshToken();
   @State libraryInitialFilter: string = LIBRARY_INITIAL_FILTER_ALL;
   @State tabContentVisible: boolean = true;
+  @State tabIconScale: number = 1;
+  private tabSwitchTimerId: number = -1;
+  private tabIconTimerId: number = -1;
   private firstRestoreGuideChecked: boolean = false;
 
   aboutToAppear(): void {
@@ -77,6 +81,7 @@ struct AppShellPage {
     FormLaunchIntentService.subscribe(this.formLaunchIntentListener);
     this.applyFormLaunchIntent();
     this.offerFirstLaunchRestore();
+    MotionQualityContext.initialize(this.getUIContext().getHostContext() as common.UIAbilityContext);
   }
 
   private async offerFirstLaunchRestore(): Promise<void> {
@@ -159,6 +164,14 @@ struct AppShellPage {
   aboutToDisappear(): void {
     SettingsRefreshService.unsubscribe(this.settingsRefreshListener);
     FormLaunchIntentService.unsubscribe(this.formLaunchIntentListener);
+    if (this.tabSwitchTimerId >= 0) {
+      clearTimeout(this.tabSwitchTimerId);
+      this.tabSwitchTimerId = -1;
+    }
+    if (this.tabIconTimerId >= 0) {
+      clearTimeout(this.tabIconTimerId);
+      this.tabIconTimerId = -1;
+    }
   }
 
   onPageShow(): void {
@@ -258,8 +271,12 @@ struct AppShellPage {
       return;
     }
 
+    if (this.tabSwitchTimerId >= 0) {
+      clearTimeout(this.tabSwitchTimerId);
+    }
     this.tabContentVisible = false;
-    setTimeout(() => {
+    this.tabSwitchTimerId = setTimeout(() => {
+      this.tabSwitchTimerId = -1;
       this.currentTab = key;
       if (key !== RootTabKey.LIBRARY) {
         this.libraryInitialFilter = LIBRARY_INITIAL_FILTER_ALL;
@@ -273,7 +290,19 @@ struct AppShellPage {
         this.myRefreshToken += 1;
       }
       this.tabContentVisible = true;
+      this.playTabIconPulse();
     }, TAB_PAGE_EXIT_DELAY);
+  }
+
+  private playTabIconPulse(): void {
+    if (this.tabIconTimerId >= 0) {
+      clearTimeout(this.tabIconTimerId);
+    }
+    this.tabIconScale = MotionTokens.scaleCeremony;
+    this.tabIconTimerId = setTimeout(() => {
+      this.tabIconScale = 1;
+      this.tabIconTimerId = -1;
+    }, MotionTokens.durationQuick);
   }
 
   private resolveTabLabelColor(key: RootTabKey): string {
@@ -294,6 +323,15 @@ struct AppShellPage {
       Image(this.isCurrentTab(item.key) ? item.activeIcon : item.inactiveIcon)
         .width(AppMetrics.tabIconSize)
         .height(AppMetrics.tabIconSize)
+        .opacity(this.isCurrentTab(item.key) ? 1 : 0.6)
+        .scale({
+          x: this.isCurrentTab(item.key) ? this.tabIconScale : 1,
+          y: this.isCurrentTab(item.key) ? this.tabIconScale : 1
+        })
+        .animation({
+          duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+          curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_BOUNCY)
+        })
 
       Text(item.label)
         .fontSize(AppTypography.tabLabel)
@@ -337,10 +375,18 @@ struct AppShellPage {
       .width('100%')
       .backgroundColor(AppColors.pageBackground)
       .opacity(this.tabContentVisible ? 1 : 0)
-      .translate({ y: this.tabContentVisible ? 0 : 10 })
+      .translate({ y: this.tabContentVisible ? 0 : MotionTokens.offsetEnterY })
+      .scale({
+        x: this.tabContentVisible ? 1 : MotionTokens.scaleSubtle,
+        y: this.tabContentVisible ? 1 : MotionTokens.scaleSubtle
+      })
       .animation({
-        duration: this.tabContentVisible ? MotionTokens.durationStandard : MotionTokens.durationQuick,
-        curve: this.tabContentVisible ? MotionTokens.curveDecelerate : MotionTokens.curveAccelerate
+        duration: MotionQualityContext.resolveDuration(
+          this.tabContentVisible ? MotionTokens.durationStandard : MotionTokens.durationQuick
+        ),
+        curve: MotionQualityContext.resolveCurve(
+          this.tabContentVisible ? MotionCurveRole.SPRING_SOFT : MotionCurveRole.EMPHASIZED
+        )
       })
 
       Column() {

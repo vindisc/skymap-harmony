@@ -1,3 +1,5 @@
+import curves from '@ohos.curves';
+
 export class TypographyTokens {
   static readonly PageTitle: number = 26;
   static readonly PageSubtitle: number = 14;
@@ -132,10 +134,39 @@ export class MotionTokens {
   static readonly durationQuick: number = 150;
   static readonly durationStandard: number = 250;
   static readonly durationSlow: number = 400;
+  static readonly durationHero: number = 520;
+  static readonly durationCeremony: number = 780;
+  static readonly durationStagger: number = 40;
+  static readonly durationStaggerLong: number = 60;
+  static readonly durationShimmer: number = 1200;
   static readonly curveStandard: Curve = Curve.EaseInOut;
   static readonly curveDecelerate: Curve = Curve.EaseOut;
   static readonly curveAccelerate: Curve = Curve.EaseIn;
+  static readonly curveEmphasized: ICurve = curves.cubicBezierCurve(0.2, 0, 0, 1);
+  static readonly curveSpringSoft: ICurve = curves.springMotion(0.55, 0.85);
+  static readonly curveSpringResponsive: ICurve = curves.springMotion(0.36, 0.9);
+  static readonly curveSpringBouncy: ICurve = curves.interpolatingSpring(9, 1, 220, 22);
+  static readonly curveDeceleratedLanding: ICurve = curves.cubicBezierCurve(0.05, 0.7, 0.1, 1);
+  static readonly offsetEnterY: number = 12;
+  static readonly offsetEnterYCard: number = 20;
+  static readonly offsetEnterYSheet: number = 320;
+  static readonly offsetExitYToast: number = -24;
   static readonly scalePressed: number = 0.96;
   static readonly scaleSubtle: number = 0.98;
   static readonly scaleSoftPressed: number = 0.97;
+  static readonly scalePressedHard: number = 0.96;
+  static readonly scaleCeremony: number = 1.06;
+  static readonly scaleHeroIntro: number = 1.04;
+  static readonly shatterDurationMs: number = 800;
+  static readonly shatterImageLayerMs: number = 500;
+  static readonly shatterPointLayerMs: number = 600;
+  static readonly shatterPointLayerDelayMs: number = 200;
+  static readonly shatterRippleBackMs: number = 280;
+}
+
+export class ToastDurationTokens {
+  static readonly success: number = 2200;
+  static readonly info: number = 2400;
+  static readonly warning: number = 2600;
+  static readonly error: number = 2800;
 }
