@@ -44,6 +44,7 @@ import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 import { ToastService } from '../services/ToastService';
+import { BottomSheetContainer } from '../components/motion/BottomSheetContainer';
 
 enum PreviewSaveState {
   UNSAVED = '未保存',
@@ -665,17 +666,8 @@ struct PreviewPage {
   }
 
   @Builder
-  ExportMenuSheet() {
-    Stack({ alignContent: Alignment.Bottom }) {
-      Column()
-        .width('100%')
-        .height('100%')
-        .backgroundColor(AppColors.modalScrim)
-        .onClick(() => {
-          this.closeExportMenu();
-        })
-
-      Column({ space: AppMetrics.space8 }) {
+  ExportMenuContent() {
+    Column({ space: AppMetrics.space8 }) {
         Column({ space: AppMetrics.space8 }) {
           Text('导出当前复盘')
             .fontSize(AppTypography.level2)
@@ -720,14 +712,8 @@ struct PreviewPage {
           .onClick(() => {
             this.closeExportMenu();
           })
-      }
-      .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space24 })
-      .width('100%')
     }
     .width('100%')
-    .height('100%')
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
-    .zIndex(10)
   }
 
   build() {
@@ -738,9 +724,14 @@ struct PreviewPage {
 
       this.ReadingPage()
 
-      if (this.isExportMenuVisible) {
-        this.ExportMenuSheet()
-      }
+      BottomSheetContainer({
+        visible: this.isExportMenuVisible,
+        content: this.ExportMenuContent,
+        onClose: () => {
+          this.closeExportMenu();
+        }
+      })
+        .zIndex(10)
     }
     .width('100%')
     .height('100%')

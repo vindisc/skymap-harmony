@@ -20,6 +20,9 @@ import {
   LearningProgressService,
   LearningProgressSnapshot
 } from '../services/LearningProgressService';
+import { CountUpText } from '../components/motion/CountUpText';
+import { ShimmerBox } from '../components/motion/ShimmerBox';
+import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
 const STATS_OVERVIEW_MIN_HEIGHT: number = 120;
 const STATS_LEARNING_OVERVIEW_MIN_HEIGHT: number = 132;
@@ -166,12 +169,7 @@ export struct StatsPage {
   @Builder
   OverviewMetric(label: string, value: number, color: string, background: string) {
     Column({ space: 2 }) {
-      Text(`${value}`)
-        .fontSize(AppTypography.cardTitle)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(color)
-        .lineHeight(AppTypography.cardTitleLineHeight)
-        .maxLines(1)
+      CountUpText({ value: value, fontSize: AppTypography.cardTitle, fontColor: color })
 
       Text(label)
         .fontSize(AppTypography.meta)
@@ -274,12 +272,11 @@ export struct StatsPage {
 
       Row({ space: AppMetrics.space12 }) {
         Row({ space: AppMetrics.space8 }) {
-          Text(`${this.feedback.totalCount}`)
-            .fontSize(AppTypography.statNumber)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.primary)
-            .lineHeight(AppTypography.statNumberLineHeight)
-            .maxLines(1)
+          CountUpText({
+            value: this.feedback.totalCount,
+            fontSize: AppTypography.statNumber,
+            fontColor: AppColors.primary
+          })
 
           Text('累计复盘')
             .fontSize(AppTypography.meta)
@@ -434,7 +431,10 @@ export struct StatsPage {
           .height(STATS_PROGRESS_HEIGHT)
           .borderRadius(STATS_PROGRESS_RADIUS)
           .backgroundColor(this.resolveDistributionColor(item.key))
-          .animation({ duration: MotionTokens.durationStandard, curve: MotionTokens.curveDecelerate })
+          .animation({
+            duration: MotionQualityContext.resolveDuration(MotionTokens.durationSlow),
+            curve: MotionQualityContext.resolveCurve(MotionCurveRole.LANDING)
+          })
       }
       .width('100%')
       .height(STATS_PROGRESS_HEIGHT)
@@ -522,21 +522,21 @@ export struct StatsPage {
   @Builder
   StatsSkeletonCard(height: number, firstLineWidth: string, secondLineWidth: string) {
     Column({ space: AppMetrics.space12 }) {
-      SkeletonBlock({ blockWidth: firstLineWidth, blockHeight: 18, blockRadius: 9 })
-      SkeletonBlock({ blockWidth: secondLineWidth, blockHeight: 14, blockRadius: 7 })
+      ShimmerBox({ boxWidth: firstLineWidth, boxHeight: 18, boxRadius: 9 })
+      ShimmerBox({ boxWidth: secondLineWidth, boxHeight: 14, boxRadius: 7 })
       Row({ space: AppMetrics.space8 }) {
         Column() {
-          SkeletonBlock({ blockHeight: 34, blockRadius: AppMetrics.buttonRadius })
+          ShimmerBox({ boxHeight: 34, boxRadius: AppMetrics.buttonRadius })
         }
         .layoutWeight(1)
 
         Column() {
-          SkeletonBlock({ blockHeight: 34, blockRadius: AppMetrics.buttonRadius })
+          ShimmerBox({ boxHeight: 34, boxRadius: AppMetrics.buttonRadius })
         }
         .layoutWeight(1)
 
         Column() {
-          SkeletonBlock({ blockHeight: 34, blockRadius: AppMetrics.buttonRadius })
+          ShimmerBox({ boxHeight: 34, boxRadius: AppMetrics.buttonRadius })
         }
         .layoutWeight(1)
       }

@@ -40,7 +40,9 @@ import {
 import { ToastService } from '../services/ToastService';
 import { DialogService } from '../services/DialogService';
 import { formatReviewTime, getImageRatioLabel, hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
-import { ElevationTokens } from '../theme/DesignTokens';
+import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
+import { ShimmerBox } from '../components/motion/ShimmerBox';
+import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
 const DELETE_SWIPE_ACTION_WIDTH: number = 92;
 const DELETE_SWIPE_BUTTON_WIDTH: number = 68;
@@ -69,6 +71,8 @@ export struct ProjectDetailPage {
   @State isLoadingMore: boolean = false;
   @State hasMoreItems: boolean = false;
   @State libraryStats: ReviewLibraryStats = ReviewCardRdbMapper.emptyStats();
+  @State filterPulseValue: string = '';
+  private filterPulseTimerId: number = -1;
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -81,6 +85,26 @@ export struct ProjectDetailPage {
 
   onPageShow(): void {
     this.reloadData();
+  }
+
+  aboutToDisappear(): void {
+    if (this.filterPulseTimerId >= 0) {
+      clearTimeout(this.filterPulseTimerId);
+      this.filterPulseTimerId = -1;
+    }
+  }
+
+  private selectFilter(value: string): void {
+    this.decisionFilter = value;
+    this.applyFilters();
+    if (this.filterPulseTimerId >= 0) {
+      clearTimeout(this.filterPulseTimerId);
+    }
+    this.filterPulseValue = value;
+    this.filterPulseTimerId = setTimeout(() => {
+      this.filterPulseValue = '';
+      this.filterPulseTimerId = -1;
+    }, MotionTokens.durationStandard);
   }
 
   refreshReviewLibraryData(): void {
@@ -471,9 +495,16 @@ export struct ProjectDetailPage {
       .fontColor(this.resolveFilterChipTextColor(value))
       .backgroundColor(this.resolveFilterChipBackgroundColor(value))
       .border({ width: 1, color: this.isFilterSelected(value) ? AppColors.primary : AppColors.border })
+      .scale({
+        x: this.filterPulseValue === value ? MotionTokens.scaleCeremony : 1,
+        y: this.filterPulseValue === value ? MotionTokens.scaleCeremony : 1
+      })
+      .animation({
+        duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+        curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_BOUNCY)
+      })
       .onClick(() => {
-        this.decisionFilter = value;
-        this.applyFilters();
+        this.selectFilter(value);
       })
   }
 
@@ -560,17 +591,17 @@ export struct ProjectDetailPage {
       ForEach([0, 1, 2], (index: number) => {
         Row({ space: AppMetrics.cardGap }) {
           Column() {
-            SkeletonBlock({
-              blockHeight: AppMetrics.listThumbnailSize,
-              blockRadius: AppMetrics.buttonRadius
+            ShimmerBox({
+              boxHeight: AppMetrics.listThumbnailSize,
+              boxRadius: AppMetrics.buttonRadius
             })
           }
           .width(AppMetrics.listThumbnailSize)
 
           Column({ space: AppMetrics.space10 }) {
-            SkeletonBlock({ blockWidth: '72%', blockHeight: 16, blockRadius: 8 })
-            SkeletonBlock({ blockWidth: index === 2 ? '58%' : '86%', blockHeight: 14, blockRadius: 7 })
-            SkeletonBlock({ blockWidth: '44%', blockHeight: 12, blockRadius: 6 })
+            ShimmerBox({ boxWidth: '72%', boxHeight: 16, boxRadius: 8 })
+            ShimmerBox({ boxWidth: index === 2 ? '58%' : '86%', boxHeight: 14, boxRadius: 7 })
+            ShimmerBox({ boxWidth: '44%', boxHeight: 12, boxRadius: 6 })
           }
           .layoutWeight(1)
           .alignItems(HorizontalAlign.Start)
@@ -615,6 +646,11 @@ export struct ProjectDetailPage {
       .clip(true)
       .backgroundColor(AppColors.surfaceMuted)
       .border({ width: 1, color: AppColors.border })
+      .geometryTransition(`review-hero-${photo.id}`)
+      .animation({
+        duration: MotionQualityContext.resolveDuration(MotionTokens.durationHero),
+        curve: MotionQualityContext.resolveCurve(MotionCurveRole.LANDING)
+      })
 
       Column({ space: AppMetrics.space8 }) {
         Text(photo.fileName.length > 0 ? photo.fileName : '待复盘照片')

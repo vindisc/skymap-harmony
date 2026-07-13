@@ -32,6 +32,9 @@ import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { estimateReviewTextLineCount, estimateReviewTextWrapUnitsPerLine } from '../utils/ReviewTextMetrics';
 import { ToastService } from '../services/ToastService';
 import { DialogService } from '../services/DialogService';
+import { SharedHero } from '../components/motion/SharedHero';
+import { CeremonyBurst } from '../components/motion/CeremonyBurst';
+import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
 const EDITOR_CONTENT_FALLBACK_WIDTH: number = 360;
@@ -102,6 +105,9 @@ struct EditorPage {
   @State isSaving: boolean = false;
   @State isDirty: boolean = false;
   @State pendingPhotoId: string = '';
+  @State introStage: number = 0;
+  @State ceremonyVisible: boolean = false;
+  private introTimerIds: Array<number> = [];
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -131,6 +137,30 @@ struct EditorPage {
     this.currentBlocker = this.document.content.currentBlocker;
     this.isDirty = false;
     this.shouldDiscardChanges = false;
+    this.playIntro();
+  }
+
+  private playIntro(): void {
+    this.clearIntroTimers();
+    this.introStage = 0;
+    const heroTimerId: number = setTimeout(() => {
+      this.introStage = 1;
+    }, 0);
+    const contentTimerId: number = setTimeout(() => {
+      this.introStage = 2;
+    }, MotionQualityContext.shouldPlayStagger() ? MotionTokens.durationInstant : 0);
+    this.introTimerIds = [heroTimerId, contentTimerId];
+  }
+
+  private clearIntroTimers(): void {
+    this.introTimerIds.forEach((timerId: number) => {
+      clearTimeout(timerId);
+    });
+    this.introTimerIds = [];
+  }
+
+  private resolveHeroTag(): string {
+    return this.pendingPhotoId.length > 0 ? this.pendingPhotoId : getReviewDocumentKey(this.document);
   }
 
   private disableSystemKeyboardAvoidance(): void {
@@ -202,6 +232,7 @@ struct EditorPage {
 
   aboutToDisappear(): void {
     this.isPageAlive = false;
+    this.clearIntroTimers();
     this.unregisterKeyboardHeightObserver();
     this.restoreSystemKeyboardAvoidance();
     if (this.shouldDiscardChanges) {
@@ -229,6 +260,7 @@ struct EditorPage {
     }
 
     this.isSaving = true;
+    const completesPendingReview: boolean = this.pendingPhotoId.length > 0;
     this.syncDocumentFromInput();
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
     try {
@@ -237,14 +269,22 @@ struct EditorPage {
       await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
       this.isDirty = false;
       ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
-      this.getUIContext().getRouter().replaceUrl({ url: PREVIEW_PAGE }).catch((error: Error) => {
-        console.error(`[EditorPage] 进入预览页失败：${error.message}`);
-      });
+      if (completesPendingReview && MotionQualityContext.shouldPlayCeremony()) {
+        this.ceremonyVisible = true;
+      } else {
+        this.openPreview();
+      }
     } catch (error) {
       ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
       this.isSaving = false;
     }
+  }
+
+  private openPreview(): void {
+    this.getUIContext().getRouter().replaceUrl({ url: PREVIEW_PAGE }).catch((error: Error) => {
+      console.error(`[EditorPage] 进入预览页失败：${error.message}`);
+    });
   }
 
   private async markPendingPhotoReviewedQuietly(): Promise<void> {
@@ -659,12 +699,25 @@ struct EditorPage {
     .zIndex(2)
   }
 
+  @Builder
+  SharedHeroPhotoHeader() {
+    this.PhotoHeader()
+  }
+
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
 
       Column() {
-        this.PhotoHeader()
+        SharedHero({
+          tag: this.resolveHeroTag(),
+          content: this.SharedHeroPhotoHeader
+        })
+          .opacity(this.introStage >= 1 ? 1 : 0)
+          .scale({
+            x: this.introStage >= 1 ? 1 : MotionTokens.scaleHeroIntro,
+            y: this.introStage >= 1 ? 1 : MotionTokens.scaleHeroIntro
+          })
 
         Scroll(this.editorScroller) {
           Column({ space: AppMetrics.space16 }) {
@@ -705,6 +758,12 @@ struct EditorPage {
         .width('100%')
         .scrollBar(BarState.Off)
         .edgeEffect(EdgeEffect.Spring)
+        .opacity(this.introStage >= 2 ? 1 : 0)
+        .translate({ y: this.introStage >= 2 ? 0 : MotionTokens.offsetEnterYCard })
+        .animation({
+          duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+          curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+        })
       }
       .width('100%')
       .height('100%')
@@ -721,6 +780,17 @@ struct EditorPage {
         })
         .width('100%')
         .hitTestBehavior(HitTestMode.Transparent)
+      }
+
+      if (this.ceremonyVisible) {
+        CeremonyBurst({
+          kind: 'review-done',
+          onFinish: () => {
+            this.ceremonyVisible = false;
+            this.openPreview();
+          }
+        })
+          .zIndex(20)
       }
     }
     .width('100%')

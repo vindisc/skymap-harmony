@@ -52,6 +52,8 @@ import {
 } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { ToastService } from '../services/ToastService';
+import { ShimmerBox } from '../components/motion/ShimmerBox';
+import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
 const HOME_HERO_ASPECT_RATIO: number = 0.68;
 const HOME_SIDE_PADDING: number = AppMetrics.pagePadding;
@@ -84,10 +86,39 @@ export struct HomePage {
   @State heroIntervalSeconds: number = 4;
   @State activeHeroIndex: number = 0;
   @State isHistoryLoading: boolean = false;
+  @State introStage: number = 0;
+  private introTimerIds: Array<number> = [];
 
   aboutToAppear(): void {
     this.reloadHistory();
     this.reloadHeroImages();
+    this.playIntro();
+  }
+
+  aboutToDisappear(): void {
+    this.clearIntroTimers();
+  }
+
+  private playIntro(): void {
+    this.clearIntroTimers();
+    this.introStage = 0;
+    const stageDelays: Array<number> = [
+      0,
+      MotionTokens.durationStagger,
+      MotionTokens.durationStaggerLong * 2,
+      MotionTokens.durationStandard - MotionTokens.durationStaggerLong
+    ];
+    stageDelays.forEach((delay: number, index: number) => {
+      const timerId: number = setTimeout(() => {
+        this.introStage = index + 1;
+      }, MotionQualityContext.shouldPlayStagger() ? delay : 0);
+      this.introTimerIds.push(timerId);
+    });
+  }
+
+  private clearIntroTimers(): void {
+    this.introTimerIds.forEach((timerId: number) => clearTimeout(timerId));
+    this.introTimerIds = [];
   }
 
   onPageShow(): void {
@@ -308,6 +339,12 @@ export struct HomePage {
       AppPageHeader({
         title: '摄影复盘'
       })
+        .opacity(this.introStage >= 1 ? 1 : 0)
+        .translate({ y: this.introStage >= 1 ? 0 : MotionTokens.offsetEnterY })
+        .animation({
+          duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+          curve: MotionQualityContext.resolveCurve(MotionCurveRole.EMPHASIZED)
+        })
 
       Swiper() {
         if (this.hasUserHeroImages()) {
@@ -339,6 +376,15 @@ export struct HomePage {
       .border({ width: 1, color: AppColors.border })
       .shadow(ElevationTokens.medium)
       .margin({ top: AppMetrics.space12 })
+      .opacity(this.introStage >= 2 ? 1 : 0)
+      .scale({
+        x: this.introStage >= 2 ? 1 : MotionTokens.scaleHeroIntro,
+        y: this.introStage >= 2 ? 1 : MotionTokens.scaleHeroIntro
+      })
+      .animation({
+        duration: MotionQualityContext.resolveDuration(MotionTokens.durationHero),
+        curve: MotionQualityContext.resolveCurve(MotionCurveRole.LANDING)
+      })
 
       Row({ space: HOME_METHOD_TAG_GAP }) {
         ForEach(this.heroFeatureTags, (item: string) => {
@@ -348,6 +394,12 @@ export struct HomePage {
       .width('100%')
       .justifyContent(FlexAlign.SpaceBetween)
       .margin({ top: AppMetrics.space16 })
+      .opacity(this.introStage >= 3 ? 1 : 0)
+      .translate({ y: this.introStage >= 3 ? 0 : MotionTokens.offsetEnterY })
+      .animation({
+        duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+        curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+      })
 
       Column({ space: AppMetrics.space8 }) {
         this.StartReviewButton()
@@ -355,6 +407,12 @@ export struct HomePage {
       }
       .width('100%')
       .margin({ top: AppMetrics.space20 })
+      .opacity(this.introStage >= 4 ? 1 : 0)
+      .translate({ y: this.introStage >= 4 ? 0 : MotionTokens.offsetEnterYCard })
+      .animation({
+        duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+        curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+      })
     }
     .width('100%')
     .padding({ left: HOME_SIDE_PADDING, right: HOME_SIDE_PADDING, top: 0, bottom: 0 })
@@ -464,20 +522,20 @@ export struct HomePage {
   @Builder
   HomeHistorySkeleton() {
     Column({ space: AppMetrics.space12 }) {
-      SkeletonBlock({ blockWidth: '38%', blockHeight: 16, blockRadius: 8 })
+      ShimmerBox({ boxWidth: '38%', boxHeight: 16, boxRadius: 8 })
       Row({ space: AppMetrics.space8 }) {
         Column() {
-          SkeletonBlock({ blockHeight: 44, blockRadius: AppMetrics.buttonRadius })
+          ShimmerBox({ boxHeight: 44, boxRadius: AppMetrics.buttonRadius })
         }
         .layoutWeight(1)
 
         Column() {
-          SkeletonBlock({ blockHeight: 44, blockRadius: AppMetrics.buttonRadius })
+          ShimmerBox({ boxHeight: 44, boxRadius: AppMetrics.buttonRadius })
         }
         .layoutWeight(1)
 
         Column() {
-          SkeletonBlock({ blockHeight: 44, blockRadius: AppMetrics.buttonRadius })
+          ShimmerBox({ boxHeight: 44, boxRadius: AppMetrics.buttonRadius })
         }
         .layoutWeight(1)
       }
