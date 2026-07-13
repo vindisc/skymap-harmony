@@ -65,8 +65,18 @@ function assertBuildProfileSafe(label, source) {
   }
 }
 
-assertBuildProfileSafe('工作树 build-profile.json5 ', fs.readFileSync('build-profile.json5', 'utf8'));
-assertBuildProfileSafe('暂存区 build-profile.json5 ', git(['show', ':build-profile.json5']));
+const worktreeBuildProfile = fs.readFileSync('build-profile.json5', 'utf8');
+const indexBuildProfile = git(['show', ':build-profile.json5']);
+assertBuildProfileSafe('暂存区 build-profile.json5 ', indexBuildProfile);
+
+if (forbiddenBuildProfileMarkers.some((marker) => worktreeBuildProfile.includes(marker))) {
+  const filterRequired = git(['config', '--local', '--get', 'filter.skymap-signing.required']);
+  const cleanHash = git(['hash-object', '--path=build-profile.json5', 'build-profile.json5']);
+  const indexHash = git(['rev-parse', ':build-profile.json5']);
+  if (filterRequired !== 'true' || cleanHash !== indexHash) {
+    fail('工作树本机签名只有在 clean filter 可净化为暂存区基线时才允许存在。');
+  }
+}
 
 const buildProfileIndexState = git(['ls-files', '-v', '--', 'build-profile.json5']);
 if (!buildProfileIndexState.startsWith('H ')) {

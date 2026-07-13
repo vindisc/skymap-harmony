@@ -13,6 +13,7 @@ OUTPUT_DIR="$REPO_ROOT/test-artifacts/device-smoke"
 SIGNED_HAP="$REPO_ROOT/entry/build/default/outputs/default/entry-default-signed.hap"
 CHECK_ONLY=false
 RESTORE_APP=false
+LAUNCH_APP=false
 SCENARIOS=(
   home
   pending
@@ -36,6 +37,8 @@ if [ "${1:-}" = "--check-only" ]; then
   CHECK_ONLY=true
 elif [ "${1:-}" = "--restore-app" ]; then
   RESTORE_APP=true
+elif [ "${1:-}" = "--launch" ]; then
+  LAUNCH_APP=true
 elif [ "$#" -gt 0 ]; then
   echo "未知参数：$1" >&2
   exit 2
@@ -115,6 +118,18 @@ if [ ! -f "$SIGNED_HAP" ]; then
   echo "未找到可安装的 Debug 签名包：$SIGNED_HAP" >&2
   echo "请先配置本机 debug 签名并构建。" >&2
   exit 1
+fi
+
+if [ "$LAUNCH_APP" = true ]; then
+  echo "覆盖安装 Debug 签名 HAP..."
+  "${HDC_COMMAND[@]}" install -r "$SIGNED_HAP"
+  "${HDC_COMMAND[@]}" shell aa force-stop "$BUNDLE_NAME" >/dev/null 2>&1 || true
+  "${HDC_COMMAND[@]}" shell aa start \
+    -a "$ABILITY_NAME" \
+    -b "$BUNDLE_NAME" \
+    -m "$MODULE_NAME"
+  echo "应用已安装并启动，原有应用数据已保留。"
+  exit 0
 fi
 
 if [ "$RESTORE_APP" = true ]; then

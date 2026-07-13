@@ -7,6 +7,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DEVECO_APP_HOME="/Applications/DevEco-Studio.app/Contents"
 DEVECO_SDK_HOME_DEFAULT="${DEVECO_APP_HOME}/sdk"
 DEVECO_JAVA_HOME_DEFAULT="${DEVECO_APP_HOME}/jbr/Contents/Home"
+SIGNING_JAVA_HOME_DEFAULT="/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home"
 HVIGOR_BIN="${DEVECO_APP_HOME}/tools/hvigor/bin/hvigorw"
 SIGNING_MODE="${SKYMAP_SIGNING_MODE:-unsigned}"
 SHOW_STATUS=false
@@ -63,11 +64,13 @@ fi
 
 node scripts/manage_signing_profile.mjs assert-safe
 
-PROFILE_BACKUP=""
+PROFILE_BACKUP="$(mktemp "${TMPDIR:-/tmp}/skymap-build-profile.XXXXXX")"
+cp build-profile.json5 "$PROFILE_BACKUP"
 
 restore_profile() {
   if [ -n "$PROFILE_BACKUP" ] && [ -f "$PROFILE_BACKUP" ]; then
     cp "$PROFILE_BACKUP" build-profile.json5
+    node scripts/manage_signing_profile.mjs refresh-status
     rm -f "$PROFILE_BACKUP"
     PROFILE_BACKUP=""
     echo "已恢复仓库 build-profile.json5。"
@@ -87,9 +90,9 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 if [ "$SIGNING_MODE" != "unsigned" ]; then
-  PROFILE_BACKUP="$(mktemp "${TMPDIR:-/tmp}/skymap-build-profile.XXXXXX")"
-  cp build-profile.json5 "$PROFILE_BACKUP"
   node scripts/manage_signing_profile.mjs activate "$SIGNING_MODE"
+else
+  node scripts/manage_signing_profile.mjs deactivate
 fi
 
 if [ "$SIGNING_MODE" = "release" ]; then
@@ -101,7 +104,12 @@ fi
 echo "构建模式：${BUILD_MODE}；签名模式：${SIGNING_MODE}"
 
 export DEVECO_SDK_HOME="${DEVECO_SDK_HOME:-$DEVECO_SDK_HOME_DEFAULT}"
-export JAVA_HOME="${JAVA_HOME:-$DEVECO_JAVA_HOME_DEFAULT}"
+if [ "$SIGNING_MODE" != "unsigned" ] && [ -x "$SIGNING_JAVA_HOME_DEFAULT/bin/java" ]; then
+  JAVA_HOME_DEFAULT="${SKYMAP_BUILD_JAVA_HOME:-$SIGNING_JAVA_HOME_DEFAULT}"
+else
+  JAVA_HOME_DEFAULT="${SKYMAP_BUILD_JAVA_HOME:-${JAVA_HOME:-$DEVECO_JAVA_HOME_DEFAULT}}"
+fi
+export JAVA_HOME="$JAVA_HOME_DEFAULT"
 export PATH="$JAVA_HOME/bin:$PATH"
 
 if [ ! -d "$DEVECO_SDK_HOME" ]; then

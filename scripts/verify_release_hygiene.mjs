@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 
 const requiredFiles = [
+  '.gitattributes',
   '.gitignore',
   'docs/release/README.md',
   'docs/release/SIGNING_MATERIALS.md',
@@ -12,6 +13,7 @@ const requiredFiles = [
   'release-assets/README.md',
   'scripts/audit_workspace_hygiene.mjs',
   'scripts/manage_signing_profile.mjs',
+  'scripts/run_device.sh',
   'scripts/verify_signing_mode_workflow.mjs',
   'README.md'
 ];

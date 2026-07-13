@@ -14,7 +14,9 @@ function readText(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }
 
-const profile = readText('build-profile.json5');
+const profileResult = spawnSync('git', ['show', ':build-profile.json5'], { encoding: 'utf8' });
+assert(profileResult.status === 0, 'Tracked build-profile.json5 must be readable from the Git index');
+const profile = profileResult.stdout;
 for (const token of [
   'signingConfigs',
   'signingConfig',
@@ -29,6 +31,8 @@ for (const token of [
 
 const gitignore = readText('.gitignore');
 assert(gitignore.includes('build-profile.local.json5'), 'Local signing profile must be ignored');
+const attributes = readText('.gitattributes');
+assert(attributes.includes('/build-profile.json5 filter=skymap-signing'), 'Signing clean filter must protect build-profile.json5');
 
 const manager = readText('scripts/manage_signing_profile.mjs');
 for (const token of [
@@ -37,7 +41,12 @@ for (const token of [
   "['debug', 'default']",
   "['release']",
   'validateMaterial',
-  'fs.writeFileSync'
+  'fs.writeFileSync',
+  'filter-clean',
+  'filter-smudge',
+  'ide-enable',
+  'migrate-ide-cache',
+  'updateDevEcoRunJavaHome'
 ]) {
   assert(manager.includes(token), `Signing profile manager missing marker: ${token}`);
 }
@@ -48,6 +57,8 @@ for (const token of [
   'SKYMAP_SIGNING_MODE',
   'manage_signing_profile.mjs assert-safe',
   'manage_signing_profile.mjs activate',
+  'SIGNING_JAVA_HOME_DEFAULT',
+  'SKYMAP_BUILD_JAVA_HOME',
   'trap cleanup_on_exit EXIT',
   'trap - EXIT',
   "trap 'exit 130' INT",
@@ -72,4 +83,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('signing mode workflow verified: sanitized repository profile, local overlay, explicit modes and automatic restore');
+console.log('signing mode workflow verified: sanitized index, IDE clean filter, explicit modes and automatic restore');

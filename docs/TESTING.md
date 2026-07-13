@@ -52,6 +52,15 @@ bash scripts/test_app.sh --device
 影响；如需更换，仅通过 `SKYMAP_DEVICE_JAVA_HOME` 显式指定。设备必须处于
 `Connected` 状态，仅能枚举到 `Offline` 设备时会在构建前终止。
 
+只做日常覆盖安装和启动、不生成整套截图时执行：
+
+```bash
+bash scripts/run_device.sh
+```
+
+DevEco Studio 直接运行前执行一次 `node scripts/manage_signing_profile.mjs ide-enable`
+并重启 IDE；该本机配置不会把证书路径或密码写入 Git 暂存区。
+
 `testScenario` 只在 Debug 包中生效，横竖方图和长文本样例只写入内存。Hypium 的
 “编辑并保存”用例会在当前测试安装中写入一条标题为“UI 自动化完整链路”的复盘，
 建议使用专用测试设备并按需清理应用数据。`today` 场景沿用真实待复盘数据；没有

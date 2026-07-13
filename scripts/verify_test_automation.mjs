@@ -26,6 +26,7 @@ const testScript = read('scripts/test_app.sh');
 const verificationSuite = read('scripts/run_verification_suite.mjs');
 const testingGuide = read('docs/TESTING.md');
 const deviceScript = read('scripts/smoke_device.sh');
+const runDeviceScript = read('scripts/run_device.sh');
 const uiTests = read('entry/src/ohosTest/ets/test/AppShellSmoke.test.ets');
 const reviewFlowTests = read('entry/src/ohosTest/ets/test/ReviewFlowSmoke.test.ets');
 const settingsTests = read('entry/src/ohosTest/ets/test/SettingsSmoke.test.ets');
@@ -50,8 +51,9 @@ const settingsTests = read('entry/src/ohosTest/ets/test/SettingsSmoke.test.ets')
 requireIncludes(routeService, "TEST = 'test'", 'FormLaunchIntentService test source');
 requireIncludes(entryBuildProfile, '"name": "ohosTest"', 'entry ohosTest target');
 requireIncludes(testScript, 'run_verification_suite.mjs', 'test_app.sh verification entry');
-requireIncludes(testScript, 'manage_signing_profile.mjs deactivate', 'test_app.sh unsigned build entry');
-requireIncludes(testScript, 'assembleHap', 'test_app.sh standard build entry');
+requireIncludes(testScript, 'build_hap.sh --signing debug', 'test_app.sh signed device build entry');
+requireIncludes(testScript, 'bash scripts/build_hap.sh', 'test_app.sh standard build entry');
+requireIncludes(testScript, 'manage_signing_profile.mjs activate debug', 'test_app.sh Hypium signing entry');
 requireIncludes(testScript, 'restore_profile', 'test_app.sh signing restoration');
 requireIncludes(testScript, 'VERIFICATION_SUITE="all"', 'test_app.sh full verification option');
 requireIncludes(testScript, 'onDeviceTest', 'test_app.sh Hypium device entry');
@@ -76,11 +78,14 @@ if (datedVerificationScripts.length > 0) {
 requireIncludes(deviceScript, '--ps testScenario', 'smoke_device.sh debug scenario entry');
 requireIncludes(deviceScript, '--check-only', 'smoke_device.sh device preflight');
 requireIncludes(deviceScript, '--restore-app', 'smoke_device.sh full app restore entry');
+requireIncludes(deviceScript, '--launch', 'smoke_device.sh normal signed launch entry');
 requireIncludes(deviceScript, '卸载测试应用', 'smoke_device.sh test app uninstall');
 requireIncludes(deviceScript, '安装完整 Debug HAP', 'smoke_device.sh full app install');
 requireIncludes(deviceScript, 'Connected', 'smoke_device.sh online device guard');
 requireIncludes(deviceScript, 'preview_long_text', 'smoke_device.sh visual state matrix');
 requireIncludes(deviceScript, 'report.md', 'smoke_device.sh visual report');
+requireIncludes(runDeviceScript, 'build_hap.sh --signing debug', 'run_device.sh signed build entry');
+requireIncludes(runDeviceScript, 'smoke_device.sh --launch', 'run_device.sh install and launch entry');
 
 [
   "describe('AppShellSmokeTest'",

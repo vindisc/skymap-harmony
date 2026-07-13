@@ -109,41 +109,20 @@ fi
 node scripts/run_verification_suite.mjs --suite "$VERIFICATION_SUITE"
 
 if [ "$RUN_BUILD" = true ]; then
-  export DEVECO_SDK_HOME="${DEVECO_SDK_HOME:-${DEVECO_APP_HOME}/sdk}"
   if [ "$RUN_DEVICE" = true ]; then
-    export JAVA_HOME="${SKYMAP_DEVICE_JAVA_HOME:-$DEVICE_JAVA_HOME_DEFAULT}"
+    SKYMAP_BUILD_JAVA_HOME="${SKYMAP_DEVICE_JAVA_HOME:-$DEVICE_JAVA_HOME_DEFAULT}" \
+      bash scripts/build_hap.sh --signing debug
   else
-    export JAVA_HOME="${JAVA_HOME:-${DEVECO_APP_HOME}/jbr/Contents/Home}"
+    bash scripts/build_hap.sh
   fi
-  export PATH="$JAVA_HOME/bin:$PATH"
-
-  if [ ! -x "$JAVA_HOME/bin/java" ]; then
-    echo "JAVA_HOME 无效：$JAVA_HOME" >&2
-    exit 1
-  fi
-
-  if [ ! -x "$HVIGOR_BIN" ]; then
-    echo "未找到 hvigorw：$HVIGOR_BIN" >&2
-    exit 1
-  fi
-
-  "$HVIGOR_BIN" --stop-daemon >/dev/null 2>&1 || true
-  if [ "$RUN_DEVICE" = false ]; then
-    PROFILE_BACKUP="$(mktemp "${TMPDIR:-/tmp}/skymap-test-build-profile.XXXXXX")"
-    cp build-profile.json5 "$PROFILE_BACKUP"
-    node scripts/manage_signing_profile.mjs deactivate
-  fi
-  "$HVIGOR_BIN" \
-    --mode module \
-    -p module=entry \
-    -p product=default \
-    -p buildMode=debug \
-    assembleHap \
-    --no-daemon
-  restore_profile
 fi
 
 if [ "$RUN_HYPIUM" = true ]; then
+  export JAVA_HOME="${SKYMAP_DEVICE_JAVA_HOME:-$DEVICE_JAVA_HOME_DEFAULT}"
+  export PATH="$JAVA_HOME/bin:$PATH"
+  PROFILE_BACKUP="$(mktemp "${TMPDIR:-/tmp}/skymap-test-profile.XXXXXX")"
+  cp build-profile.json5 "$PROFILE_BACKUP"
+  node scripts/manage_signing_profile.mjs activate debug
   UI_TEST_INSTALLATION_DIRTY=true
   "$HVIGOR_BIN" \
     --mode module \

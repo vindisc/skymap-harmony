@@ -56,7 +56,16 @@
 
 1. 使用 DevEco Studio 打开仓库根目录。
 2. 等待工程同步完成。
-3. 选择 `entry` 模块和默认设备后运行。
+3. 首次真机调试执行 `node scripts/manage_signing_profile.mjs ide-enable`，然后重启 DevEco Studio。
+4. 选择 `entry` 模块和默认设备后运行。
+
+如果只需要可靠地构建、覆盖安装并启动真机应用，可直接执行：
+
+```bash
+bash scripts/run_device.sh
+```
+
+该命令使用本机 Debug 签名和 Zulu 11，保留已有应用数据，不会安装 unsigned HAP。
 
 命令行构建优先使用仓库脚本：
 
