@@ -15,9 +15,18 @@ export struct RippleTouch {
   @State rippleOpacity: number = 0;
   @State originX: number = 0;
   @State originY: number = 0;
+  private startTimerId: number = -1;
   private resetTimerId: number = -1;
 
   aboutToDisappear(): void {
+    this.cancelTimers();
+  }
+
+  private cancelTimers(): void {
+    if (this.startTimerId >= 0) {
+      clearTimeout(this.startTimerId);
+      this.startTimerId = -1;
+    }
     if (this.resetTimerId >= 0) {
       clearTimeout(this.resetTimerId);
       this.resetTimerId = -1;
@@ -25,16 +34,18 @@ export struct RippleTouch {
   }
 
   private play(event: TouchEvent): void {
+    this.cancelTimers();
     if (event.touches.length > 0) {
       this.originX = event.touches[0].x;
       this.originY = event.touches[0].y;
     }
     this.rippleScale = 0.1;
     this.rippleOpacity = 0.18;
-    setTimeout(() => {
+    this.startTimerId = setTimeout(() => {
       this.rippleScale = 1;
       this.rippleOpacity = 0;
-    }, 24);
+      this.startTimerId = -1;
+    }, MotionTokens.durationFrame);
     this.resetTimerId = setTimeout(() => {
       this.rippleScale = 0;
       this.resetTimerId = -1;

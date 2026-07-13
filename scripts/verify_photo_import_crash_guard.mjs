@@ -5,6 +5,7 @@ const appDesignSource = fs.readFileSync('entry/src/main/ets/components/AppDesign
 const reviewPhotoBlockSource = fs.readFileSync('entry/src/main/ets/components/ReviewPhotoBlock.ets', 'utf8');
 const projectDetailSource = fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8');
 const homePageSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
+const editorPageSource = fs.readFileSync('entry/src/main/ets/pages/EditorPage.ets', 'utf8');
 
 let failed = false;
 
@@ -58,8 +59,24 @@ assertNotIncludes(
   'Pending import must not reject photos only because metadata size fallback was used'
 );
 
+assertNotIncludes(
+  editorPageSource,
+  'content: this.SharedHeroPhotoHeader',
+  'Editor shared hero must not pass an unbound component builder through BuilderParam'
+);
+assertNotIncludes(
+  editorPageSource,
+  'SharedHeroPhotoHeader()',
+  'Editor must not retain the crashing BuilderParam wrapper'
+);
+assertIncludes(
+  editorPageSource,
+  'geometryTransition(`review-hero-${this.resolveHeroTag()}`)',
+  'Editor must keep the shared hero transition inline'
+);
+
 if (failed) {
   process.exit(1);
 }
 
-console.log('photo import crash guard verified: fd-first size probing, async image rendering, pending fallback import');
+console.log('photo import crash guard verified: fd-first probing, async rendering, pending fallback import, inline shared hero');

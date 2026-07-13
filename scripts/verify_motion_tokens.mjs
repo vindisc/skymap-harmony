@@ -6,6 +6,7 @@ const tokenSource = fs.readFileSync(tokenPath, 'utf8');
 const contextSource = fs.readFileSync(contextPath, 'utf8');
 
 const requiredTokens = [
+  'durationFrame',
   'durationHero',
   'durationCeremony',
   'durationStagger',

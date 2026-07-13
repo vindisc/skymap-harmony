@@ -14,6 +14,7 @@ export struct CountUpText {
   @State displayedValue: number = 0;
   @State terminalScale: number = 1;
   private timerId: number = -1;
+  private celebrateTimerId: number = -1;
 
   aboutToAppear(): void {
     this.displayedValue = this.value;
@@ -21,6 +22,7 @@ export struct CountUpText {
 
   aboutToDisappear(): void {
     this.stopTween();
+    this.cancelCelebration();
   }
 
   private onValueChanged(): void {
@@ -29,6 +31,8 @@ export struct CountUpText {
 
   private startTween(from: number, to: number): void {
     this.stopTween();
+    this.cancelCelebration();
+    this.terminalScale = 1;
     const duration: number = MotionQualityContext.resolveDuration(this.durationMs);
     if (duration <= COUNT_UP_FRAME_MS || from === to) {
       this.displayedValue = to;
@@ -49,10 +53,19 @@ export struct CountUpText {
     if (!MotionQualityContext.shouldPlayCeremony()) {
       return;
     }
+    this.cancelCelebration();
     this.terminalScale = MotionTokens.scaleCeremony;
-    setTimeout(() => {
+    this.celebrateTimerId = setTimeout(() => {
       this.terminalScale = 1;
+      this.celebrateTimerId = -1;
     }, MotionTokens.durationInstant);
+  }
+
+  private cancelCelebration(): void {
+    if (this.celebrateTimerId >= 0) {
+      clearTimeout(this.celebrateTimerId);
+      this.celebrateTimerId = -1;
+    }
   }
 
   private stopTween(): void {

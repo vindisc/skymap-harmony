@@ -130,6 +130,7 @@ export class ElevationTokens {
 }
 
 export class MotionTokens {
+  static readonly durationFrame: number = 16;
   static readonly durationInstant: number = 80;
   static readonly durationQuick: number = 150;
   static readonly durationStandard: number = 250;

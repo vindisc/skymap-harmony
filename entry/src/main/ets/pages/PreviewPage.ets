@@ -726,7 +726,9 @@ struct PreviewPage {
 
       BottomSheetContainer({
         visible: this.isExportMenuVisible,
-        content: this.ExportMenuContent,
+        content: () => {
+          this.ExportMenuContent();
+        },
         onClose: () => {
           this.closeExportMenu();
         }

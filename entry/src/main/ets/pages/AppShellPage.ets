@@ -81,7 +81,6 @@ struct AppShellPage {
     FormLaunchIntentService.subscribe(this.formLaunchIntentListener);
     this.applyFormLaunchIntent();
     this.offerFirstLaunchRestore();
-    MotionQualityContext.initialize(this.getUIContext().getHostContext() as common.UIAbilityContext);
   }
 
   private async offerFirstLaunchRestore(): Promise<void> {

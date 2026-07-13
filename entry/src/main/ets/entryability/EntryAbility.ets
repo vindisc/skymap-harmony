@@ -5,6 +5,7 @@ import window from '@ohos.window';
 import { FormLaunchIntentService } from '../services/FormLaunchIntentService';
 import { LearningProgressFormService } from '../services/LearningProgressFormService';
 import { DebugLaunchScenarioService } from '../services/DebugLaunchScenarioService';
+import { MotionQualityContext } from '../theme/MotionQualityContext';
 
 const APP_PAGE_BACKGROUND: string = '#F5F1E9';
 const APP_TRANSPARENT: string = '#00000000';
@@ -42,9 +43,21 @@ export default class EntryAbility extends UIAbility {
     }
 
     const debugInitialPage: string = DebugLaunchScenarioService.consumeInitialPage();
-    windowStage.loadContent(debugInitialPage.length > 0 ? debugInitialPage : 'pages/AppShellPage');
+    this.initializeMotionAndLoadContent(
+      windowStage,
+      debugInitialPage.length > 0 ? debugInitialPage : 'pages/AppShellPage'
+    );
     LearningProgressFormService.refreshAllForms(this.context).catch((error: Error) => {
       console.warn(`[EntryAbility] 学习进度服务卡片同步失败：${error.message}`);
     });
+  }
+
+  private async initializeMotionAndLoadContent(windowStage: window.WindowStage, page: string): Promise<void> {
+    try {
+      await MotionQualityContext.initialize(this.context);
+    } catch (error) {
+      console.warn(`[EntryAbility] 动效强度读取失败，使用默认设置：${error}`);
+    }
+    windowStage.loadContent(page);
   }
 }

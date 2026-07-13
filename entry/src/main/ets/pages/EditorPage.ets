@@ -260,6 +260,7 @@ struct EditorPage {
     }
 
     this.isSaving = true;
+    let keepSavingLockedForCeremony: boolean = false;
     const completesPendingReview: boolean = this.pendingPhotoId.length > 0;
     this.syncDocumentFromInput();
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
@@ -270,6 +271,7 @@ struct EditorPage {
       this.isDirty = false;
       ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
       if (completesPendingReview && MotionQualityContext.shouldPlayCeremony()) {
+        keepSavingLockedForCeremony = true;
         this.ceremonyVisible = true;
       } else {
         this.openPreview();
@@ -277,7 +279,9 @@ struct EditorPage {
     } catch (error) {
       ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
-      this.isSaving = false;
+      if (!keepSavingLockedForCeremony) {
+        this.isSaving = false;
+      }
     }
   }
 
@@ -699,20 +703,19 @@ struct EditorPage {
     .zIndex(2)
   }
 
-  @Builder
-  SharedHeroPhotoHeader() {
-    this.PhotoHeader()
-  }
-
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
 
       Column() {
-        SharedHero({
-          tag: this.resolveHeroTag(),
-          content: this.SharedHeroPhotoHeader
-        })
+        Column() {
+          this.PhotoHeader()
+        }
+          .geometryTransition(`review-hero-${this.resolveHeroTag()}`)
+          .animation({
+            duration: MotionQualityContext.resolveDuration(MotionTokens.durationHero),
+            curve: MotionQualityContext.resolveCurve(MotionCurveRole.LANDING)
+          })
           .opacity(this.introStage >= 1 ? 1 : 0)
           .scale({
             x: this.introStage >= 1 ? 1 : MotionTokens.scaleHeroIntro,
@@ -787,6 +790,7 @@ struct EditorPage {
           kind: 'review-done',
           onFinish: () => {
             this.ceremonyVisible = false;
+            this.isSaving = false;
             this.openPreview();
           }
         })

@@ -38,7 +38,7 @@ export struct BottomSheetContainer {
     this.timerId = setTimeout(() => {
       this.presented = true;
       this.timerId = -1;
-    }, 0);
+    }, MotionTokens.durationFrame);
   }
 
   private cancelTimer(): void {

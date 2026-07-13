@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 
 const checks = new Map([
-  ['entry/src/main/ets/pages/AppShellPage.ets', ['MotionQualityContext.initialize', 'playTabIconPulse', 'MotionCurveRole.SPRING_SOFT']],
+  ['entry/src/main/ets/entryability/EntryAbility.ets', ['initializeMotionAndLoadContent', 'MotionQualityContext.initialize']],
+  ['entry/src/main/ets/pages/AppShellPage.ets', ['playTabIconPulse', 'MotionCurveRole.SPRING_SOFT']],
   ['entry/src/main/ets/pages/HomePage.ets', ['playIntro', 'scaleHeroIntro', 'ShimmerBox']],
-  ['entry/src/main/ets/pages/EditorPage.ets', ['SharedHero', 'completesPendingReview', "kind: 'review-done'"]],
+  ['entry/src/main/ets/pages/EditorPage.ets', ['geometryTransition(`review-hero-${this.resolveHeroTag()}`)', 'completesPendingReview', "kind: 'review-done'"]],
   ['entry/src/main/ets/pages/PreviewPage.ets', ['BottomSheetContainer', 'ExportMenuContent']],
   ['entry/src/main/ets/pages/StatsPage.ets', ['CountUpText', 'ShimmerBox', 'MotionCurveRole.LANDING']],
   ['entry/src/main/ets/pages/MotionSettingsPage.ets', ['MotionQuality.FULL', 'MotionQuality.CALM', 'MotionQuality.MINIMAL']]
