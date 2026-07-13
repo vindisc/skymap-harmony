@@ -115,6 +115,16 @@ if [ "$RUN_BUILD" = true ]; then
   else
     bash scripts/build_hap.sh
   fi
+  if [ "$VERIFICATION_SUITE" = "all" ]; then
+    DEVECO_SDK_HOME="${DEVECO_APP_HOME}/sdk" \
+      JAVA_HOME="${DEVECO_APP_HOME}/jbr/Contents/Home" \
+      "$HVIGOR_BIN" \
+      --mode module \
+      -p module=entry@ohosTest \
+      -p product=default \
+      assembleHap \
+      --no-daemon
+  fi
 fi
 
 if [ "$RUN_HYPIUM" = true ]; then

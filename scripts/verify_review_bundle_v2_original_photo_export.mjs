@@ -42,7 +42,7 @@ for (const token of [
   'fs.openSync(sourceUri, fs.OpenMode.READ_ONLY)',
   'fs.copyFileSync(sourceFile.fd, targetFile.fd)',
   'manifest.originalPhoto.fileSize <= 0',
-  'verifyReviewJsonNotPolluted(paths.reviewJson)',
+  'validateReviewBundleV2Texts(manifestText, reviewJsonText, originalRelativePath)',
   'remoteRelativePath: originalRelativePath',
   'HomeStorageService.uploadFilesToDirectory(',
   'bundle_v2_export_start',

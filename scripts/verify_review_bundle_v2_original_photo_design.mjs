@@ -69,7 +69,7 @@ assertIncludes(bundleServiceSource, 'remoteRelativePath: THUMBNAIL_PATH', 'Revie
 assertIncludes(originalPhotoExportSource, 'bundleVersion: 2', 'ReviewBundleOriginalPhotoExportService v2 export');
 assertIncludes(originalPhotoExportSource, "const BUNDLE_TYPE: string = 'original-photo-review'", 'ReviewBundleOriginalPhotoExportService v2 export');
 assertIncludes(originalPhotoExportSource, 'exportedImages: []', 'ReviewBundleOriginalPhotoExportService v2 export');
-assertIncludes(originalPhotoExportSource, 'verifyReviewJsonNotPolluted(paths.reviewJson)', 'ReviewBundleOriginalPhotoExportService v2 export');
+assertIncludes(originalPhotoExportSource, 'validateReviewBundleV2Texts(manifestText, reviewJsonText, originalRelativePath)', 'ReviewBundleOriginalPhotoExportService v2 export');
 assert(!exchangeSchemaSource.includes('bundleId'), 'Review JSON schema must not gain bundleId.');
 assert(!exchangeSchemaSource.includes('bundleType'), 'Review JSON schema must not gain bundleType.');
 assert(!exchangeSchemaSource.includes('originalPhoto'), 'Review JSON schema must not gain originalPhoto.');

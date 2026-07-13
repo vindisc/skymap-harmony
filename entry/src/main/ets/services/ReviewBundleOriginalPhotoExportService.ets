@@ -50,7 +50,7 @@ interface ReviewBundleDateParts {
   isoText: string;
 }
 
-interface ReviewBundleOriginalPhotoManifest {
+export interface ReviewBundleOriginalPhotoManifest {
   included: boolean;
   path: string;
   fileName: string;
@@ -60,14 +60,14 @@ interface ReviewBundleOriginalPhotoManifest {
   fileSize: number;
 }
 
-interface ReviewBundleReviewSummaryManifest {
+export interface ReviewBundleReviewSummaryManifest {
   decision: string;
   titleText: string;
   reviewTimeText: string;
   reviewerText: string;
 }
 
-interface ReviewBundleManifestV2 {
+export interface ReviewBundleManifestV2 {
   bundleVersion: number;
   bundleType: string;
   bundleId: string;
@@ -394,8 +394,8 @@ function buildManifest(
   return JSON.stringify(manifest, null, 2);
 }
 
-function verifyReviewJsonNotPolluted(reviewJsonPath: string): void {
-  const parsed = JSON.parse(fs.readTextSync(reviewJsonPath)) as Record<string, Object>;
+function verifyReviewJsonNotPollutedText(reviewJsonText: string): void {
+  const parsed = JSON.parse(reviewJsonText) as Record<string, Object>;
   const forbiddenKeys: Array<string> = [
     'bundleId',
     'bundleType',
@@ -414,12 +414,11 @@ function verifyReviewJsonNotPolluted(reviewJsonPath: string): void {
   }
 }
 
-function verifyBundle(paths: ReviewBundleOriginalPhotoPaths, originalRelativePath: string): void {
-  assertFileExists(paths.manifest, 'manifest.json');
-  assertFileExists(paths.reviewJson, 'review.json');
-  assertFileExists(paths.originalPhoto, originalRelativePath);
-
-  const manifestText: string = fs.readTextSync(paths.manifest);
+export function validateReviewBundleV2Texts(
+  manifestText: string,
+  reviewJsonText: string,
+  originalRelativePath: string
+): void {
   const manifest: ReviewBundleManifestV2 = JSON.parse(manifestText) as ReviewBundleManifestV2;
   if (manifest.bundleVersion !== 2 ||
     manifest.bundleType !== BUNDLE_TYPE ||
@@ -433,6 +432,21 @@ function verifyBundle(paths: ReviewBundleOriginalPhotoPaths, originalRelativePat
     manifest.originalPhoto.fileSize <= 0) {
     throw new Error('manifest.json v2 字段不完整');
   }
+  if (manifest.thumbnailPath !== undefined && manifest.thumbnailPath.trim().length === 0) {
+    throw new Error('manifest.thumbnailPath 无效');
+  }
+  verifyReviewJsonNotPollutedText(reviewJsonText);
+}
+
+function verifyBundle(paths: ReviewBundleOriginalPhotoPaths, originalRelativePath: string): void {
+  assertFileExists(paths.manifest, 'manifest.json');
+  assertFileExists(paths.reviewJson, 'review.json');
+  assertFileExists(paths.originalPhoto, originalRelativePath);
+
+  const manifestText: string = fs.readTextSync(paths.manifest);
+  const reviewJsonText: string = fs.readTextSync(paths.reviewJson);
+  validateReviewBundleV2Texts(manifestText, reviewJsonText, originalRelativePath);
+  const manifest: ReviewBundleManifestV2 = JSON.parse(manifestText) as ReviewBundleManifestV2;
 
   if (manifest.thumbnailPath !== undefined) {
     const thumbnailPath: string = manifest.thumbnailPath;
@@ -442,7 +456,6 @@ function verifyBundle(paths: ReviewBundleOriginalPhotoPaths, originalRelativePat
     assertFileExists(`${paths.root}/${thumbnailPath}`, 'thumbnailPath');
   }
 
-  verifyReviewJsonNotPolluted(paths.reviewJson);
 }
 
 function buildUploadFiles(

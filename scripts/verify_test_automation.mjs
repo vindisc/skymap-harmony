@@ -30,6 +30,7 @@ const runDeviceScript = read('scripts/run_device.sh');
 const uiTests = read('entry/src/ohosTest/ets/test/AppShellSmoke.test.ets');
 const reviewFlowTests = read('entry/src/ohosTest/ets/test/ReviewFlowSmoke.test.ets');
 const settingsTests = read('entry/src/ohosTest/ets/test/SettingsSmoke.test.ets');
+const dataBehaviorTests = read('entry/src/ohosTest/ets/test/DataBehavior.test.ets');
 
 [
   'this.context.applicationInfo.debug',
@@ -56,6 +57,7 @@ requireIncludes(testScript, 'bash scripts/build_hap.sh', 'test_app.sh standard b
 requireIncludes(testScript, 'manage_signing_profile.mjs activate debug', 'test_app.sh Hypium signing entry');
 requireIncludes(testScript, 'restore_profile', 'test_app.sh signing restoration');
 requireIncludes(testScript, 'VERIFICATION_SUITE="all"', 'test_app.sh full verification option');
+requireIncludes(testScript, '-p module=entry@ohosTest', 'test_app.sh behavioral test compile gate');
 requireIncludes(testScript, 'onDeviceTest', 'test_app.sh Hypium device entry');
 requireIncludes(testScript, 'zulu-11.jdk', 'test_app.sh compatible signing JDK');
 requireIncludes(testScript, 'SKYMAP_DEVICE_JAVA_HOME', 'test_app.sh explicit device JDK override');
@@ -108,8 +110,16 @@ requireIncludes(runDeviceScript, 'smoke_device.sh --launch', 'run_device.sh inst
   "it('navigatesFromMyToCardSettings'"
 ].forEach((token) => requireIncludes(settingsTests, token, 'Hypium settings suite'));
 
+[
+  "describe('DataBehaviorTest'",
+  "it('importsMarksAndDeletesPendingPhoto'",
+  "it('savesUpdatesAndDeletesReview'",
+  "it('roundTripsBackupAndRejectsTampering'",
+  "it('validatesBundleContractAndRejectsPollutedReviewJson'"
+].forEach((token) => requireIncludes(dataBehaviorTests, token, 'Hypium data behavior suite'));
+
 if (failed) {
   process.exit(1);
 }
 
-console.log('test automation verified: unified runner, debug scenarios, device smoke, and Hypium suite');
+console.log('test automation verified: unified runner, debug scenarios, device smoke, and behavioral Hypium suite');

@@ -56,7 +56,7 @@ for (const token of [
   'manifest.originalPhoto.included !== true',
   'manifest.originalPhoto.path !== originalRelativePath',
   'manifest.originalPhoto.fileSize <= 0',
-  'verifyReviewJsonNotPolluted(paths.reviewJson)',
+  'validateReviewBundleV2Texts(manifestText, reviewJsonText, originalRelativePath)',
   '{ localPath: paths.originalPhoto, remoteRelativePath: originalRelativePath }'
 ]) {
   includes(v2Service, token, 'v2 ReviewBundleOriginalPhotoExportService');

@@ -104,6 +104,60 @@ interface ParsedBackupFile {
   payload: ReviewLibraryBackupPayloadV1;
 }
 
+export function createReviewLibraryBackupEnvelope(
+  payload: ReviewLibraryBackupPayloadV1
+): ReviewLibraryBackupEnvelopeV1 {
+  const normalizedRecords: Array<ReviewLibraryBackupRecordV1> =
+    validatePayload(payload, REVIEW_LIBRARY_BACKUP_SCHEMA_VERSION);
+  const normalizedPayload: ReviewLibraryBackupPayloadV1 = {
+    createdAt: payload.createdAt,
+    appVersion: normalizeText(payload.appVersion),
+    reviewCount: normalizedRecords.length,
+    reviews: normalizedRecords,
+    settings: normalizeSettings(payload.settings)
+  };
+  return {
+    schemaName: REVIEW_LIBRARY_BACKUP_SCHEMA_NAME,
+    schemaVersion: REVIEW_LIBRARY_BACKUP_SCHEMA_VERSION,
+    checksumAlgorithm: REVIEW_LIBRARY_BACKUP_CHECKSUM_ALGORITHM,
+    checksum: sha256(JSON.stringify(normalizedPayload)),
+    payload: normalizedPayload
+  };
+}
+
+export function parseReviewLibraryBackupEnvelope(rawText: string): ReviewLibraryBackupEnvelopeV1 {
+  if (rawText.length <= 0 || rawText.length > REVIEW_LIBRARY_BACKUP_MAX_TEXT_LENGTH) {
+    throw new Error('文件为空或超过 300 MB');
+  }
+  const envelope: ReviewLibraryBackupEnvelopeV1 = JSON.parse(rawText) as ReviewLibraryBackupEnvelopeV1;
+  if (envelope.schemaName !== REVIEW_LIBRARY_BACKUP_SCHEMA_NAME) {
+    throw new Error('不是见遇完整备份文件');
+  }
+  if (!isSupportedSchemaVersion(envelope.schemaVersion)) {
+    throw new Error(`暂不支持备份版本 ${envelope.schemaVersion}`);
+  }
+  if (envelope.checksumAlgorithm !== REVIEW_LIBRARY_BACKUP_CHECKSUM_ALGORITHM) {
+    throw new Error('备份校验算法不受支持');
+  }
+  if (sha256(JSON.stringify(envelope.payload)) !== envelope.checksum) {
+    throw new Error('完整性校验失败，文件可能已损坏');
+  }
+  const records: Array<ReviewLibraryBackupRecordV1> = validatePayload(envelope.payload, envelope.schemaVersion);
+  return {
+    schemaName: envelope.schemaName,
+    schemaVersion: envelope.schemaVersion,
+    checksumAlgorithm: envelope.checksumAlgorithm,
+    checksum: envelope.checksum,
+    payload: {
+      createdAt: envelope.payload.createdAt,
+      appVersion: normalizeText(envelope.payload.appVersion),
+      reviewCount: records.length,
+      reviews: records,
+      settings: normalizeSettings(envelope.payload.settings)
+    }
+  };
+}
+
 function encodeUtf8(value: string): Uint8Array {
   const encoded: string = encodeURIComponent(value);
   const bytes: Array<number> = [];
@@ -126,84 +180,123 @@ function sha256(value: string): string {
 }
 
 function sha256Bytes(value: Uint8Array): string {
-  const md: cryptoFramework.Md = cryptoFramework.createMd('SHA256');
-  md.updateSync({ data: value });
-  const digest: cryptoFramework.DataBlob = md.digestSync();
-  const bytes: Uint8Array = new Uint8Array(digest.data);
-  let result: string = '';
-  for (let index = 0; index < bytes.length; index += 1) {
-    result += bytes[index].toString(16).padStart(2, '0');
+  try {
+    const md: cryptoFramework.Md = cryptoFramework.createMd('SHA256');
+    md.updateSync({ data: value });
+    const digest: cryptoFramework.DataBlob = md.digestSync();
+    const bytes: Uint8Array = new Uint8Array(digest.data);
+    let result: string = '';
+    for (let index = 0; index < bytes.length; index += 1) {
+      result += bytes[index].toString(16).padStart(2, '0');
+    }
+    return result;
+  } catch (error) {
+    throw new Error(`计算备份校验值失败：${error}`);
   }
-  return result;
 }
 
 function encodeBase64(value: Uint8Array): string {
-  const helper: util.Base64Helper = new util.Base64Helper();
-  return helper.encodeToStringSync(value);
+  try {
+    const helper: util.Base64Helper = new util.Base64Helper();
+    return helper.encodeToStringSync(value);
+  } catch (error) {
+    throw new Error(`编码备份图片失败：${error}`);
+  }
 }
 
 function decodeBase64(value: string): Uint8Array {
-  const helper: util.Base64Helper = new util.Base64Helper();
-  return helper.decodeSync(value);
+  try {
+    const helper: util.Base64Helper = new util.Base64Helper();
+    return helper.decodeSync(value);
+  } catch (error) {
+    throw new Error(`解码备份图片失败：${error}`);
+  }
 }
 
 function readBinaryFile(path: string, maxBytes: number): Uint8Array {
-  const file: fs.File = fs.openSync(path, fs.OpenMode.READ_ONLY);
   try {
-    const stat = fs.statSync(file.fd);
-    if (stat.size <= 0) {
-      throw new Error('图片文件为空');
-    }
-    if (stat.size > maxBytes) {
-      throw new Error(`单张图片超过 ${Math.floor(maxBytes / 1024 / 1024)} MB`);
-    }
-    const result: Uint8Array = new Uint8Array(stat.size);
-    let totalRead: number = 0;
-    while (totalRead < stat.size) {
-      const chunkLength: number = Math.min(1024 * 1024, stat.size - totalRead);
-      const chunkBuffer: ArrayBuffer = new ArrayBuffer(chunkLength);
-      const readLength: number = fs.readSync(file.fd, chunkBuffer);
-      if (readLength <= 0) {
-        break;
+    const file: fs.File = fs.openSync(path, fs.OpenMode.READ_ONLY);
+    try {
+      const stat = fs.statSync(file.fd);
+      if (stat.size <= 0) {
+        throw new Error('图片文件为空');
       }
-      result.set(new Uint8Array(chunkBuffer, 0, readLength), totalRead);
-      totalRead += readLength;
+      if (stat.size > maxBytes) {
+        throw new Error(`单张图片超过 ${Math.floor(maxBytes / 1024 / 1024)} MB`);
+      }
+      const result: Uint8Array = new Uint8Array(stat.size);
+      let totalRead: number = 0;
+      while (totalRead < stat.size) {
+        const chunkLength: number = Math.min(1024 * 1024, stat.size - totalRead);
+        const chunkBuffer: ArrayBuffer = new ArrayBuffer(chunkLength);
+        const readLength: number = fs.readSync(file.fd, chunkBuffer);
+        if (readLength <= 0) {
+          break;
+        }
+        result.set(new Uint8Array(chunkBuffer, 0, readLength), totalRead);
+        totalRead += readLength;
+      }
+      if (totalRead !== stat.size) {
+        throw new Error('图片文件读取不完整');
+      }
+      return result;
+    } finally {
+      fs.closeSync(file);
     }
-    if (totalRead !== stat.size) {
-      throw new Error('图片文件读取不完整');
-    }
-    return result;
-  } finally {
-    fs.closeSync(file);
+  } catch (error) {
+    throw new Error(`读取备份图片失败：${error}`);
   }
 }
 
 function writeBinaryFile(path: string, value: Uint8Array): void {
-  const file: fs.File = fs.openSync(path, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
-    fs.writeSync(file.fd, value.buffer);
-  } finally {
-    fs.closeSync(file);
+    const file: fs.File = fs.openSync(path, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+    try {
+      fs.writeSync(file.fd, value.buffer);
+    } finally {
+      fs.closeSync(file);
+    }
+  } catch (error) {
+    throw new Error(`写入备份图片失败：${error}`);
   }
 }
 
 function writeTextFile(path: string, value: string): void {
-  const file: fs.File = fs.openSync(path, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
-    fs.writeSync(file.fd, encodeUtf8(value).buffer);
-  } finally {
-    fs.closeSync(file);
+    const file: fs.File = fs.openSync(path, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+    try {
+      fs.writeSync(file.fd, encodeUtf8(value).buffer);
+    } finally {
+      fs.closeSync(file);
+    }
+  } catch (error) {
+    throw new Error(`写入备份文件失败：${error}`);
   }
 }
 
 function copyFile(sourcePath: string, targetPath: string): void {
-  const sourceFile: fs.File = fs.openSync(sourcePath, fs.OpenMode.READ_ONLY);
-  const targetFile: fs.File = fs.openSync(targetPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
-    fs.copyFileSync(sourceFile.fd, targetFile.fd);
-  } finally {
-    fs.closeSync(sourceFile);
-    fs.closeSync(targetFile);
+    const sourceFile: fs.File = fs.openSync(sourcePath, fs.OpenMode.READ_ONLY);
+    try {
+      const targetFile: fs.File = fs.openSync(targetPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+      try {
+        fs.copyFileSync(sourceFile.fd, targetFile.fd);
+      } finally {
+        fs.closeSync(targetFile);
+      }
+    } finally {
+      fs.closeSync(sourceFile);
+    }
+  } catch (error) {
+    throw new Error(`复制备份文件失败：${error}`);
+  }
+}
+
+function readTextFile(path: string): string {
+  try {
+    return fs.readTextSync(path);
+  } catch (error) {
+    throw new Error(`读取备份文件失败：${error}`);
   }
 }
 
@@ -276,7 +369,11 @@ function hasExpectedImage(document: ReviewCardDocument): boolean {
 
 function ensureRestoredImageDirectory(context: common.UIAbilityContext): string {
   const directory: string = `${context.filesDir}/${REVIEW_LIBRARY_RESTORED_IMAGE_DIR}`;
-  fs.mkdirSync(directory, true);
+  try {
+    fs.mkdirSync(directory, true);
+  } catch (error) {
+    throw new Error(`创建备份图片目录失败：${error}`);
+  }
   return directory;
 }
 
@@ -403,37 +500,12 @@ function parseBackupFile(
     `${context.cacheDir}/selected-review-library-backup-${index}.${REVIEW_LIBRARY_BACKUP_EXTENSION}`;
   copyFile(selectedUri, sandboxPath);
   try {
-    const rawText: string = fs.readTextSync(sandboxPath);
-    if (rawText.length <= 0 || rawText.length > REVIEW_LIBRARY_BACKUP_MAX_TEXT_LENGTH) {
-      throw new Error('文件为空或超过 300 MB');
-    }
-    const envelope: ReviewLibraryBackupEnvelopeV1 = JSON.parse(rawText) as ReviewLibraryBackupEnvelopeV1;
-    if (envelope.schemaName !== REVIEW_LIBRARY_BACKUP_SCHEMA_NAME) {
-      throw new Error('不是见遇完整备份文件');
-    }
-    if (!isSupportedSchemaVersion(envelope.schemaVersion)) {
-      throw new Error(`暂不支持备份版本 ${envelope.schemaVersion}`);
-    }
-    if (envelope.checksumAlgorithm !== REVIEW_LIBRARY_BACKUP_CHECKSUM_ALGORITHM) {
-      throw new Error('备份校验算法不受支持');
-    }
-    const expectedChecksum: string = sha256(JSON.stringify(envelope.payload));
-    if (expectedChecksum !== envelope.checksum) {
-      throw new Error('完整性校验失败，文件可能已损坏');
-    }
-    const records: Array<ReviewLibraryBackupRecordV1> =
-      validatePayload(envelope.payload, envelope.schemaVersion);
-    const payload: ReviewLibraryBackupPayloadV1 = {
-      createdAt: envelope.payload.createdAt,
-      appVersion: normalizeText(envelope.payload.appVersion),
-      reviewCount: records.length,
-      reviews: records,
-      settings: normalizeSettings(envelope.payload.settings)
-    };
+    const rawText: string = readTextFile(sandboxPath);
+    const envelope: ReviewLibraryBackupEnvelopeV1 = parseReviewLibraryBackupEnvelope(rawText);
     return {
       fileName: fileName,
       schemaVersion: envelope.schemaVersion,
-      payload: payload
+      payload: envelope.payload
     };
   } catch (error) {
     throw new Error(`${fileName || `第 ${index + 1} 个文件`}：${error}`);
@@ -525,14 +597,7 @@ export class ReviewLibraryBackupService {
       reviews: records,
       settings: await loadBackupSettings(context)
     };
-    const payloadText: string = JSON.stringify(payload);
-    const envelope: ReviewLibraryBackupEnvelopeV1 = {
-      schemaName: REVIEW_LIBRARY_BACKUP_SCHEMA_NAME,
-      schemaVersion: REVIEW_LIBRARY_BACKUP_SCHEMA_VERSION,
-      checksumAlgorithm: REVIEW_LIBRARY_BACKUP_CHECKSUM_ALGORITHM,
-      checksum: sha256(payloadText),
-      payload: payload
-    };
+    const envelope: ReviewLibraryBackupEnvelopeV1 = createReviewLibraryBackupEnvelope(payload);
     const fileName: string = `见遇完整备份-${formatTimestamp(now)}.${REVIEW_LIBRARY_BACKUP_EXTENSION}`;
     const sandboxPath: string = `${context.cacheDir}/${fileName}`;
     const verifyPath: string = `${context.cacheDir}/verify-${fileName}`;
@@ -556,7 +621,7 @@ export class ReviewLibraryBackupService {
       }
       copyFile(sandboxPath, selectedUris[0]);
       copyFile(selectedUris[0], verifyPath);
-      const savedText: string = fs.readTextSync(verifyPath);
+      const savedText: string = readTextFile(verifyPath);
       if (savedText !== envelopeText) {
         throw new Error('备份文件写入校验失败，请更换保存位置后重试');
       }
@@ -745,14 +810,18 @@ export class ReviewLibraryBackupService {
   }
 
   static async shouldOfferFirstLaunchRestore(context: common.UIAbilityContext): Promise<boolean> {
-    const store = await preferences.getPreferences(context, { name: REVIEW_LIBRARY_BACKUP_GUIDE_PREFERENCES });
-    const hasShown = await store.get(REVIEW_LIBRARY_BACKUP_GUIDE_SHOWN_KEY, false);
-    if (hasShown === true) {
-      return false;
+    try {
+      const store = await preferences.getPreferences(context, { name: REVIEW_LIBRARY_BACKUP_GUIDE_PREFERENCES });
+      const hasShown = await store.get(REVIEW_LIBRARY_BACKUP_GUIDE_SHOWN_KEY, false);
+      if (hasShown === true) {
+        return false;
+      }
+      const shouldOffer: boolean = await ReviewCardRdbService.countReviews(context) === 0;
+      await store.put(REVIEW_LIBRARY_BACKUP_GUIDE_SHOWN_KEY, true);
+      await store.flush();
+      return shouldOffer;
+    } catch (error) {
+      throw new Error(`读取首次恢复提示状态失败：${error}`);
     }
-    const shouldOffer: boolean = await ReviewCardRdbService.countReviews(context) === 0;
-    await store.put(REVIEW_LIBRARY_BACKUP_GUIDE_SHOWN_KEY, true);
-    await store.flush();
-    return shouldOffer;
   }
 }

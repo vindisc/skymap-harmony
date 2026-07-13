@@ -62,7 +62,71 @@ export function createEmptyPendingReviewPhotoStats(): PendingReviewPhotoStats {
 }
 
 function getValue(resultSet: relationalStore.ResultSet, columnName: string): relationalStore.ValueType {
-  return resultSet.getValue(resultSet.getColumnIndex(columnName));
+  try {
+    return resultSet.getValue(resultSet.getColumnIndex(columnName));
+  } catch (error) {
+    throw new Error(`读取待复盘图片字段 ${columnName} 失败：${error}`);
+  }
+}
+
+function goToFirstRow(resultSet: relationalStore.ResultSet): boolean {
+  try {
+    return resultSet.goToFirstRow();
+  } catch (error) {
+    throw new Error(`定位待复盘图片查询结果失败：${error}`);
+  }
+}
+
+function goToNextRow(resultSet: relationalStore.ResultSet): boolean {
+  try {
+    return resultSet.goToNextRow();
+  } catch (error) {
+    throw new Error(`读取下一条待复盘图片失败：${error}`);
+  }
+}
+
+function closeResultSet(resultSet: relationalStore.ResultSet): void {
+  try {
+    resultSet.close();
+  } catch (error) {
+    console.error(`关闭待复盘图片查询结果失败：${error}`);
+  }
+}
+
+async function executeSql(
+  store: relationalStore.RdbStore,
+  sql: string,
+  args: Array<relationalStore.ValueType> = []
+): Promise<void> {
+  try {
+    await store.executeSql(sql, args);
+  } catch (error) {
+    throw new Error(`执行待复盘图片数据库操作失败：${error}`);
+  }
+}
+
+async function querySql(
+  store: relationalStore.RdbStore,
+  sql: string,
+  args: Array<relationalStore.ValueType> = []
+): Promise<relationalStore.ResultSet> {
+  try {
+    return await store.querySql(sql, args);
+  } catch (error) {
+    throw new Error(`查询待复盘图片失败：${error}`);
+  }
+}
+
+async function insertPhoto(store: relationalStore.RdbStore, photo: PendingReviewPhoto): Promise<void> {
+  try {
+    await store.insert(
+      PENDING_REVIEW_PHOTO_TABLE,
+      toValuesBucket(photo),
+      relationalStore.ConflictResolution.ON_CONFLICT_REPLACE
+    );
+  } catch (error) {
+    throw new Error(`保存待复盘图片失败：${error}`);
+  }
 }
 
 function getStringValue(resultSet: relationalStore.ResultSet, columnName: string): string {
@@ -143,9 +207,9 @@ export class PendingReviewPhotoStore {
 
   static async init(context: common.UIAbilityContext): Promise<void> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getStore(context);
-    await store.executeSql(CREATE_PENDING_REVIEW_PHOTOS_TABLE_SQL);
+    await executeSql(store, CREATE_PENDING_REVIEW_PHOTOS_TABLE_SQL);
     for (let index = 0; index < PENDING_REVIEW_PHOTO_INDEX_SQLS.length; index += 1) {
-      await store.executeSql(PENDING_REVIEW_PHOTO_INDEX_SQLS[index]);
+      await executeSql(store, PENDING_REVIEW_PHOTO_INDEX_SQLS[index]);
     }
   }
 
@@ -164,11 +228,7 @@ export class PendingReviewPhotoStore {
       height,
       resolveOrientation(width, height, imageSizeFallbackUsed)
     );
-    await store.insert(
-      PENDING_REVIEW_PHOTO_TABLE,
-      toValuesBucket(photo),
-      relationalStore.ConflictResolution.ON_CONFLICT_REPLACE
-    );
+    await insertPhoto(store, photo);
     return normalizePendingReviewPhoto(photo);
   }
 
@@ -200,72 +260,72 @@ export class PendingReviewPhotoStore {
 
   static async listPending(context: common.UIAbilityContext): Promise<Array<PendingReviewPhoto>> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
-    const resultSet: relationalStore.ResultSet = await store.querySql(
+    const resultSet: relationalStore.ResultSet = await querySql(store,
       `SELECT * FROM ${PENDING_REVIEW_PHOTO_TABLE} WHERE status = ? ORDER BY import_time DESC`,
       [PendingReviewPhotoStatus.PENDING]
     );
     const photos: Array<PendingReviewPhoto> = [];
     try {
-      while (resultSet.goToNextRow()) {
+      while (goToNextRow(resultSet)) {
         photos.push(rowFromResultSet(resultSet));
       }
     } finally {
-      resultSet.close();
+      closeResultSet(resultSet);
     }
     return photos;
   }
 
   static async getOldestPending(context: common.UIAbilityContext): Promise<PendingReviewPhoto | undefined> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
-    const resultSet: relationalStore.ResultSet = await store.querySql(
+    const resultSet: relationalStore.ResultSet = await querySql(store,
       `SELECT * FROM ${PENDING_REVIEW_PHOTO_TABLE} WHERE status = ? ORDER BY import_time ASC LIMIT 1`,
       [PendingReviewPhotoStatus.PENDING]
     );
     try {
-      if (!resultSet.goToFirstRow()) {
+      if (!goToFirstRow(resultSet)) {
         return undefined;
       }
       return rowFromResultSet(resultSet);
     } finally {
-      resultSet.close();
+      closeResultSet(resultSet);
     }
   }
 
   static async getById(context: common.UIAbilityContext, id: string): Promise<PendingReviewPhoto | undefined> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
-    const resultSet: relationalStore.ResultSet = await store.querySql(
+    const resultSet: relationalStore.ResultSet = await querySql(store,
       `SELECT * FROM ${PENDING_REVIEW_PHOTO_TABLE} WHERE id = ? LIMIT 1`,
       [id]
     );
     try {
-      if (!resultSet.goToFirstRow()) {
+      if (!goToFirstRow(resultSet)) {
         return undefined;
       }
       return rowFromResultSet(resultSet);
     } finally {
-      resultSet.close();
+      closeResultSet(resultSet);
     }
   }
 
   static async countPending(context: common.UIAbilityContext): Promise<number> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
-    const resultSet: relationalStore.ResultSet = await store.querySql(
+    const resultSet: relationalStore.ResultSet = await querySql(store,
       `SELECT COUNT(1) AS total FROM ${PENDING_REVIEW_PHOTO_TABLE} WHERE status = ?`,
       [PendingReviewPhotoStatus.PENDING]
     );
     try {
-      if (!resultSet.goToFirstRow()) {
+      if (!goToFirstRow(resultSet)) {
         return 0;
       }
       return getNumberValue(resultSet, 'total');
     } finally {
-      resultSet.close();
+      closeResultSet(resultSet);
     }
   }
 
   static async getStats(context: common.UIAbilityContext): Promise<PendingReviewPhotoStats> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
-    const resultSet: relationalStore.ResultSet = await store.querySql(
+    const resultSet: relationalStore.ResultSet = await querySql(store,
       `SELECT COUNT(1) AS total_imported,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS pending_total,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS reviewed_total
@@ -273,7 +333,7 @@ export class PendingReviewPhotoStore {
       [PendingReviewPhotoStatus.PENDING, PendingReviewPhotoStatus.REVIEWED]
     );
     try {
-      if (!resultSet.goToFirstRow()) {
+      if (!goToFirstRow(resultSet)) {
         return createEmptyPendingReviewPhotoStats();
       }
       return {
@@ -282,13 +342,13 @@ export class PendingReviewPhotoStore {
         totalImportedCount: getNumberValue(resultSet, 'total_imported')
       };
     } finally {
-      resultSet.close();
+      closeResultSet(resultSet);
     }
   }
 
   static async markReviewed(context: common.UIAbilityContext, id: string, linkedReviewId: string): Promise<void> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
-    await store.executeSql(
+    await executeSql(store,
       `UPDATE ${PENDING_REVIEW_PHOTO_TABLE} SET status = ?, linked_review_id = ? WHERE id = ?`,
       [PendingReviewPhotoStatus.REVIEWED, linkedReviewId, id]
     );
@@ -296,7 +356,7 @@ export class PendingReviewPhotoStore {
 
   static async updateLinkedReviewId(context: common.UIAbilityContext, id: string, linkedReviewId: string): Promise<void> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
-    await store.executeSql(
+    await executeSql(store,
       `UPDATE ${PENDING_REVIEW_PHOTO_TABLE} SET linked_review_id = ? WHERE id = ?`,
       [linkedReviewId, id]
     );
@@ -304,7 +364,7 @@ export class PendingReviewPhotoStore {
 
   static async delete(context: common.UIAbilityContext, id: string): Promise<void> {
     const store: relationalStore.RdbStore = await PendingReviewPhotoStore.getInitializedStore(context);
-    await store.executeSql(`DELETE FROM ${PENDING_REVIEW_PHOTO_TABLE} WHERE id = ?`, [id]);
+    await executeSql(store, `DELETE FROM ${PENDING_REVIEW_PHOTO_TABLE} WHERE id = ?`, [id]);
   }
 
   private static async getInitializedStore(context: common.UIAbilityContext): Promise<relationalStore.RdbStore> {
@@ -314,7 +374,11 @@ export class PendingReviewPhotoStore {
 
   private static async getStore(context: common.UIAbilityContext): Promise<relationalStore.RdbStore> {
     if (!PendingReviewPhotoStore.storePromise) {
-      PendingReviewPhotoStore.storePromise = relationalStore.getRdbStore(context, PENDING_REVIEW_RDB_CONFIG);
+      try {
+        PendingReviewPhotoStore.storePromise = relationalStore.getRdbStore(context, PENDING_REVIEW_RDB_CONFIG);
+      } catch (error) {
+        throw new Error(`打开待复盘图片数据库失败：${error}`);
+      }
     }
     return PendingReviewPhotoStore.storePromise;
   }

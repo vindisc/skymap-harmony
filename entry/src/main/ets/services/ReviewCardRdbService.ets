@@ -56,7 +56,71 @@ function toLikeKeyword(value: string | undefined): string {
 }
 
 function getValue(resultSet: relationalStore.ResultSet, columnName: string): relationalStore.ValueType {
-  return resultSet.getValue(resultSet.getColumnIndex(columnName));
+  try {
+    return resultSet.getValue(resultSet.getColumnIndex(columnName));
+  } catch (error) {
+    throw new Error(`读取复盘记录字段 ${columnName} 失败：${error}`);
+  }
+}
+
+function goToFirstRow(resultSet: relationalStore.ResultSet): boolean {
+  try {
+    return resultSet.goToFirstRow();
+  } catch (error) {
+    throw new Error(`定位复盘记录查询结果失败：${error}`);
+  }
+}
+
+function goToNextRow(resultSet: relationalStore.ResultSet): boolean {
+  try {
+    return resultSet.goToNextRow();
+  } catch (error) {
+    throw new Error(`读取下一条复盘记录失败：${error}`);
+  }
+}
+
+function closeResultSet(resultSet: relationalStore.ResultSet): void {
+  try {
+    resultSet.close();
+  } catch (error) {
+    console.error(`关闭复盘记录查询结果失败：${error}`);
+  }
+}
+
+async function executeSql(
+  store: relationalStore.RdbStore,
+  sql: string,
+  args: Array<relationalStore.ValueType> = []
+): Promise<void> {
+  try {
+    await store.executeSql(sql, args);
+  } catch (error) {
+    throw new Error(`执行复盘库数据库操作失败：${error}`);
+  }
+}
+
+async function querySql(
+  store: relationalStore.RdbStore,
+  sql: string,
+  args: Array<relationalStore.ValueType> = []
+): Promise<relationalStore.ResultSet> {
+  try {
+    return await store.querySql(sql, args);
+  } catch (error) {
+    throw new Error(`查询复盘记录失败：${error}`);
+  }
+}
+
+async function insertReview(
+  store: relationalStore.RdbStore,
+  row: ReviewCardRdbRow,
+  conflictResolution: relationalStore.ConflictResolution
+): Promise<void> {
+  try {
+    await store.insert(REVIEW_LIBRARY_RDB_TABLE, ReviewCardRdbMapper.toValuesBucket(row), conflictResolution);
+  } catch (error) {
+    throw new Error(`保存复盘记录失败：${error}`);
+  }
 }
 
 function getStringValue(resultSet: relationalStore.ResultSet, columnName: string): string {
@@ -141,9 +205,9 @@ export class ReviewCardRdbService {
 
   static async init(context: common.UIAbilityContext): Promise<void> {
     const store: relationalStore.RdbStore = await ReviewCardRdbService.getStore(context);
-    await store.executeSql(CREATE_REVIEWS_TABLE_SQL);
+    await executeSql(store, CREATE_REVIEWS_TABLE_SQL);
     for (let index = 0; index < REVIEW_LIBRARY_RDB_INDEX_SQLS.length; index += 1) {
-      await store.executeSql(REVIEW_LIBRARY_RDB_INDEX_SQLS[index]);
+      await executeSql(store, REVIEW_LIBRARY_RDB_INDEX_SQLS[index]);
     }
   }
 
@@ -158,26 +222,22 @@ export class ReviewCardRdbService {
   static async upsertReview(context: common.UIAbilityContext, item: ReviewCardHistoryItem, reviewId?: string): Promise<void> {
     const store: relationalStore.RdbStore = await ReviewCardRdbService.getInitializedStore(context);
     const row: ReviewCardRdbRow = ReviewCardRdbMapper.toRow(item, reviewId);
-    await store.insert(
-      REVIEW_LIBRARY_RDB_TABLE,
-      ReviewCardRdbMapper.toValuesBucket(row),
-      relationalStore.ConflictResolution.ON_CONFLICT_REPLACE
-    );
+    await insertReview(store, row, relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
   }
 
   static async getReview(context: common.UIAbilityContext, id: string): Promise<ReviewCardHistoryItem | undefined> {
     const store: relationalStore.RdbStore = await ReviewCardRdbService.getInitializedStore(context);
-    const resultSet: relationalStore.ResultSet = await store.querySql(
+    const resultSet: relationalStore.ResultSet = await querySql(store,
       `SELECT * FROM ${REVIEW_LIBRARY_RDB_TABLE} WHERE id = ? AND is_deleted = 0 LIMIT 1`,
       [id]
     );
     try {
-      if (!resultSet.goToFirstRow()) {
+      if (!goToFirstRow(resultSet)) {
         return undefined;
       }
       return ReviewCardRdbMapper.toHistoryItem(rowFromResultSet(resultSet));
     } finally {
-      resultSet.close();
+      closeResultSet(resultSet);
     }
   }
 
@@ -227,14 +287,14 @@ export class ReviewCardRdbService {
       args.push(offset);
     }
 
-    const resultSet: relationalStore.ResultSet = await store.querySql(sql, args);
+    const resultSet: relationalStore.ResultSet = await querySql(store, sql, args);
     const rows: Array<ReviewCardRdbRow> = [];
     try {
-      while (resultSet.goToNextRow()) {
+      while (goToNextRow(resultSet)) {
         rows.push(rowFromResultSet(resultSet));
       }
     } finally {
-      resultSet.close();
+      closeResultSet(resultSet);
     }
     return rows;
   }
@@ -242,28 +302,28 @@ export class ReviewCardRdbService {
   static async countReviews(context: common.UIAbilityContext, query?: ReviewListQuery): Promise<number> {
     const store: relationalStore.RdbStore = await ReviewCardRdbService.getInitializedStore(context);
     const whereClause = buildWhereClause(query);
-    const resultSet: relationalStore.ResultSet = await store.querySql(
+    const resultSet: relationalStore.ResultSet = await querySql(store,
       `SELECT COUNT(1) AS total FROM ${REVIEW_LIBRARY_RDB_TABLE}${whereClause.sql}`,
       whereClause.args
     );
     try {
-      if (!resultSet.goToFirstRow()) {
+      if (!goToFirstRow(resultSet)) {
         return 0;
       }
       return getNumberValue(resultSet, 'total');
     } finally {
-      resultSet.close();
+      closeResultSet(resultSet);
     }
   }
 
   static async deleteReview(context: common.UIAbilityContext, id: string): Promise<void> {
     const store: relationalStore.RdbStore = await ReviewCardRdbService.getInitializedStore(context);
-    await store.executeSql(`DELETE FROM ${REVIEW_LIBRARY_RDB_TABLE} WHERE id = ?`, [id]);
+    await executeSql(store, `DELETE FROM ${REVIEW_LIBRARY_RDB_TABLE} WHERE id = ?`, [id]);
   }
 
   static async markExported(context: common.UIAbilityContext, id: string, exportedPath: string): Promise<void> {
     const store: relationalStore.RdbStore = await ReviewCardRdbService.getInitializedStore(context);
-    await store.executeSql(
+    await executeSql(store,
       `UPDATE ${REVIEW_LIBRARY_RDB_TABLE} SET exported_path = ?, updated_at = updated_at WHERE id = ?`,
       [exportedPath, id]
     );
@@ -280,7 +340,7 @@ export class ReviewCardRdbService {
 
   static async clearAll(context: common.UIAbilityContext): Promise<void> {
     const store: relationalStore.RdbStore = await ReviewCardRdbService.getInitializedStore(context);
-    await store.executeSql(`DELETE FROM ${REVIEW_LIBRARY_RDB_TABLE}`);
+    await executeSql(store, `DELETE FROM ${REVIEW_LIBRARY_RDB_TABLE}`);
   }
 
   static async replaceAllReviews(
@@ -288,21 +348,29 @@ export class ReviewCardRdbService {
     replacements: Array<ReviewCardRdbReplacementItem>
   ): Promise<void> {
     const store: relationalStore.RdbStore = await ReviewCardRdbService.getInitializedStore(context);
-    const transaction: relationalStore.Transaction = await store.createTransaction();
     try {
-      await transaction.delete(new relationalStore.RdbPredicates(REVIEW_LIBRARY_RDB_TABLE));
-      for (let index = 0; index < replacements.length; index += 1) {
-        const replacement: ReviewCardRdbReplacementItem = replacements[index];
-        const row: ReviewCardRdbRow = ReviewCardRdbMapper.toRow(replacement.item, replacement.reviewId);
-        await transaction.insert(
-          REVIEW_LIBRARY_RDB_TABLE,
-          ReviewCardRdbMapper.toValuesBucket(row),
-          relationalStore.ConflictResolution.ON_CONFLICT_ABORT
-        );
+      const transaction: relationalStore.Transaction = await store.createTransaction();
+      try {
+        await transaction.delete(new relationalStore.RdbPredicates(REVIEW_LIBRARY_RDB_TABLE));
+        for (let index = 0; index < replacements.length; index += 1) {
+          const replacement: ReviewCardRdbReplacementItem = replacements[index];
+          const row: ReviewCardRdbRow = ReviewCardRdbMapper.toRow(replacement.item, replacement.reviewId);
+          await transaction.insert(
+            REVIEW_LIBRARY_RDB_TABLE,
+            ReviewCardRdbMapper.toValuesBucket(row),
+            relationalStore.ConflictResolution.ON_CONFLICT_ABORT
+          );
+        }
+        await transaction.commit();
+      } catch (error) {
+        try {
+          await transaction.rollback();
+        } catch (rollbackError) {
+          throw new Error(`恢复事务失败且回滚失败：${error}；${rollbackError}`);
+        }
+        throw new Error(`恢复事务失败：${error}`);
       }
-      await transaction.commit();
     } catch (error) {
-      await transaction.rollback();
       throw new Error(`恢复事务失败：${error}`);
     }
   }
@@ -314,7 +382,11 @@ export class ReviewCardRdbService {
 
   private static async getStore(context: common.UIAbilityContext): Promise<relationalStore.RdbStore> {
     if (!ReviewCardRdbService.storePromise) {
-      ReviewCardRdbService.storePromise = relationalStore.getRdbStore(context, REVIEW_LIBRARY_RDB_CONFIG);
+      try {
+        ReviewCardRdbService.storePromise = relationalStore.getRdbStore(context, REVIEW_LIBRARY_RDB_CONFIG);
+      } catch (error) {
+        throw new Error(`打开复盘库数据库失败：${error}`);
+      }
     }
     return ReviewCardRdbService.storePromise;
   }

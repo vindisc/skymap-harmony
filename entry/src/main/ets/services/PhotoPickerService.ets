@@ -113,12 +113,16 @@ async function resolveDisplayImageSizeByUri(imageUri: string): Promise<DisplayIm
 }
 
 async function resolveDisplayImageSizeByFd(imageUri: string): Promise<DisplayImageSize> {
-  const file: fs.File = fs.openSync(imageUri, fs.OpenMode.READ_ONLY);
   try {
-    const source: image.ImageSource = image.createImageSource(file.fd);
-    return await readDisplayImageSize(source);
-  } finally {
-    fs.closeSync(file);
+    const file: fs.File = fs.openSync(imageUri, fs.OpenMode.READ_ONLY);
+    try {
+      const source: image.ImageSource = image.createImageSource(file.fd);
+      return await readDisplayImageSize(source);
+    } finally {
+      fs.closeSync(file);
+    }
+  } catch (error) {
+    throw new Error(`读取所选图片尺寸失败：${error}`);
   }
 }
 
