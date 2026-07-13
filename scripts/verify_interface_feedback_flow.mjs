@@ -34,7 +34,8 @@ assert(editorSource.includes('REVIEW_FLOW_SAVE_SUCCESS_TEXT'), 'Editor should us
 assert(editorSource.includes('REVIEW_FLOW_SAVE_FAILED_TEXT'), 'Editor should use shared save failure copy.');
 
 assert(previewSource.includes('@State exportState: ExportState = ExportState.IDLE;'), 'Preview should track export state centrally.');
-assert(previewSource.includes('actionFeedbackText'), 'Preview should keep inline lightweight feedback text.');
+assert(previewSource.includes('floatingStatusMessage'), 'Preview should keep floating status message state.');
+assert(previewSource.includes('FloatingStatusBanner({'), 'Preview should render floating feedback via the shared banner component.');
 assert(previewSource.includes('markExportedQuietly'), 'Preview should separate export success from exported-state writeback.');
 assert(previewSource.includes('result.cancelled'), 'Preview should treat cancelled export separately from failed export.');
 assert(previewSource.includes('this.isSaving ||') && previewSource.includes('this.exportState !== ExportState.IDLE'), 'Preview busy gate should block repeated actions across save/export/bundle export.');
@@ -54,7 +55,8 @@ assert(previewSource.includes('.animation({ duration: MotionTokens.durationInsta
 
 assert(projectSource.includes('REVIEW_FLOW_DELETE_CONFIRM_TITLE'), 'Project detail delete dialog should use shared confirm title.');
 assert(projectSource.includes('REVIEW_FLOW_DELETE_CONFIRM_MESSAGE'), 'Project detail delete dialog should use shared scope copy.');
-assert(projectSource.includes('REVIEW_FLOW_DELETE_PENDING_TEXT'), 'Project detail delete action should use shared pending copy.');
+assert(projectSource.includes('tone: DialogTone.DANGER'), 'Project detail destructive confirmation should use danger tone.');
+assert(projectSource.includes('MotionTokens.shatterDurationMs'), 'Project detail delete action should wait for the visible removal animation.');
 assert(projectSource.includes('REVIEW_FLOW_IMPORT_PENDING_TEXT'), 'Project detail create-first-review action should reuse import pending copy.');
 
 assert(mySource.includes('if (ENABLE_RDB_DIAGNOSTICS_ENTRY) {'), 'My page diagnostics entry should be guarded by a debug-only flag.');

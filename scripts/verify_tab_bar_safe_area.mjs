@@ -14,7 +14,7 @@ function assertIncludes(source, marker, message) {
 
 assertIncludes(
   designSource,
-  'static readonly tabBarShellHeight: number = LayoutTokens.TabBarHeight + 20;',
+  'static readonly tabBarShellHeight: number = LayoutTokens.TabBarHeight + 20 + TAB_BAR_SAFE_AREA_HEIGHT;',
   'Tab bar shell must reserve a bottom safe-area gutter without changing the touch target token.'
 );
 assertIncludes(

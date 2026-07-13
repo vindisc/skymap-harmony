@@ -31,8 +31,11 @@ function forbidIncludes(source, marker, message) {
   "title: '首页图片'",
   "title: '家庭存储'",
   "title: '同步中心'",
-  "Text('版本')",
-  'this.VersionInfoCard()',
+  "Text('关于')",
+  "this.AboutField('版本'",
+  "this.AboutField('作者 QQ'",
+  'APP_AUTHOR_QQ_TEXT: string = \'921086628\'',
+  'this.AboutInfoCard()',
   'this.DeveloperDiagnosticsCard()'
 ].forEach((marker) => requireIncludes(myPageSource, marker, 'MyPage missing settings-first marker'));
 
@@ -74,11 +77,12 @@ assert(myPageSource.indexOf('this.SettingsSection()') < myPageSource.indexOf('th
   'MyPage should show settings before app section.');
 assert(myPageSource.includes('Scroll() {'), 'MyPage must keep scroll ability.');
 assert(myPageSource.includes('const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;'), 'MyPage title-to-settings gap must be compact.');
-assert(myPageSource.includes('Scroll() {\n        Column() {\n          AppPageHeader({'), 'MyPage title must live in the same scroll content flow as settings.');
-assert(myPageSource.includes('.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })'), 'MyPage settings content must sit directly below the title with compact spacing.');
-assert(myPageSource.includes('top: AppMetrics.pageTopPadding'), 'MyPage scroll content must keep the normal page top padding.');
+assert(myPageSource.includes("Column() {\n      AppPageHeader({\n        title: '我的'"), 'MyPage title must stay fixed above the scroll content.');
+assert(myPageSource.indexOf("title: '我的'") < myPageSource.indexOf('Scroll() {'), 'MyPage fixed title must precede the scroll region.');
+assert(myPageSource.includes('bottom: MY_PAGE_TITLE_CONTENT_GAP'), 'MyPage fixed title must keep the compact title-to-content gap.');
+assert(myPageSource.includes('top: AppMetrics.pageTopPadding'), 'MyPage fixed title must keep the normal page top padding.');
 assert(myPageSource.includes('bottom: MY_PAGE_BOTTOM_PADDING'), 'MyPage content must keep bottom padding for tab bar.');
-assert(myPageSource.includes(".height('100%')"), 'MyPage scroll region must fill the page content height.');
+assert(myPageSource.includes('.layoutWeight(1)'), 'MyPage scroll region must fill the remaining page height.');
 assert(myPageSource.includes('.justifyContent(FlexAlign.Start)'), 'MyPage scroll content must stay pinned to the top.');
 assert(myPageSource.includes('pushUrl({ url: REVIEWER_PROFILE_PAGE })'), 'Reviewer profile entry navigation must remain.');
 assert(myPageSource.includes('pushUrl({ url: HOME_HERO_IMAGE_PAGE })'), 'Home hero entry navigation must remain.');
@@ -88,11 +92,11 @@ assert(myPageSource.includes('HomeHeroImageService.listImages'), 'Home hero imag
 assert(myPageSource.includes('HomeStorageService.resolveEntryStatusLabel'), 'Home storage status mapping must remain visible in MyPage.');
 
 [
-  "AppPageHeader({\n            title: '统计'",
+  "AppPageHeader({\n        title: '统计'",
   'LearningProgressService.loadWithReviewItems(context)',
   'ReviewProjectService.buildStatsFeedback(progressResult.reviewItems)',
   'OverviewCard()',
-  '.fontSize(AppTypography.statNumber)',
+  'fontSize: AppTypography.statNumber',
   'this.OverviewMetric(',
   'resolveDistributionProgressWidth'
 ].forEach((marker) => requireIncludes(statsPageSource, marker, 'StatsPage must keep review statistics'));
@@ -106,7 +110,8 @@ assert(myPageSource.includes('HomeStorageService.resolveEntryStatusLabel'), 'Hom
 ].forEach((marker) => requireIncludes(appShellSource, marker, 'Bottom tab or MyPage refresh wiring changed unexpectedly'));
 
 requireIncludes(homeHeroPageSource, "title: '首页图片'", 'Home hero config page must remain registered and reachable');
-requireIncludes(homeStoragePageSource, 'CenterFeedbackOverlay()', 'Home storage page must keep centered feedback.');
+requireIncludes(homeStoragePageSource, "InlineStatusBanner({", 'Home storage page must render form-level status via InlineStatusBanner.');
+forbidIncludes(homeStoragePageSource, 'CenterFeedbackOverlay', 'Home storage page must retire the legacy centered overlay.');
 forbidIncludes(homeStoragePageSource, 'StatusSummary()', 'Home storage page must not restore redundant status summary');
 
 if (failed) {

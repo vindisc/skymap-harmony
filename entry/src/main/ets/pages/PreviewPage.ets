@@ -27,6 +27,13 @@ import {
 import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
+  FEEDBACK_CLIPBOARD_COPY_FAILED_TEXT,
+  FEEDBACK_CLIPBOARD_COPY_SUCCESS_TEXT,
+  FEEDBACK_EXPORT_TIMEOUT_TEXT,
+  FEEDBACK_PROGRESS_COLLECT_ORIGINAL_BUNDLE_TEXT,
+  FEEDBACK_PROGRESS_RENDER_EXPORT_IMAGE_TEXT,
+  FEEDBACK_PROGRESS_SAVE_TO_GALLERY_TEXT,
+  FEEDBACK_PROGRESS_WRITE_HOME_STORAGE_TEXT,
   REVIEW_FLOW_EXPORT_FAILED_TEXT,
   REVIEW_FLOW_EXPORT_PENDING_TEXT,
   REVIEW_FLOW_EXPORT_SUCCESS_TEXT,
@@ -44,6 +51,7 @@ import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { DisplayImageSize, resolveDisplayImageSize } from '../services/PhotoPickerService';
 import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 import { ToastService } from '../services/ToastService';
+import { FloatingStatusBanner, StatusBannerTone } from '../components/InlineStatusBanner';
 import { BottomSheetContainer } from '../components/motion/BottomSheetContainer';
 
 enum PreviewSaveState {
@@ -70,7 +78,8 @@ struct PreviewPage {
   @State isExportSnapshotMode: boolean = false;
   @State isExportMenuVisible: boolean = false;
   @State saveStateLabel: PreviewSaveState = PreviewSaveState.UNSAVED;
-  @State actionFeedbackText: string = '';
+  @State floatingStatusMessage: string = '';
+  @State floatingStatusTone: StatusBannerTone = StatusBannerTone.PROGRESS;
   @State reviewerText: string = '';
   @State pressedActionKey: string = '';
 
@@ -181,11 +190,11 @@ struct PreviewPage {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
       await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
       this.saveStateLabel = PreviewSaveState.SAVED;
-      this.actionFeedbackText = REVIEW_FLOW_SAVE_SUCCESS_TEXT;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
+      this.setFloatingStatus(REVIEW_FLOW_SAVE_SUCCESS_TEXT, StatusBannerTone.SUCCESS);
+      ToastService.success(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
     } catch (error) {
-      this.actionFeedbackText = REVIEW_FLOW_SAVE_FAILED_TEXT;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
+      this.setFloatingStatus(REVIEW_FLOW_SAVE_FAILED_TEXT, StatusBannerTone.ERROR);
+      ToastService.error(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
       this.isSaving = false;
     }
@@ -209,9 +218,9 @@ struct PreviewPage {
     this.isExportSnapshotMode = true;
     let timeoutId: number = this.startExportTimeout(ExportState.IMAGE);
     try {
-      this.actionFeedbackText = '渲染导出图…';
+      this.setFloatingStatus(FEEDBACK_PROGRESS_RENDER_EXPORT_IMAGE_TEXT, StatusBannerTone.PROGRESS);
       await this.waitForExportLayout();
-      this.actionFeedbackText = '保存到相册…';
+      this.setFloatingStatus(FEEDBACK_PROGRESS_SAVE_TO_GALLERY_TEXT, StatusBannerTone.PROGRESS);
       const result: ReviewCardExportResult = await ReviewCardExportService.exportSnapshot(
         this.getAbilityContext(),
         this.getExportComponentId(),
@@ -221,18 +230,18 @@ struct PreviewPage {
       );
       if (result.savedToPhotoLibrary) {
         await this.markExportedQuietly(result.path);
-        this.actionFeedbackText = REVIEW_FLOW_EXPORT_SUCCESS_TEXT;
-        ToastService.show(this.getUIContext(), REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT);
+        this.setFloatingStatus(REVIEW_FLOW_EXPORT_SUCCESS_TEXT, StatusBannerTone.SUCCESS);
+        ToastService.success(this.getUIContext(), REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT);
       } else if (result.cancelled) {
-        this.actionFeedbackText = '';
+        this.clearFloatingStatus();
       } else {
         const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_EXPORT_FAILED_TEXT;
-        this.actionFeedbackText = failedText;
-        ToastService.show(this.getUIContext(), failedText);
+        this.setFloatingStatus(failedText, StatusBannerTone.ERROR);
+        ToastService.error(this.getUIContext(), failedText);
       }
     } catch (error) {
-      this.actionFeedbackText = REVIEW_FLOW_EXPORT_FAILED_TEXT;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_EXPORT_FAILED_TEXT);
+      this.setFloatingStatus(REVIEW_FLOW_EXPORT_FAILED_TEXT, StatusBannerTone.ERROR);
+      ToastService.error(this.getUIContext(), REVIEW_FLOW_EXPORT_FAILED_TEXT);
     } finally {
       clearTimeout(timeoutId);
       this.isExportSnapshotMode = false;
@@ -246,9 +255,9 @@ struct PreviewPage {
       const exchangeJson: string = stringifyReviewCardExchangeSchemaV1(this.document, reviewerName);
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, exchangeJson);
       await pasteboard.getSystemPasteboard().setData(data);
-      ToastService.show(this.getUIContext(), '已复制复盘数据');
+      ToastService.success(this.getUIContext(), FEEDBACK_CLIPBOARD_COPY_SUCCESS_TEXT);
     } catch (error) {
-      ToastService.show(this.getUIContext(), '复制失败，请稍后重试');
+      ToastService.error(this.getUIContext(), FEEDBACK_CLIPBOARD_COPY_FAILED_TEXT);
     }
   }
 
@@ -261,9 +270,9 @@ struct PreviewPage {
     this.isExportSnapshotMode = true;
     let timeoutId: number = this.startExportTimeout(ExportState.BUNDLE);
     try {
-      this.actionFeedbackText = '渲染导出图…';
+      this.setFloatingStatus(FEEDBACK_PROGRESS_RENDER_EXPORT_IMAGE_TEXT, StatusBannerTone.PROGRESS);
       await this.waitForExportLayout();
-      this.actionFeedbackText = '写入家庭存储…';
+      this.setFloatingStatus(FEEDBACK_PROGRESS_WRITE_HOME_STORAGE_TEXT, StatusBannerTone.PROGRESS);
       const context = this.getAbilityContext();
       const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
       const result: ReviewBundleExportResult = await ReviewBundleExportService.exportReviewBundleToHomeStorage(
@@ -279,18 +288,18 @@ struct PreviewPage {
       );
       if (result.success) {
         await this.markExportedQuietly(result.remotePath);
-        this.actionFeedbackText = REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT;
-        ToastService.show(this.getUIContext(), REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT);
+        this.setFloatingStatus(REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT, StatusBannerTone.SUCCESS);
+        ToastService.success(this.getUIContext(), REVIEW_FLOW_BUNDLE_EXPORT_SUCCESS_TEXT);
         return;
       }
       console.error(`[PreviewPage] 复盘包导出失败：${result.message}`);
       const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
-      this.actionFeedbackText = failedText;
-      ToastService.show(this.getUIContext(), failedText);
+      this.setFloatingStatus(failedText, StatusBannerTone.ERROR);
+      ToastService.error(this.getUIContext(), failedText);
     } catch (error) {
       console.error(`[PreviewPage] 复盘包导出异常：${error}`);
-      this.actionFeedbackText = REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT);
+      this.setFloatingStatus(REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT, StatusBannerTone.ERROR);
+      ToastService.error(this.getUIContext(), REVIEW_FLOW_BUNDLE_EXPORT_FAILED_TEXT);
     } finally {
       clearTimeout(timeoutId);
       this.isExportSnapshotMode = false;
@@ -306,10 +315,10 @@ struct PreviewPage {
     this.startExportAction(ExportState.ORIGINAL, REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_PENDING_TEXT);
     let timeoutId: number = this.startExportTimeout(ExportState.ORIGINAL);
     try {
-      this.actionFeedbackText = '整理原图和复盘数据…';
+      this.setFloatingStatus(FEEDBACK_PROGRESS_COLLECT_ORIGINAL_BUNDLE_TEXT, StatusBannerTone.PROGRESS);
       const context = this.getAbilityContext();
       const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
-      this.actionFeedbackText = '写入家庭存储…';
+      this.setFloatingStatus(FEEDBACK_PROGRESS_WRITE_HOME_STORAGE_TEXT, StatusBannerTone.PROGRESS);
       const result: ReviewBundleOriginalPhotoExportResult = await ReviewBundleOriginalPhotoExportService.exportOriginalPhotoReviewBundleToHomeStorage(
         context,
         this.document,
@@ -317,18 +326,18 @@ struct PreviewPage {
       );
       if (result.success) {
         await this.markExportedQuietly(result.remotePath);
-        this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT;
-        ToastService.show(this.getUIContext(), REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT);
+        this.setFloatingStatus(REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT, StatusBannerTone.SUCCESS);
+        ToastService.success(this.getUIContext(), REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_SUCCESS_TEXT);
         return;
       }
       console.error(`[PreviewPage] 含原图复盘包导出失败：${result.message}`);
       const failedText: string = result.message.length > 0 ? result.message : REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
-      this.actionFeedbackText = failedText;
-      ToastService.show(this.getUIContext(), failedText);
+      this.setFloatingStatus(failedText, StatusBannerTone.ERROR);
+      ToastService.error(this.getUIContext(), failedText);
     } catch (error) {
       console.error(`[PreviewPage] 含原图复盘包导出异常：${error}`);
-      this.actionFeedbackText = REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT);
+      this.setFloatingStatus(REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT, StatusBannerTone.ERROR);
+      ToastService.error(this.getUIContext(), REVIEW_FLOW_ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT);
     } finally {
       clearTimeout(timeoutId);
       this.finishExportAction(ExportState.ORIGINAL);
@@ -337,7 +346,17 @@ struct PreviewPage {
 
   private startExportAction(state: ExportState, message: string): void {
     this.exportState = state;
-    this.actionFeedbackText = message;
+    this.setFloatingStatus(message, StatusBannerTone.PROGRESS);
+  }
+
+  private setFloatingStatus(message: string, tone: StatusBannerTone): void {
+    this.floatingStatusMessage = message;
+    this.floatingStatusTone = tone;
+  }
+
+  private clearFloatingStatus(): void {
+    this.floatingStatusMessage = '';
+    this.floatingStatusTone = StatusBannerTone.PROGRESS;
   }
 
   private startExportTimeout(state: ExportState): number {
@@ -345,10 +364,10 @@ struct PreviewPage {
       if (this.exportState !== state) {
         return;
       }
-      this.actionFeedbackText = '导出超时，请重试';
+      this.setFloatingStatus(FEEDBACK_EXPORT_TIMEOUT_TEXT, StatusBannerTone.WARNING);
       this.isExportSnapshotMode = false;
       this.exportState = ExportState.IDLE;
-      ToastService.show(this.getUIContext(), '导出超时，请重试');
+      ToastService.warning(this.getUIContext(), FEEDBACK_EXPORT_TIMEOUT_TEXT);
     }, EXPORT_ACTION_TIMEOUT_MS);
   }
 
@@ -416,8 +435,8 @@ struct PreviewPage {
   }
 
   private getFloatingActionBarHeight(): number {
-    const feedbackHeight: number = this.actionFeedbackText.length > 0
-      ? AppTypography.captionLineHeight + AppMetrics.space8
+    const feedbackHeight: number = this.floatingStatusMessage.length > 0
+      ? AppTypography.bodyLineHeight + AppMetrics.space16 + AppMetrics.space8
       : 0;
     return AppMetrics.toolbarButtonHeight + AppMetrics.floatingDockPadding * 2 + feedbackHeight;
   }
@@ -484,16 +503,10 @@ struct PreviewPage {
   @Builder
   FloatingActionBar() {
     Column({ space: AppMetrics.space8 }) {
-      if (this.actionFeedbackText.length > 0) {
-        Text(this.actionFeedbackText)
-          .fontSize(AppTypography.caption)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.captionLineHeight)
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .width('100%')
-          .textAlign(TextAlign.Center)
-      }
+      FloatingStatusBanner({
+        tone: this.floatingStatusTone,
+        message: this.floatingStatusMessage
+      })
 
       Row({ space: AppMetrics.space8 }) {
         Column() {

@@ -40,11 +40,11 @@ const requiredStatsPageTokens = [
   "@Prop @Watch('refreshStatsData') refreshToken",
   'LearningProgressService.loadWithReviewItems(context)',
   'ReviewProjectService.buildStatsFeedback(progressResult.reviewItems)',
-  "AppPageHeader({\n            title: '统计'",
-  'Scroll() {\n      Column({ space: AppMetrics.cardGap }) {',
+  "AppPageHeader({\n        title: '统计'",
+  'Scroll() {\n        Column({ space: AppMetrics.cardGap }) {',
   'const STATS_PAGE_TOP_PADDING: number = AppMetrics.pageTopPadding - AppMetrics.space8;',
   'top: STATS_PAGE_TOP_PADDING',
-  ".height('100%')\n      .justifyContent(FlexAlign.Start)",
+  ".constraintSize({ minHeight: '100%' })\n        .justifyContent(FlexAlign.Start)",
   'LearningOverviewCard()',
   "Text('学习进度')",
   '还没有复盘数据',
@@ -57,12 +57,13 @@ const requiredStatsPageTokens = [
   'Stack({ alignContent: Alignment.Start })',
   "import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';",
   'this.OverviewMetric(',
-  '.fontSize(AppTypography.statNumber)',
+  'CountUpText({ value: value, fontSize: AppTypography.cardTitle, fontColor: color })',
   '.shadow(ElevationTokens.medium)',
   '.shadow(ElevationTokens.subtle)',
   'resolveDistributionProgressWidth',
   'Math.max(item.rate, 4)',
-  '.animation({ duration: MotionTokens.durationStandard, curve: MotionTokens.curveDecelerate })'
+  'duration: MotionQualityContext.resolveDuration(MotionTokens.durationSlow)',
+  'curve: MotionQualityContext.resolveCurve(MotionCurveRole.LANDING)'
 ];
 
 for (const token of requiredStatsPageTokens) {

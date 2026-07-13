@@ -21,7 +21,12 @@ import {
   RdbMigrationDiagnosticsResult,
   ReviewCardRdbDiagnosticsService
 } from '../services/ReviewCardRdbDiagnosticsService';
-import { ENABLE_RDB_DIAGNOSTICS_ENTRY } from '../services/ReviewFlowFeedback';
+import {
+  ENABLE_RDB_DIAGNOSTICS_ENTRY,
+  FEEDBACK_RDB_DIAG_EXCEPTION_TEXT,
+  FEEDBACK_RDB_DIAG_FAILED_TEXT,
+  FEEDBACK_RDB_DIAG_SUCCESS_TEXT
+} from '../services/ReviewFlowFeedback';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
 import { HomeHeroImageService } from '../services/HomeHeroImageService';
 import {
@@ -30,7 +35,7 @@ import {
   ReviewSettingsService
 } from '../services/ReviewSettingsService';
 import { ToastService, ToastTone } from '../services/ToastService';
-import { DialogService } from '../services/DialogService';
+import { DialogService, DialogTone } from '../services/DialogService';
 import {
   ReviewLibraryBackupExportResult,
   ReviewLibraryBackupInspection,
@@ -40,8 +45,10 @@ import {
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
 const APP_BUILD_TEXT: string = 'Harmony Beta V1';
+const APP_AUTHOR_QQ_TEXT: string = '921086628';
 const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;
 const MY_PAGE_BOTTOM_PADDING: number = AppMetrics.tabContentBottomPadding + AppMetrics.space16;
+const ABOUT_INFO_CARD_HEIGHT: number = 108;
 
 @Component
 export struct MyPage {
@@ -51,13 +58,14 @@ export struct MyPage {
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
   @State homeHeroImageCount: number = 0;
   @State widgetCardBackgroundStyle: string = REVIEW_WIDGET_CARD_BACKGROUND_PLAIN;
-  @State backupItemTotal: number = 0;
+  @State shatterAnimationEnabled: boolean = true;
   @State motionQuality: MotionQuality = MotionQuality.FULL;
-  @State isBackupActionRunning: boolean = false;
   @State isRdbDiagnosticsRunning: boolean = false;
   @State rdbDiagnosticsSummary: string = '未运行';
   @State rdbDiagnosticsStatus: string = '开发';
   @State isDeveloperDiagnosticsPressed: boolean = false;
+  @State backupItemTotal: number = 0;
+  @State isBackupActionRunning: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -100,6 +108,11 @@ export struct MyPage {
       return;
     }
 
+    this.shatterAnimationEnabled = await ReviewSettingsService.loadShatterAnimationEnabled(context);
+    if (requestId !== this.loadRequestId) {
+      return;
+    }
+
     this.motionQuality = await ReviewSettingsService.loadMotionQuality(context);
     if (requestId !== this.loadRequestId) {
       return;
@@ -112,6 +125,9 @@ export struct MyPage {
   }
 
   private formatBackupTime(timestamp: number): string {
+    if (timestamp <= 0) {
+      return '未知时间';
+    }
     const date = new Date(timestamp);
     const pad = (value: number): string => `${value}`.padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -193,6 +209,20 @@ export struct MyPage {
     } finally {
       this.isBackupActionRunning = false;
     }
+  }
+
+  private async toggleShatterAnimation(): Promise<void> {
+    const next: boolean = !this.shatterAnimationEnabled;
+    try {
+      const saved: boolean = await ReviewSettingsService.saveShatterAnimationEnabled(this.getAbilityContext(), next);
+      this.shatterAnimationEnabled = saved;
+    } catch (error) {
+      console.warn(`[MyPage] toggle shatter animation failed: ${error}`);
+    }
+  }
+
+  private resolveShatterAnimationBadge(): string {
+    return this.shatterAnimationEnabled ? '已开启' : '已关闭';
   }
 
   private resolveHomeStorageStatus(): HomeStorageConfigStatus {
@@ -316,6 +346,7 @@ export struct MyPage {
       message: '此入口仅用于开发期验证 RDB 与迁移链路，普通使用不需要运行。',
       cancelText: '取消',
       confirmText: '运行',
+      tone: DialogTone.PRIMARY,
       onConfirm: () => {
         this.runRdbDeveloperDiagnostics();
       }
@@ -344,12 +375,14 @@ export struct MyPage {
       this.rdbDiagnosticsStatus = isSuccess ? '通过' : '失败';
       this.rdbDiagnosticsSummary =
         `${isSuccess ? '通过' : '失败'} · RDB ${rdbResult.steps.length} 步 · 迁移 ${migrationResult.steps.length} 步 · 错误 ${errorCount}`;
-      ToastService.show(this.getUIContext(), isSuccess ? 'RDB开发诊断通过' : 'RDB开发诊断失败，查看日志');
+      ToastService.byTone(this.getUIContext(),
+        isSuccess ? FEEDBACK_RDB_DIAG_SUCCESS_TEXT : FEEDBACK_RDB_DIAG_FAILED_TEXT,
+        isSuccess ? ToastTone.SUCCESS : ToastTone.ERROR);
     } catch (error) {
       this.rdbDiagnosticsStatus = '失败';
       this.rdbDiagnosticsSummary = `异常：${error}`;
       console.info(`[RDB开发诊断] exception=${error}`);
-      ToastService.show(this.getUIContext(), 'RDB开发诊断异常，查看日志');
+      ToastService.error(this.getUIContext(), FEEDBACK_RDB_DIAG_EXCEPTION_TEXT);
     } finally {
       this.isRdbDiagnosticsRunning = false;
     }
@@ -395,6 +428,16 @@ export struct MyPage {
         dense: true,
         onTap: () => {
           this.openMotionSettings();
+        }
+      })
+
+      SettingsLinkRow({
+        title: '删除星河效果',
+        status: this.resolveShatterAnimationBadge(),
+        tone: this.shatterAnimationEnabled ? SettingsEntryTone.SUCCESS : SettingsEntryTone.MUTED,
+        dense: true,
+        onTap: () => {
+          this.toggleShatterAnimation();
         }
       })
 
@@ -451,7 +494,7 @@ export struct MyPage {
   @Builder
   AboutSection() {
     Column({ space: AppMetrics.cardGap }) {
-      this.VersionInfoCard()
+      this.AboutInfoCard()
 
       if (ENABLE_RDB_DIAGNOSTICS_ENTRY) {
         this.DeveloperDiagnosticsCard()
@@ -461,22 +504,18 @@ export struct MyPage {
   }
 
   @Builder
-  VersionInfoCard() {
-    Column({ space: 4 }) {
-      Text('版本')
+  AboutInfoCard() {
+    Column({ space: AppMetrics.space8 }) {
+      Text('关于')
         .fontSize(AppTypography.body)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.text)
         .lineHeight(AppTypography.bodyLineHeight)
         .width('100%')
 
-      Text(`${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`)
-        .fontSize(AppTypography.caption)
-        .fontColor(AppColors.secondaryText)
-        .lineHeight(AppTypography.captionLineHeight)
-        .width('100%')
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
+      this.AboutField('版本', `${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`)
+
+      this.AboutField('作者 QQ', APP_AUTHOR_QQ_TEXT)
     }
     .alignItems(HorizontalAlign.Start)
     .padding({
@@ -486,11 +525,34 @@ export struct MyPage {
       bottom: AppMetrics.space10
     })
     .width('100%')
-    .height(60)
+    .height(ABOUT_INFO_CARD_HEIGHT)
     .borderRadius(AppMetrics.cardRadius)
     .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
     .shadow(ElevationTokens.subtle)
+  }
+
+  @Builder
+  AboutField(label: string, value: string) {
+    Row({ space: AppMetrics.space10 }) {
+      Text(label)
+        .fontSize(AppTypography.caption)
+        .fontColor(AppColors.secondaryText)
+        .lineHeight(AppTypography.captionLineHeight)
+        .maxLines(1)
+
+      Text(value)
+        .fontSize(AppTypography.caption)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.captionLineHeight)
+        .textAlign(TextAlign.End)
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+        .layoutWeight(1)
+    }
+    .alignItems(VerticalAlign.Center)
+    .width('100%')
   }
 
   @Builder
@@ -560,35 +622,35 @@ export struct MyPage {
 
   build() {
     Column() {
+      AppPageHeader({
+        title: '我的'
+      })
+        .padding({
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
+          top: AppMetrics.pageTopPadding,
+          bottom: MY_PAGE_TITLE_CONTENT_GAP
+        })
+
       Scroll() {
-        Column() {
-          AppPageHeader({
-            title: '我的'
-          })
+        Column({ space: AppMetrics.sectionGap }) {
+          this.SettingsSection()
 
-          Column({ space: AppMetrics.sectionGap }) {
-            this.SettingsSection()
+          this.DataProtectionSection()
 
-            this.DataProtectionSection()
-
-            this.AboutSection()
-          }
-          .width('100%')
-          .margin({ top: MY_PAGE_TITLE_CONTENT_GAP })
+          this.AboutSection()
         }
         .alignItems(HorizontalAlign.Start)
         .width('100%')
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
-          top: AppMetrics.pageTopPadding,
           bottom: MY_PAGE_BOTTOM_PADDING
         })
-        .height('100%')
         .justifyContent(FlexAlign.Start)
       }
       .width('100%')
-      .height('100%')
+      .layoutWeight(1)
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
     }

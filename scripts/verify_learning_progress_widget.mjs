@@ -384,9 +384,9 @@ assert(!rhythmReviewPage.includes("Text('完成率')") &&
 [
   'widgetCardBackgroundStyle',
   "title: '卡片背景'",
-  "this.WidgetBackgroundOption('素纸', '清爽留白', REVIEW_WIDGET_CARD_BACKGROUND_PLAIN)",
-  "this.WidgetBackgroundOption('密集回纹', '低对比度连续铺陈', REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN)",
-  "this.WidgetBackgroundOption('回纹角花', '四角沿边，保留中央留白', REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN_CORNER)",
+  "this.WidgetBackgroundOption('素纸', REVIEW_WIDGET_CARD_BACKGROUND_PLAIN)",
+  "this.WidgetBackgroundOption('密集回纹', REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN)",
+  "this.WidgetBackgroundOption('回纹角花', REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN_CORNER)",
   'SettingsLinkRow',
   "status: this.widgetCardBackgroundStyle === style ? '当前使用' : ''",
   'ReviewSettingsService.loadWidgetCardBackgroundStyle(this.getAbilityContext())',
@@ -482,14 +482,15 @@ assert(!rhythmReviewPage.includes("Text('完成率')") &&
   'ReviewProjectService.buildStatsFeedback(progressResult.reviewItems)'
 ].forEach((token) => requireIncludes(statsPage, token, 'StatsPage must reuse the shared learning progress source'));
 
-[
-  'LearningProgressFormService.refreshAllForms(this.getAbilityContext())'
-].forEach((token) => {
-  requireIncludes(homePage, token, 'Pending import must refresh the service widget');
-  requireIncludes(editorPage, token, 'Review save must refresh the service widget');
-  requireIncludes(projectDetailPage, token, 'Pending state changes in library must refresh the service widget');
-  requireIncludes(previewPage, token, 'Preview fallback save must refresh the service widget');
-});
+const pageContextRefresh = 'LearningProgressFormService.refreshAllForms(this.getAbilityContext())';
+requireIncludes(homePage, pageContextRefresh, 'Pending import must refresh the service widget');
+requireIncludes(editorPage, pageContextRefresh, 'Review save must refresh the service widget');
+requireIncludes(previewPage, pageContextRefresh, 'Preview fallback save must refresh the service widget');
+requireIncludes(
+  projectDetailPage,
+  'LearningProgressFormService.refreshAllForms(context)',
+  'Pending state changes in library must refresh the service widget with the captured page context'
+);
 
 [
   'LEARNING_PROGRESS_WIDGET_ROUTE_HOME',

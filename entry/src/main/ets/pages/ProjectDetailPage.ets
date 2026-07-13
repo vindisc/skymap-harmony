@@ -7,8 +7,7 @@ import {
   AppTypography,
   EmptyState,
   PrimaryButton,
-  ProjectReviewCard,
-  SkeletonBlock
+  ProjectReviewCard
 } from '../components/AppDesign';
 import { ReviewProjectSummary, createDefaultProjectSummary } from '../model/ProjectModel';
 import {
@@ -31,14 +30,18 @@ import {
   REVIEW_FLOW_DELETE_CONFIRM_MESSAGE,
   REVIEW_FLOW_DELETE_CONFIRM_TITLE,
   REVIEW_FLOW_DELETE_FAILED_TEXT,
-  REVIEW_FLOW_DELETE_PENDING_TEXT,
   REVIEW_FLOW_DELETE_SUCCESS_TEXT,
   REVIEW_FLOW_IMPORT_PENDING_TEXT,
   REVIEW_FLOW_PENDING_DELETE_FAILED_TEXT,
   REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
 import { ToastService } from '../services/ToastService';
-import { DialogService } from '../services/DialogService';
+import { DialogService, DialogTone } from '../services/DialogService';
+import {
+  ReviewSettingsService,
+  SHATTER_ANIMATION_DEFAULT
+} from '../services/ReviewSettingsService';
+import { ShatterOverlay } from '../components/ShatterOverlay';
 import { formatReviewTime, getImageRatioLabel, hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { ShimmerBox } from '../components/motion/ShimmerBox';
@@ -55,6 +58,7 @@ const PENDING_REVIEW_FILTER: string = 'pending';
 @Component
 export struct ProjectDetailPage {
   private loadRequestId: number = 0;
+  private isPageAlive: boolean = false;
   @Prop @Watch('refreshReviewLibraryData') refreshToken: number = 0;
   @Prop @Watch('refreshReviewLibraryData') initialFilter: string = 'all';
   @State summary: ReviewProjectSummary = createDefaultProjectSummary();
@@ -71,6 +75,9 @@ export struct ProjectDetailPage {
   @State isLoadingMore: boolean = false;
   @State hasMoreItems: boolean = false;
   @State libraryStats: ReviewLibraryStats = ReviewCardRdbMapper.emptyStats();
+  @State shatterEnabled: boolean = SHATTER_ANIMATION_DEFAULT;
+  @State activeShatterId: string = '';
+  @State hiddenCardKeys: Array<string> = [];
   @State filterPulseValue: string = '';
   private filterPulseTimerId: number = -1;
 
@@ -79,15 +86,20 @@ export struct ProjectDetailPage {
   }
 
   aboutToAppear(): void {
+    this.isPageAlive = true;
     this.applyInitialFilter();
     this.reloadData();
+    this.loadShatterPreference();
   }
 
   onPageShow(): void {
     this.reloadData();
+    this.loadShatterPreference();
   }
 
   aboutToDisappear(): void {
+    this.isPageAlive = false;
+    this.loadRequestId += 1;
     if (this.filterPulseTimerId >= 0) {
       clearTimeout(this.filterPulseTimerId);
       this.filterPulseTimerId = -1;
@@ -105,6 +117,41 @@ export struct ProjectDetailPage {
       this.filterPulseValue = '';
       this.filterPulseTimerId = -1;
     }, MotionTokens.durationStandard);
+  }
+
+  private async loadShatterPreference(): Promise<void> {
+    try {
+      const enabled: boolean = await ReviewSettingsService.loadShatterAnimationEnabled(this.getAbilityContext());
+      if (this.isPageAlive) {
+        this.shatterEnabled = enabled;
+      }
+    } catch (error) {
+      if (this.isPageAlive) {
+        this.shatterEnabled = SHATTER_ANIMATION_DEFAULT;
+      }
+    }
+  }
+
+  private beginShatter(id: string): void {
+    this.activeShatterId = id;
+  }
+
+  private endShatter(): void {
+    this.activeShatterId = '';
+  }
+
+  private markCardHidden(key: string): void {
+    if (this.hiddenCardKeys.indexOf(key) < 0) {
+      this.hiddenCardKeys = this.hiddenCardKeys.concat([key]);
+    }
+  }
+
+  private markCardVisible(key: string): void {
+    this.hiddenCardKeys = this.hiddenCardKeys.filter((existing: string): boolean => existing !== key);
+  }
+
+  private isCardHidden(key: string): boolean {
+    return this.hiddenCardKeys.indexOf(key) >= 0;
   }
 
   refreshReviewLibraryData(): void {
@@ -261,7 +308,7 @@ export struct ProjectDetailPage {
 
     if (!result.success) {
       if (!result.cancelled && result.message.length > 0) {
-        ToastService.show(this.getUIContext(), result.message);
+        ToastService.error(this.getUIContext(), result.message);
       }
       return;
     }
@@ -316,20 +363,50 @@ export struct ProjectDetailPage {
     }
 
     this.deletingPendingPhotoId = photo.id;
-    const previousItems: Array<PendingReviewPhoto> = this.pendingItems;
-    this.pendingItems = previousItems.filter((item: PendingReviewPhoto): boolean => item.id !== photo.id);
-    this.libraryStats.pendingCount = Math.max(0, this.libraryStats.pendingCount - 1);
+    const componentId: string = `shatter-pending-${photo.id}`;
+    const useShatter: boolean = this.shatterEnabled;
+    if (useShatter) {
+      this.markCardHidden(photo.id);
+      this.beginShatter(componentId);
+    }
+
+    const context: common.UIAbilityContext = this.getAbilityContext();
     try {
-      await PendingReviewPhotoStore.delete(this.getAbilityContext(), photo.id);
-      await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT);
+      const deleteTask: Promise<void> = PendingReviewPhotoStore.delete(context, photo.id);
+      if (useShatter) {
+        const animationTask: Promise<void> = new Promise<void>((resolve: () => void): void => {
+          setTimeout(resolve, MotionTokens.shatterDurationMs);
+        });
+        await Promise.all([deleteTask, animationTask]);
+      } else {
+        await deleteTask;
+      }
+      await LearningProgressFormService.refreshAllForms(context);
+      if (!this.isPageAlive) {
+        return;
+      }
+      this.pendingItems = this.pendingItems.filter((item: PendingReviewPhoto): boolean => item.id !== photo.id);
+      this.libraryStats.pendingCount = Math.max(0, this.libraryStats.pendingCount - 1);
+      if (useShatter) {
+        this.markCardVisible(photo.id);
+      }
+      ToastService.success(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT);
       this.reloadData();
     } catch (error) {
-      this.pendingItems = previousItems;
-      this.libraryStats.pendingCount = previousItems.length;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_FAILED_TEXT);
+      if (!this.isPageAlive) {
+        return;
+      }
+      if (useShatter) {
+        this.markCardVisible(photo.id);
+      }
+      ToastService.error(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_FAILED_TEXT);
     } finally {
-      this.deletingPendingPhotoId = '';
+      if (this.isPageAlive && useShatter) {
+        this.endShatter();
+      }
+      if (this.isPageAlive) {
+        this.deletingPendingPhotoId = '';
+      }
     }
   }
 
@@ -343,7 +420,7 @@ export struct ProjectDetailPage {
       message: REVIEW_FLOW_DELETE_CONFIRM_MESSAGE,
       cancelText: '取消',
       confirmText: '删除',
-      confirmColor: AppColors.danger,
+      tone: DialogTone.DANGER,
       onConfirm: () => {
         this.deleteHistory(document);
       }
@@ -357,68 +434,96 @@ export struct ProjectDetailPage {
     }
 
     this.deletingReviewKey = deletingKey;
+    const componentId: string = `shatter-history-${deletingKey}`;
+    const useShatter: boolean = this.shatterEnabled;
+    if (useShatter) {
+      this.markCardHidden(deletingKey);
+      this.beginShatter(componentId);
+    }
+
     const previousItems: Array<ReviewCardHistoryItem> = this.summary.items;
     const previousRecordCount: number = this.summary.recordCount;
     const previousLibraryStats: ReviewLibraryStats = this.libraryStats;
-    const nextItems: Array<ReviewCardHistoryItem> = previousItems.filter((item: ReviewCardHistoryItem): boolean => {
-      return getReviewDocumentKey(item.document) !== deletingKey;
-    });
-    const optimisticSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(nextItems);
-    optimisticSummary.recordCount = Math.max(0, previousRecordCount - 1);
-    optimisticSummary.stats.totalCount = optimisticSummary.recordCount;
-    this.summary = optimisticSummary;
-    this.filteredItems = nextItems;
-    const optimisticLibraryStats: ReviewLibraryStats = {
-      total: Math.max(0, previousLibraryStats.total - 1),
-      works: previousLibraryStats.works,
-      notWorks: previousLibraryStats.notWorks,
-      uncertain: previousLibraryStats.uncertain,
-      pendingCount: previousLibraryStats.pendingCount
-    };
-    const deletingJudgement: ReviewJudgementStatus = document.content.judgement === 'works'
-      ? ReviewJudgementStatus.VALID
-      : document.content.judgement === 'notWorks'
-        ? ReviewJudgementStatus.INVALID
-        : document.content.judgement === 'uncertain'
-          ? ReviewJudgementStatus.UNSURE
-          : normalizeReviewJudgement(document.content.judgement);
-    if (deletingJudgement === ReviewJudgementStatus.VALID) {
-      optimisticLibraryStats.works = Math.max(0, optimisticLibraryStats.works - 1);
-    } else if (deletingJudgement === ReviewJudgementStatus.INVALID) {
-      optimisticLibraryStats.notWorks = Math.max(0, optimisticLibraryStats.notWorks - 1);
-    } else {
-      optimisticLibraryStats.uncertain = Math.max(0, optimisticLibraryStats.uncertain - 1);
-    }
-    this.libraryStats = optimisticLibraryStats;
-    this.hasMoreItems = nextItems.length < optimisticSummary.recordCount;
+    const context: common.UIAbilityContext = this.getAbilityContext();
     try {
-      await ReviewCardHistoryService.deleteDocument(this.getAbilityContext(), document);
+      const deleteTask: Promise<Array<ReviewCardHistoryItem>> = ReviewCardHistoryService.deleteDocument(context, document);
+      if (useShatter) {
+        const animationTask: Promise<void> = new Promise<void>((resolve: () => void): void => {
+          setTimeout(resolve, MotionTokens.shatterDurationMs);
+        });
+        await Promise.all([deleteTask, animationTask]);
+      } else {
+        await deleteTask;
+      }
+      await LearningProgressFormService.refreshAllForms(context);
+      if (!this.isPageAlive) {
+        return;
+      }
+      const nextItems: Array<ReviewCardHistoryItem> = previousItems.filter((item: ReviewCardHistoryItem): boolean => {
+        return getReviewDocumentKey(item.document) !== deletingKey;
+      });
+      const nextSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(nextItems);
+      nextSummary.recordCount = Math.max(0, previousRecordCount - 1);
+      nextSummary.stats.totalCount = nextSummary.recordCount;
+      this.summary = nextSummary;
+      this.filteredItems = nextItems;
+      const nextLibraryStats: ReviewLibraryStats = {
+        total: Math.max(0, previousLibraryStats.total - 1),
+        works: previousLibraryStats.works,
+        notWorks: previousLibraryStats.notWorks,
+        uncertain: previousLibraryStats.uncertain,
+        pendingCount: previousLibraryStats.pendingCount
+      };
+      const deletingJudgement: ReviewJudgementStatus = document.content.judgement === 'works'
+        ? ReviewJudgementStatus.VALID
+        : document.content.judgement === 'notWorks'
+          ? ReviewJudgementStatus.INVALID
+          : document.content.judgement === 'uncertain'
+            ? ReviewJudgementStatus.UNSURE
+            : normalizeReviewJudgement(document.content.judgement);
+      if (deletingJudgement === ReviewJudgementStatus.VALID) {
+        nextLibraryStats.works = Math.max(0, nextLibraryStats.works - 1);
+      } else if (deletingJudgement === ReviewJudgementStatus.INVALID) {
+        nextLibraryStats.notWorks = Math.max(0, nextLibraryStats.notWorks - 1);
+      } else {
+        nextLibraryStats.uncertain = Math.max(0, nextLibraryStats.uncertain - 1);
+      }
+      this.libraryStats = nextLibraryStats;
+      this.hasMoreItems = nextItems.length < nextSummary.recordCount;
       const currentDocument: ReviewCardDocument = ReviewCardStore.getCurrentDocument();
       if (getReviewDocumentKey(currentDocument) === deletingKey) {
         ReviewCardStore.setCurrentDocument(nextItems.length > 0
           ? nextItems[0].document
           : createDefaultReviewCardDocument());
       }
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_DELETE_SUCCESS_TEXT);
+      if (useShatter) {
+        this.markCardVisible(deletingKey);
+      }
+      ToastService.success(this.getUIContext(), REVIEW_FLOW_DELETE_SUCCESS_TEXT);
       this.reloadData();
     } catch (error) {
-      const restoredSummary: ReviewProjectSummary = ReviewProjectService.buildDefaultProjectSummary(previousItems);
-      restoredSummary.recordCount = previousRecordCount;
-      restoredSummary.stats.totalCount = previousRecordCount;
-      this.summary = restoredSummary;
-      this.filteredItems = previousItems;
-      this.libraryStats = previousLibraryStats;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_DELETE_FAILED_TEXT);
+      if (!this.isPageAlive) {
+        return;
+      }
+      if (useShatter) {
+        this.markCardVisible(deletingKey);
+      }
+      ToastService.error(this.getUIContext(), REVIEW_FLOW_DELETE_FAILED_TEXT);
       this.reloadData();
     } finally {
-      this.deletingReviewKey = '';
+      if (this.isPageAlive && useShatter) {
+        this.endShatter();
+      }
+      if (this.isPageAlive) {
+        this.deletingReviewKey = '';
+      }
     }
   }
 
   @Builder
   DeleteSwipeAction(document: ReviewCardDocument) {
     Row() {
-      Button(this.deletingReviewKey === getReviewDocumentKey(document) ? REVIEW_FLOW_DELETE_PENDING_TEXT : '删除')
+      Button('删除')
         .height(AppMetrics.compactControlHeight)
         .width(DELETE_SWIPE_BUTTON_WIDTH)
         .borderRadius(AppMetrics.buttonRadius)
@@ -428,11 +533,10 @@ export struct ProjectDetailPage {
         .backgroundColor(AppColors.dangerSoft)
         .shadow({
           radius: 10,
-          color: '#14000000',
+          color: '#14000000', // verify-feedback:allow-raw
           offsetX: 0,
           offsetY: 3
         })
-        .opacity(this.deletingReviewKey === getReviewDocumentKey(document) ? 0.52 : 1)
         .stateEffect(this.deletingReviewKey.length === 0)
         .enabled(this.deletingReviewKey.length === 0)
         .onClick(() => {
@@ -444,6 +548,8 @@ export struct ProjectDetailPage {
     }
     .width(DELETE_SWIPE_ACTION_WIDTH)
     .height('100%')
+    .opacity(this.deletingReviewKey === getReviewDocumentKey(document) ? 0 : 1)
+    .visibility(this.deletingReviewKey === getReviewDocumentKey(document) ? Visibility.Hidden : Visibility.Visible)
     .justifyContent(FlexAlign.Center)
     .alignItems(VerticalAlign.Center)
     .padding({ left: AppMetrics.space8, right: 0 })
@@ -452,7 +558,7 @@ export struct ProjectDetailPage {
   @Builder
   PendingDeleteSwipeAction(photo: PendingReviewPhoto) {
     Row() {
-      Button(this.deletingPendingPhotoId === photo.id ? REVIEW_FLOW_DELETE_PENDING_TEXT : '删除')
+      Button('删除')
         .height(AppMetrics.compactControlHeight)
         .width(DELETE_SWIPE_BUTTON_WIDTH)
         .borderRadius(AppMetrics.buttonRadius)
@@ -462,11 +568,10 @@ export struct ProjectDetailPage {
         .backgroundColor(AppColors.dangerSoft)
         .shadow({
           radius: 10,
-          color: '#14000000',
+          color: '#14000000', // verify-feedback:allow-raw
           offsetX: 0,
           offsetY: 3
         })
-        .opacity(this.deletingPendingPhotoId === photo.id ? 0.52 : 1)
         .stateEffect(this.deletingPendingPhotoId.length === 0)
         .enabled(this.deletingPendingPhotoId.length === 0)
         .onClick(() => {
@@ -478,6 +583,8 @@ export struct ProjectDetailPage {
     }
     .width(DELETE_SWIPE_ACTION_WIDTH)
     .height('100%')
+    .opacity(this.deletingPendingPhotoId === photo.id ? 0 : 1)
+    .visibility(this.deletingPendingPhotoId === photo.id ? Visibility.Hidden : Visibility.Visible)
     .justifyContent(FlexAlign.Center)
     .alignItems(VerticalAlign.Center)
     .padding({ left: AppMetrics.space8, right: 0 })
@@ -714,9 +821,10 @@ export struct ProjectDetailPage {
   }
 
   build() {
-    Column() {
+    Stack() {
       Column() {
-        this.HeaderRow()
+        Column() {
+          this.HeaderRow()
 
         Column({ space: AppMetrics.cardGap }) {
           this.SearchField()
@@ -777,8 +885,35 @@ export struct ProjectDetailPage {
         List({ space: AppMetrics.cardGap }) {
           ForEach(this.resolveVisiblePendingItems(), (photo: PendingReviewPhoto) => {
             ListItem() {
-              this.PendingReviewPhotoCard(photo)
+              Stack() {
+                Stack() {
+                  this.PendingReviewPhotoCard(photo)
+                }
+                  .width('100%')
+                  .visibility(this.isCardHidden(photo.id) ? Visibility.Hidden : Visibility.Visible)
+
+                if (this.activeShatterId === `shatter-pending-${photo.id}`) {
+                  ShatterOverlay({
+                    quality: 'medium'
+                  })
+                    .width('100%')
+                    .height('100%')
+                    .position({ x: 0, y: 0 })
+                    .hitTestBehavior(HitTestMode.None)
+                }
+              }
+              .width('100%')
+              .constraintSize({
+                minHeight: AppMetrics.listCardMinHeight,
+                maxHeight: AppMetrics.listCardMaxHeight
+              })
+              .clip(true)
             }
+            .id(`shatter-pending-${photo.id}`)
+            .animation({
+              duration: MotionTokens.shatterRippleBackMs,
+              curve: MotionTokens.curveDecelerate
+            })
             .swipeAction({
               end: () => {
                 this.PendingDeleteSwipeAction(photo);
@@ -836,13 +971,39 @@ export struct ProjectDetailPage {
         List({ space: AppMetrics.cardGap }) {
           ForEach(this.filteredItems, (item: ReviewCardHistoryItem) => {
             ListItem() {
-              ProjectReviewCard({
-                item: item,
-                onTap: () => {
-                  this.openHistory(item.document);
+              Stack() {
+                ProjectReviewCard({
+                  item: item,
+                  onTap: () => {
+                    this.openHistory(item.document);
+                  }
+                })
+                  .visibility(this.isCardHidden(getReviewDocumentKey(item.document))
+                    ? Visibility.Hidden
+                    : Visibility.Visible)
+
+                if (this.activeShatterId === `shatter-history-${getReviewDocumentKey(item.document)}`) {
+                  ShatterOverlay({
+                    quality: 'medium'
+                  })
+                    .width('100%')
+                    .height('100%')
+                    .position({ x: 0, y: 0 })
+                    .hitTestBehavior(HitTestMode.None)
                 }
+              }
+              .width('100%')
+              .constraintSize({
+                minHeight: AppMetrics.listCardMinHeight,
+                maxHeight: AppMetrics.listCardMaxHeight
               })
+              .clip(true)
             }
+            .id(`shatter-history-${getReviewDocumentKey(item.document)}`)
+            .animation({
+              duration: MotionTokens.shatterRippleBackMs,
+              curve: MotionTokens.curveDecelerate
+            })
             .swipeAction({
               end: () => {
                 this.DeleteSwipeAction(item.document);
@@ -880,9 +1041,12 @@ export struct ProjectDetailPage {
           this.loadMoreItems();
         })
       }
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor(AppColors.pageBackground)
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(AppColors.pageBackground)
   }
 }

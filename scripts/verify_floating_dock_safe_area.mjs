@@ -19,13 +19,13 @@ function assertIncludes(source, marker, message) {
 
 assertIncludes(
   sources.design,
-  'static readonly floatingDockBottomPadding: number = 20;',
+  'static readonly floatingDockBottomPadding: number = FLOATING_DOCK_BOTTOM_PADDING;',
   'Floating docks must keep their buttons above the system gesture area.'
 );
 assertIncludes(
   sources.design,
-  'static readonly floatingDockReservedHeight: number = 74;',
-  'Scroll content must reserve the actual floating dock height: 48 control + 6 top mask + 20 bottom safe padding.'
+  'static readonly floatingDockReservedHeight: number = LayoutTokens.PrimaryButtonHeight + 16 + FLOATING_DOCK_BOTTOM_PADDING;',
+  'Scroll content must derive floating dock clearance from shared control and safe-area tokens.'
 );
 
 for (const [name, source] of [

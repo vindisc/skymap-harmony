@@ -16,7 +16,7 @@ import {
 } from '../services/HomeStorageService';
 import { SettingsRefreshService } from '../services/SettingsRefreshService';
 import { formatReviewTime } from '../utils/ImageLayoutUtils';
-import { ToastService } from '../services/ToastService';
+import { ToastService, ToastTone } from '../services/ToastService';
 
 @Entry
 @Component
@@ -94,7 +94,7 @@ struct SyncCenterPage {
       this.lastCheckedAt = Date.now();
       this.lastTestMessage = result.message;
       this.lastTestSucceeded = result.success;
-      ToastService.show(this.getUIContext(), result.message);
+      ToastService.byTone(this.getUIContext(), result.message, result.success ? ToastTone.SUCCESS : ToastTone.ERROR);
     } finally {
       this.isTesting = false;
     }

@@ -125,14 +125,16 @@ const docsSource = read(files.docs);
   "Text(this.images.length <= 0 ? '展示中' : '默认')",
   '@Builder\n  AddImageRow()',
   "Text(this.isAdding ? '添加中…' : '添加图片')",
-  "Text('可一次选择多张，加入首页轮播')",
   '@Builder\n  ClearImagesAction()',
   "Button(this.isClearing ? '清空中…' : '清空自定义')",
   "title: '删除这张图片？'",
   "title: '清空首页图片？'",
-  "ToastService.show(this.getUIContext(), '已恢复默认首页图片')",
-  "ToastService.show(this.getUIContext(), '图片保存失败，请重试')"
+  'ToastService.success(this.getUIContext(), this.images.length <= 0 ? FEEDBACK_HERO_IMAGE_RESTORED_TEXT',
+  'ToastService.error(this.getUIContext(), FEEDBACK_HERO_IMAGE_SAVE_FAILED_TEXT)'
 ].forEach((marker) => requireIncludes(configPageSource, marker, 'HomeHeroImagePage missing UX marker'));
+
+forbidIncludes(configPageSource, "Text('可一次选择多张，加入首页轮播')", 'HomeHeroImagePage must not restore explanatory row copy');
+forbidIncludes(configPageSource, 'ToastService.show(', 'HomeHeroImagePage must use semantic toast tones');
 
 [
   '@Builder\n  SummaryCard()',

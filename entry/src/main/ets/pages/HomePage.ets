@@ -33,6 +33,8 @@ import {
   HomeDashboardReloadState
 } from '../services/HomeDashboardPresenter';
 import {
+  formatFeedbackImportSummary,
+  formatFeedbackPendingImportBatchSuccess,
   REVIEW_FLOW_HOME_COPY_ISSUE_FAILED_TEXT,
   REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT,
   REVIEW_FLOW_HOME_COPY_ISSUE_TEXT,
@@ -47,8 +49,7 @@ import {
   AppPageHeader,
   AppTypography,
   PrimaryButton,
-  SecondaryButton,
-  SkeletonBlock
+  SecondaryButton
 } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { ToastService } from '../services/ToastService';
@@ -117,7 +118,9 @@ export struct HomePage {
   }
 
   private clearIntroTimers(): void {
-    this.introTimerIds.forEach((timerId: number) => clearTimeout(timerId));
+    this.introTimerIds.forEach((timerId: number) => {
+      clearTimeout(timerId);
+    });
     this.introTimerIds = [];
   }
 
@@ -230,7 +233,7 @@ export struct HomePage {
 
     if (!result.success) {
       if (!result.cancelled && result.message.length > 0) {
-        ToastService.show(this.getUIContext(), result.message);
+        ToastService.error(this.getUIContext(), result.message);
       }
       return;
     }
@@ -256,7 +259,7 @@ export struct HomePage {
       const result: PickedPhotoDetailListResult = await pickMultiplePhotoDetails(HOME_PENDING_IMPORT_MAX_SELECT_NUMBER);
       if (!result.success) {
         if (!result.cancelled && result.message.length > 0) {
-          ToastService.show(this.getUIContext(), result.message);
+          ToastService.error(this.getUIContext(), result.message);
         }
         return;
       }
@@ -284,22 +287,24 @@ export struct HomePage {
       failedCount += batchResult.failedCount;
 
       if (successCount <= 0) {
-        ToastService.show(this.getUIContext(), failedCount > 0
-          ? `成功导入：0，失败：${failedCount}`
-          : REVIEW_FLOW_PENDING_IMPORT_FAILED_TEXT);
+        if (failedCount > 0) {
+          ToastService.error(this.getUIContext(), formatFeedbackImportSummary(0, failedCount));
+        } else {
+          ToastService.error(this.getUIContext(), REVIEW_FLOW_PENDING_IMPORT_FAILED_TEXT);
+        }
         return;
       }
 
       await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
 
       if (failedCount > 0) {
-        ToastService.show(this.getUIContext(), `成功导入：${successCount}，失败：${failedCount}`);
+        ToastService.info(this.getUIContext(), formatFeedbackImportSummary(successCount, failedCount));
         return;
       }
 
-      ToastService.show(this.getUIContext(), successCount === 1
+      ToastService.success(this.getUIContext(), successCount === 1
         ? REVIEW_FLOW_PENDING_IMPORT_SUCCESS_TEXT
-        : `已加入待复盘（${successCount} 张）`);
+        : formatFeedbackPendingImportBatchSuccess(successCount));
     } finally {
       this.isImportingPendingPhoto = false;
     }
@@ -327,9 +332,9 @@ export struct HomePage {
     try {
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, diagnosticsText);
       await pasteboard.getSystemPasteboard().setData(data);
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT);
+      ToastService.success(this.getUIContext(), REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT);
     } catch (error) {
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_HOME_COPY_ISSUE_FAILED_TEXT);
+      ToastService.error(this.getUIContext(), REVIEW_FLOW_HOME_COPY_ISSUE_FAILED_TEXT);
     }
   }
 

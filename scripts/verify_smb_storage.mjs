@@ -102,11 +102,11 @@ if (!settingsFormSource.includes('.onChange((value: string) => {') ||
 if (!homeStoragePageSource.includes('InputType.Number') ||
   !homeStoragePageSource.includes('this.sanitizePort(value)') ||
   !homeStoragePageSource.includes('showsPasswordToggle: showsPasswordToggle') ||
-  !homeStoragePageSource.includes('CenterFeedbackOverlay()') ||
+  !homeStoragePageSource.includes('InlineStatusBanner({') ||
   !homeStoragePageSource.includes('this.setActionFeedback(result.message, result.success ?') ||
   !homeStoragePageSource.includes('this.clearActionFeedback();')) {
   failed = true;
-  console.error('HomeStoragePage must provide numeric port input, password visibility, centered operation feedback, and stale-feedback clearing.');
+  console.error('HomeStoragePage must provide numeric port input, password visibility, inline banner operation feedback, and stale-feedback clearing.');
 }
 
 if (homeStoragePageSource.includes("SettingsInput('工作组或域'") ||

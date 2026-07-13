@@ -9,12 +9,17 @@ import {
   SettingsPageHeader
 } from '../components/AppDesign';
 import { SettingsActionBar, SettingsTextInput } from '../components/SettingsForm';
-import { ElevationTokens } from '../theme/DesignTokens';
+import { InlineStatusBanner, StatusBannerTone } from '../components/InlineStatusBanner';
 import {
   HomeStorageOperationResult,
   HomeStorageService,
   HomeStorageSettings
 } from '../services/HomeStorageService';
+import {
+  FEEDBACK_HOME_STORAGE_ROUNDTRIP_MISMATCH_TEXT,
+  FEEDBACK_HOME_STORAGE_SAVE_FAILED_TEXT,
+  FEEDBACK_HOME_STORAGE_SAVE_SUCCESS_TEXT
+} from '../services/ReviewFlowFeedback';
 
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
@@ -45,8 +50,8 @@ struct HomeStoragePage {
   @State isSettingsLoaded: boolean = false;
   @State isSaving: boolean = false;
   @State isTestingHomeStorage: boolean = false;
-  @State actionFeedbackText: string = '';
-  @State actionFeedbackLevel: string = 'neutral';
+  @State formStatusMessage: string = '';
+  @State formStatusTone: StatusBannerTone = StatusBannerTone.INFO;
   @State keyboardHeight: number = 0;
   @State focusedInputIndex: number = -1;
 
@@ -176,12 +181,12 @@ struct HomeStoragePage {
         verifiedSettings.remoteDirectory !== this.homeStorageRemoteDirectory ||
         verifiedSettings.username !== this.homeStorageUsername ||
         verifiedSettings.smbDomain !== this.homeStorageDomain) {
-        this.setActionFeedback('已保存，但回读不一致', 'warning');
+        this.setActionFeedback(FEEDBACK_HOME_STORAGE_ROUNDTRIP_MISMATCH_TEXT, 'warning');
         return;
       }
-      this.setActionFeedback('已保存家庭存储设置', 'success');
+      this.setActionFeedback(FEEDBACK_HOME_STORAGE_SAVE_SUCCESS_TEXT, 'success');
     } catch (error) {
-      this.setActionFeedback('保存失败，请稍后重试', 'error');
+      this.setActionFeedback(FEEDBACK_HOME_STORAGE_SAVE_FAILED_TEXT, 'error');
     } finally {
       this.isSaving = false;
     }
@@ -239,14 +244,14 @@ struct HomeStoragePage {
 
   private clearActionFeedback(): void {
     this.clearFeedbackTimer();
-    this.actionFeedbackText = '';
-    this.actionFeedbackLevel = 'neutral';
+    this.formStatusMessage = '';
+    this.formStatusTone = StatusBannerTone.INFO;
   }
 
   private setActionFeedback(message: string, level: string): void {
     this.clearFeedbackTimer();
-    this.actionFeedbackText = message;
-    this.actionFeedbackLevel = level;
+    this.formStatusMessage = message;
+    this.formStatusTone = this.resolveStatusBannerTone(level);
     this.feedbackDismissTimer = setTimeout(() => {
       this.clearActionFeedback();
     }, SETTINGS_FEEDBACK_DISMISS_MS);
@@ -260,38 +265,25 @@ struct HomeStoragePage {
     this.feedbackDismissTimer = -1;
   }
 
+  private resolveStatusBannerTone(level: string): StatusBannerTone {
+    if (level === 'success') {
+      return StatusBannerTone.SUCCESS;
+    }
+    if (level === 'error') {
+      return StatusBannerTone.ERROR;
+    }
+    if (level === 'warning') {
+      return StatusBannerTone.WARNING;
+    }
+    return StatusBannerTone.INFO;
+  }
+
   private sanitizePort(value: string): string {
     return value.replace(/[^0-9]/g, '');
   }
 
   private isActionDisabled(): boolean {
     return !this.isSettingsLoaded || this.isSaving || this.isTestingHomeStorage;
-  }
-
-  private resolveFeedbackColor(): string {
-    if (this.actionFeedbackLevel === 'success') {
-      return AppColors.tagGreenText;
-    }
-    if (this.actionFeedbackLevel === 'error') {
-      return AppColors.danger;
-    }
-    if (this.actionFeedbackLevel === 'warning') {
-      return AppColors.tagAmberText;
-    }
-    return AppColors.secondaryText;
-  }
-
-  private resolveFeedbackBackground(): string {
-    if (this.actionFeedbackLevel === 'success') {
-      return AppColors.tagGreen;
-    }
-    if (this.actionFeedbackLevel === 'error') {
-      return AppColors.surface;
-    }
-    if (this.actionFeedbackLevel === 'warning') {
-      return AppColors.tagAmber;
-    }
-    return AppColors.surfaceMuted;
   }
 
   @Builder
@@ -347,29 +339,15 @@ struct HomeStoragePage {
   }
 
   @Builder
-  CenterFeedbackOverlay() {
-    if (this.actionFeedbackText.length > 0) {
-      Text(this.actionFeedbackText)
-        .fontSize(AppTypography.body)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(this.resolveFeedbackColor())
-        .lineHeight(AppTypography.bodyLineHeight)
-        .textAlign(TextAlign.Center)
-        .padding({ left: AppMetrics.space20, right: AppMetrics.space20, top: AppMetrics.space12, bottom: AppMetrics.space12 })
-        .constraintSize({ minWidth: 168, maxWidth: 300 })
-        .borderRadius(AppMetrics.capsuleRadius)
-        .backgroundColor(this.resolveFeedbackBackground())
-        .border({ width: 1, color: this.actionFeedbackLevel === 'error' ? AppColors.danger : AppColors.border })
-        .shadow(ElevationTokens.medium)
-        .maxLines(2)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
-        .zIndex(8)
-    }
-  }
-
-  @Builder
   ConfigurationForm() {
     Column({ space: AppMetrics.cardGap }) {
+      if (this.formStatusMessage.length > 0) {
+        InlineStatusBanner({
+          tone: this.formStatusTone,
+          message: this.formStatusMessage
+        })
+      }
+
       this.SettingsInput('家庭存储地址', this.homeStorageHost, '192.168.3.10', (value: string) => {
         this.homeStorageHost = value;
         this.clearActionFeedback();
@@ -438,13 +416,6 @@ struct HomeStoragePage {
         bottom: 0
       })
       .backgroundColor(AppColors.pageBackground)
-
-      Stack({ alignContent: Alignment.Center }) {
-        this.CenterFeedbackOverlay()
-      }
-      .width('100%')
-      .height('100%')
-      .hitTestBehavior(HitTestMode.None)
 
       if (!this.isKeyboardActive()) {
         SettingsActionBar({

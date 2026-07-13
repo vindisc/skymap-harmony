@@ -122,7 +122,7 @@ requireOrder(sources.library, 'this.SearchField()', "this.FilterChip('全部', '
 requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)", 'ProjectReviewCard({', 'Review library list should appear directly after filters.');
 
 [
-  "AppPageHeader({\n            title: '统计'",
+  "AppPageHeader({\n        title: '统计'",
   'STATS_PAGE_TOP_PADDING',
   'this.LearningOverviewCard()',
   'this.OverviewCard()',
@@ -132,11 +132,11 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   '还没有复盘数据',
   '完成第一张照片复盘后，这里会显示你的判断变化。',
   'top: STATS_PAGE_TOP_PADDING',
-  ".height('100%')\n      .justifyContent(FlexAlign.Start)"
+  ".constraintSize({ minHeight: '100%' })\n        .justifyContent(FlexAlign.Start)"
 ].forEach((marker) => requireIncludes(sources.stats, marker, 'Stats page must keep compact stats cards and empty-state-only guidance'));
 
 [
-  "AppPageHeader({\n            title: '我的'",
+  "AppPageHeader({\n        title: '我的'",
   'const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;',
   'this.SettingsSection()',
   'this.AboutSection()',
@@ -144,8 +144,11 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   "title: '首页图片'",
   "title: '家庭存储'",
   "title: '同步中心'",
-  "Text('版本')",
-  'this.VersionInfoCard()',
+  "Text('关于')",
+  "this.AboutField('版本'",
+  "this.AboutField('作者 QQ'",
+  'APP_AUTHOR_QQ_TEXT: string = \'921086628\'',
+  'this.AboutInfoCard()',
   'this.DeveloperDiagnosticsCard()',
   'dense: true',
   'bottom: MY_PAGE_BOTTOM_PADDING',
@@ -166,7 +169,7 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   'ReviewProjectService.buildHomeSummary',
   'top: AppMetrics.sectionGap'
 ].forEach((marker) => forbidIncludes(sources.my, marker, 'My page must not restore the profile/stat card or title gap'));
-requireOrder(sources.my, 'AppPageHeader({\n            title: \'我的\'', 'this.SettingsSection()', 'My page settings must sit in the same scroll flow as the title.');
+requireOrder(sources.my, 'AppPageHeader({\n        title: \'我的\'', 'Scroll() {', 'My page title must stay fixed above the scroll region.');
 requireOrder(sources.my, 'this.SettingsSection()', 'this.AboutSection()', 'My page settings should appear before app information.');
 
 [

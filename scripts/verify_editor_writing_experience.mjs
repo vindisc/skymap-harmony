@@ -24,7 +24,7 @@ function assertNotIncludes(source, marker, message) {
 assertNotIncludes(editorPageSource, "Text('写复盘')", 'EditorPage must not reserve first-screen space for the 写复盘 title.');
 assertNotIncludes(editorPageSource, 'EDITOR_PHOTO_TITLE_HEIGHT', 'EditorPage photo header height must not include a hidden title slot.');
 assertNotIncludes(editorPageSource, 'EDITOR_PHOTO_TITLE_GAP', 'EditorPage photo header must not keep the old title/image gap.');
-assertIncludes(editorPageSource, 'const EDITOR_PHOTO_HEADER_TOP_PADDING: number = 4;', 'EditorPage should keep the photo header tight at the top.');
+assertIncludes(editorPageSource, 'const EDITOR_PHOTO_HEADER_TOP_PADDING: number = AppMetrics.pageTopPadding;', 'EditorPage must keep the photo header below the system status area.');
 assertIncludes(editorPageSource, 'const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 10;', 'EditorPage should keep a compact photo-to-form gap.');
 assertIncludes(editorPageSource, 'const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.30;', 'EditorPage photo should leave more first-screen writing room.');
 assertIncludes(editorPageSource, 'const EDITOR_KEYBOARD_VISIBLE_RESERVE: number = 54;', 'EditorPage keyboard math must reserve visible caret breathing room.');

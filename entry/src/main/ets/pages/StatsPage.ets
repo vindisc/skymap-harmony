@@ -1,6 +1,6 @@
 import common from '@ohos.app.ability.common';
 import { EDITOR_PAGE } from '../app/AppRouter';
-import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState, SkeletonBlock } from '../components/AppDesign';
+import { AppColors, AppMetrics, AppPageHeader, AppTypography, EmptyState } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import {
   createEmptyReviewStatsFeedback,
@@ -116,7 +116,7 @@ export struct StatsPage {
 
     if (!result.success) {
       if (!result.cancelled && result.message.length > 0) {
-        ToastService.show(this.getUIContext(), result.message);
+        ToastService.error(this.getUIContext(), result.message);
       }
       return;
     }
@@ -563,19 +563,21 @@ export struct StatsPage {
   }
 
   build() {
-    Scroll() {
-      Column({ space: AppMetrics.cardGap }) {
-        Column({ space: STATS_TITLE_CONTENT_GAP }) {
-          AppPageHeader({
-            title: '统计'
-          })
+    Column() {
+      AppPageHeader({
+        title: '统计'
+      })
+        .padding({
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
+          top: STATS_PAGE_TOP_PADDING,
+          bottom: STATS_TITLE_CONTENT_GAP
+        })
 
-          this.LearningOverviewCard()
-        }
-        .width('100%')
-        .alignItems(HorizontalAlign.Start)
-
+      Scroll() {
         Column({ space: AppMetrics.cardGap }) {
+          this.LearningOverviewCard()
+
           if (this.shouldShowStatsSkeleton()) {
             this.StatsSkeleton()
           } else if (this.statsLoadFailed) {
@@ -601,23 +603,22 @@ export struct StatsPage {
           }
         }
         .alignItems(HorizontalAlign.Start)
+        .padding({
+          left: AppMetrics.pagePadding,
+          right: AppMetrics.pagePadding,
+          bottom: AppMetrics.tabContentBottomPadding
+        })
         .width('100%')
+        .constraintSize({ minHeight: '100%' })
+        .justifyContent(FlexAlign.Start)
       }
-      .alignItems(HorizontalAlign.Start)
-      .padding({
-        left: AppMetrics.pagePadding,
-        right: AppMetrics.pagePadding,
-        top: STATS_PAGE_TOP_PADDING,
-        bottom: AppMetrics.tabContentBottomPadding
-      })
       .width('100%')
-      .height('100%')
-      .justifyContent(FlexAlign.Start)
-    }
-      .width('100%')
-      .height('100%')
+      .layoutWeight(1)
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
-      .backgroundColor(AppColors.pageBackground)
+    }
+    .width('100%')
+    .height('100%')
+    .backgroundColor(AppColors.pageBackground)
   }
 }

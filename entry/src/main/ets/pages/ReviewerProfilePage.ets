@@ -9,6 +9,10 @@ import {
 import { SettingsActionBar } from '../components/SettingsForm';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import { ToastService } from '../services/ToastService';
+import {
+  FEEDBACK_REVIEWER_SAVE_FAILED_TEXT,
+  FEEDBACK_REVIEWER_SAVE_SUCCESS_TEXT
+} from '../services/ReviewFlowFeedback';
 
 @Entry
 @Component
@@ -36,9 +40,9 @@ struct ReviewerProfilePage {
     this.isSaving = true;
     try {
       this.reviewerName = await ReviewSettingsService.saveReviewerName(this.getAbilityContext(), this.reviewerName);
-      ToastService.show(this.getUIContext(), '已保存复盘人');
+      ToastService.success(this.getUIContext(), FEEDBACK_REVIEWER_SAVE_SUCCESS_TEXT);
     } catch (error) {
-      ToastService.show(this.getUIContext(), '保存失败，请稍后重试');
+      ToastService.error(this.getUIContext(), FEEDBACK_REVIEWER_SAVE_FAILED_TEXT);
     } finally {
       this.isSaving = false;
     }

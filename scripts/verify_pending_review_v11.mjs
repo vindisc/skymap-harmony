@@ -32,11 +32,13 @@ function requireIncludes(source, marker, message) {
   'pickMultiplePhotoDetails(HOME_PENDING_IMPORT_MAX_SELECT_NUMBER)',
   "label: this.isImportingPendingPhoto ? '正在加入待复盘…' : '导入待复盘'",
   'PendingReviewPhotoStore.addPhotos(',
-  'if (result.photos[index].imageSizeFallbackUsed)',
-  '`成功导入：0，失败：${failedCount}`',
-  '`成功导入：${successCount}，失败：${failedCount}`',
-  '`已加入待复盘（${successCount} 张）`'
+  'formatFeedbackImportSummary(0, failedCount)',
+  'formatFeedbackImportSummary(successCount, failedCount)',
+  'formatFeedbackPendingImportBatchSuccess(successCount)'
 ].forEach((marker) => requireIncludes(homePageSource, marker, 'Pending import must keep V1.1 batch behavior'));
+
+assert(!homePageSource.includes('if (result.photos[index].imageSizeFallbackUsed)'),
+  'Metadata fallback must not reject an otherwise selectable pending photo.');
 
 assert(!homePageSource.includes('PendingReviewPhotoStore.addPhoto('),
   'HomePage should use PendingReviewPhotoStore.addPhotos for batch pending import.');

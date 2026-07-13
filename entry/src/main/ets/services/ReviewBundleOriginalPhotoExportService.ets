@@ -28,6 +28,7 @@ interface ReviewBundleOriginalPhotoPaths {
   root: string;
   manifest: string;
   reviewJson: string;
+  originalDirectory: string;
   originalPhoto: string;
 }
 
@@ -87,6 +88,7 @@ const SOURCE_APP: string = 'skymap-photoreview';
 const SOURCE_APP_VERSION: string = '0.1.0';
 const PLATFORM: string = 'HarmonyOS';
 const BUNDLE_TYPE: string = 'original-photo-review';
+const ORIGINAL_PHOTO_ROOT: string = 'assets/original';
 const ORIGINAL_READ_FAILED_TEXT: string = '原始照片无法读取，请重新导入。';
 const ORIGINAL_COPY_FAILED_TEXT: string = '原始照片保存失败，请重试。';
 const ORIGINAL_BUNDLE_EXPORT_FAILED_TEXT: string = '含原图复盘包导出失败，请重试。';
@@ -286,7 +288,8 @@ function buildLocalPaths(
     root: root,
     manifest: `${root}/manifest.json`,
     reviewJson: `${root}/review.json`,
-    originalPhoto: `${root}/${originalFileName}`
+    originalDirectory: `${root}/${ORIGINAL_PHOTO_ROOT}`,
+    originalPhoto: `${root}/${ORIGINAL_PHOTO_ROOT}/${originalFileName}`
   };
 }
 
@@ -476,7 +479,7 @@ export class ReviewBundleOriginalPhotoExportService {
     const bundleDirectoryName: string = sanitizeBundleName(`review_${dateParts.year}${dateParts.month}${dateParts.day}_${dateParts.hour}${dateParts.minute}${dateParts.second}_${safeHash(bundleId)}`);
     const extension: string = resolveSafeOriginalExtension(document);
     const originalFileName: string = `original.${extension}`;
-    const originalRelativePath: string = originalFileName;
+    const originalRelativePath: string = `${ORIGINAL_PHOTO_ROOT}/${originalFileName}`;
     const paths: ReviewBundleOriginalPhotoPaths = buildLocalPaths(context, bundleDirectoryName, originalFileName);
     const remoteDirectory: string = bundleDirectoryName;
     const reviewId: number = document.createdAt;
@@ -505,6 +508,8 @@ export class ReviewBundleOriginalPhotoExportService {
       }
 
       ensureDirectory(paths.root);
+      ensureDirectory(`${paths.root}/assets`);
+      ensureDirectory(paths.originalDirectory);
       console.info(`[ReviewBundleOriginalPhotoExport] local_directories_ready root=${paths.root}`);
 
       console.info(`[ReviewBundleOriginalPhotoExport] original_copy_start review_id=${reviewId} bundleId=${bundleId} target=${originalRelativePath} read_method=fs.openSync_read_only uri_scheme=${sourceUriScheme} uri_digest=${sourceUriDigest}`);

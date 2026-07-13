@@ -192,13 +192,17 @@ assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titl
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'Status tags must use compact token.');
 
-assertIncludes(myPageSource, "AppPageHeader({\n            title: '我的'", 'MyPage must keep the compact title-only header.');
+assertIncludes(myPageSource, "AppPageHeader({\n        title: '我的'", 'MyPage must keep the compact title-only header.');
 assertIncludes(myPageSource, 'SettingsLinkRow({', 'MyPage settings entries must use the shared link row.');
 assertIncludes(myPageSource, 'dense: true', 'MyPage settings rows must use compact density.');
 assertIncludes(myPageSource, 'SettingsEntryTone.SUCCESS', 'MyPage status badges must use semantic tones.');
 assertIncludes(myPageSource, 'SettingsEntryTone.WARNING', 'MyPage status badges must keep warning tone coverage.');
-assertIncludes(myPageSource, '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })', 'MyPage title-to-content gap must stay compact.');
-assertIncludes(myPageSource, 'this.VersionInfoCard()', 'MyPage app version must use a static information card.');
+assertIncludes(myPageSource, 'bottom: MY_PAGE_TITLE_CONTENT_GAP', 'MyPage title-to-content gap must stay compact.');
+assertIncludes(myPageSource, 'this.AboutInfoCard()', 'MyPage app version must live in the static about card.');
+assertIncludes(myPageSource, "Text('关于')", 'MyPage about card must show an about title.');
+assertIncludes(myPageSource, "this.AboutField('版本'", 'MyPage about card must show app version.');
+assertIncludes(myPageSource, "this.AboutField('作者 QQ'", 'MyPage about card must show author QQ.');
+assertIncludes(myPageSource, "APP_AUTHOR_QQ_TEXT: string = '921086628'", 'MyPage about card must keep author QQ.');
 assertIncludes(myPageSource, 'this.DeveloperDiagnosticsCard()', 'MyPage diagnostics must be visually separated from ordinary settings.');
 assertIncludes(myPageSource, '.backgroundColor(this.isDeveloperDiagnosticsPressed ? AppColors.surfaceMuted : AppColors.tagAmber)',
   'MyPage diagnostics card must keep its highlighted press state.');
@@ -206,9 +210,9 @@ assertIncludes(appDesignSource, '@State isPressed: boolean = false;', 'Shared in
 assertIncludes(appDesignSource, '.scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })',
   'Shared cards and settings rows must keep subtle press feedback.');
 assertIncludes(reviewerProfileSource, '.justifyContent(FlexAlign.Start)', 'ReviewerProfilePage must explicitly top-align content.');
-assertIncludes(homeStorageSource, 'const HOME_STORAGE_PAGE_TOP_PADDING: number = 0;', 'HomeStoragePage must remove the extra top spacer.');
-assertIncludes(homeStorageSource, 'top: HOME_STORAGE_PAGE_TOP_PADDING', 'HomeStoragePage must pin settings content to the top.');
-assertIncludes(previewPageSource, '.shadow(ElevationTokens.high)', 'Preview floating action bar must use high elevation.');
+assertIncludes(homeStorageSource, 'const HOME_STORAGE_PAGE_TOP_PADDING: number = AppMetrics.pageTopPadding;', 'HomeStoragePage must align settings content to the shared page top padding.');
+assertIncludes(homeStorageSource, 'top: HOME_STORAGE_PAGE_TOP_PADDING', 'HomeStoragePage must apply the shared top padding token.');
+assertIncludes(previewPageSource, 'ElevationTokens.medium : ElevationTokens.subtle', 'Preview floating primary action must lift to medium elevation when pressed.');
 assertIncludes(previewPageSource, '@State pressedActionKey: string = \'\';', 'Preview actions must keep explicit press feedback state.');
 assertIncludes(editorPageSource, '.shadow(ElevationTokens.medium)', 'Editor photo header must keep medium elevation.');
 assertIncludes(editorPageSource, 'duration: MotionTokens.durationStandard', 'Editor focus scrolling must use shared motion tokens.');

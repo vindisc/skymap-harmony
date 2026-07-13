@@ -51,7 +51,9 @@ const checks = [
   'verify_learning_progress_widget.mjs',
   'verify_ui_copy_density.mjs',
   'verify_ui_production_completion.mjs',
-  'verify_image_layout.mjs'
+  'verify_image_layout.mjs',
+  'verify_feedback_semantics.mjs',
+  'verify_shatter_animation.mjs'
 ];
 
 for (const check of checks) {

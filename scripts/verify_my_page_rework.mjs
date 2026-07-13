@@ -61,10 +61,11 @@ assert(!myPageSource.includes('Blank()'), 'MyPage must not use Blank as a hidden
 assert(!myPageSource.includes('Spacer()'), 'MyPage must not use Spacer as a hidden subtitle placeholder.');
 assert(!myPageSource.includes('minHeight'), 'MyPage must not reserve fixed top header height.');
 assert(!myPageSource.includes('SettingsPageHeader({\n          title: \'我的\''), 'MyPage root title must not use compact settings header.');
-assert(myPageSource.includes('Scroll() {\n        Column() {\n          AppPageHeader({'), 'MyPage title and settings content must share the same scroll flow.');
-assert(myPageSource.includes('Column({ space: AppMetrics.sectionGap }) {\n            this.SettingsSection()'), 'MyPage settings and app sections must keep section spacing.');
+assert(myPageSource.includes("Column() {\n      AppPageHeader({\n        title: '我的'"), 'MyPage title must stay fixed above the scroll content.');
+assert(myPageSource.indexOf("title: '我的'") < myPageSource.indexOf('Scroll() {'), 'MyPage fixed title must precede the scroll region.');
+assert(myPageSource.includes('Column({ space: AppMetrics.sectionGap }) {\n          this.SettingsSection()'), 'MyPage settings and app sections must keep section spacing.');
 assert(myPageSource.includes('const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;'), 'MyPage should define a compact title-to-content gap.');
-assert(myPageSource.includes('.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })'), 'MyPage settings content should sit below the title with compact spacing.');
+assert(myPageSource.includes('bottom: MY_PAGE_TITLE_CONTENT_GAP'), 'MyPage fixed title should keep a compact bottom gap.');
 assert(!myPageSource.includes('top: AppMetrics.sectionGap'), 'MyPage must not keep the old large title-to-content gap.');
 assert(myPageSource.indexOf('this.SettingsSection()') < myPageSource.indexOf('this.AboutSection()'), 'MyPage settings section must appear before app section.');
 assert(!myPageSource.includes('this.IdentityCard()'), 'MyPage must not render the old identity card.');
@@ -89,7 +90,7 @@ assert(myPageSource.includes("Text('开发诊断')"), 'MyPage must keep diagnost
 assert(myPageSource.includes('运行开发诊断？'), 'Developer diagnostics must require confirmation.');
 assert(!myPageSource.includes('this.LinkRow('), 'MyPage should use SettingsLinkRow instead of the old local row.');
 assert(myPageSource.includes('bottom: MY_PAGE_BOTTOM_PADDING'), 'MyPage scroll content must keep bottom padding for the tab bar.');
-assert(myPageSource.includes(".height('100%')"), 'MyPage scroll region must fill the page content height.');
+assert(myPageSource.includes('.layoutWeight(1)'), 'MyPage scroll region must fill the remaining page height.');
 assert(myPageSource.includes('.justifyContent(FlexAlign.Start)'), 'MyPage scroll content must stay pinned to the top.');
 
 for (const [name, source] of [
@@ -108,7 +109,7 @@ assert(reviewerProfileSource.includes("title: '复盘人'"), 'ReviewerProfilePag
 assert(!reviewerProfileSource.includes('this.resolvePreviewName()'), 'ReviewerProfilePage must not keep the redundant preview card before editing.');
 assert(reviewerProfileSource.includes("primaryLabel: this.isSaving ? '保存中…' : '保存'"), 'ReviewerProfilePage save button must show loading state.');
 
-assert(homeStorageSource.includes('CenterFeedbackOverlay()'), 'HomeStoragePage must show centered lightweight feedback.');
+assert(homeStorageSource.includes('InlineStatusBanner({'), 'HomeStoragePage must show inline banner feedback at form top.');
 assert(!homeStorageSource.includes('StatusSummary()'), 'HomeStoragePage must not show the redundant status summary.');
 assert(homeStorageSource.includes("'家庭存储地址'"), 'HomeStoragePage must keep connection fields.');
 assert(homeStorageSource.includes("primaryLabel: this.isSaving ? '保存中…' : '保存'"), 'HomeStoragePage save action must show loading state.');

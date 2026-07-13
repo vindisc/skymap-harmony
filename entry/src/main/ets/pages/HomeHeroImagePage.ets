@@ -14,7 +14,15 @@ import {
   HomeHeroImportResult
 } from '../services/HomeHeroImageService';
 import { ToastService } from '../services/ToastService';
-import { DialogService } from '../services/DialogService';
+import { DialogService, DialogTone } from '../services/DialogService';
+import {
+  FEEDBACK_HERO_IMAGE_CLEAR_FAILED_TEXT,
+  FEEDBACK_HERO_IMAGE_DELETE_FAILED_TEXT,
+  FEEDBACK_HERO_IMAGE_PARTIAL_FAILED_TEXT,
+  FEEDBACK_HERO_IMAGE_RESTORED_TEXT,
+  FEEDBACK_HERO_IMAGE_SAVE_FAILED_TEXT,
+  FEEDBACK_HERO_IMAGE_UPDATED_TEXT
+} from '../services/ReviewFlowFeedback';
 
 const HOME_HERO_MAX_PICK_COUNT: number = 9;
 const HOME_HERO_THUMBNAIL_SIZE: number = 72;
@@ -76,7 +84,7 @@ struct HomeHeroImagePage {
       const pickResult: PickedPhotoListResult = await pickMultiplePhotos(HOME_HERO_MAX_PICK_COUNT);
       if (!pickResult.success) {
         if (!pickResult.cancelled && pickResult.message.length > 0) {
-          ToastService.show(this.getUIContext(), '图片保存失败，请重试');
+          ToastService.error(this.getUIContext(), FEEDBACK_HERO_IMAGE_SAVE_FAILED_TEXT);
         }
         return;
       }
@@ -85,13 +93,13 @@ struct HomeHeroImagePage {
         await HomeHeroImageService.importImages(this.getAbilityContext(), pickResult.imageUris);
       await this.loadImages();
       if (importResult.failedCount > 0 && importResult.importedCount > 0) {
-        ToastService.show(this.getUIContext(), '部分图片无法保存，请重试');
+        ToastService.warning(this.getUIContext(), FEEDBACK_HERO_IMAGE_PARTIAL_FAILED_TEXT);
         return;
       }
-      ToastService.show(this.getUIContext(), importResult.message);
+      ToastService.info(this.getUIContext(), importResult.message);
     } catch (error) {
       console.warn(`[HomeHeroImagePage] add failed: ${error}`);
-      ToastService.show(this.getUIContext(), '图片保存失败，请重试');
+      ToastService.error(this.getUIContext(), FEEDBACK_HERO_IMAGE_SAVE_FAILED_TEXT);
     } finally {
       this.isAdding = false;
     }
@@ -107,7 +115,7 @@ struct HomeHeroImagePage {
       message: '删除后，首页将不再展示这张图片。',
       cancelText: '取消',
       confirmText: '删除',
-      confirmColor: AppColors.danger,
+      tone: DialogTone.DANGER,
       onConfirm: () => {
         this.removeImage(image.id);
       }
@@ -123,14 +131,14 @@ struct HomeHeroImagePage {
     try {
       const success: boolean = await HomeHeroImageService.removeImage(this.getAbilityContext(), imageId);
       if (!success) {
-        ToastService.show(this.getUIContext(), '删除失败，请重试');
+        ToastService.error(this.getUIContext(), FEEDBACK_HERO_IMAGE_DELETE_FAILED_TEXT);
         return;
       }
       await this.loadImages();
-      ToastService.show(this.getUIContext(), this.images.length <= 0 ? '已恢复默认首页图片' : '首页图片已更新');
+      ToastService.success(this.getUIContext(), this.images.length <= 0 ? FEEDBACK_HERO_IMAGE_RESTORED_TEXT : FEEDBACK_HERO_IMAGE_UPDATED_TEXT);
     } catch (error) {
       console.warn(`[HomeHeroImagePage] remove failed: ${error}`);
-      ToastService.show(this.getUIContext(), '删除失败，请重试');
+      ToastService.error(this.getUIContext(), FEEDBACK_HERO_IMAGE_DELETE_FAILED_TEXT);
     } finally {
       this.deletingImageId = '';
     }
@@ -146,7 +154,7 @@ struct HomeHeroImagePage {
       message: '清空后，首页会恢复默认图片。',
       cancelText: '取消',
       confirmText: '清空',
-      confirmColor: AppColors.danger,
+      tone: DialogTone.DANGER,
       onConfirm: () => {
         this.clearImages();
       }
@@ -162,14 +170,14 @@ struct HomeHeroImagePage {
     try {
       const success: boolean = await HomeHeroImageService.clearImages(this.getAbilityContext());
       if (!success) {
-        ToastService.show(this.getUIContext(), '清空失败，请重试');
+        ToastService.error(this.getUIContext(), FEEDBACK_HERO_IMAGE_CLEAR_FAILED_TEXT);
         return;
       }
       await this.loadImages();
-      ToastService.show(this.getUIContext(), '已恢复默认首页图片');
+      ToastService.success(this.getUIContext(), FEEDBACK_HERO_IMAGE_RESTORED_TEXT);
     } catch (error) {
       console.warn(`[HomeHeroImagePage] clear failed: ${error}`);
-      ToastService.show(this.getUIContext(), '清空失败，请重试');
+      ToastService.error(this.getUIContext(), FEEDBACK_HERO_IMAGE_CLEAR_FAILED_TEXT);
     } finally {
       this.isClearing = false;
     }

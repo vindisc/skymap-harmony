@@ -97,8 +97,8 @@ assert(historyRestoreBody.includes("notifyReviewLibraryChanged('library_backup_r
 assert(!myPageSource.includes("Text('数据保护')"), '我的页不得展示“数据保护”小标题。');
 assert(myPageSource.includes("title: '备份全部复盘'"), '我的页必须提供完整备份入口。');
 assert(myPageSource.includes("title: '从备份恢复'"), '我的页必须提供恢复入口。');
-assert(myPageSource.includes('支持多选备份'), '我的页必须明确恢复支持多选。');
-assert(myPageSource.includes('复盘与原图保存到手机文件'), '我的页必须明确备份包含原图。');
+assert(!myPageSource.includes('支持多选备份'), '我的页设置入口不得恢复第二行说明。');
+assert(!myPageSource.includes('复盘与原图保存到手机文件'), '我的页设置入口不得恢复第二行说明。');
 assert(appShellSource.includes('shouldOfferFirstLaunchRestore'), '空库首次启动必须提供恢复引导。');
 assert(appShellSource.includes('DebugLaunchScenarioService.isAutomatedTestLaunch()'), '自动化启动必须跳过恢复引导。');
 assert(debugLaunchSource.includes('automatedTestLaunch = scenario.length > 0'), '测试场景必须留下自动化启动标记。');

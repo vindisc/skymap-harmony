@@ -74,9 +74,10 @@ for (const [name, source] of [
 
 assertIncludes(appShellSource, '@State tabContentVisible: boolean = true;', 'AppShellPage must own tab transition state.');
 assertIncludes(appShellSource, 'TAB_PAGE_EXIT_DELAY', 'AppShellPage must keep a short tab exit delay.');
-assertIncludes(appShellSource, '.translate({ y: this.tabContentVisible ? 0 : 10 })', 'AppShellPage tab transition must include subtle vertical motion.');
-assertIncludes(appShellSource, 'duration: this.tabContentVisible ? MotionTokens.durationStandard : MotionTokens.durationQuick',
+assertIncludes(appShellSource, '.translate({ y: this.tabContentVisible ? 0 : MotionTokens.offsetEnterY })', 'AppShellPage tab transition must use the shared directional offset.');
+assertIncludes(appShellSource, 'this.tabContentVisible ? MotionTokens.durationStandard : MotionTokens.durationQuick',
   'AppShellPage tab transition must use shared motion tokens.');
+assertIncludes(appShellSource, 'MotionQualityContext.resolveCurve(', 'AppShellPage tab transition must respect the selected motion quality.');
 
 if (failed) {
   process.exit(1);

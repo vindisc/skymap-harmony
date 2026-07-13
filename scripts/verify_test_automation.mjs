@@ -23,6 +23,8 @@ const scenarioService = read('entry/src/main/ets/services/DebugLaunchScenarioSer
 const routeService = read('entry/src/main/ets/services/FormLaunchIntentService.ets');
 const entryBuildProfile = read('entry/build-profile.json5');
 const testScript = read('scripts/test_app.sh');
+const verificationSuite = read('scripts/run_verification_suite.mjs');
+const testingGuide = read('docs/TESTING.md');
 const deviceScript = read('scripts/smoke_device.sh');
 const uiTests = read('entry/src/ohosTest/ets/test/AppShellSmoke.test.ets');
 const reviewFlowTests = read('entry/src/ohosTest/ets/test/ReviewFlowSmoke.test.ets');
@@ -59,6 +61,18 @@ requireIncludes(testScript, 'RUN_HYPIUM=false', 'test_app.sh safe default');
 requireIncludes(testScript, 'SKYMAP_ALLOW_DATA_RESET', 'test_app.sh destructive test confirmation');
 requireIncludes(testScript, 'onDeviceTest 会卸载应用并清空全部应用数据', 'test_app.sh data loss warning');
 requireIncludes(testScript, 'restore_full_app_after_ui_test', 'test_app.sh full app restoration');
+[
+  'verify_motion_lifecycle_guards.mjs',
+  'verify_photo_import_crash_guard.mjs',
+  'verify_shatter_animation.mjs'
+].forEach((token) => requireIncludes(verificationSuite, token, 'Default smoke regression coverage'));
+requireIncludes(testingGuide, '测试数据中的固定日期是确定性夹具', 'Testing date semantics');
+const datedVerificationScripts = fs.readdirSync('scripts')
+  .filter((name) => /^verify_.*_20\d{6}\.mjs$/.test(name));
+if (datedVerificationScripts.length > 0) {
+  failed = true;
+  console.error(`dated one-off verification scripts must be retired: ${datedVerificationScripts.join(', ')}`);
+}
 requireIncludes(deviceScript, '--ps testScenario', 'smoke_device.sh debug scenario entry');
 requireIncludes(deviceScript, '--check-only', 'smoke_device.sh device preflight');
 requireIncludes(deviceScript, '--restore-app', 'smoke_device.sh full app restore entry');

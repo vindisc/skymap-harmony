@@ -50,28 +50,29 @@ function forbidRegex(source, pattern, message) {
 ].forEach((marker) => requireIncludes(projectDetailSource, marker, 'ProjectDetailPage must keep core library controls'));
 
 [
-  "AppPageHeader({\n          title: '统计'",
+  "AppPageHeader({\n        title: '统计'",
   'this.OverviewCard()',
   'this.Recent30DaysCard()',
   'this.DistributionCard()',
   'this.BlockersCard()',
-  'this.RecentReviewsCard()',
-  'EmptyState({\n              title: \'还没有复盘数据\'',
+  "title: this.hasLearningData() ? '还没有完成复盘' : '还没有复盘数据'",
   '完成第一张照片复盘后，这里会显示你的判断变化。'
 ].forEach((marker) => requireIncludes(statsPageSource, marker, 'StatsPage must keep stats cards and empty-state guidance'));
 
+forbidIncludes(statsPageSource, 'this.RecentReviewsCard()', 'StatsPage must not restore the retired recent-review card');
+
 [
-  "AppPageHeader({\n            title: '我的'",
+  "AppPageHeader({\n        title: '我的'",
   'const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;',
-  'Scroll() {\n        Column() {\n          AppPageHeader({',
-  '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })',
+  "Column() {\n      AppPageHeader({\n        title: '我的'",
+  'bottom: MY_PAGE_TITLE_CONTENT_GAP',
   'top: AppMetrics.pageTopPadding',
   "title: '复盘人'",
   "title: '首页图片'",
   "title: '家庭存储'",
   "title: '同步中心'",
   'bottom: MY_PAGE_BOTTOM_PADDING',
-  ".height('100%')",
+  '.layoutWeight(1)',
   '.justifyContent(FlexAlign.Start)'
 ].forEach((marker) => requireIncludes(myPageSource, marker, 'MyPage must keep settings entries and tab clearance'));
 
@@ -93,15 +94,15 @@ function forbidRegex(source, pattern, message) {
 
 forbidRegex(
   myPageSource,
-  /Column\(\) \{\s*Column\(\) \{\s*AppPageHeader\(\{[\s\S]*?title: '我的'/,
-  'MyPage must not split the title and settings content into separate vertical containers'
+  /Scroll\(\) \{\s*Column[^\{]*\{\s*AppPageHeader\(\{[\s\S]*?title: '我的'/,
+  'MyPage title must not scroll with settings content'
 );
 forbidRegex(
   myPageSource,
   /AppPageHeader\(\{[\s\S]*?title: '我的'[\s\S]*?subtitle:/,
   'MyPage title header must not pass an empty or hidden subtitle prop'
 );
-requireIncludes(myPageSource, '.margin({ top: MY_PAGE_TITLE_CONTENT_GAP })', 'MyPage title-to-settings gap must use the compact top gap');
+requireIncludes(myPageSource, 'bottom: MY_PAGE_TITLE_CONTENT_GAP', 'MyPage fixed title must use the compact bottom gap');
 
 [
   "label: '首页', activeIcon:",

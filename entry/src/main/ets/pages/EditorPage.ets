@@ -31,8 +31,7 @@ import {
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { estimateReviewTextLineCount, estimateReviewTextWrapUnitsPerLine } from '../utils/ReviewTextMetrics';
 import { ToastService } from '../services/ToastService';
-import { DialogService } from '../services/DialogService';
-import { SharedHero } from '../components/motion/SharedHero';
+import { DialogService, DialogTone } from '../services/DialogService';
 import { CeremonyBurst } from '../components/motion/CeremonyBurst';
 import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
@@ -269,7 +268,7 @@ struct EditorPage {
       await this.markPendingPhotoReviewedQuietly();
       await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
       this.isDirty = false;
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
+      ToastService.success(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
       if (completesPendingReview && MotionQualityContext.shouldPlayCeremony()) {
         keepSavingLockedForCeremony = true;
         this.ceremonyVisible = true;
@@ -277,7 +276,7 @@ struct EditorPage {
         this.openPreview();
       }
     } catch (error) {
-      ToastService.show(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
+      ToastService.error(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
       if (!keepSavingLockedForCeremony) {
         this.isSaving = false;
@@ -636,7 +635,7 @@ struct EditorPage {
       message: '是否放弃当前编辑内容？',
       cancelText: '继续编辑',
       confirmText: '放弃',
-      confirmColor: AppColors.danger,
+      tone: DialogTone.WARNING,
       onConfirm: () => {
         this.shouldDiscardChanges = true;
         this.getUIContext().getRouter().back();

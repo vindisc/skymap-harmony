@@ -194,6 +194,37 @@ function deactivate() {
   console.log('已临时停用签名；构建结束后必须恢复原配置。');
 }
 
+function migrateTrackedSigning() {
+  const trackedProfile = readProfile(trackedProfilePath, '仓库 build-profile.json5');
+  const trackedConfigs = trackedProfile?.app?.signingConfigs;
+  if (!Array.isArray(trackedConfigs) || trackedConfigs.length === 0) {
+    fail('仓库 build-profile.json5 没有可迁移的签名配置。');
+  }
+
+  const localProfile = fs.existsSync(localProfilePath)
+    ? readProfile(localProfilePath, '本机签名配置')
+    : JSON.parse(JSON.stringify(trackedProfile));
+  if (!localProfile.app || typeof localProfile.app !== 'object') {
+    fail('本机签名配置缺少 app。');
+  }
+  const localConfigs = Array.isArray(localProfile.app.signingConfigs)
+    ? localProfile.app.signingConfigs
+    : [];
+  const mergedConfigs = localConfigs.slice();
+  for (const config of trackedConfigs) {
+    const existingIndex = mergedConfigs.findIndex((item) => item?.name === config?.name);
+    if (existingIndex >= 0) {
+      mergedConfigs[existingIndex] = config;
+    } else {
+      mergedConfigs.push(config);
+    }
+  }
+  localProfile.app.signingConfigs = mergedConfigs;
+  fs.writeFileSync(localProfilePath, `${JSON.stringify(localProfile, null, 2)}\n`, { mode: 0o600 });
+  deactivate();
+  console.log(`已把 ${trackedConfigs.length} 组本机签名迁移到忽略文件，并净化仓库配置。`);
+}
+
 const [command = 'status', mode] = process.argv.slice(2);
 
 if (command === 'assert-safe') {
@@ -219,6 +250,8 @@ if (command === 'assert-safe') {
   activate(mode);
 } else if (command === 'deactivate') {
   deactivate();
+} else if (command === 'migrate-tracked') {
+  migrateTrackedSigning();
 } else {
-  fail('支持命令：status、assert-safe、verify-local、activate、deactivate。');
+  fail('支持命令：status、assert-safe、verify-local、activate、deactivate、migrate-tracked。');
 }

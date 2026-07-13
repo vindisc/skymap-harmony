@@ -49,8 +49,10 @@ assertNotIncludes(previewSource, "'导出 review.json'", 'Preview export sheet')
 
 assertIncludes(syncCenterSource, "title: '同步中心'", 'SyncCenterPage');
 assertIncludes(syncCenterSource, "secondaryLabel: this.isTesting ? '检查中…' : '检查家庭存储'", 'SyncCenterPage');
-assertIncludes(syncCenterSource, 'SettingsLinkRow({', 'SyncCenterPage');
-assertIncludes(myPageSource, 'value: this.resolveSyncSummary()', 'MyPage');
+assertNotIncludes(syncCenterSource, 'SettingsLinkRow({', 'SyncCenterPage');
+assertIncludes(syncCenterSource, "this.InfoRow('状态', this.resolveAvailabilityText())", 'SyncCenterPage');
+assertNotIncludes(myPageSource, 'value: this.resolveSyncSummary()', 'MyPage');
+assertIncludes(myPageSource, "title: '同步中心'", 'MyPage');
 
 const ordinaryCopySources = [
   ['PreviewPage', previewSource],

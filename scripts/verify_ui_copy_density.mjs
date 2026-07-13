@@ -35,7 +35,7 @@ const forbiddenCopy = [
 
 const requiredCopy = [
   ['entry/src/main/ets/pages/HomePage.ets', "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'"],
-  ['entry/src/main/ets/pages/MyPage.ets', "AppPageHeader({\n            title: '我的'\n          })"],
+  ['entry/src/main/ets/pages/MyPage.ets', "AppPageHeader({\n        title: '我的'"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', "placeholder: '标题、关系、卡点、文件名'"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', "this.HeaderRow()"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".height(AppMetrics.filterChipHeight)"],
@@ -43,8 +43,13 @@ const requiredCopy = [
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".fontSize(13)"],
   ['entry/src/main/ets/pages/PreviewPage.ets', ".height(AppMetrics.toolbarButtonHeight)"],
   ['entry/src/main/ets/pages/PreviewPage.ets', "this.ExportSheetAction('复制复盘数据', '复制当前复盘的文本数据。', this.isActionBusy(), () => {"],
-  ['entry/src/main/ets/pages/ReviewSettingsPage.ets', "Text('连接与凭据')"],
+  ['entry/src/main/ets/pages/ReviewSettingsPage.ets', "Text('家庭存储')"],
   ['entry/src/main/ets/components/ReviewPhotoBlock.ets', "Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '照片暂不可见' : '照片')"]
+];
+
+const forbiddenPageMarkers = [
+  ['entry/src/main/ets/pages/MyPage.ets', /^\s+value:/m],
+  ['entry/src/main/ets/pages/ReviewSettingsPage.ets', /Text\('连接与凭据'\)/]
 ];
 
 let failed = false;
@@ -85,6 +90,13 @@ for (const [filePath, marker] of requiredCopy) {
   const source = fs.readFileSync(filePath, 'utf8');
   if (!source.includes(marker)) {
     fail(`Expected compact copy marker missing in ${filePath}: ${marker}`);
+  }
+}
+
+for (const [filePath, pattern] of forbiddenPageMarkers) {
+  const source = fs.readFileSync(filePath, 'utf8');
+  if (pattern.test(source)) {
+    fail(`Explanatory second-line copy returned in ${filePath}: ${pattern}`);
   }
 }
 
