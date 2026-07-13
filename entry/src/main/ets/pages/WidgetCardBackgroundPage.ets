@@ -3,7 +3,6 @@ import {
   AppBottomSafeAreaFill,
   AppColors,
   AppMetrics,
-  AppTypography,
   SettingsEntryTone,
   SettingsLinkRow,
   SettingsPageHeader
@@ -60,10 +59,9 @@ struct WidgetCardBackgroundPage {
   }
 
   @Builder
-  WidgetBackgroundOption(title: string, subtitle: string, style: string) {
+  WidgetBackgroundOption(title: string, style: string) {
     SettingsLinkRow({
       title: title,
-      value: subtitle,
       status: this.widgetCardBackgroundStyle === style ? '当前使用' : '',
       tone: SettingsEntryTone.DEFAULT,
       dense: true,
@@ -76,9 +74,9 @@ struct WidgetCardBackgroundPage {
   @Builder
   BackgroundOptions() {
     Column({ space: AppMetrics.cardGap }) {
-      this.WidgetBackgroundOption('素纸', '清爽留白', REVIEW_WIDGET_CARD_BACKGROUND_PLAIN)
-      this.WidgetBackgroundOption('密集回纹', '低对比度连续铺陈', REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN)
-      this.WidgetBackgroundOption('回纹角花', '四角沿边，保留中央留白', REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN_CORNER)
+      this.WidgetBackgroundOption('素纸', REVIEW_WIDGET_CARD_BACKGROUND_PLAIN)
+      this.WidgetBackgroundOption('密集回纹', REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN)
+      this.WidgetBackgroundOption('回纹角花', REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN_CORNER)
     }
     .width('100%')
   }
@@ -92,12 +90,6 @@ struct WidgetCardBackgroundPage {
           SettingsPageHeader({
             title: '卡片背景'
           })
-
-          Text('选定后会立即同步到桌面卡片。回纹以低对比度铺在底层，不影响数据阅读。')
-            .fontSize(AppTypography.body)
-            .lineHeight(AppTypography.bodyLineHeight)
-            .fontColor(AppColors.secondaryText)
-            .width('100%')
 
           this.BackgroundOptions()
         }

@@ -5,8 +5,6 @@ import {
   AppColors,
   AppMetrics,
   AppTypography,
-  SettingsEntryTone,
-  SettingsLinkRow,
   SettingsPageHeader
 } from '../components/AppDesign';
 import { SettingsActionBar } from '../components/SettingsForm';
@@ -56,21 +54,6 @@ struct SyncCenterPage {
 
   private resolveStatus(): HomeStorageConfigStatus {
     return HomeStorageService.getConfigurationStatus(this.homeStorageSettings);
-  }
-
-  private resolveStatusText(): string {
-    return HomeStorageService.resolveConfigurationStatusLabel(this.resolveStatus());
-  }
-
-  private resolveStatusTone(): SettingsEntryTone {
-    const status: HomeStorageConfigStatus = this.resolveStatus();
-    if (status === HomeStorageConfigStatus.COMPLETE) {
-      return SettingsEntryTone.SUCCESS;
-    }
-    if (status === HomeStorageConfigStatus.PARTIAL) {
-      return SettingsEntryTone.WARNING;
-    }
-    return SettingsEntryTone.MUTED;
   }
 
   private resolveAvailabilityText(): string {
@@ -160,19 +143,6 @@ struct SyncCenterPage {
           SettingsPageHeader({
             title: '同步中心'
           })
-
-          Column({ space: AppMetrics.space8 }) {
-            SettingsLinkRow({
-              title: this.resolveAvailabilityText(),
-              value: `${this.resolveHomeStorageAddress()} · ${this.resolveShareName()} · ${this.resolveRemoteDirectory()}`,
-              status: this.resolveStatusText(),
-              tone: this.resolveStatusTone(),
-              showChevron: false,
-              onTap: () => {
-              }
-            })
-          }
-          .width('100%')
 
           Column({ space: AppMetrics.cardGap }) {
             this.InfoRow('状态', this.resolveAvailabilityText())

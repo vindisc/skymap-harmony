@@ -240,22 +240,12 @@ struct ReviewSettingsPage {
   @Builder
   HomeStorageLink() {
     Row({ space: AppMetrics.cardGap }) {
-      Column({ space: AppMetrics.space8 }) {
-        Text('家庭存储')
-          .fontSize(AppTypography.cardTitle)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.text)
-          .lineHeight(AppTypography.cardTitleLineHeight)
-          .width('100%')
-
-        Text('连接与凭据')
-          .fontSize(AppTypography.caption)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.captionLineHeight)
-          .width('100%')
-      }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
+      Text('家庭存储')
+        .fontSize(AppTypography.cardTitle)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(AppColors.text)
+        .lineHeight(AppTypography.cardTitleLineHeight)
+        .layoutWeight(1)
 
       Text('›')
         .fontSize(AppTypography.cardTitle)

@@ -70,12 +70,12 @@ assertIncludes(feedbackSource, "REVIEW_FLOW_BUNDLE_EXPORT_AUTH_FAILED_TEXT: stri
 
 assertIncludes(syncCenterSource, "title: '同步中心'", 'SyncCenterPage');
 assertIncludes(syncCenterSource, "secondaryLabel: this.isTesting ? '检查中…' : '检查家庭存储'", 'SyncCenterPage');
-assertIncludes(syncCenterSource, 'SettingsLinkRow({', 'SyncCenterPage');
+assertNotIncludes(syncCenterSource, 'SettingsLinkRow({', 'SyncCenterPage');
 assertIncludes(homeStoragePageSource, "title: '家庭存储'", 'HomeStoragePage');
 assertIncludes(homeStoragePageSource, 'CenterFeedbackOverlay()', 'HomeStoragePage');
 assertNotIncludes(homeStoragePageSource, 'StatusSummary()', 'HomeStoragePage');
 assertIncludes(homeStoragePageSource, "'家庭存储地址'", 'HomeStoragePage');
-assertIncludes(reviewSettingsSource, "Text('连接与凭据')", 'ReviewSettingsPage');
+assertNotIncludes(reviewSettingsSource, "Text('连接与凭据')", 'ReviewSettingsPage');
 
 const ordinaryUserCopy = [
   previewSource,

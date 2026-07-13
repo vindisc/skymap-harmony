@@ -51,10 +51,9 @@ struct MotionSettingsPage {
   }
 
   @Builder
-  MotionOption(title: string, subtitle: string, value: MotionQuality) {
+  MotionOption(title: string, value: MotionQuality) {
     SettingsLinkRow({
       title: title,
-      value: subtitle,
       status: this.motionQuality === value ? '当前使用' : '',
       tone: this.motionQuality === value ? SettingsEntryTone.SUCCESS : SettingsEntryTone.DEFAULT,
       dense: true,
@@ -72,26 +71,16 @@ struct MotionSettingsPage {
         Column({ space: AppMetrics.sectionGap }) {
           SettingsPageHeader({ title: '显示与动效' })
 
-          Column({ space: AppMetrics.space8 }) {
-            Text('动效强度')
-              .fontSize(AppTypography.cardTitle)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.text)
-              .width('100%')
-
-            Text('控制里程碑动画与页面转场的强度。')
-              .fontSize(AppTypography.body)
-              .lineHeight(AppTypography.bodyLineHeight)
-              .fontColor(AppColors.secondaryText)
-              .width('100%')
-          }
-          .alignItems(HorizontalAlign.Start)
-          .width('100%')
+          Text('动效强度')
+            .fontSize(AppTypography.cardTitle)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.text)
+            .width('100%')
 
           Column({ space: AppMetrics.cardGap }) {
-            this.MotionOption('完整', '分层转场、弹性回应与里程碑动画', MotionQuality.FULL)
-            this.MotionOption('舒缓', '保留方向与层次，关闭弹性超冲和庆祝粒子', MotionQuality.CALM)
-            this.MotionOption('最少', '只保留必要的短过渡，不播放分批与粒子动画', MotionQuality.MINIMAL)
+            this.MotionOption('完整', MotionQuality.FULL)
+            this.MotionOption('舒缓', MotionQuality.CALM)
+            this.MotionOption('最少', MotionQuality.MINIMAL)
           }
           .width('100%')
           .opacity(this.isSaving ? 0.68 : 1)
@@ -104,6 +93,8 @@ struct MotionSettingsPage {
           top: AppMetrics.pageTopPadding,
           bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
         })
+        .height('100%')
+        .justifyContent(FlexAlign.Start)
       }
       .width('100%')
       .height('100%')

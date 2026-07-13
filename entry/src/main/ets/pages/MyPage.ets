@@ -203,27 +203,6 @@ export struct MyPage {
     return this.reviewerName.length > 0 ? this.reviewerName : '未设置';
   }
 
-  private resolveHomeStorageDetail(): string {
-    if (this.resolveHomeStorageStatus() === HomeStorageConfigStatus.EMPTY) {
-      return '未配置';
-    }
-    return `${this.homeStorageSettings.smbHost} · ${this.homeStorageSettings.smbShareName || '共享目录未填'}`;
-  }
-
-  private resolveSyncSummary(): string {
-    return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
-  }
-
-  private resolveHomeHeroSummary(): string {
-    if (this.homeHeroImageCount <= 0) {
-      return '使用默认首页图';
-    }
-    if (this.homeHeroImageCount === 1) {
-      return '已设置 1 张图片';
-    }
-    return `已设置 ${this.homeHeroImageCount} 张图片，会自动轮播`;
-  }
-
   private resolveHomeHeroBadge(): string {
     return this.homeHeroImageCount <= 0 ? '默认' : `${this.homeHeroImageCount} 张`;
   }
@@ -381,8 +360,7 @@ export struct MyPage {
     Column({ space: AppMetrics.cardGap }) {
       SettingsLinkRow({
         title: '复盘人',
-        value: this.resolveReviewerSummary(),
-        status: this.resolveReviewerSummary() === '未设置' ? '未设置' : '已设置',
+        status: this.resolveReviewerSummary(),
         tone: this.resolveReviewerSummary() === '未设置' ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
         dense: true,
         onTap: () => {
@@ -392,7 +370,6 @@ export struct MyPage {
 
       SettingsLinkRow({
         title: '首页图片',
-        value: this.resolveHomeHeroSummary(),
         status: this.resolveHomeHeroBadge(),
         tone: this.homeHeroImageCount <= 0 ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
         dense: true,
@@ -413,7 +390,6 @@ export struct MyPage {
 
       SettingsLinkRow({
         title: '显示与动效',
-        value: '里程碑动画与页面转场的强度',
         status: ReviewSettingsService.resolveMotionQualityLabel(this.motionQuality),
         tone: SettingsEntryTone.DEFAULT,
         dense: true,
@@ -424,7 +400,6 @@ export struct MyPage {
 
       SettingsLinkRow({
         title: '家庭存储',
-        value: this.resolveHomeStorageDetail(),
         status: this.resolveHomeStorageBadge(),
         tone: this.resolveStorageTone(),
         dense: true,
@@ -435,7 +410,6 @@ export struct MyPage {
 
       SettingsLinkRow({
         title: '同步中心',
-        value: this.resolveSyncSummary(),
         status: this.resolveSyncBadge(),
         tone: this.resolveStorageTone(),
         dense: true,
@@ -452,7 +426,6 @@ export struct MyPage {
     Column({ space: AppMetrics.cardGap }) {
       SettingsLinkRow({
         title: '备份全部复盘',
-        value: '复盘与原图保存到手机文件，卸载后仍可恢复',
         status: this.isBackupActionRunning ? '处理中' : `${this.backupItemTotal} 条`,
         tone: this.backupItemTotal > 0 ? SettingsEntryTone.SUCCESS : SettingsEntryTone.MUTED,
         dense: true,
@@ -463,7 +436,6 @@ export struct MyPage {
 
       SettingsLinkRow({
         title: '从备份恢复',
-        value: '支持多选备份，去重合并后整体恢复',
         status: this.isBackupActionRunning ? '处理中' : '选择文件',
         tone: SettingsEntryTone.DEFAULT,
         dense: true,
@@ -533,7 +505,7 @@ export struct MyPage {
           .width('100%')
           .maxLines(1)
 
-        Text(this.isRdbDiagnosticsRunning ? '正在运行，仅用于开发验证' : `RDB 验证 · ${this.rdbDiagnosticsSummary}`)
+        Text(this.isRdbDiagnosticsRunning ? '正在运行' : this.rdbDiagnosticsSummary)
           .fontSize(AppTypography.caption)
           .fontColor(AppColors.secondaryText)
           .lineHeight(AppTypography.captionLineHeight)

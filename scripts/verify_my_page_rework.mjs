@@ -116,7 +116,7 @@ assert(homeStorageSource.includes("secondaryLabel: this.isTestingHomeStorage ? '
 
 assert(syncCenterSource.includes('lastTestMessage'), 'SyncCenterPage must keep visible test feedback.');
 assert(syncCenterSource.includes("secondaryLabel: this.isTesting ? '检查中…' : '检查家庭存储'"), 'SyncCenterPage test button must show loading state.');
-assert(syncCenterSource.includes('SettingsLinkRow({'), 'SyncCenterPage must show a compact status row.');
+assert(!syncCenterSource.includes('SettingsLinkRow({'), 'SyncCenterPage must not repeat status above the detail card.');
 assert(!homeStorageSource.includes(".height('100%')\n      .justifyContent(FlexAlign.Start)"), 'HomeStoragePage scroll content must not be fixed to viewport height.');
 
 if (failed) {
