@@ -122,7 +122,22 @@ async function resolveDisplayImageSizeByFd(imageUri: string): Promise<DisplayIma
   }
 }
 
+function shouldResolveImageSizeByFdFirst(imageUri: string): boolean {
+  const normalizedUri: string = imageUri.trim().toLowerCase();
+  return normalizedUri.startsWith('file://media/')
+    || normalizedUri.startsWith('datashare://media/')
+    || normalizedUri.indexOf('://media/') >= 0;
+}
+
 export async function resolveDisplayImageSize(imageUri: string): Promise<DisplayImageSize> {
+  if (shouldResolveImageSizeByFdFirst(imageUri)) {
+    try {
+      return await resolveDisplayImageSizeByFd(imageUri);
+    } catch (error) {
+      return await resolveDisplayImageSizeByUri(imageUri);
+    }
+  }
+
   try {
     return await resolveDisplayImageSizeByUri(imageUri);
   } catch (error) {

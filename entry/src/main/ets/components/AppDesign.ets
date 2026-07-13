@@ -816,7 +816,6 @@ export struct PhotoWritingHero {
             .width('100%')
             .height('100%')
             .objectFit(ImageFit.Contain)
-            .syncLoad(true)
             .onError(() => {
               this.loadFailed = true;
             })
@@ -835,7 +834,6 @@ export struct PhotoWritingHero {
             .width('100%')
             .height('100%')
             .objectFit(ImageFit.Contain)
-            .syncLoad(true)
             .onError(() => {
               this.loadFailed = true;
             })

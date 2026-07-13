@@ -43,7 +43,6 @@ export struct ReviewPhotoBlock {
           .width('100%')
           .height('100%')
           .objectFit(this.fitMode)
-          .syncLoad(true)
           .onError(() => {
             this.loadFailed = true;
           })

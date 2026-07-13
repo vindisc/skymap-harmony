@@ -627,7 +627,6 @@ export struct ProjectDetailPage {
             .width('100%')
             .height('100%')
             .objectFit(ImageFit.Cover)
-            .syncLoad(true)
             .onError(() => {
               this.markPendingImageFailed(photo.id);
             })

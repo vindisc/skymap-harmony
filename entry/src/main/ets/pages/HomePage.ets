@@ -264,7 +264,7 @@ export struct HomePage {
       let failedCount: number = 0;
       const photos: Array<PendingReviewPhotoInput> = [];
       for (let index = 0; index < result.photos.length; index += 1) {
-        if (result.photos[index].imageSizeFallbackUsed) {
+        if (result.photos[index].imageUri.trim().length <= 0) {
           failedCount += 1;
           continue;
         }
