@@ -8,7 +8,7 @@ const componentMarkers = new Map([
   ['CountUpText.ets', ['export struct CountUpText', 'value', 'durationMs', 'suffix']],
   ['BottomSheetContainer.ets', ['export struct BottomSheetContainer', 'visible', 'onClose']],
   ['CeremonyBurst.ets', ['export struct CeremonyBurst', 'kind', 'onFinish', 'Particle']],
-  ['RippleTouch.ets', ['export struct RippleTouch', 'tint', 'TouchType.Down']]
+  ['RippleTouch.ets', ['export struct RippleTouch', 'tint', 'clipRadius', '.overlay(', 'TouchType.Down']]
 ]);
 
 for (const [file, markers] of componentMarkers.entries()) {

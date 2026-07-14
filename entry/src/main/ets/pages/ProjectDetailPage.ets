@@ -832,6 +832,7 @@ export struct ProjectDetailPage {
   @Builder
   PendingReviewListCard(photo: PendingReviewPhoto) {
     RippleTouch({
+      clipRadius: AppMetrics.cardRadius,
       content: () => {
         this.PendingReviewListCardContent(photo);
       }
@@ -873,6 +874,7 @@ export struct ProjectDetailPage {
   @Builder
   HistoryReviewListCard(item: ReviewCardHistoryItem) {
     RippleTouch({
+      clipRadius: AppMetrics.cardRadius,
       content: () => {
         this.HistoryReviewListCardContent(item);
       }

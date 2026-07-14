@@ -90,7 +90,10 @@ struct SyncCenterPage {
 
     this.isTesting = true;
     try {
-      const result: HomeStorageOperationResult = await HomeStorageService.testConnection(this.homeStorageSettings);
+      const result: HomeStorageOperationResult = await HomeStorageService.testConnection(
+        this.homeStorageSettings,
+        this.getAbilityContext()
+      );
       this.lastCheckedAt = Date.now();
       this.lastTestMessage = result.message;
       this.lastTestSucceeded = result.success;

@@ -411,6 +411,7 @@ export struct MyPage {
   @Builder
   RippleSettingsLinkRow(options: RippleSettingsLinkOptions) {
     RippleTouch({
+      clipRadius: AppMetrics.cardRadius,
       content: () => {
         this.RippleSettingsLinkRowContent(options);
       }

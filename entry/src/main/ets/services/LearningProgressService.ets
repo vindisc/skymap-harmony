@@ -23,7 +23,7 @@ export interface LearningProgressLoadResult {
 
 export interface PendingReviewCompletionMotionResult {
   pendingBecameEmpty: boolean;
-  handledBySubscriber: boolean;
+  ceremonyScheduled: boolean;
 }
 
 export function createEmptyLearningProgressSnapshot(): LearningProgressSnapshot {
@@ -114,12 +114,13 @@ export class LearningProgressService {
     if (pendingStats.pendingCount > 0) {
       return {
         pendingBecameEmpty: false,
-        handledBySubscriber: false
+        ceremonyScheduled: false
       };
     }
+    MotionCeremonyEventService.enqueue(MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED);
     return {
       pendingBecameEmpty: true,
-      handledBySubscriber: MotionCeremonyEventService.emit(MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED)
+      ceremonyScheduled: true
     };
   }
 

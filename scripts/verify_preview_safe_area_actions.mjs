@@ -21,9 +21,11 @@ assert(previewSource.includes('.justifyContent(FlexAlign.Start)\n          .alig
 assert(previewSource.includes('BottomSheetContainer({') &&
   bottomSheetSource.includes('.expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])'),
   'Preview export menu sheet must cover the bottom safe area.');
-assert(previewSource.includes(".fontColor(this.isPressed('cancel-export') ? AppColors.onPrimary : AppColors.primary)"), 'Export sheet cancel button must use primary-colored text.');
-assert(previewSource.includes(".backgroundColor(this.isPressed('cancel-export') ? AppColors.primary : AppColors.primarySoft)"), 'Export sheet cancel button must use a visible primary-tinted background.');
-assert(previewSource.includes("this.updatePressedAction(event, 'cancel-export', false);"), 'Export sheet cancel button must have pressed feedback.');
+assert(previewSource.includes('.fontColor(AppColors.primary)'), 'Export sheet cancel button must use primary-colored text.');
+assert(previewSource.includes('.backgroundColor(AppColors.primarySoft)'), 'Export sheet cancel button must use a visible primary-tinted background.');
+assert(previewSource.includes('this.CancelExportActionContent();') && previewSource.includes("intensity: 'firm'"),
+  'Export sheet cancel button must use shared PressReactive feedback.');
+assert(previewSource.includes('.stateEffect(false)'), 'Export sheet cancel button must disable its second native pressed-state system.');
 assert(entryAbilitySource.includes('setWindowLayoutFullScreen(true)'), 'Main window must use immersive layout so pages can own the bottom navigation area.');
 assert(entryAbilitySource.includes("const APP_TRANSPARENT: string = '#00000000';"), 'System bars must use a transparent color token.');
 assert(entryAbilitySource.includes('navigationBarColor: APP_TRANSPARENT'), 'Navigation bar must not draw a separate bottom strip color.');

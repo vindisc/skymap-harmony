@@ -584,13 +584,10 @@ struct PreviewPage {
     .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space8, bottom: AppMetrics.space8 })
     .width('100%')
     .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(this.isPressed(label) ? AppColors.surfaceMuted : AppColors.surfaceElevated)
+    .backgroundColor(AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
-    .shadow(isDisabled ? ElevationTokens.none : (this.isPressed(label) ? ElevationTokens.medium : ElevationTokens.subtle))
+    .shadow(isDisabled ? ElevationTokens.none : ElevationTokens.subtle)
     .opacity(isDisabled ? 0.56 : 1)
-    .onTouch((event: TouchEvent) => {
-      this.updatePressedAction(event, label, isDisabled);
-    })
     .onClick(() => {
       if (isDisabled) {
         return;
@@ -609,6 +606,7 @@ struct PreviewPage {
       }
     })
       .width('100%')
+      .enabled(!isDisabled)
   }
 
   @Builder
@@ -619,14 +617,11 @@ struct PreviewPage {
       .borderRadius(AppMetrics.cardRadius)
       .fontSize(AppTypography.buttonText)
       .fontWeight(FontWeight.Medium)
-      .fontColor(this.isPressed('cancel-export') ? AppColors.onPrimary : AppColors.primary)
-      .backgroundColor(this.isPressed('cancel-export') ? AppColors.primary : AppColors.primarySoft)
+      .fontColor(AppColors.primary)
+      .backgroundColor(AppColors.primarySoft)
       .border({ width: 1, color: AppColors.primary })
-      .shadow(this.isPressed('cancel-export') ? ElevationTokens.subtle : ElevationTokens.low)
-      .stateEffect(true)
-      .onTouch((event: TouchEvent) => {
-        this.updatePressedAction(event, 'cancel-export', false);
-      })
+      .shadow(ElevationTokens.low)
+      .stateEffect(false)
       .onClick(() => {
         this.closeExportMenu();
       })

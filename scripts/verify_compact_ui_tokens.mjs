@@ -212,7 +212,11 @@ assertIncludes(appDesignSource, '.scale({ x: this.isPressed ? MotionTokens.scale
 assertIncludes(reviewerProfileSource, '.justifyContent(FlexAlign.Start)', 'ReviewerProfilePage must explicitly top-align content.');
 assertIncludes(homeStorageSource, 'const HOME_STORAGE_PAGE_TOP_PADDING: number = AppMetrics.pageTopPadding;', 'HomeStoragePage must align settings content to the shared page top padding.');
 assertIncludes(homeStorageSource, 'top: HOME_STORAGE_PAGE_TOP_PADDING', 'HomeStoragePage must apply the shared top padding token.');
-assertIncludes(previewPageSource, 'ElevationTokens.medium : ElevationTokens.subtle', 'Preview floating primary action must lift to medium elevation when pressed.');
+assertIncludes(
+  previewPageSource,
+  '.shadow(isDisabled ? ElevationTokens.none : (this.isPressed(label) ? ElevationTokens.subtle : ElevationTokens.low))',
+  'Preview floating actions must soften from low to subtle elevation when pressed.'
+);
 assertIncludes(previewPageSource, '@State pressedActionKey: string = \'\';', 'Preview actions must keep explicit press feedback state.');
 assertIncludes(editorPageSource, '.shadow(ElevationTokens.medium)', 'Editor photo header must keep medium elevation.');
 assertIncludes(editorPageSource, 'duration: MotionTokens.durationStandard', 'Editor focus scrolling must use shared motion tokens.');

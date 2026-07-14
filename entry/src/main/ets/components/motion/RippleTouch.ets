@@ -10,6 +10,7 @@ function EmptyRippleContent() {
 @Component
 export struct RippleTouch {
   @Prop tint: ResourceColor = AppColors.primary;
+  @Prop clipRadius: number = 0;
   @BuilderParam content: () => void = EmptyRippleContent;
   @State rippleScale: number = 0;
   @State rippleOpacity: number = 0;
@@ -52,23 +53,33 @@ export struct RippleTouch {
     }, MotionTokens.durationStandard);
   }
 
+  @Builder
+  RippleLayer() {
+    Circle()
+      .width(240)
+      .height(240)
+      .fill(this.tint)
+      .opacity(this.rippleOpacity)
+      .scale({ x: this.rippleScale, y: this.rippleScale })
+      .position({ x: this.originX - 120, y: this.originY - 120 })
+      .animation({
+        duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+        curve: MotionQualityContext.resolveCurve(MotionCurveRole.EMPHASIZED)
+      })
+      .hitTestBehavior(HitTestMode.None)
+  }
+
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
       this.content()
-
-      Circle()
-        .width(240)
-        .height(240)
-        .fill(this.tint)
-        .opacity(this.rippleOpacity)
-        .scale({ x: this.rippleScale, y: this.rippleScale })
-        .position({ x: this.originX - 120, y: this.originY - 120 })
-        .animation({
-          duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
-          curve: MotionQualityContext.resolveCurve(MotionCurveRole.EMPHASIZED)
-        })
-        .hitTestBehavior(HitTestMode.None)
     }
+    .overlay(
+      () => {
+        this.RippleLayer();
+      },
+      { align: Alignment.TopStart }
+    )
+    .borderRadius(this.clipRadius)
     .clip(true)
     .onTouch((event: TouchEvent) => {
       if (event.type === TouchType.Down) {

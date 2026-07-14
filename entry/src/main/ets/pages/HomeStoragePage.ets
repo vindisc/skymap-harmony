@@ -49,11 +49,12 @@ struct HomeStoragePage {
   private ceremonyEventListener: (kind: MotionCeremonyEventKind) => boolean = (
     kind: MotionCeremonyEventKind
   ): boolean => {
-    if (!this.isPageAlive || kind !== MotionCeremonyEventKind.SMB_FIRST_CONNECT ||
-      !MotionQualityContext.shouldPlayCeremony()) {
+    if (!this.isPageAlive || kind !== MotionCeremonyEventKind.SMB_FIRST_CONNECT) {
       return false;
     }
-    this.ceremonyVisible = true;
+    if (MotionQualityContext.shouldPlayCeremony()) {
+      this.ceremonyVisible = true;
+    }
     return true;
   };
   @State homeStorageHost: string = '';

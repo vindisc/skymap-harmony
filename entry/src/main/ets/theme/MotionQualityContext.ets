@@ -70,6 +70,7 @@ export class MotionQualityContext {
     return MotionQualityContext.quality === MotionQuality.FULL;
   }
 
+  // 预留：未来若决定 MINIMAL 档自动关闭星河效果，只需修改此处；当前仅镜像用户开关。
   static shouldPlayShatter(userEnabled: boolean): boolean {
     return userEnabled;
   }

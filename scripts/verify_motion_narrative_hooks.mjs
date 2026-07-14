@@ -7,7 +7,7 @@ const checks = new Map([
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ['StaggeredEnter', 'RippleTouch', 'delayMs: MotionTokens.durationStagger']],
   ['entry/src/main/ets/pages/EditorPage.ets', ['geometryTransition(`review-hero-${this.resolveHeroTag()}`)', 'completesPendingReview', "kind: 'review-done'", 'PressReactive']],
   ['entry/src/main/ets/pages/PreviewPage.ets', ['BottomSheetContainer', 'ExportMenuContent', 'PressReactive']],
-  ['entry/src/main/ets/pages/StatsPage.ets', ['CountUpText', 'ShimmerBox', 'MotionCurveRole.LANDING']],
+  ['entry/src/main/ets/pages/StatsPage.ets', ['CountUpText', 'ShimmerBox', 'playIntro', 'introStage', 'InsightsIntro', 'MotionCurveRole.LANDING']],
   ['entry/src/main/ets/pages/MyPage.ets', ['RippleTouch', 'RippleSettingsLinkRow']],
   ['entry/src/main/ets/pages/MotionSettingsPage.ets', ['MotionQuality.FULL', 'MotionQuality.CALM', 'MotionQuality.MINIMAL']]
 ]);

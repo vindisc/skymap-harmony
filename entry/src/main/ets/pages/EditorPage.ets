@@ -266,7 +266,7 @@ struct EditorPage {
     this.isSaving = true;
     let keepSavingLockedForCeremony: boolean = false;
     const completesPendingReview: boolean = this.pendingPhotoId.length > 0;
-    let ceremonyHandledBySubscriber: boolean = false;
+    let ceremonyScheduledElsewhere: boolean = false;
     this.syncDocumentFromInput();
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
     try {
@@ -277,7 +277,7 @@ struct EditorPage {
         try {
           const motionResult: PendingReviewCompletionMotionResult =
             await LearningProgressService.notifyPendingReviewCompleted(this.getAbilityContext());
-          ceremonyHandledBySubscriber = motionResult.pendingBecameEmpty && motionResult.handledBySubscriber;
+          ceremonyScheduledElsewhere = motionResult.pendingBecameEmpty && motionResult.ceremonyScheduled;
         } catch (error) {
           console.warn(`[EditorPage] 待复盘归零动效判定失败：${error}`);
         }
@@ -285,7 +285,7 @@ struct EditorPage {
       this.isDirty = false;
       ToastService.success(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
       if (completesPendingReview && pendingReviewCompleted &&
-        !ceremonyHandledBySubscriber && MotionQualityContext.shouldPlayCeremony()) {
+        !ceremonyScheduledElsewhere && MotionQualityContext.shouldPlayCeremony()) {
         keepSavingLockedForCeremony = true;
         this.ceremonyVisible = true;
       } else {

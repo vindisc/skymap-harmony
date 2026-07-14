@@ -77,14 +77,16 @@ const HOME_PENDING_IMPORT_MAX_SELECT_NUMBER: number = 30;
 export struct HomePage {
   private dashboardReloadState: HomeDashboardReloadState = createHomeDashboardReloadState();
   private isPageActive: boolean = false;
+  private ceremonyListenerSubscribed: boolean = false;
   private ceremonyEventListener: (kind: MotionCeremonyEventKind) => boolean = (
     kind: MotionCeremonyEventKind
   ): boolean => {
-    if (!this.isPageActive || kind !== MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED ||
-      !MotionQualityContext.shouldPlayCeremony()) {
+    if (!this.isPageActive || kind !== MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED) {
       return false;
     }
-    this.ceremonyVisible = true;
+    if (MotionQualityContext.shouldPlayCeremony()) {
+      this.ceremonyVisible = true;
+    }
     return true;
   };
   private readonly heroFeatureTags: Array<string> = [
@@ -110,7 +112,7 @@ export struct HomePage {
 
   aboutToAppear(): void {
     this.isPageActive = true;
-    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
+    this.ensureCeremonySubscription();
     this.reloadHistory();
     this.reloadHeroImages();
     this.playIntro();
@@ -118,8 +120,20 @@ export struct HomePage {
 
   aboutToDisappear(): void {
     this.isPageActive = false;
-    MotionCeremonyEventService.unsubscribe(this.ceremonyEventListener);
+    if (this.ceremonyListenerSubscribed) {
+      MotionCeremonyEventService.unsubscribe(this.ceremonyEventListener);
+      this.ceremonyListenerSubscribed = false;
+    }
     this.clearIntroTimers();
+  }
+
+  private ensureCeremonySubscription(): void {
+    if (this.ceremonyListenerSubscribed) {
+      MotionCeremonyEventService.consumePending(this.ceremonyEventListener);
+      return;
+    }
+    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
+    this.ceremonyListenerSubscribed = true;
   }
 
   private playIntro(): void {
@@ -148,13 +162,14 @@ export struct HomePage {
 
   onPageShow(): void {
     this.isPageActive = true;
-    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
+    this.ensureCeremonySubscription();
     this.reloadHistory();
     this.reloadHeroImages();
-    this.playIntro();
   }
 
   refreshHomeData(): void {
+    this.isPageActive = true;
+    this.ensureCeremonySubscription();
     this.reloadHistory();
     this.reloadHeroImages();
   }

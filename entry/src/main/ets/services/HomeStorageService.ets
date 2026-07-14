@@ -765,7 +765,7 @@ export class HomeStorageService {
 
   static async testConnection(
     settings: HomeStorageSettings,
-    context?: common.UIAbilityContext
+    context: common.UIAbilityContext
   ): Promise<HomeStorageOperationResult> {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
     const validationMessage: string = HomeStorageService.validateSettings(normalized);
@@ -776,9 +776,7 @@ export class HomeStorageService {
     const client: Smb2Client = new Smb2Client();
     try {
       await client.testConnection(createSmbUploadOptions(normalized, 'connection-test.review.json', '{}'));
-      if (context !== undefined) {
-        await HomeStorageService.notifyFirstSuccessfulConnection(context);
-      }
+      await HomeStorageService.notifyFirstSuccessfulConnection(context);
       return createOperationResult(true, `\\\\${normalized.smbHost}\\${normalized.smbShareName}`, '家庭存储连接成功');
     } catch (error) {
       await client.close();
@@ -803,7 +801,7 @@ export class HomeStorageService {
       return result;
     }
 
-    const result: HomeStorageOperationResult = await HomeStorageService.testConnection(settings);
+    const result: HomeStorageOperationResult = await HomeStorageService.testConnection(settings, context);
     console.info(`[HomeStorageService] availability_check_finished success=${result.success} type=${result.errorType} message=${result.message}`);
     return result;
   }

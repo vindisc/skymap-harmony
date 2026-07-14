@@ -24,6 +24,7 @@ const smokeScripts = [
   'verify_motion_lifecycle_guards.mjs',
   'verify_motion_narrative_hooks.mjs',
   'verify_motion_tokens.mjs',
+  'verify_ripple_layout_contract.mjs',
   'verify_my_page_information_architecture.mjs',
   'verify_my_page_rework.mjs',
   'verify_my_pages_copy_cleanup.mjs',

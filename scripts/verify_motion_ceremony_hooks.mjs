@@ -5,11 +5,17 @@ const sources = new Map([
     'REVIEW_QUEUE_CLEARED',
     'STREAK_RECORD',
     'SMB_FIRST_CONNECT',
-    'static emit(kind: MotionCeremonyEventKind): boolean'
+    'pendingKinds',
+    'static enqueue(kind: MotionCeremonyEventKind): void',
+    'static consumePending(listener: MotionCeremonyEventListener): void',
+    'if (!handled)',
+    'static emit(kind: MotionCeremonyEventKind): boolean',
+    'listener 已订阅，已跳过重复注册'
   ]],
   ['entry/src/main/ets/services/LearningProgressService.ets', [
     'notifyPendingReviewCompleted',
     'PendingReviewPhotoStore.getStats(context)',
+    'MotionCeremonyEventService.enqueue(MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED)',
     'MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED',
     'detectAndNotifyStreakRecord',
     'MotionCeremonyEventKind.STREAK_RECORD'
@@ -17,6 +23,7 @@ const sources = new Map([
   ['entry/src/main/ets/services/ReviewSettingsService.ets', [
     "REVIEW_STREAK_RECORD_KEY: string = 'review_streak_record'",
     'updateReviewStreakRecord',
+    'normalizedStreakDays < 2',
     'normalizedStreakDays <= previousRecord'
   ]],
   ['entry/src/main/ets/services/HomeStorageService.ets', [
@@ -25,7 +32,9 @@ const sources = new Map([
     'MotionCeremonyEventKind.SMB_FIRST_CONNECT'
   ]],
   ['entry/src/main/ets/pages/HomePage.ets', [
-    'MotionCeremonyEventService.subscribe(this.ceremonyEventListener)',
+    'this.ensureCeremonySubscription()',
+    'MotionCeremonyEventService.consumePending(this.ceremonyEventListener)',
+    'if (MotionQualityContext.shouldPlayCeremony())',
     'MotionCeremonyEventService.unsubscribe(this.ceremonyEventListener)',
     'MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED',
     "kind: 'review-done'"
@@ -33,19 +42,32 @@ const sources = new Map([
   ['entry/src/main/ets/pages/StatsPage.ets', [
     'LearningProgressService.detectAndNotifyStreakRecord',
     'MotionCeremonyEventKind.STREAK_RECORD',
+    'if (MotionQualityContext.shouldPlayCeremony())',
     "kind: 'streak-record'"
   ]],
   ['entry/src/main/ets/pages/HomeStoragePage.ets', [
     'HomeStorageService.testConnection(',
     'MotionCeremonyEventKind.SMB_FIRST_CONNECT',
+    'if (MotionQualityContext.shouldPlayCeremony())',
     "kind: 'smb-first-connect'"
   ]],
   ['entry/src/main/ets/pages/EditorPage.ets', [
     'PendingReviewCompletionMotionResult',
     'pendingReviewCompleted',
-    '!ceremonyHandledBySubscriber'
+    'ceremonyScheduledElsewhere',
+    '!ceremonyScheduledElsewhere'
+  ]],
+  ['entry/src/main/ets/pages/SyncCenterPage.ets', [
+    'HomeStorageService.testConnection(',
+    'this.getAbilityContext()'
   ]]
 ]);
+
+const homeStorageSource = fs.readFileSync('entry/src/main/ets/services/HomeStorageService.ets', 'utf8');
+if (homeStorageSource.includes('context?: common.UIAbilityContext') ||
+  !homeStorageSource.includes('HomeStorageService.testConnection(settings, context)')) {
+  throw new Error('HomeStorageService.testConnection 必须要求 context，内部可用性检查也必须传入。');
+}
 
 for (const [path, markers] of sources.entries()) {
   const source = fs.readFileSync(path, 'utf8');

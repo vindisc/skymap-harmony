@@ -41,14 +41,17 @@ const STATS_PAGE_TOP_PADDING: number = AppMetrics.pageTopPadding - AppMetrics.sp
 export struct StatsPage {
   private loadRequestId: number = 0;
   private isPageActive: boolean = false;
+  private ceremonyListenerSubscribed: boolean = false;
+  private introTimerIds: Array<number> = [];
   private ceremonyEventListener: (kind: MotionCeremonyEventKind) => boolean = (
     kind: MotionCeremonyEventKind
   ): boolean => {
-    if (!this.isPageActive || kind !== MotionCeremonyEventKind.STREAK_RECORD ||
-      !MotionQualityContext.shouldPlayCeremony()) {
+    if (!this.isPageActive || kind !== MotionCeremonyEventKind.STREAK_RECORD) {
       return false;
     }
-    this.ceremonyVisible = true;
+    if (MotionQualityContext.shouldPlayCeremony()) {
+      this.ceremonyVisible = true;
+    }
     return true;
   };
   @Prop @Watch('refreshStatsData') refreshToken: number = 0;
@@ -58,6 +61,7 @@ export struct StatsPage {
   @State isStatsLoading: boolean = false;
   @State isPickingPhoto: boolean = false;
   @State ceremonyVisible: boolean = false;
+  @State introStage: number = 0;
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -65,20 +69,60 @@ export struct StatsPage {
 
   aboutToAppear(): void {
     this.isPageActive = true;
-    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
+    this.ensureCeremonySubscription();
+    this.playIntro();
     this.reloadStats();
   }
 
   aboutToDisappear(): void {
     this.isPageActive = false;
     this.loadRequestId += 1;
-    MotionCeremonyEventService.unsubscribe(this.ceremonyEventListener);
+    this.clearIntroTimers();
+    if (this.ceremonyListenerSubscribed) {
+      MotionCeremonyEventService.unsubscribe(this.ceremonyEventListener);
+      this.ceremonyListenerSubscribed = false;
+    }
   }
 
   onPageShow(): void {
     this.isPageActive = true;
-    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
+    this.ensureCeremonySubscription();
+    this.playIntro();
     this.reloadStats();
+  }
+
+  private ensureCeremonySubscription(): void {
+    if (this.ceremonyListenerSubscribed) {
+      MotionCeremonyEventService.consumePending(this.ceremonyEventListener);
+      return;
+    }
+    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
+    this.ceremonyListenerSubscribed = true;
+  }
+
+  private playIntro(): void {
+    this.clearIntroTimers();
+    this.introStage = 0;
+    const stageDelays: Array<number> = [
+      0,
+      MotionTokens.durationStagger,
+      MotionTokens.durationStaggerLong,
+      MotionTokens.durationStaggerLong * 2,
+      MotionTokens.durationStandard - MotionTokens.durationStaggerLong
+    ];
+    stageDelays.forEach((delay: number, index: number): void => {
+      const timerId: number = setTimeout(() => {
+        this.introStage = index + 1;
+      }, MotionQualityContext.shouldPlayStagger() ? delay : 0);
+      this.introTimerIds.push(timerId);
+    });
+  }
+
+  private clearIntroTimers(): void {
+    this.introTimerIds.forEach((timerId: number): void => {
+      clearTimeout(timerId);
+    });
+    this.introTimerIds = [];
   }
 
   refreshStatsData(): void {
@@ -596,6 +640,77 @@ export struct StatsPage {
     .width('100%')
   }
 
+  @Builder
+  LearningOverviewIntro() {
+    Column() {
+      this.LearningOverviewCard()
+    }
+    .width('100%')
+    .opacity(this.introStage >= 2 ? 1 : 0)
+    .translate({ y: this.introStage >= 2 ? 0 : MotionTokens.offsetEnterYCard })
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+    })
+  }
+
+  @Builder
+  StatsSkeletonIntro() {
+    Column() {
+      this.StatsSkeleton()
+    }
+    .width('100%')
+    .opacity(this.introStage >= 3 ? 1 : 0)
+    .translate({ y: this.introStage >= 3 ? 0 : MotionTokens.offsetEnterYCard })
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+    })
+  }
+
+  @Builder
+  OverviewIntro() {
+    Column() {
+      this.OverviewCard()
+    }
+    .width('100%')
+    .opacity(this.introStage >= 3 ? 1 : 0)
+    .translate({ y: this.introStage >= 3 ? 0 : MotionTokens.offsetEnterYCard })
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+    })
+  }
+
+  @Builder
+  Recent30DaysIntro() {
+    Column() {
+      this.Recent30DaysCard()
+    }
+    .width('100%')
+    .opacity(this.introStage >= 4 ? 1 : 0)
+    .translate({ y: this.introStage >= 4 ? 0 : MotionTokens.offsetEnterYCard })
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+    })
+  }
+
+  @Builder
+  InsightsIntro() {
+    Column({ space: AppMetrics.cardGap }) {
+      this.DistributionCard()
+      this.BlockersCard()
+    }
+    .width('100%')
+    .opacity(this.introStage >= 5 ? 1 : 0)
+    .translate({ y: this.introStage >= 5 ? 0 : MotionTokens.offsetEnterYCard })
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+    })
+  }
+
   build() {
     Stack() {
       Column() {
@@ -608,32 +723,55 @@ export struct StatsPage {
             top: STATS_PAGE_TOP_PADDING,
             bottom: STATS_TITLE_CONTENT_GAP
           })
+          .opacity(this.introStage >= 1 ? 1 : 0)
+          .translate({ y: this.introStage >= 1 ? 0 : MotionTokens.offsetEnterY })
+          .animation({
+            duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+            curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+          })
 
         Scroll() {
           Column({ space: AppMetrics.cardGap }) {
-            this.LearningOverviewCard()
+            this.LearningOverviewIntro()
 
             if (this.shouldShowStatsSkeleton()) {
-              this.StatsSkeleton()
+              this.StatsSkeletonIntro()
             } else if (this.statsLoadFailed) {
-              EmptyState({
-                title: '统计暂时无法刷新',
-                message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
+              Column() {
+                EmptyState({
+                  title: '统计暂时无法刷新',
+                  message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
+                })
+              }
+              .width('100%')
+              .opacity(this.introStage >= 3 ? 1 : 0)
+              .translate({ y: this.introStage >= 3 ? 0 : MotionTokens.offsetEnterYCard })
+              .animation({
+                duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+                curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
               })
             } else if (this.hasStatsData()) {
-              this.OverviewCard()
-              this.Recent30DaysCard()
-              this.DistributionCard()
-              this.BlockersCard()
+              this.OverviewIntro()
+              this.Recent30DaysIntro()
+              this.InsightsIntro()
             } else {
-              EmptyState({
-                title: this.hasLearningData() ? '还没有完成复盘' : '还没有复盘数据',
-                message: this.hasLearningData() ? '从待复盘照片进入编辑并保存后，这里会显示判断变化。' : '完成第一张照片复盘后，这里会显示你的判断变化。',
-                actionLabel: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '去创建第一条复盘',
-                isActionDisabled: this.isPickingPhoto,
-                onAction: () => {
-                  this.openCreateFirstReview();
-                }
+              Column() {
+                EmptyState({
+                  title: this.hasLearningData() ? '还没有完成复盘' : '还没有复盘数据',
+                  message: this.hasLearningData() ? '从待复盘照片进入编辑并保存后，这里会显示判断变化。' : '完成第一张照片复盘后，这里会显示你的判断变化。',
+                  actionLabel: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '去创建第一条复盘',
+                  isActionDisabled: this.isPickingPhoto,
+                  onAction: () => {
+                    this.openCreateFirstReview();
+                  }
+                })
+              }
+              .width('100%')
+              .opacity(this.introStage >= 3 ? 1 : 0)
+              .translate({ y: this.introStage >= 3 ? 0 : MotionTokens.offsetEnterYCard })
+              .animation({
+                duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+                curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
               })
             }
           }

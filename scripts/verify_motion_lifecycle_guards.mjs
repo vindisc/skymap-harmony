@@ -7,6 +7,7 @@ const editorSource = fs.readFileSync('entry/src/main/ets/pages/EditorPage.ets', 
 const entryAbilitySource = fs.readFileSync('entry/src/main/ets/entryability/EntryAbility.ets', 'utf8');
 const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
 const homeSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
+const statsSource = fs.readFileSync('entry/src/main/ets/pages/StatsPage.ets', 'utf8');
 const previewSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
 
 function assertIncludes(source, marker, message) {
@@ -33,6 +34,10 @@ assertIncludes(entryAbilitySource, 'await MotionQualityContext.initialize(this.c
 assertNotIncludes(appShellSource, 'MotionQualityContext.initialize(', 'App shell must not race motion initialization after first render');
 assertIncludes(homeSource, 'MotionTokens.durationStaggerLong * 2', 'Home stagger must use motion tokens');
 assertNotIncludes(homeSource, 'MotionTokens.durationStagger, 120, 200', 'Home stagger must not use raw delays');
+const homePageShowSource = homeSource.slice(homeSource.indexOf('onPageShow(): void {'), homeSource.indexOf('refreshHomeData(): void {'));
+assertNotIncludes(homePageShowSource, 'this.playIntro();', 'Home must not replay its intro when returning from a child page');
+assertIncludes(statsSource, 'private introTimerIds: Array<number> = [];', 'Stats must track stagger timers');
+assertIncludes(statsSource, 'this.clearIntroTimers();', 'Stats must clear stagger timers before leaving');
 assertNotIncludes(previewSource, 'content: this.', 'BuilderParam content must not receive an unbound page builder');
 
 console.log('motion lifecycle guards verified: timers, next-frame sheet, save lock, startup quality, builder binding');

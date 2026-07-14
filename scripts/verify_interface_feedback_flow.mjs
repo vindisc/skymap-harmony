@@ -52,6 +52,17 @@ assert(previewSource.includes('.shadow(isDisabled ? ElevationTokens.none : (this
 assert(previewSource.includes('.scale({ x: this.isPressed(label) ? MotionTokens.scalePressed : 1'), 'Preview toolbar buttons should scale on press.');
 assert(previewSource.includes('PressReactive({') && previewSource.includes("intensity: 'firm'"),
   'Preview export sheet rows should use shared firm press feedback.');
+const exportSheetActionStart = previewSource.indexOf('ExportSheetActionContent(');
+const exportSheetActionEnd = previewSource.indexOf('ExportSheetAction(', exportSheetActionStart);
+const exportSheetActionSource = previewSource.slice(exportSheetActionStart, exportSheetActionEnd);
+assert(!exportSheetActionSource.includes('this.isPressed(') && !exportSheetActionSource.includes('updatePressedAction('),
+  'Preview export sheet rows must not keep a second pressed-state system inside PressReactive.');
+const cancelActionStart = previewSource.indexOf('CancelExportActionContent()');
+const cancelActionEnd = previewSource.indexOf('ReadingPage()', cancelActionStart);
+const cancelActionSource = previewSource.slice(cancelActionStart, cancelActionEnd);
+assert(!cancelActionSource.includes('this.isPressed(') && !cancelActionSource.includes('updatePressedAction(') &&
+  cancelActionSource.includes('.stateEffect(false)'),
+  'Preview cancel action must use only PressReactive feedback.');
 assert(previewSource.includes('.animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })'), 'Preview press feedback should use motion tokens.');
 
 assert(projectSource.includes('this.deleteHistory(document);'), 'Project detail delete action should execute directly.');

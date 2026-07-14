@@ -168,7 +168,7 @@ export class ReviewSettingsService {
     streakDays: number
   ): Promise<boolean> {
     const normalizedStreakDays: number = Math.max(0, Math.floor(streakDays));
-    if (normalizedStreakDays <= 0) {
+    if (normalizedStreakDays < 2) {
       return false;
     }
     try {
