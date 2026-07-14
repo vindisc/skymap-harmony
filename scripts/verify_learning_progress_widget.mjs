@@ -41,7 +41,7 @@ const editorPage = read('entry/src/main/ets/pages/EditorPage.ets');
 const projectDetailPage = read('entry/src/main/ets/pages/ProjectDetailPage.ets');
 const previewPage = read('entry/src/main/ets/pages/PreviewPage.ets');
 const entryAbility = read('entry/src/main/ets/entryability/EntryAbility.ets');
-const myPage = read('entry/src/main/ets/pages/MyPage.ets');
+const appearanceSettingsPage = read('entry/src/main/ets/pages/AppearanceSettingsPage.ets');
 const widgetCardBackgroundPage = read('entry/src/main/ets/pages/WidgetCardBackgroundPage.ets');
 const widgetCardBackground = read('entry/src/main/ets/components/WidgetCardBackground.ets');
 const huiwenSquare = read('entry/src/main/resources/base/media/widget_card_huiwen_square.svg');
@@ -364,7 +364,11 @@ assert(!rhythmReviewPage.includes("Text('完成率')") &&
   'WIDGET_CARD_BACKGROUND_PAGE',
   'pushUrl({ url: WIDGET_CARD_BACKGROUND_PAGE })',
   'ReviewSettingsService.loadWidgetCardBackgroundStyle(context)'
-].forEach((token) => requireIncludes(myPage, token, 'MyPage must expose widget card background as a secondary settings entry'));
+].forEach((token) => requireIncludes(
+  appearanceSettingsPage,
+  token,
+  'AppearanceSettingsPage must expose widget card background as a secondary settings entry'
+));
 
 [
   'WidgetBackgroundCurrentPreview',
@@ -373,7 +377,8 @@ assert(!rhythmReviewPage.includes("Text('完成率')") &&
   '下方预览当前纹样',
   "import { WidgetCardBackground }"
 ].forEach((token) => {
-  assert(!myPage.includes(token), `MyPage must not duplicate the current background as a preview card: ${token}`);
+  assert(!appearanceSettingsPage.includes(token),
+    `AppearanceSettingsPage must not duplicate the current background as a preview card: ${token}`);
 });
 
 [

@@ -57,7 +57,7 @@ export class MotionCeremonyEventService {
       (pendingEvent: MotionCeremonyPendingEvent): boolean =>
         now - pendingEvent.enqueuedAt <= MOTION_CEREMONY_PENDING_TTL_MS
     );
-    MotionCeremonyEventService.pendingKinds = pendingKinds.slice();
+    MotionCeremonyEventService.pendingKinds = pendingKinds;
     pendingKinds.forEach((pendingEvent: MotionCeremonyPendingEvent): void => {
       if (!MotionCeremonyEventService.tryHandle(listener, pendingEvent.kind)) {
         return;

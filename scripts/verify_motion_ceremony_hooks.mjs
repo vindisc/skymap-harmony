@@ -71,6 +71,7 @@ const sources = new Map([
 
 const homeStorageSource = fs.readFileSync('entry/src/main/ets/services/HomeStorageService.ets', 'utf8');
 const editorSource = fs.readFileSync('entry/src/main/ets/pages/EditorPage.ets', 'utf8');
+const ceremonyServiceSource = fs.readFileSync('entry/src/main/ets/services/MotionCeremonyEventService.ets', 'utf8');
 if (homeStorageSource.includes('context?: common.UIAbilityContext') ||
   !homeStorageSource.includes('HomeStorageService.testConnection(settings, context)')) {
   throw new Error('HomeStorageService.testConnection 必须要求 context，内部可用性检查也必须传入。');
@@ -78,6 +79,9 @@ if (homeStorageSource.includes('context?: common.UIAbilityContext') ||
 if (editorSource.includes("import { CeremonyBurst }") || editorSource.includes('@State ceremonyVisible') ||
   editorSource.includes('keepSavingLockedForCeremony')) {
   throw new Error('EditorPage 不得保留已迁移到 HomePage 的仪式死代码。');
+}
+if (ceremonyServiceSource.includes('pendingKinds.slice()')) {
+  throw new Error('pendingKinds 已由 filter 创建新数组，不得再做冗余 slice。');
 }
 
 for (const [path, markers] of sources.entries()) {

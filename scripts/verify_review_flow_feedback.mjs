@@ -7,6 +7,7 @@ const files = {
   library: fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8'),
   stats: fs.readFileSync('entry/src/main/ets/pages/StatsPage.ets', 'utf8'),
   my: fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8'),
+  appearance: fs.readFileSync('entry/src/main/ets/pages/AppearanceSettingsPage.ets', 'utf8'),
   photoPicker: fs.readFileSync('entry/src/main/ets/services/PhotoPickerService.ets', 'utf8'),
   photoBlock: fs.readFileSync('entry/src/main/ets/components/ReviewPhotoBlock.ets', 'utf8'),
   feedback: fs.readFileSync('entry/src/main/ets/services/ReviewFlowFeedback.ets', 'utf8')
@@ -60,7 +61,8 @@ assert(files.stats.includes('最近卡点'), 'Stats should show recent blocker f
 assert(!files.stats.includes("Text('当前记录')"), 'Stats must remove the old 当前记录 placeholder section.');
 
 assert(files.my.includes("@Prop @Watch('refreshPageData') refreshToken"), 'My page must still refresh from shell token.');
-assert(files.my.includes('HomeHeroImageService.listImages'), 'My page should refresh home image status.');
+assert(files.my.includes('APPEARANCE_SETTINGS_PAGE'), 'My page should expose the appearance settings entry.');
+assert(files.appearance.includes('HomeHeroImageService.listImages'), 'Appearance settings should refresh home image status.');
 assert(files.my.includes('HomeStorageService.loadSettings'), 'My page should refresh home storage status.');
 assert(files.my.includes("title: '同步中心'"), 'My page should expose the sync center entry.');
 assert(files.my.includes('运行开发诊断？'), 'Developer diagnostics must be protected by confirmation.');

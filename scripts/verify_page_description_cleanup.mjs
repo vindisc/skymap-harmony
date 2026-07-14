@@ -62,15 +62,17 @@ function forbidRegex(source, pattern, message) {
 forbidIncludes(statsPageSource, 'this.RecentReviewsCard()', 'StatsPage must not restore the retired recent-review card');
 
 [
-  "AppPageHeader({\n        title: '我的'",
+  "AppPageHeader({ title: '我的' })",
   'const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;',
-  "Column() {\n      AppPageHeader({\n        title: '我的'",
+  "Column() {\n      AppPageHeader({ title: '我的' })",
   'bottom: MY_PAGE_TITLE_CONTENT_GAP',
   'top: AppMetrics.pageTopPadding',
-  "title: '复盘人'",
-  "title: '首页图片'",
+  'this.ReviewerCard()',
+  "Text('复盘人')",
+  "title: '外观与动效'",
   "title: '家庭存储'",
   "title: '同步中心'",
+  "title: '备份与恢复'",
   'bottom: MY_PAGE_BOTTOM_PADDING',
   '.layoutWeight(1)',
   '.justifyContent(FlexAlign.Start)'
@@ -83,7 +85,6 @@ forbidIncludes(statsPageSource, 'this.RecentReviewsCard()', 'StatsPage must not 
   'Text("")',
   'Blank()',
   'Spacer()',
-  'minHeight',
   'top: AppMetrics.sectionGap'
 ].forEach((marker) => forbidIncludes(myPageSource, marker, 'MyPage must not keep empty subtitle placeholders or large fixed top gaps'));
 [
@@ -132,8 +133,8 @@ requireIncludes(myPageSource, 'bottom: MY_PAGE_TITLE_CONTENT_GAP', 'MyPage fixed
 
 ['AppMetrics.space4', 'AppMetrics.space12'].forEach((marker) => {
   forbidIncludes(projectDetailSource, marker, 'ProjectDetailPage must keep existing spacing scale');
-  forbidIncludes(myPageSource, marker, 'MyPage must keep existing spacing scale');
 });
+requireIncludes(myPageSource, 'AppMetrics.space4', 'MyPage identity and diagnostics cards must use shared compact spacing.');
 forbidIncludes(statsPageSource, 'AppMetrics.space4', 'StatsPage must keep existing spacing scale');
 requireIncludes(statsPageSource, 'AppMetrics.space12', 'StatsPage may use shared 12vp rhythm for production metric groups');
 

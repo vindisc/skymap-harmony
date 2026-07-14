@@ -5,6 +5,8 @@ const myPageSource = fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf
 const reviewerProfileSource = fs.readFileSync('entry/src/main/ets/pages/ReviewerProfilePage.ets', 'utf8');
 const homeStorageSource = fs.readFileSync('entry/src/main/ets/pages/HomeStoragePage.ets', 'utf8');
 const syncCenterSource = fs.readFileSync('entry/src/main/ets/pages/SyncCenterPage.ets', 'utf8');
+const appearanceSource = fs.readFileSync('entry/src/main/ets/pages/AppearanceSettingsPage.ets', 'utf8');
+const backupSource = fs.readFileSync('entry/src/main/ets/pages/BackupCenterPage.ets', 'utf8');
 
 let failed = false;
 
@@ -59,9 +61,8 @@ assert(!myPageSource.includes("subtitle: ''"), 'MyPage must not pass an empty su
 assert(!myPageSource.includes("description: ''"), 'MyPage must not pass an empty section description prop.');
 assert(!myPageSource.includes('Blank()'), 'MyPage must not use Blank as a hidden subtitle placeholder.');
 assert(!myPageSource.includes('Spacer()'), 'MyPage must not use Spacer as a hidden subtitle placeholder.');
-assert(!myPageSource.includes('minHeight'), 'MyPage must not reserve fixed top header height.');
 assert(!myPageSource.includes('SettingsPageHeader({\n          title: \'我的\''), 'MyPage root title must not use compact settings header.');
-assert(myPageSource.includes("Column() {\n      AppPageHeader({\n        title: '我的'"), 'MyPage title must stay fixed above the scroll content.');
+assert(myPageSource.includes("Column() {\n      AppPageHeader({ title: '我的' })"), 'MyPage title must stay fixed above the scroll content.');
 assert(myPageSource.indexOf("title: '我的'") < myPageSource.indexOf('Scroll() {'), 'MyPage fixed title must precede the scroll region.');
 assert(myPageSource.includes('Column({ space: AppMetrics.sectionGap }) {\n          this.SettingsSection()'), 'MyPage settings and app sections must keep section spacing.');
 assert(myPageSource.includes('const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;'), 'MyPage should define a compact title-to-content gap.');
@@ -79,12 +80,15 @@ assert(!myPageSource.includes('reviewCount'), 'MyPage must not keep reviewCount 
 assert(!myPageSource.includes('validReviewCount'), 'MyPage must not keep validReviewCount state.');
 assert(myPageSource.includes('this.SettingsSection()'), 'MyPage must group settings entries.');
 assert(myPageSource.includes('this.AboutSection()'), 'MyPage must group app/developer entries.');
-assert(myPageSource.includes("title: '复盘人'"), 'MyPage must expose reviewer profile entry.');
-assert(myPageSource.includes("title: '首页图片'"), 'MyPage must expose home hero image entry.');
-assert(myPageSource.includes('pushUrl({ url: HOME_HERO_IMAGE_PAGE })'), 'MyPage home hero entry must keep navigation.');
-assert(myPageSource.includes('HomeHeroImageService.listImages'), 'MyPage must keep home hero status display.');
+assert(myPageSource.includes('this.ReviewerCard()'), 'MyPage must expose the reviewer identity card.');
+assert(myPageSource.includes("Text('复盘人')"), 'MyPage reviewer identity card must keep its label.');
+assert(myPageSource.includes("title: '外观与动效'"), 'MyPage must expose appearance settings entry.');
+assert(myPageSource.includes('this.openPage(APPEARANCE_SETTINGS_PAGE'), 'MyPage appearance entry must keep navigation.');
 assert(myPageSource.includes("title: '家庭存储'"), 'MyPage must expose home storage entry.');
 assert(myPageSource.includes("title: '同步中心'"), 'MyPage must expose sync center entry.');
+assert(myPageSource.includes("title: '备份与恢复'"), 'MyPage must expose backup center entry.');
+assert(!myPageSource.includes("title: '首页图片'"), 'MyPage must not duplicate secondary appearance settings.');
+assert(!myPageSource.includes("title: '备份全部复盘'"), 'MyPage must not duplicate backup actions.');
 assert(myPageSource.includes('@Builder\n  DeveloperDiagnosticsCard()'), 'MyPage must keep diagnostics as a weak developer entry.');
 assert(myPageSource.includes("Text('开发诊断')"), 'MyPage must keep diagnostics as a weak developer entry.');
 assert(myPageSource.includes('运行开发诊断？'), 'Developer diagnostics must require confirmation.');
@@ -96,7 +100,9 @@ assert(myPageSource.includes('.justifyContent(FlexAlign.Start)'), 'MyPage scroll
 for (const [name, source] of [
   ['ReviewerProfilePage', reviewerProfileSource],
   ['HomeStoragePage', homeStorageSource],
-  ['SyncCenterPage', syncCenterSource]
+  ['SyncCenterPage', syncCenterSource],
+  ['AppearanceSettingsPage', appearanceSource],
+  ['BackupCenterPage', backupSource]
 ]) {
   assert(source.includes('SettingsPageHeader({'), `${name} must use shared settings header.`);
   assert(!source.includes('showBack: true'), `${name} must not show a back arrow.`);
@@ -120,8 +126,15 @@ assert(syncCenterSource.includes("secondaryLabel: this.isTesting ? '检查中…
 assert(!syncCenterSource.includes('SettingsLinkRow({'), 'SyncCenterPage must not repeat status above the detail card.');
 assert(!homeStorageSource.includes(".height('100%')\n      .justifyContent(FlexAlign.Start)"), 'HomeStoragePage scroll content must not be fixed to viewport height.');
 
+assert(appearanceSource.includes("title: '首页图片'"), 'AppearanceSettingsPage must keep the home hero entry.');
+assert(appearanceSource.includes("title: '卡片背景'"), 'AppearanceSettingsPage must keep the widget background entry.');
+assert(appearanceSource.includes("title: '显示与动效'"), 'AppearanceSettingsPage must keep the motion settings entry.');
+assert(appearanceSource.includes("Text('删除星河效果')"), 'AppearanceSettingsPage must keep the shatter toggle.');
+assert(backupSource.includes("title: '备份全部复盘'"), 'BackupCenterPage must keep the export action.');
+assert(backupSource.includes("title: '从备份恢复'"), 'BackupCenterPage must keep the restore action.');
+
 if (failed) {
   process.exit(1);
 }
 
-console.log('my page rework: settings-first IA, no profile stats card, no duplicate review stats, entries and deep feedback verified');
+console.log('my page rework: reviewer card, compact V4 aggregation, routed settings and deep feedback verified');

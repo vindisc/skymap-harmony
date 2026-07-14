@@ -3,6 +3,7 @@ import fs from 'node:fs';
 const files = {
   homePage: 'entry/src/main/ets/pages/HomePage.ets',
   myPage: 'entry/src/main/ets/pages/MyPage.ets',
+  appearancePage: 'entry/src/main/ets/pages/AppearanceSettingsPage.ets',
   service: 'entry/src/main/ets/services/HomeHeroImageService.ets',
   configPage: 'entry/src/main/ets/pages/HomeHeroImagePage.ets',
   picker: 'entry/src/main/ets/services/PhotoPickerService.ets',
@@ -49,6 +50,7 @@ for (const path of Object.values(files)) {
 
 const homePageSource = read(files.homePage);
 const myPageSource = read(files.myPage);
+const appearancePageSource = read(files.appearancePage);
 const serviceSource = read(files.service);
 const configPageSource = read(files.configPage);
 const pickerSource = read(files.picker);
@@ -153,13 +155,16 @@ forbidIncludes(configPageSource, 'ToastService.show(', 'HomeHeroImagePage must u
   "title: '首页图片'",
   'this.openHomeHeroImage();',
   'HomeHeroImageService.listImages'
-].forEach((marker) => requireIncludes(myPageSource, marker, 'MyPage missing settings entry marker'));
+].forEach((marker) => requireIncludes(appearancePageSource, marker, 'AppearanceSettingsPage missing settings entry marker'));
+requireIncludes(myPageSource, 'APPEARANCE_SETTINGS_PAGE', 'MyPage missing appearance settings route');
+requireIncludes(myPageSource, "title: '外观与动效'", 'MyPage missing appearance settings entry');
 
 requireIncludes(routerSource, "export const HOME_HERO_IMAGE_PAGE: string = 'pages/HomeHeroImagePage';", 'AppRouter missing page route');
 requireIncludes(mainPagesSource, '"pages/HomeHeroImagePage"', 'main_pages missing page registration');
 
 forbidIncludes(homePageSource, "@ohos.data.preferences", 'HomePage must not read or write Preferences directly');
 forbidIncludes(myPageSource, "@ohos.data.preferences", 'MyPage must not read or write Preferences directly');
+forbidIncludes(appearancePageSource, "@ohos.data.preferences", 'AppearanceSettingsPage must not read or write Preferences directly');
 forbidIncludes(configPageSource, "@ohos.data.preferences", 'HomeHeroImagePage must not read or write Preferences directly');
 
 [
@@ -279,4 +284,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('home hero image config verified: service, settings entry, default fallback, single image, autoplay, copy/delete/clear, safe boundaries');
+console.log('home hero image config verified: service, routed appearance entry, default fallback, autoplay and safe boundaries');

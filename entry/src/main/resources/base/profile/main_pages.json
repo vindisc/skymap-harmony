@@ -9,6 +9,8 @@
     "pages/ReviewerProfilePage",
     "pages/ReviewSettingsPage",
     "pages/SyncCenterPage",
-    "pages/MotionSettingsPage"
+    "pages/MotionSettingsPage",
+    "pages/AppearanceSettingsPage",
+    "pages/BackupCenterPage"
   ]
 }

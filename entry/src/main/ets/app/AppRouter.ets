@@ -10,3 +10,5 @@ export const MY_PAGE: string = 'pages/MyPage';
 export const REVIEWER_PROFILE_PAGE: string = 'pages/ReviewerProfilePage';
 export const SYNC_CENTER_PAGE: string = 'pages/SyncCenterPage';
 export const MOTION_SETTINGS_PAGE: string = 'pages/MotionSettingsPage';
+export const APPEARANCE_SETTINGS_PAGE: string = 'pages/AppearanceSettingsPage';
+export const BACKUP_CENTER_PAGE: string = 'pages/BackupCenterPage';

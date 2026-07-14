@@ -13,6 +13,7 @@ const sources = {
   library: fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8'),
   stats: fs.readFileSync('entry/src/main/ets/pages/StatsPage.ets', 'utf8'),
   my: fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8'),
+  appearance: fs.readFileSync('entry/src/main/ets/pages/AppearanceSettingsPage.ets', 'utf8'),
   shell: fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8'),
   design: fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8'),
   tokens: fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8'),
@@ -137,14 +138,15 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
 ].forEach((marker) => requireIncludes(sources.stats, marker, 'Stats page must keep compact stats cards and empty-state-only guidance'));
 
 [
-  "AppPageHeader({\n        title: '我的'",
+  "AppPageHeader({ title: '我的' })",
   'const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;',
   'this.SettingsSection()',
   'this.AboutSection()',
-  "title: '复盘人'",
-  "title: '首页图片'",
+  'this.ReviewerCard()',
+  "title: '外观与动效'",
   "title: '家庭存储'",
   "title: '同步中心'",
+  "title: '备份与恢复'",
   "Text('关于')",
   "this.AboutField('版本'",
   "this.AboutField('作者 QQ'",
@@ -155,6 +157,16 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   'bottom: MY_PAGE_BOTTOM_PADDING',
   '.justifyContent(FlexAlign.Start)'
 ].forEach((marker) => requireIncludes(sources.my, marker, 'My page must show settings first with compact rows and bottom clearance'));
+[
+  "title: '首页图片'",
+  "title: '卡片背景'",
+  "title: '显示与动效'",
+  "Text('删除星河效果')"
+].forEach((marker) => requireIncludes(
+  sources.appearance,
+  marker,
+  'Appearance settings page must keep the secondary visual settings'
+));
 [
   "title: '设置'",
   "title: '应用'",
@@ -170,7 +182,7 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   'ReviewProjectService.buildHomeSummary',
   'top: AppMetrics.sectionGap'
 ].forEach((marker) => forbidIncludes(sources.my, marker, 'My page must not restore the profile/stat card or title gap'));
-requireOrder(sources.my, 'AppPageHeader({\n        title: \'我的\'', 'Scroll() {', 'My page title must stay fixed above the scroll region.');
+requireOrder(sources.my, "AppPageHeader({ title: '我的' })", 'Scroll() {', 'My page title must stay fixed above the scroll region.');
 requireOrder(sources.my, 'this.SettingsSection()', 'this.AboutSection()', 'My page settings should appear before app information.');
 
 [

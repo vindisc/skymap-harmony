@@ -192,7 +192,7 @@ assertIncludes(appDesignSource, '.fontSize(AppTypography.listTitle)', 'List titl
 assertIncludes(appDesignSource, '.fontSize(AppTypography.listSubtitle)', 'List subtitle must use compact token.');
 assertIncludes(appDesignSource, '.fontSize(AppTypography.meta)', 'Status tags must use compact token.');
 
-assertIncludes(myPageSource, "AppPageHeader({\n        title: '我的'", 'MyPage must keep the compact title-only header.');
+assertIncludes(myPageSource, "AppPageHeader({ title: '我的' })", 'MyPage must keep the compact title-only header.');
 assertIncludes(myPageSource, 'SettingsLinkRow({', 'MyPage settings entries must use the shared link row.');
 assertIncludes(myPageSource, 'dense: true', 'MyPage settings rows must use compact density.');
 assertIncludes(myPageSource, 'SettingsEntryTone.SUCCESS', 'MyPage status badges must use semantic tones.');

@@ -4,6 +4,7 @@ const sources = {
   homePage: fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8'),
   appShell: fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8'),
   myPage: fs.readFileSync('entry/src/main/ets/pages/MyPage.ets', 'utf8'),
+  appearanceSettingsPage: fs.readFileSync('entry/src/main/ets/pages/AppearanceSettingsPage.ets', 'utf8'),
   libraryPage: fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8'),
   previewPage: fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8'),
   syncCenterPage: fs.readFileSync('entry/src/main/ets/pages/SyncCenterPage.ets', 'utf8'),
@@ -116,12 +117,23 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
   "title: '我的'",
   'this.SettingsSection()',
   'this.AboutSection()',
+  'this.ReviewerCard()',
+  "title: '外观与动效'",
+  'APPEARANCE_SETTINGS_PAGE',
+  "title: '同步中心'",
+  "title: '家庭存储'",
+  "title: '备份与恢复'"
+].forEach((marker) => requireIncludes(sources.myPage, marker, 'MyPage missing current personal-center marker'));
+
+[
   "title: '首页图片'",
   'HOME_HERO_IMAGE_PAGE',
-  'HomeHeroImageService.listImages',
-  "title: '同步中心'",
-  "title: '家庭存储'"
-].forEach((marker) => requireIncludes(sources.myPage, marker, 'MyPage missing current personal-center marker'));
+  'HomeHeroImageService.listImages'
+].forEach((marker) => requireIncludes(
+  sources.appearanceSettingsPage,
+  marker,
+  'AppearanceSettingsPage missing home hero configuration marker'
+));
 
 [
   'this.IdentityCard()',
@@ -163,15 +175,19 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
 [
   'private openHomeHeroImage(): void {',
   'HOME_HERO_IMAGE_PAGE',
-  'private openSyncCenter(): void {',
-  'SYNC_CENTER_PAGE',
-  "title: '首页图片'",
-  "title: '同步中心'"
-].forEach((marker) => requireIncludes(sources.myPage, marker, 'MyPage missing current personal-center marker'));
+  "title: '首页图片'"
+].forEach((marker) => requireIncludes(
+  sources.appearanceSettingsPage,
+  marker,
+  'AppearanceSettingsPage missing home hero navigation marker'
+));
+requireIncludes(sources.myPage, 'SYNC_CENTER_PAGE', 'MyPage missing sync center route');
+requireIncludes(sources.myPage, "title: '同步中心'", 'MyPage missing sync center entry');
 
 [
   '"pages/HomeHeroImagePage"',
-  '"pages/SyncCenterPage"'
+  '"pages/SyncCenterPage"',
+  '"pages/AppearanceSettingsPage"'
 ].forEach((marker) => requireIncludes(sources.mainPages, marker, 'main_pages.json missing registration'));
 
 if (failed) {

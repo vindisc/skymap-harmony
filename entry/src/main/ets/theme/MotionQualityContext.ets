@@ -1,6 +1,6 @@
 import common from '@ohos.app.ability.common';
 import { MotionQuality, ReviewSettingsService } from '../services/ReviewSettingsService';
-import { MotionTokens } from './DesignTokens';
+import { MotionTokens, ShatterTokens } from './DesignTokens';
 
 export enum MotionCurveRole {
   EMPHASIZED = 'emphasized',
@@ -73,6 +73,12 @@ export class MotionQualityContext {
   // 预留：未来若决定 MINIMAL 档自动关闭星河效果，只需修改此处；当前仅镜像用户开关。
   static shouldPlayShatter(userEnabled: boolean): boolean {
     return userEnabled;
+  }
+
+  static resolveShatterLayerCount(): number {
+    return MotionQualityContext.quality === MotionQuality.FULL
+      ? ShatterTokens.fullLayerCount
+      : ShatterTokens.reducedLayerCount;
   }
 
   static tryAcquireCeremonySlot(): boolean {

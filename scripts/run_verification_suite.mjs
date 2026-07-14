@@ -49,6 +49,7 @@ const smokeScripts = [
   'verify_settings_entry_status.mjs',
   'verify_settings_refresh_flow.mjs',
   'verify_shatter_animation.mjs',
+  'verify_shatter_layers.mjs',
   'verify_smb_storage.mjs',
   'verify_test_automation.mjs',
   'verify_ui_production_completion.mjs',

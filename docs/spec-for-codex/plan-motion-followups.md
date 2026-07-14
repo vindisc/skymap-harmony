@@ -1,13 +1,208 @@
 # 交互动效后续排查与实现清单
 
 > 面向：下一轮实现 Agent（Codex）
-> 版本：v3（2026-07-14 追加）
+> 版本：v4（2026-07-15 追加）
 > v1 起源：`docs/spec-for-codex/plan-motion-narrative-upgrade.md` 落地至 `885c357` 后的 code review 结论
 > v2 起源：v1 落地至 `31239c8` 后的 code review 结论。新增 P0-V2、P1-V2、P2-V2 三组条目（编号带 `V2-` 前缀），原 P0/P1/P2 保持不变。
 > v3 起源：v2 落地至 `be1f978` 后的 code review 结论。新增 V3 组条目（编号带 `V3-` 前缀），原 v1/v2 内容保持不变。
+> v4 起源：v3 落地至 `c3ec2be` 后的用户新需求：我的页面收拢、星河效果升级、`consumePending` 冗余 `.slice()`。
 
 按"可直接派单"的粒度整理。分三档：**P0 排查**、**P1 补齐欠账**、**P2 卫生与决策**。
 每条给出：类别 · 动作 · 完成判定 · 文件锚点 · 背景。
+
+---
+
+## v4 追加条目（针对用户新反馈）
+
+### V4-P1-1. 我的页面信息架构收拢（档 B：二级聚合页）
+
+- **类别**：实现（信息架构）
+- **问题**：MyPage 顶层同级列表 9~10 行，密度过大，"看起来太散"。用户想要
+  更清晰的层次。
+- **决策已定**：**方案 B（二级聚合页）**。顶层收敛为「复盘人卡片 + 3 条二级入口 +
+  关于」，共 4~5 行。
+- **动作**：
+  1. **新增页面 `AppearanceSettingsPage.ets`**：把 MyPage 里以下条目二级化：
+     - `首页图片` → 迁入
+     - `卡片背景` → 迁入
+     - `显示与动效` → 迁入（保留原 `MotionSettingsPage` 二级页，本页做入口）
+     - `删除星河效果` → 迁入（改为 Toggle 行）
+     - 页面结构参照 `HomeStoragePage`：AppPageHeader + Column({ space: cardGap })
+       + `RippleSettingsLinkRow` 集合。每行仍走 `RippleTouch` + `SettingsLinkRow`
+       组合，遵循 V3-P2-2 的 `clipRadius: AppMetrics.cardRadius` 约束。
+  2. **新增页面 `BackupCenterPage.ets`**：把 `备份全部复盘` + `从备份恢复` 从
+     MyPage 迁入。原 `DataProtectionSection` 里的逻辑（`exportLibraryBackup /
+     selectLibraryBackup / backupItemTotal / isBackupActionRunning`）随之搬迁。
+  3. **改造 `MyPage.ets`**：顶部保留 `复盘人` **卡片**（比设置行更醒目，因为它
+     是用户身份，中频高价值）；下方三条二级入口 + `关于` 卡：
+     ```
+     [卡片] 复盘人：小李             →
+     外观与动效        完整 · 星河开 →   (openAppearanceSettings)
+     家庭存储          已连接         →   (openHomeStorage) —— 保留原有直达
+     备份与恢复        12 条          →   (openBackupCenter)
+     [卡片] 关于（版本 + 诊断入口）
+     ```
+     `同步中心` 仍保留为独立入口还是并入"家庭存储"页内？—— **默认保留独立入口**
+     （用户在 v4 未提及；家庭存储与同步中心在业务逻辑上仍是两回事）。若产品
+     后续想合并，另开子任务。
+  4. **新增 `AppRouter.ets` 中的两条路由**：`AppearanceSettingsPage`、
+     `BackupCenterPage`，遵循现有 `main_pages.json` 注册规范。
+  5. **verify 脚本收口**：
+     - 新增 `scripts/verify_my_page_information_architecture.mjs` 或扩展现有的：
+       断言 `MyPage.ets` 顶层设置行数 ≤ 5 条；断言 `AppearanceSettingsPage.ets`
+       必须包含指定 4 类子项；断言 `BackupCenterPage.ets` 必须包含备份+恢复
+       两个动作
+- **完成判定**：
+  - MyPage 编译后行数从当前约 700 行下降至 ≤ 500 行（迁移出去的逻辑不算在
+    MyPage 里）
+  - 新增两个页面各自可独立编译；`test_app.sh --quick` 全绿
+  - 真机上 MyPage 首屏可视区一屏容纳完整设置入口，不再需要滚动
+- **锚点**：
+  - `entry/src/main/ets/pages/MyPage.ets`（收敛）
+  - `entry/src/main/ets/pages/AppearanceSettingsPage.ets`（新增）
+  - `entry/src/main/ets/pages/BackupCenterPage.ets`（新增）
+  - `entry/src/main/ets/app/AppRouter.ets`
+  - `entry/src/main/resources/base/profile/main_pages.json`
+- **背景**：
+  - 「复盘人」保留在 MyPage 顶层是因为它是**身份类信息**，用户希望"一眼看到自己
+    是谁"；把它做成卡片形式而非普通行，突出身份属性
+  - 「家庭存储」保留在 MyPage 顶层是因为它是**状态类信息**（"已连接/未配置/失败"），
+    用户希望**一眼看到 NAS 是否可用**，不应再深一级
+  - 「删除星河效果」从行改成 Toggle 行是因为它是布尔开关，Toggle 比 Link 更贴合
+
+### V4-P1-2. 星河粒子效果升级（档 2：三层叠加 · 冒险星河风）
+
+- **类别**：实现（视觉升级）
+- **问题**：当前 `ShatterOverlay` 观感"差点意思"——粒子形态单一、颜色深、消失
+  太快、无光晕、运动无层次。诊断五个具体问题：
+  1. 只有 `POINT type, radius=2` 的硬边小点
+  2. 颜色 `#356F80` + `#B7773E` 太重（原本是应用主色和标签琥珀色）
+  3. 500ms 生命周期，200ms 内几乎完全消失
+  4. 无光晕（ArkUI Particle 不支持 blur）
+  5. 所有粒子速度均匀外扩，缺少"漂"的层次感
+- **决策已定**：**方案 2（三层叠加）+ 冒险星河风配色**。
+- **动作**：改造 `entry/src/main/ets/components/ShatterOverlay.ets` 为三层
+  粒子叠加。**三层参数如下**（所有值可通过 `MotionTokens` / `ShatterTokens`
+  抽出，避免 magic number）：
+
+  **主爆层**（现有层的强化版本 · 快速外扩）：
+  - `type: POINT, radius: 2`
+  - `count: 72`（低 48 / 中 72 / 高 96 —— 略低于原来）
+  - `lifetime: 700ms`（比 500ms 长，尾巴更长）
+  - `color range: ['#FFFFFF', '#C7D4FF']`（纯白到淡蓝白）
+  - `opacity: 1→1 (0-400ms) → 1→0 (400-700ms)`（前段保持满亮度更久）
+  - `scale range: [0.4, 1.6]`（比原来 0.6-1.2 更大动态范围）
+  - `speed: [24, 72]`，`angle: [0, 360]`
+
+  **光晕层**（新增 · 大颗慢速）：
+  - `type: IMAGE`，`src: $r('app.media.particle_halo')`（新增 halo PNG 资源；
+    32×32 白色径向渐变到透明的圆点，见后文资源规范）
+  - `count: 12`（低 6 / 中 12 / 高 20）
+  - `lifetime: 900ms`
+  - `color range: ['#FFFFFF', '#FFFFFF']`（IMAGE 类型 color 用作 tint，白色即原色）
+  - `opacity: 0.9→0.6 (0-500ms) → 0 (500-900ms)`
+  - `scale range: [0.8, 1.4]`（图像本身已经带 halo，不需要再放大很多）
+  - `speed: [8, 24]`（比主爆慢 3 倍，感觉"漂"）
+  - `angle: [0, 360]`
+
+  **慢漂层**（新增 · 长尾星尘）：
+  - `type: POINT, radius: 1`
+  - `count: 40`（低 20 / 中 40 / 高 60）
+  - `lifetime: 1200ms`（三层里最长）
+  - `color range: ['#FFFFFF', '#B8B8FF']`（白到淡紫）
+  - `opacity: 0.8→0.8 (0-600ms) → 0 (600-1200ms)`
+  - `scale range: [0.3, 0.9]`（最小）
+  - `speed: [6, 18]`（最慢）
+  - `angle: [0, 360]`
+
+  **总时长**：`MotionTokens.shatterDurationMs` 从 800ms 提高到 **1300ms**（覆盖最长
+  的慢漂层 1200ms + 200ms 缓冲）；同步更新 `verify_shatter_animation.mjs` 断言。
+
+- **新增资源**：
+  - `entry/src/main/resources/base/media/particle_halo.png`（32×32，白色径向渐变
+    从中心 alpha=1.0 到边缘 alpha=0.0；纯 alpha 通道，颜色由 Particle color prop
+    tint）
+  - 若无法生成 PNG，退化为 SVG（Particle IMAGE 目前应支持 SVG，但需真机验证）
+
+- **完成判定**：
+  - `ShatterOverlay.ets` 内包含三个 `emitter`，且每层的 `type / count / color /
+    opacity / scale / speed / lifetime` 都从 `ShatterTokens`（新增于 DesignTokens）
+    读取，不出现 magic number
+  - `MotionTokens.shatterDurationMs` = 1300
+  - 新增 `verify_shatter_layers.mjs`：断言三层的 lifetime 关系
+    `main < halo < drift` 与 count 关系 `drift > main > halo`
+  - 真机上删除卡片时能看到"发光星尘扩散 + 慢漂尾巴"，与之前的"糊一片颜色"有
+    肉眼可辨的差异
+  - 低端机 jank 若明显，`MotionQuality=CALM` 时**自动降级到只保留主爆层**
+    （在 `MotionQualityContext` 里加一个 `resolveShatterLayerCount()` 返回
+    1/2/3）；此改造并入本条目一起做
+
+- **锚点**：
+  - `entry/src/main/ets/components/ShatterOverlay.ets`
+  - `entry/src/main/ets/theme/DesignTokens.ets`（新增 `ShatterTokens` class）
+  - `entry/src/main/ets/theme/MotionQualityContext.ets`（新增 `resolveShatterLayerCount`）
+  - `entry/src/main/resources/base/media/particle_halo.png`（新增资源）
+  - `scripts/verify_shatter_animation.mjs`（时长值更新）
+  - `scripts/verify_shatter_layers.mjs`（新增分层校验）
+
+- **背景**：
+  - "冒险星河风"配色理由：白色/淡蓝白/淡紫都是**高亮 · 冷调 · 中性**，不与
+    应用整体的塔伽花米色 / 花胶质感冲突
+  - 三层叠加的物理动机：真实的粒子爆发从来不是同质的。中心点亮度高、外缘
+    小星尘慢漂、周围有光晕包裹——这三层分别对应人眼在"看烟花""看星河"时
+    捕捉到的三种视觉层次
+  - 为什么不做「光流 + 碎裂帧」（档 3）：开发量大 3 倍，低端机风险高，且当前
+    产品是照片复盘不是游戏，过度炫技反而突兀
+
+### V4-P2-1. `MotionCeremonyEventService.consumePending` 移除冗余 `.slice()`
+
+- **类别**：卫生
+- **问题**：`entry/src/main/ets/services/MotionCeremonyEventService.ets:60`
+  第 60 行 `MotionCeremonyEventService.pendingKinds = pendingKinds.slice();`
+  是冗余的：右侧 `pendingKinds` 已经是第 56 行 filter 返回的**新数组**，
+  再 `.slice()` 一次没有实际效果。局部变量 `pendingKinds` 用于遍历，静态
+  字段 `pendingKinds` 用于最终存储；即使两者短暂指向同一数组，第 65 行的
+  filter 也会生成新数组重新赋值，不会污染遍历中的局部变量。
+- **动作**：把第 60 行改成 `MotionCeremonyEventService.pendingKinds = pendingKinds;`
+- **完成判定**：
+  - 第 60 行不再出现 `.slice()`
+  - `test_app.sh --quick` 全绿
+  - 若认为需要 verify 断言防回归（可选），在 `verify_motion_ceremony_hooks.mjs`
+    里加一条 `assertNotIncludes(source, 'pendingKinds.slice()', ...)`
+- **锚点**：`entry/src/main/ets/services/MotionCeremonyEventService.ets:60`
+- **背景**：v3 code review 时发现，当时没派单。现在收口。
+
+---
+
+## v4 建议派单顺序
+
+1. **V4-P2-1** `.slice()` 清理（1 分钟，独立提交）
+2. **V4-P1-2** 星河粒子升级（观感立竿见影，用户能立刻反馈）
+3. **V4-P1-1** 我的页面收拢（架构调整，需要更多真机验证；等 V4-P1-2 落地后再动
+   避免同一次提交里改动过大）
+
+---
+
+## Codex v4 执行记录（2026-07-15）
+
+| 条目 | 状态 | 结论 |
+| --- | --- | --- |
+| V4-P1-1 我的页面收拢 | 代码完成，待真机观感 | `MyPage` 改为“复盘人身份卡 + 外观与动效 + 家庭存储 + 同步中心 + 备份与恢复 + 关于/开发诊断”，顶层 4 条设置入口；首页图片、卡片背景、显示与动效、星河开关迁入 `AppearanceSettingsPage`，备份与恢复逻辑迁入 `BackupCenterPage`。两个页面均已注册路由，Ripple 使用卡片圆角裁剪。`MyPage.ets` 从 683 行降至 500 行，门禁禁止恢复会撑大行距的顶层 `List`。 |
+| V4-P1-2 三层星河 | 代码完成，待真机观感 | `ShatterOverlay` 已拆为主爆 POINT、光晕 IMAGE、慢漂 POINT 三层，全部参数收口到 `ShatterTokens`；FULL 播放三层，CALM/MINIMAL 降级为仅主爆层。新增 32×32 RGBA alpha 光晕资源及分层门禁，总时长改为 1300ms。 |
+| V4-P2-1 pending slice | 已完成 | `consumePending` 直接保存 `filter` 产生的新数组，不再做冗余 `.slice()`；`verify_motion_ceremony_hooks.mjs` 已加防回归断言。 |
+| 旧发布门禁迁移 | 已完成 | 与旧 MyPage 扁平结构绑定的 smoke/all 断言已迁移到二级页，继续验证功能归属、路由可达、备份完整逻辑、刷新链路、Ripple 圆角和中文文案，没有通过删除能力断言来绕过门禁。 |
+
+规格取舍：三层明确参数为 main 72、drift 40、halo 12（低/高档同样保持该顺序），
+因此实现与门禁采用 `main > drift > halo`，不采用完成判定中矛盾的
+`drift > main > halo`。总时长采用明确指定的 1300ms；“覆盖 1200ms + 200ms 缓冲”
+算术上应为 1400ms，与指定值冲突，当前按指定值执行并保留 100ms 收尾空间。光晕是
+简单径向几何资产，使用确定性像素生成而非生成式图片；已验证为 32×32、RGBA、含 alpha。
+
+本地验证：`bash scripts/test_app.sh --quick` 通过 46/46；
+`bash scripts/test_app.sh --all` 通过 63/63，主模块与 `entry@ohosTest` 均完成 ArkTS
+编译和 HAP 打包，最终 unsigned HAP 为 4.1MB。HDC 设备探测超时，未执行覆盖安装或
+会清空数据的 UI 测试；MyPage 一屏容纳效果及“发光星尘扩散 + 慢漂尾巴”仍需设备
+恢复连接后做最终真机验收。
 
 ---
 

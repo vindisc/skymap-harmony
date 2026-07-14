@@ -1,97 +1,232 @@
-import { AppColors } from './AppDesign';
-import { MotionTokens } from '../theme/DesignTokens';
+import { ShatterTokens } from '../theme/DesignTokens';
+import { MotionQualityContext } from '../theme/MotionQualityContext';
 
 export type ShatterQuality = 'low' | 'medium' | 'high';
 
 interface ShatterDensity {
-  point: number;
+  main: number;
+  halo: number;
+  drift: number;
 }
 
 function resolveShatterDensity(quality: ShatterQuality): ShatterDensity {
   if (quality === 'low') {
-    return { point: 48 };
+    return {
+      main: ShatterTokens.mainCountLow,
+      halo: ShatterTokens.haloCountLow,
+      drift: ShatterTokens.driftCountLow
+    };
   }
   if (quality === 'high') {
-    return { point: 128 };
+    return {
+      main: ShatterTokens.mainCountHigh,
+      halo: ShatterTokens.haloCountHigh,
+      drift: ShatterTokens.driftCountHigh
+    };
   }
-  return { point: 96 };
+  return {
+    main: ShatterTokens.mainCountMedium,
+    halo: ShatterTokens.haloCountMedium,
+    drift: ShatterTokens.driftCountMedium
+  };
 }
 
-function resolveShatterEmitRate(quality: ShatterQuality): number {
-  return Math.ceil(resolveShatterDensity(quality).point * 1000 / MotionTokens.shatterPointLayerMs);
+function resolveShatterEmitRate(count: number): number {
+  return Math.ceil(count * 1000 / ShatterTokens.emissionWindowMs);
 }
 
 @Component
 export struct ShatterOverlay {
   @Prop quality: ShatterQuality = 'medium';
 
-  @State pointLayerVisible: boolean = false;
+  private readonly layerCount: number = MotionQualityContext.resolveShatterLayerCount();
 
-  private pointDelayTimerId: number = -1;
-
-  aboutToAppear(): void {
-    this.pointDelayTimerId = setTimeout(() => {
-      this.pointLayerVisible = true;
-    }, MotionTokens.shatterPointLayerDelayMs);
+  @Builder
+  MainBurstLayer() {
+    Particle({
+      particles: [
+        {
+          emitter: {
+            particle: {
+              type: ParticleType.POINT,
+              config: {
+                radius: ShatterTokens.mainRadius
+              },
+              count: resolveShatterDensity(this.quality).main,
+              lifetime: ShatterTokens.mainLifetimeMs
+            },
+            emitRate: resolveShatterEmitRate(resolveShatterDensity(this.quality).main),
+            position: [0, 0],
+            size: ['100%', '100%'],
+            shape: ParticleEmitterShape.RECTANGLE
+          },
+          color: {
+            range: [ShatterTokens.mainColorStart, ShatterTokens.mainColorEnd]
+          },
+          opacity: {
+            range: [ShatterTokens.mainOpacityStart, ShatterTokens.mainOpacityHold],
+            updater: {
+              type: ParticleUpdater.CURVE,
+              config: [
+                {
+                  from: ShatterTokens.mainOpacityStart,
+                  to: ShatterTokens.mainOpacityHold,
+                  startMillis: 0,
+                  endMillis: ShatterTokens.mainOpacityHoldEndMs,
+                  curve: Curve.Linear
+                },
+                {
+                  from: ShatterTokens.mainOpacityHold,
+                  to: ShatterTokens.mainOpacityEnd,
+                  startMillis: ShatterTokens.mainOpacityHoldEndMs,
+                  endMillis: ShatterTokens.mainLifetimeMs,
+                  curve: Curve.EaseIn
+                }
+              ]
+            }
+          },
+          scale: {
+            range: [ShatterTokens.mainScaleMin, ShatterTokens.mainScaleMax]
+          },
+          velocity: {
+            speed: [ShatterTokens.mainSpeedMin, ShatterTokens.mainSpeedMax],
+            angle: [ShatterTokens.angleMin, ShatterTokens.angleMax]
+          }
+        }
+      ]
+    })
+      .width('100%')
+      .height('100%')
   }
 
-  aboutToDisappear(): void {
-    this.cancelTimers();
+  @Builder
+  HaloLayer() {
+    Particle({
+      particles: [
+        {
+          emitter: {
+            particle: {
+              type: ParticleType.IMAGE,
+              config: {
+                src: $r('app.media.particle_halo'),
+                size: [ShatterTokens.haloImageSize, ShatterTokens.haloImageSize],
+                objectFit: ImageFit.Contain
+              },
+              count: resolveShatterDensity(this.quality).halo,
+              lifetime: ShatterTokens.haloLifetimeMs
+            },
+            emitRate: resolveShatterEmitRate(resolveShatterDensity(this.quality).halo),
+            position: [0, 0],
+            size: ['100%', '100%'],
+            shape: ParticleEmitterShape.RECTANGLE
+          },
+          color: {
+            range: [ShatterTokens.haloColorStart, ShatterTokens.haloColorEnd]
+          },
+          opacity: {
+            range: [ShatterTokens.haloOpacityStart, ShatterTokens.haloOpacityHold],
+            updater: {
+              type: ParticleUpdater.CURVE,
+              config: [
+                {
+                  from: ShatterTokens.haloOpacityStart,
+                  to: ShatterTokens.haloOpacityHold,
+                  startMillis: 0,
+                  endMillis: ShatterTokens.haloOpacityHoldEndMs,
+                  curve: Curve.EaseOut
+                },
+                {
+                  from: ShatterTokens.haloOpacityHold,
+                  to: ShatterTokens.haloOpacityEnd,
+                  startMillis: ShatterTokens.haloOpacityHoldEndMs,
+                  endMillis: ShatterTokens.haloLifetimeMs,
+                  curve: Curve.EaseIn
+                }
+              ]
+            }
+          },
+          scale: {
+            range: [ShatterTokens.haloScaleMin, ShatterTokens.haloScaleMax]
+          },
+          velocity: {
+            speed: [ShatterTokens.haloSpeedMin, ShatterTokens.haloSpeedMax],
+            angle: [ShatterTokens.angleMin, ShatterTokens.angleMax]
+          }
+        }
+      ]
+    })
+      .width('100%')
+      .height('100%')
   }
 
-  private cancelTimers(): void {
-    if (this.pointDelayTimerId >= 0) {
-      clearTimeout(this.pointDelayTimerId);
-      this.pointDelayTimerId = -1;
-    }
+  @Builder
+  DriftLayer() {
+    Particle({
+      particles: [
+        {
+          emitter: {
+            particle: {
+              type: ParticleType.POINT,
+              config: {
+                radius: ShatterTokens.driftRadius
+              },
+              count: resolveShatterDensity(this.quality).drift,
+              lifetime: ShatterTokens.driftLifetimeMs
+            },
+            emitRate: resolveShatterEmitRate(resolveShatterDensity(this.quality).drift),
+            position: [0, 0],
+            size: ['100%', '100%'],
+            shape: ParticleEmitterShape.RECTANGLE
+          },
+          color: {
+            range: [ShatterTokens.driftColorStart, ShatterTokens.driftColorEnd]
+          },
+          opacity: {
+            range: [ShatterTokens.driftOpacityStart, ShatterTokens.driftOpacityHold],
+            updater: {
+              type: ParticleUpdater.CURVE,
+              config: [
+                {
+                  from: ShatterTokens.driftOpacityStart,
+                  to: ShatterTokens.driftOpacityHold,
+                  startMillis: 0,
+                  endMillis: ShatterTokens.driftOpacityHoldEndMs,
+                  curve: Curve.Linear
+                },
+                {
+                  from: ShatterTokens.driftOpacityHold,
+                  to: ShatterTokens.driftOpacityEnd,
+                  startMillis: ShatterTokens.driftOpacityHoldEndMs,
+                  endMillis: ShatterTokens.driftLifetimeMs,
+                  curve: Curve.EaseIn
+                }
+              ]
+            }
+          },
+          scale: {
+            range: [ShatterTokens.driftScaleMin, ShatterTokens.driftScaleMax]
+          },
+          velocity: {
+            speed: [ShatterTokens.driftSpeedMin, ShatterTokens.driftSpeedMax],
+            angle: [ShatterTokens.angleMin, ShatterTokens.angleMax]
+          }
+        }
+      ]
+    })
+      .width('100%')
+      .height('100%')
   }
 
   build() {
     Stack() {
-      if (this.pointLayerVisible) {
-        Particle({
-          particles: [
-            {
-              emitter: {
-                particle: {
-                  type: ParticleType.POINT,
-                  config: {
-                    radius: 2
-                  },
-                  count: resolveShatterDensity(this.quality).point,
-                  lifetime: MotionTokens.shatterPointLayerMs,
-                  lifetimeRange: 100
-                },
-                emitRate: resolveShatterEmitRate(this.quality),
-                position: [0, 0],
-                size: ['100%', '100%'],
-                shape: ParticleEmitterShape.RECTANGLE
-              },
-              color: {
-                range: [AppColors.primary, AppColors.tagAmberText]
-              },
-              opacity: {
-                range: [1, 1],
-                updater: {
-                  type: ParticleUpdater.CURVE,
-                  config: [
-                    { from: 1, to: 0.2, startMillis: 0, endMillis: 300, curve: Curve.EaseOut },
-                    { from: 0.2, to: 0, startMillis: 300, endMillis: MotionTokens.shatterPointLayerMs, curve: Curve.EaseIn }
-                  ]
-                }
-              },
-              scale: {
-                range: [0.6, 1.2]
-              },
-              velocity: {
-                speed: [24, 72],
-                angle: [0, 360]
-              }
-            }
-          ]
-        })
-          .width('100%')
-          .height('100%')
+      this.MainBurstLayer()
+
+      if (this.layerCount >= 2) {
+        this.HaloLayer()
+      }
+
+      if (this.layerCount >= 3) {
+        this.DriftLayer()
       }
     }
     .width('100%')

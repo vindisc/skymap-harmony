@@ -158,11 +158,64 @@ export class MotionTokens {
   static readonly scalePressedHard: number = 0.96;
   static readonly scaleCeremony: number = 1.06;
   static readonly scaleHeroIntro: number = 1.04;
-  static readonly shatterDurationMs: number = 800;
-  static readonly shatterImageLayerMs: number = 500;
-  static readonly shatterPointLayerMs: number = 600;
-  static readonly shatterPointLayerDelayMs: number = 200;
+  static readonly shatterDurationMs: number = 1300;
   static readonly shatterRippleBackMs: number = 280;
+}
+
+export class ShatterTokens {
+  static readonly mainRadius: number = 2;
+  static readonly mainCountLow: number = 48;
+  static readonly mainCountMedium: number = 72;
+  static readonly mainCountHigh: number = 96;
+  static readonly mainLifetimeMs: number = 700;
+  static readonly mainColorStart: string = '#FFFFFF';
+  static readonly mainColorEnd: string = '#C7D4FF';
+  static readonly mainOpacityStart: number = 1;
+  static readonly mainOpacityHold: number = 1;
+  static readonly mainOpacityEnd: number = 0;
+  static readonly mainOpacityHoldEndMs: number = 400;
+  static readonly mainScaleMin: number = 0.4;
+  static readonly mainScaleMax: number = 1.6;
+  static readonly mainSpeedMin: number = 24;
+  static readonly mainSpeedMax: number = 72;
+
+  static readonly haloImageSize: number = 32;
+  static readonly haloCountLow: number = 6;
+  static readonly haloCountMedium: number = 12;
+  static readonly haloCountHigh: number = 20;
+  static readonly haloLifetimeMs: number = 900;
+  static readonly haloColorStart: string = '#FFFFFF';
+  static readonly haloColorEnd: string = '#FFFFFF';
+  static readonly haloOpacityStart: number = 0.9;
+  static readonly haloOpacityHold: number = 0.6;
+  static readonly haloOpacityEnd: number = 0;
+  static readonly haloOpacityHoldEndMs: number = 500;
+  static readonly haloScaleMin: number = 0.8;
+  static readonly haloScaleMax: number = 1.4;
+  static readonly haloSpeedMin: number = 8;
+  static readonly haloSpeedMax: number = 24;
+
+  static readonly driftRadius: number = 1;
+  static readonly driftCountLow: number = 20;
+  static readonly driftCountMedium: number = 40;
+  static readonly driftCountHigh: number = 60;
+  static readonly driftLifetimeMs: number = 1200;
+  static readonly driftColorStart: string = '#FFFFFF';
+  static readonly driftColorEnd: string = '#B8B8FF';
+  static readonly driftOpacityStart: number = 0.8;
+  static readonly driftOpacityHold: number = 0.8;
+  static readonly driftOpacityEnd: number = 0;
+  static readonly driftOpacityHoldEndMs: number = 600;
+  static readonly driftScaleMin: number = 0.3;
+  static readonly driftScaleMax: number = 0.9;
+  static readonly driftSpeedMin: number = 6;
+  static readonly driftSpeedMax: number = 18;
+
+  static readonly emissionWindowMs: number = 120;
+  static readonly angleMin: number = 0;
+  static readonly angleMax: number = 360;
+  static readonly fullLayerCount: number = 3;
+  static readonly reducedLayerCount: number = 1;
 }
 
 export class ToastDurationTokens {

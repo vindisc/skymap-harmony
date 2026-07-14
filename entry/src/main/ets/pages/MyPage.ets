@@ -1,11 +1,10 @@
 import common from '@ohos.app.ability.common';
 import {
-  HOME_HERO_IMAGE_PAGE,
+  APPEARANCE_SETTINGS_PAGE,
+  BACKUP_CENTER_PAGE,
   HOME_STORAGE_PAGE,
-  MOTION_SETTINGS_PAGE,
   REVIEWER_PROFILE_PAGE,
-  SYNC_CENTER_PAGE,
-  WIDGET_CARD_BACKGROUND_PAGE
+  SYNC_CENTER_PAGE
 } from '../app/AppRouter';
 import {
   AppColors,
@@ -15,6 +14,7 @@ import {
   SettingsEntryTone,
   SettingsLinkRow
 } from '../components/AppDesign';
+import { RippleTouch } from '../components/motion/RippleTouch';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import {
   RdbDiagnosticsResult,
@@ -28,21 +28,10 @@ import {
   FEEDBACK_RDB_DIAG_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
 import { HomeStorageConfigStatus, HomeStorageService, HomeStorageSettings } from '../services/HomeStorageService';
-import { HomeHeroImageService } from '../services/HomeHeroImageService';
-import {
-  MotionQuality,
-  REVIEW_WIDGET_CARD_BACKGROUND_PLAIN,
-  ReviewSettingsService
-} from '../services/ReviewSettingsService';
+import { MotionQuality, ReviewSettingsService } from '../services/ReviewSettingsService';
+import { ReviewLibraryBackupService } from '../services/ReviewLibraryBackupService';
 import { ToastService, ToastTone } from '../services/ToastService';
 import { DialogService, DialogTone } from '../services/DialogService';
-import {
-  ReviewLibraryBackupExportResult,
-  ReviewLibraryBackupInspection,
-  ReviewLibraryBackupRestoreResult,
-  ReviewLibraryBackupService
-} from '../services/ReviewLibraryBackupService';
-import { RippleTouch } from '../components/motion/RippleTouch';
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
 const APP_BUILD_TEXT: string = 'Harmony Beta V1';
@@ -64,16 +53,13 @@ export struct MyPage {
   @Prop @Watch('refreshPageData') refreshToken: number = 0;
   @State reviewerName: string = '';
   @State homeStorageSettings: HomeStorageSettings = HomeStorageService.defaultSettings();
-  @State homeHeroImageCount: number = 0;
-  @State widgetCardBackgroundStyle: string = REVIEW_WIDGET_CARD_BACKGROUND_PLAIN;
-  @State shatterAnimationEnabled: boolean = true;
   @State motionQuality: MotionQuality = MotionQuality.FULL;
+  @State shatterAnimationEnabled: boolean = true;
+  @State backupItemTotal: number = 0;
   @State isRdbDiagnosticsRunning: boolean = false;
   @State rdbDiagnosticsSummary: string = '未运行';
   @State rdbDiagnosticsStatus: string = '开发';
   @State isDeveloperDiagnosticsPressed: boolean = false;
-  @State backupItemTotal: number = 0;
-  @State isBackupActionRunning: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -94,171 +80,44 @@ export struct MyPage {
   private async reloadData(): Promise<void> {
     const requestId: number = this.loadRequestId + 1;
     this.loadRequestId = requestId;
-    const context = this.getAbilityContext();
+    const context: common.UIAbilityContext = this.getAbilityContext();
 
     this.reviewerName = await ReviewSettingsService.loadReviewerName(context);
     if (requestId !== this.loadRequestId) {
       return;
     }
-
-    this.widgetCardBackgroundStyle = await ReviewSettingsService.loadWidgetCardBackgroundStyle(context);
-    if (requestId !== this.loadRequestId) {
-      return;
-    }
-
     this.homeStorageSettings = await HomeStorageService.loadSettings(context);
     if (requestId !== this.loadRequestId) {
       return;
     }
-
-    this.homeHeroImageCount = (await HomeHeroImageService.listImages(context)).length;
-    if (requestId !== this.loadRequestId) {
-      return;
-    }
-
-    this.shatterAnimationEnabled = await ReviewSettingsService.loadShatterAnimationEnabled(context);
-    if (requestId !== this.loadRequestId) {
-      return;
-    }
-
     this.motionQuality = await ReviewSettingsService.loadMotionQuality(context);
     if (requestId !== this.loadRequestId) {
       return;
     }
-
-    this.backupItemTotal = await ReviewLibraryBackupService.countBackupItems(context);
+    this.shatterAnimationEnabled = await ReviewSettingsService.loadShatterAnimationEnabled(context);
     if (requestId !== this.loadRequestId) {
       return;
     }
-  }
-
-  private formatBackupTime(timestamp: number): string {
-    if (timestamp <= 0) {
-      return '未知时间';
-    }
-    const date = new Date(timestamp);
-    const pad = (value: number): string => `${value}`.padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  }
-
-  private async exportLibraryBackup(): Promise<void> {
-    if (this.isBackupActionRunning) {
-      return;
-    }
-    this.isBackupActionRunning = true;
-    try {
-      const result: ReviewLibraryBackupExportResult =
-        await ReviewLibraryBackupService.exportToUserFile(this.getAbilityContext());
-      if (result.success) {
-        ToastService.success(this.getUIContext(), result.message);
-      } else if (!result.cancelled) {
-        ToastService.error(this.getUIContext(), result.message);
-      }
-    } catch (error) {
-      ToastService.error(this.getUIContext(), `备份失败：${error}`);
-    } finally {
-      this.isBackupActionRunning = false;
-    }
-  }
-
-  private async selectLibraryBackup(): Promise<void> {
-    if (this.isBackupActionRunning) {
-      return;
-    }
-    this.isBackupActionRunning = true;
-    try {
-      const inspection: ReviewLibraryBackupInspection =
-        await ReviewLibraryBackupService.selectAndInspectBackup(this.getAbilityContext());
-      if (!inspection.success) {
-        if (!inspection.cancelled) {
-          ToastService.error(this.getUIContext(), inspection.message);
-        }
-        return;
-      }
-      const imageSummary: string = inspection.missingImageCount > 0
-        ? `包含 ${inspection.imageCount} 张照片；旧版备份另有 ${inspection.missingImageCount} 张未包含。`
-        : `包含 ${inspection.imageCount} 张照片。`;
-      DialogService.confirm(this.getUIContext(), {
-        title: `恢复 ${inspection.itemCount} 条复盘？`,
-        message: `已选择 ${inspection.fileCount} 个备份，最新备份时间：${this.formatBackupTime(inspection.createdAt)}。${imageSummary}\n恢复后会替换当前 ${this.backupItemTotal} 条复盘，家庭存储密码不会恢复。`,
-        cancelText: '取消',
-        confirmText: '确认恢复',
-        onConfirm: () => {
-          this.restoreLibraryBackup(inspection);
-        }
-      });
-    } catch (error) {
-      ToastService.error(this.getUIContext(), `读取备份失败：${error}`);
-    } finally {
-      this.isBackupActionRunning = false;
-    }
-  }
-
-  private async restoreLibraryBackup(inspection: ReviewLibraryBackupInspection): Promise<void> {
-    if (this.isBackupActionRunning) {
-      return;
-    }
-    this.isBackupActionRunning = true;
-    try {
-      const result: ReviewLibraryBackupRestoreResult =
-        await ReviewLibraryBackupService.restoreInspectedBackup(this.getAbilityContext(), inspection);
-      if (!result.success) {
-        ToastService.error(this.getUIContext(), result.message);
-        return;
-      }
-      ToastService.byTone(
-        this.getUIContext(),
-        result.message,
-        result.settingsRestored ? ToastTone.SUCCESS : ToastTone.WARNING
-      );
-      await this.reloadData();
-    } catch (error) {
-      ToastService.error(this.getUIContext(), `恢复失败，当前数据未被替换：${error}`);
-    } finally {
-      this.isBackupActionRunning = false;
-    }
-  }
-
-  private async toggleShatterAnimation(): Promise<void> {
-    const next: boolean = !this.shatterAnimationEnabled;
-    try {
-      const saved: boolean = await ReviewSettingsService.saveShatterAnimationEnabled(this.getAbilityContext(), next);
-      this.shatterAnimationEnabled = saved;
-    } catch (error) {
-      console.warn(`[MyPage] toggle shatter animation failed: ${error}`);
-    }
-  }
-
-  private resolveShatterAnimationBadge(): string {
-    return this.shatterAnimationEnabled ? '已开启' : '已关闭';
-  }
-
-  private resolveHomeStorageStatus(): HomeStorageConfigStatus {
-    return HomeStorageService.getConfigurationStatus(this.homeStorageSettings);
+    this.backupItemTotal = await ReviewLibraryBackupService.countBackupItems(context);
   }
 
   private resolveReviewerSummary(): string {
     return this.reviewerName.length > 0 ? this.reviewerName : '未设置';
   }
 
-  private resolveHomeHeroBadge(): string {
-    return this.homeHeroImageCount <= 0 ? '默认' : `${this.homeHeroImageCount} 张`;
-  }
-
-  private resolveWidgetCardBackgroundBadge(): string {
-    return ReviewSettingsService.resolveWidgetCardBackgroundLabel(this.widgetCardBackgroundStyle);
+  private resolveAppearanceSummary(): string {
+    const quality: string = ReviewSettingsService.resolveMotionQualityLabel(this.motionQuality);
+    return `${quality} · ${this.shatterAnimationEnabled ? '星河开' : '星河关'}`;
   }
 
   private resolveHomeStorageBadge(): string {
-    return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
-  }
-
-  private resolveSyncBadge(): string {
-    return HomeStorageService.resolveEntryStatusLabel(this.resolveHomeStorageStatus());
+    return HomeStorageService.resolveEntryStatusLabel(
+      HomeStorageService.getConfigurationStatus(this.homeStorageSettings)
+    );
   }
 
   private resolveStorageTone(): SettingsEntryTone {
-    const status: HomeStorageConfigStatus = this.resolveHomeStorageStatus();
+    const status: HomeStorageConfigStatus = HomeStorageService.getConfigurationStatus(this.homeStorageSettings);
     if (status === HomeStorageConfigStatus.COMPLETE) {
       return SettingsEntryTone.SUCCESS;
     }
@@ -266,6 +125,12 @@ export struct MyPage {
       return SettingsEntryTone.WARNING;
     }
     return SettingsEntryTone.MUTED;
+  }
+
+  private openPage(url: string, failureMessage: string): void {
+    this.getUIContext().getRouter().pushUrl({ url }).catch((error: Error) => {
+      console.error(`[MyPage] ${failureMessage}：${error.message}`);
+    });
   }
 
   private resolveDeveloperStatusTextColor(): string {
@@ -308,47 +173,10 @@ export struct MyPage {
     }
   }
 
-  private openReviewerProfile(): void {
-    this.getUIContext().getRouter().pushUrl({ url: REVIEWER_PROFILE_PAGE }).catch((error: Error) => {
-      console.error(`[MyPage] 打开复盘人设置失败：${error.message}`);
-    });
-  }
-
-  private openHomeHeroImage(): void {
-    this.getUIContext().getRouter().pushUrl({ url: HOME_HERO_IMAGE_PAGE }).catch((error: Error) => {
-      console.error(`[MyPage] 打开首页图片设置失败：${error.message}`);
-    });
-  }
-
-  private openHomeStorage(): void {
-    this.getUIContext().getRouter().pushUrl({ url: HOME_STORAGE_PAGE }).catch((error: Error) => {
-      console.error(`[MyPage] 打开家庭存储设置失败：${error.message}`);
-    });
-  }
-
-  private openMotionSettings(): void {
-    this.getUIContext().getRouter().pushUrl({ url: MOTION_SETTINGS_PAGE }).catch((error: Error) => {
-      console.error(`[MyPage] 打开显示与动效设置失败：${error.message}`);
-    });
-  }
-
-  private openWidgetCardBackground(): void {
-    this.getUIContext().getRouter().pushUrl({ url: WIDGET_CARD_BACKGROUND_PAGE }).catch((error: Error) => {
-      console.error(`[MyPage] 打开卡片背景设置失败：${error.message}`);
-    });
-  }
-
-  private openSyncCenter(): void {
-    this.getUIContext().getRouter().pushUrl({ url: SYNC_CENTER_PAGE }).catch((error: Error) => {
-      console.error(`[MyPage] 打开同步中心失败：${error.message}`);
-    });
-  }
-
   private confirmRdbDeveloperDiagnostics(): void {
     if (this.isRdbDiagnosticsRunning) {
       return;
     }
-
     DialogService.confirm(this.getUIContext(), {
       title: '运行开发诊断？',
       message: '此入口仅用于开发期验证 RDB 与迁移链路，普通使用不需要运行。',
@@ -365,27 +193,27 @@ export struct MyPage {
     if (this.isRdbDiagnosticsRunning) {
       return;
     }
-
     this.isRdbDiagnosticsRunning = true;
     this.rdbDiagnosticsSummary = '正在运行 RDB 旁路诊断';
     this.rdbDiagnosticsStatus = '运行中';
     try {
-      const context = this.getAbilityContext();
+      const context: common.UIAbilityContext = this.getAbilityContext();
       const rdbResult: RdbDiagnosticsResult = await ReviewCardRdbDiagnosticsService.runRdbDiagnostics(context);
       const migrationResult: RdbMigrationDiagnosticsResult =
         await ReviewCardRdbDiagnosticsService.runMigrationDiagnostics(context);
       const formattedRdbResult: string = ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(rdbResult);
       const formattedMigrationResult: string = ReviewCardRdbDiagnosticsService.formatDiagnosticsResult(migrationResult);
       console.info(`[RDB开发诊断]\n${formattedRdbResult}\n\n[Preferences迁移诊断]\n${formattedMigrationResult}`);
-
       const isSuccess: boolean = rdbResult.success && migrationResult.success;
       const errorCount: number = rdbResult.errors.length + migrationResult.errors.length;
       this.rdbDiagnosticsStatus = isSuccess ? '通过' : '失败';
       this.rdbDiagnosticsSummary =
         `${isSuccess ? '通过' : '失败'} · RDB ${rdbResult.steps.length} 步 · 迁移 ${migrationResult.steps.length} 步 · 错误 ${errorCount}`;
-      ToastService.byTone(this.getUIContext(),
+      ToastService.byTone(
+        this.getUIContext(),
         isSuccess ? FEEDBACK_RDB_DIAG_SUCCESS_TEXT : FEEDBACK_RDB_DIAG_FAILED_TEXT,
-        isSuccess ? ToastTone.SUCCESS : ToastTone.ERROR);
+        isSuccess ? ToastTone.SUCCESS : ToastTone.ERROR
+      );
     } catch (error) {
       this.rdbDiagnosticsStatus = '失败';
       this.rdbDiagnosticsSummary = `异常：${error}`;
@@ -397,15 +225,54 @@ export struct MyPage {
   }
 
   @Builder
-  RippleSettingsLinkRowContent(options: RippleSettingsLinkOptions) {
-    SettingsLinkRow({
-      title: options.title,
-      status: options.status,
-      tone: options.tone,
-      dense: true,
-      scaleOnPress: false,
-      onTap: options.onTap
+  ReviewerCardContent() {
+    Row({ space: AppMetrics.cardGap }) {
+      Column({ space: AppMetrics.space4 }) {
+        Text('复盘人')
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
+
+        Text(this.resolveReviewerSummary())
+          .fontSize(AppTypography.cardTitle)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.cardTitleLineHeight)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .width('100%')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      Text('›')
+        .fontSize(20)
+        .fontColor(AppColors.primary)
+        .opacity(0.7)
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.cardPadding)
+    .width('100%')
+    .constraintSize({ minHeight: 76 })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.primarySoft)
+    .border({ width: 1, color: AppColors.primary })
+    .shadow(ElevationTokens.low)
+    .onClick(() => {
+      this.openPage(REVIEWER_PROFILE_PAGE, '打开复盘人设置失败');
     })
+  }
+
+  @Builder
+  ReviewerCard() {
+    RippleTouch({
+      clipRadius: AppMetrics.cardRadius,
+      content: () => {
+        this.ReviewerCardContent();
+      }
+    })
+      .width('100%')
   }
 
   @Builder
@@ -413,7 +280,14 @@ export struct MyPage {
     RippleTouch({
       clipRadius: AppMetrics.cardRadius,
       content: () => {
-        this.RippleSettingsLinkRowContent(options);
+        SettingsLinkRow({
+          title: options.title,
+          status: options.status,
+          tone: options.tone,
+          dense: true,
+          scaleOnPress: false,
+          onTap: options.onTap
+        })
       }
     })
       .width('100%')
@@ -422,48 +296,14 @@ export struct MyPage {
   @Builder
   SettingsSection() {
     Column({ space: AppMetrics.cardGap }) {
-      this.RippleSettingsLinkRow({
-        title: '复盘人',
-        status: this.resolveReviewerSummary(),
-        tone: this.resolveReviewerSummary() === '未设置' ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
-        onTap: () => {
-          this.openReviewerProfile();
-        }
-      })
+      this.ReviewerCard()
 
       this.RippleSettingsLinkRow({
-        title: '首页图片',
-        status: this.resolveHomeHeroBadge(),
-        tone: this.homeHeroImageCount <= 0 ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
-        onTap: () => {
-          this.openHomeHeroImage();
-        }
-      })
-
-      this.RippleSettingsLinkRow({
-        title: '卡片背景',
-        status: this.resolveWidgetCardBackgroundBadge(),
+        title: '外观与动效',
+        status: this.resolveAppearanceSummary(),
         tone: SettingsEntryTone.DEFAULT,
         onTap: () => {
-          this.openWidgetCardBackground();
-        }
-      })
-
-      this.RippleSettingsLinkRow({
-        title: '显示与动效',
-        status: ReviewSettingsService.resolveMotionQualityLabel(this.motionQuality),
-        tone: SettingsEntryTone.DEFAULT,
-        onTap: () => {
-          this.openMotionSettings();
-        }
-      })
-
-      this.RippleSettingsLinkRow({
-        title: '删除星河效果',
-        status: this.resolveShatterAnimationBadge(),
-        tone: this.shatterAnimationEnabled ? SettingsEntryTone.SUCCESS : SettingsEntryTone.MUTED,
-        onTap: () => {
-          this.toggleShatterAnimation();
+          this.openPage(APPEARANCE_SETTINGS_PAGE, '打开外观与动效失败');
         }
       })
 
@@ -472,55 +312,27 @@ export struct MyPage {
         status: this.resolveHomeStorageBadge(),
         tone: this.resolveStorageTone(),
         onTap: () => {
-          this.openHomeStorage();
+          this.openPage(HOME_STORAGE_PAGE, '打开家庭存储设置失败');
         }
       })
 
       this.RippleSettingsLinkRow({
         title: '同步中心',
-        status: this.resolveSyncBadge(),
+        status: this.resolveHomeStorageBadge(),
         tone: this.resolveStorageTone(),
         onTap: () => {
-          this.openSyncCenter();
+          this.openPage(SYNC_CENTER_PAGE, '打开同步中心失败');
         }
       })
-    }
-    .width('100%')
-  }
 
-  @Builder
-  DataProtectionSection() {
-    Column({ space: AppMetrics.cardGap }) {
       this.RippleSettingsLinkRow({
-        title: '备份全部复盘',
-        status: this.isBackupActionRunning ? '处理中' : `${this.backupItemTotal} 条`,
+        title: '备份与恢复',
+        status: `${this.backupItemTotal} 条`,
         tone: this.backupItemTotal > 0 ? SettingsEntryTone.SUCCESS : SettingsEntryTone.MUTED,
         onTap: () => {
-          this.exportLibraryBackup();
+          this.openPage(BACKUP_CENTER_PAGE, '打开备份与恢复失败');
         }
       })
-
-      this.RippleSettingsLinkRow({
-        title: '从备份恢复',
-        status: this.isBackupActionRunning ? '处理中' : '选择文件',
-        tone: SettingsEntryTone.DEFAULT,
-        onTap: () => {
-          this.selectLibraryBackup();
-        }
-      })
-    }
-    .alignItems(HorizontalAlign.Start)
-    .width('100%')
-  }
-
-  @Builder
-  AboutSection() {
-    Column({ space: AppMetrics.cardGap }) {
-      this.AboutInfoCard()
-
-      if (ENABLE_RDB_DIAGNOSTICS_ENTRY) {
-        this.DeveloperDiagnosticsCard()
-      }
     }
     .width('100%')
   }
@@ -536,7 +348,6 @@ export struct MyPage {
         .width('100%')
 
       this.AboutField('版本', `${APP_VERSION_TEXT} · ${APP_BUILD_TEXT}`)
-
       this.AboutField('作者 QQ', APP_AUTHOR_QQ_TEXT)
     }
     .alignItems(HorizontalAlign.Start)
@@ -580,7 +391,7 @@ export struct MyPage {
   @Builder
   DeveloperDiagnosticsCard() {
     Row({ space: AppMetrics.cardGap }) {
-      Column({ space: 4 }) {
+      Column({ space: AppMetrics.space4 }) {
         Text('开发诊断')
           .fontSize(AppTypography.body)
           .fontWeight(FontWeight.Bold)
@@ -642,11 +453,20 @@ export struct MyPage {
     })
   }
 
+  @Builder
+  AboutSection() {
+    Column({ space: AppMetrics.cardGap }) {
+      this.AboutInfoCard()
+      if (ENABLE_RDB_DIAGNOSTICS_ENTRY) {
+        this.DeveloperDiagnosticsCard()
+      }
+    }
+    .width('100%')
+  }
+
   build() {
     Column() {
-      AppPageHeader({
-        title: '我的'
-      })
+      AppPageHeader({ title: '我的' })
         .padding({
           left: AppMetrics.pagePadding,
           right: AppMetrics.pagePadding,
@@ -657,9 +477,6 @@ export struct MyPage {
       Scroll() {
         Column({ space: AppMetrics.sectionGap }) {
           this.SettingsSection()
-
-          this.DataProtectionSection()
-
           this.AboutSection()
         }
         .alignItems(HorizontalAlign.Start)

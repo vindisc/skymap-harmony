@@ -35,7 +35,7 @@ const forbiddenCopy = [
 
 const requiredCopy = [
   ['entry/src/main/ets/pages/HomePage.ets', "label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘'"],
-  ['entry/src/main/ets/pages/MyPage.ets', "AppPageHeader({\n        title: '我的'"],
+  ['entry/src/main/ets/pages/MyPage.ets', "AppPageHeader({ title: '我的' })"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', "placeholder: '标题、关系、卡点、文件名'"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', "this.HeaderRow()"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".height(AppMetrics.filterChipHeight)"],
