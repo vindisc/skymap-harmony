@@ -119,10 +119,10 @@ baselineImagePaths.forEach((imagePath) => {
   'ProjectReviewCard({'
 ].forEach((marker) => requireIncludes(sources.library, marker, 'Review library must keep compact search, filters and cards'));
 requireOrder(sources.library, 'this.SearchField()', "this.FilterChip('全部', 'all')", 'Review library search must appear before filters.');
-requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)", 'ProjectReviewCard({', 'Review library list should appear directly after filters.');
+requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)", 'this.HistoryReviewListCard(item);', 'Review library list should appear directly after filters.');
 
 [
-  "AppPageHeader({\n        title: '统计'",
+  "title: '统计'",
   'STATS_PAGE_TOP_PADDING',
   'this.LearningOverviewCard()',
   'this.OverviewCard()',
@@ -132,7 +132,8 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   '还没有复盘数据',
   '完成第一张照片复盘后，这里会显示你的判断变化。',
   'top: STATS_PAGE_TOP_PADDING',
-  ".constraintSize({ minHeight: '100%' })\n        .justifyContent(FlexAlign.Start)"
+  ".constraintSize({ minHeight: '100%' })",
+  '.justifyContent(FlexAlign.Start)'
 ].forEach((marker) => requireIncludes(sources.stats, marker, 'Stats page must keep compact stats cards and empty-state-only guidance'));
 
 [

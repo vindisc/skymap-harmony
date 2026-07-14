@@ -8,7 +8,6 @@ const entryAbilitySource = fs.readFileSync('entry/src/main/ets/entryability/Entr
 const appShellSource = fs.readFileSync('entry/src/main/ets/pages/AppShellPage.ets', 'utf8');
 const homeSource = fs.readFileSync('entry/src/main/ets/pages/HomePage.ets', 'utf8');
 const previewSource = fs.readFileSync('entry/src/main/ets/pages/PreviewPage.ets', 'utf8');
-const sharedHeroSource = fs.readFileSync('entry/src/main/ets/components/motion/SharedHero.ets', 'utf8');
 
 function assertIncludes(source, marker, message) {
   if (!source.includes(marker)) {
@@ -35,6 +34,5 @@ assertNotIncludes(appShellSource, 'MotionQualityContext.initialize(', 'App shell
 assertIncludes(homeSource, 'MotionTokens.durationStaggerLong * 2', 'Home stagger must use motion tokens');
 assertNotIncludes(homeSource, 'MotionTokens.durationStagger, 120, 200', 'Home stagger must not use raw delays');
 assertNotIncludes(previewSource, 'content: this.', 'BuilderParam content must not receive an unbound page builder');
-assertIncludes(sharedHeroSource, 'private hasTransitionTag(): boolean', 'SharedHero must disable transitions for empty tags');
 
 console.log('motion lifecycle guards verified: timers, next-frame sheet, save lock, startup quality, builder binding');

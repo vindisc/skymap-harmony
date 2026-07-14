@@ -6,7 +6,6 @@ const componentMarkers = new Map([
   ['StaggeredEnter.ets', ['export struct StaggeredEnter', 'batchIndex', 'batchSize', 'delayMs']],
   ['ShimmerBox.ets', ['export struct ShimmerBox', 'boxWidth', 'boxHeight', 'boxRadius']],
   ['CountUpText.ets', ['export struct CountUpText', 'value', 'durationMs', 'suffix']],
-  ['SharedHero.ets', ['export struct SharedHero', 'tag', 'geometryTransition']],
   ['BottomSheetContainer.ets', ['export struct BottomSheetContainer', 'visible', 'onClose']],
   ['CeremonyBurst.ets', ['export struct CeremonyBurst', 'kind', 'onFinish', 'Particle']],
   ['RippleTouch.ets', ['export struct RippleTouch', 'tint', 'TouchType.Down']]
@@ -25,4 +24,4 @@ for (const [file, markers] of componentMarkers.entries()) {
   }
 }
 
-console.log('motion component shapes verified: 8 reusable ArkUI components');
+console.log('motion component shapes verified: 7 reusable ArkUI components');

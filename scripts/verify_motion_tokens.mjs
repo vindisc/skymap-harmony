@@ -31,7 +31,7 @@ for (const token of requiredTokens) {
   }
 }
 
-for (const api of ['resolveDuration', 'resolveCurve', 'shouldPlayCeremony', 'tryAcquireCeremonySlot']) {
+for (const api of ['resolveDuration', 'resolveCurve', 'shouldPlayCeremony', 'shouldPlayShatter', 'tryAcquireCeremonySlot']) {
   if (!contextSource.includes(`static ${api}`)) {
     throw new Error(`MotionQualityContext 缺少 API: ${api}`);
   }

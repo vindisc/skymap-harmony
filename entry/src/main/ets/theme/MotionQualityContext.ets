@@ -70,6 +70,10 @@ export class MotionQualityContext {
     return MotionQualityContext.quality === MotionQuality.FULL;
   }
 
+  static shouldPlayShatter(userEnabled: boolean): boolean {
+    return userEnabled;
+  }
+
   static tryAcquireCeremonySlot(): boolean {
     if (!MotionQualityContext.shouldPlayCeremony() || MotionQualityContext.ceremonyOccupied) {
       return false;

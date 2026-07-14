@@ -55,6 +55,7 @@ requireIncludes(projectDetailSource, '@State hiddenCardKeys: Array<string>', 'Pr
 requireIncludes(projectDetailSource, 'MotionTokens.shatterDurationMs', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'Visibility.Hidden', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'ReviewSettingsService.loadShatterAnimationEnabled', 'ProjectDetailPage');
+requireIncludes(projectDetailSource, 'MotionQualityContext.shouldPlayShatter', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'private isPageAlive: boolean = false;', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'if (!this.isPageAlive)', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'this.deleteHistory(document);', 'ProjectDetailPage');

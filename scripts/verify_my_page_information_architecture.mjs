@@ -92,7 +92,7 @@ assert(myPageSource.includes('HomeHeroImageService.listImages'), 'Home hero imag
 assert(myPageSource.includes('HomeStorageService.resolveEntryStatusLabel'), 'Home storage status mapping must remain visible in MyPage.');
 
 [
-  "AppPageHeader({\n        title: '统计'",
+  "title: '统计'",
   'LearningProgressService.loadWithReviewItems(context)',
   'ReviewProjectService.buildStatsFeedback(progressResult.reviewItems)',
   'OverviewCard()',

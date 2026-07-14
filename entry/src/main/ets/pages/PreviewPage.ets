@@ -53,6 +53,7 @@ import { hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 import { ToastService } from '../services/ToastService';
 import { FloatingStatusBanner, StatusBannerTone } from '../components/InlineStatusBanner';
 import { BottomSheetContainer } from '../components/motion/BottomSheetContainer';
+import { PressReactive } from '../components/motion/PressReactive';
 
 enum PreviewSaveState {
   UNSAVED = '未保存',
@@ -563,7 +564,7 @@ struct PreviewPage {
   }
 
   @Builder
-  ExportSheetAction(label: string, description: string, isDisabled: boolean, onTap: () => void) {
+  ExportSheetActionContent(label: string, description: string, isDisabled: boolean, onTap: () => void) {
     Column({ space: 3 }) {
       Text(label)
         .fontSize(AppTypography.body)
@@ -577,27 +578,57 @@ struct PreviewPage {
         .lineHeight(AppTypography.captionLineHeight)
         .width('100%')
     }
-      .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Start)
-      .constraintSize({ minHeight: AppMetrics.controlHeight })
-      .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space8, bottom: AppMetrics.space8 })
+    .justifyContent(FlexAlign.Center)
+    .alignItems(HorizontalAlign.Start)
+    .constraintSize({ minHeight: AppMetrics.controlHeight })
+    .padding({ left: AppMetrics.space16, right: AppMetrics.space16, top: AppMetrics.space8, bottom: AppMetrics.space8 })
+    .width('100%')
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(this.isPressed(label) ? AppColors.surfaceMuted : AppColors.surfaceElevated)
+    .border({ width: 1, color: AppColors.border })
+    .shadow(isDisabled ? ElevationTokens.none : (this.isPressed(label) ? ElevationTokens.medium : ElevationTokens.subtle))
+    .opacity(isDisabled ? 0.56 : 1)
+    .onTouch((event: TouchEvent) => {
+      this.updatePressedAction(event, label, isDisabled);
+    })
+    .onClick(() => {
+      if (isDisabled) {
+        return;
+      }
+      this.closeExportMenu();
+      onTap();
+    })
+  }
+
+  @Builder
+  ExportSheetAction(label: string, description: string, isDisabled: boolean, onTap: () => void) {
+    PressReactive({
+      intensity: 'firm',
+      content: () => {
+        this.ExportSheetActionContent(label, description, isDisabled, onTap);
+      }
+    })
+      .width('100%')
+  }
+
+  @Builder
+  CancelExportActionContent() {
+    Button('取消')
+      .height(AppMetrics.controlHeight)
       .width('100%')
       .borderRadius(AppMetrics.cardRadius)
-      .backgroundColor(this.isPressed(label) ? AppColors.surfaceMuted : AppColors.surfaceElevated)
-      .border({ width: 1, color: AppColors.border })
-      .shadow(isDisabled ? ElevationTokens.none : (this.isPressed(label) ? ElevationTokens.medium : ElevationTokens.subtle))
-      .scale({ x: this.isPressed(label) ? MotionTokens.scaleSubtle : 1, y: this.isPressed(label) ? MotionTokens.scaleSubtle : 1 })
-      .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
-      .opacity(isDisabled ? 0.56 : 1)
+      .fontSize(AppTypography.buttonText)
+      .fontWeight(FontWeight.Medium)
+      .fontColor(this.isPressed('cancel-export') ? AppColors.onPrimary : AppColors.primary)
+      .backgroundColor(this.isPressed('cancel-export') ? AppColors.primary : AppColors.primarySoft)
+      .border({ width: 1, color: AppColors.primary })
+      .shadow(this.isPressed('cancel-export') ? ElevationTokens.subtle : ElevationTokens.low)
+      .stateEffect(true)
       .onTouch((event: TouchEvent) => {
-        this.updatePressedAction(event, label, isDisabled);
+        this.updatePressedAction(event, 'cancel-export', false);
       })
       .onClick(() => {
-        if (isDisabled) {
-          return;
-        }
         this.closeExportMenu();
-        onTap();
       })
   }
 
@@ -708,25 +739,13 @@ struct PreviewPage {
         .backgroundColor(AppColors.pageBackground)
         .border({ width: 1, color: AppColors.border })
 
-        Button('取消')
-          .height(AppMetrics.controlHeight)
+        PressReactive({
+          intensity: 'firm',
+          content: () => {
+            this.CancelExportActionContent();
+          }
+        })
           .width('100%')
-          .borderRadius(AppMetrics.cardRadius)
-          .fontSize(AppTypography.buttonText)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(this.isPressed('cancel-export') ? AppColors.onPrimary : AppColors.primary)
-          .backgroundColor(this.isPressed('cancel-export') ? AppColors.primary : AppColors.primarySoft)
-          .border({ width: 1, color: AppColors.primary })
-          .shadow(this.isPressed('cancel-export') ? ElevationTokens.subtle : ElevationTokens.low)
-          .scale({ x: this.isPressed('cancel-export') ? MotionTokens.scalePressed : 1, y: this.isPressed('cancel-export') ? MotionTokens.scalePressed : 1 })
-          .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
-          .stateEffect(true)
-          .onTouch((event: TouchEvent) => {
-            this.updatePressedAction(event, 'cancel-export', false);
-          })
-          .onClick(() => {
-            this.closeExportMenu();
-          })
     }
     .width('100%')
   }
@@ -741,6 +760,8 @@ struct PreviewPage {
 
       BottomSheetContainer({
         visible: this.isExportMenuVisible,
+        // @Builder 方法必须通过绑定当前页面实例的闭包调用；不要直接传方法引用，
+        // 否则运行时会因未绑定 this 触发 bind 异常。
         content: () => {
           this.ExportMenuContent();
         },

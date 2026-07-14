@@ -54,7 +54,13 @@ import {
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { ToastService } from '../services/ToastService';
 import { ShimmerBox } from '../components/motion/ShimmerBox';
+import { PressReactive } from '../components/motion/PressReactive';
+import { CeremonyBurst } from '../components/motion/CeremonyBurst';
 import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
+import {
+  MotionCeremonyEventKind,
+  MotionCeremonyEventService
+} from '../services/MotionCeremonyEventService';
 
 const HOME_HERO_ASPECT_RATIO: number = 0.68;
 const HOME_SIDE_PADDING: number = AppMetrics.pagePadding;
@@ -70,6 +76,17 @@ const HOME_PENDING_IMPORT_MAX_SELECT_NUMBER: number = 30;
 @Component
 export struct HomePage {
   private dashboardReloadState: HomeDashboardReloadState = createHomeDashboardReloadState();
+  private isPageActive: boolean = false;
+  private ceremonyEventListener: (kind: MotionCeremonyEventKind) => boolean = (
+    kind: MotionCeremonyEventKind
+  ): boolean => {
+    if (!this.isPageActive || kind !== MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED ||
+      !MotionQualityContext.shouldPlayCeremony()) {
+      return false;
+    }
+    this.ceremonyVisible = true;
+    return true;
+  };
   private readonly heroFeatureTags: Array<string> = [
     '视觉落点',
     '视线路径',
@@ -88,15 +105,20 @@ export struct HomePage {
   @State activeHeroIndex: number = 0;
   @State isHistoryLoading: boolean = false;
   @State introStage: number = 0;
+  @State ceremonyVisible: boolean = false;
   private introTimerIds: Array<number> = [];
 
   aboutToAppear(): void {
+    this.isPageActive = true;
+    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
     this.reloadHistory();
     this.reloadHeroImages();
     this.playIntro();
   }
 
   aboutToDisappear(): void {
+    this.isPageActive = false;
+    MotionCeremonyEventService.unsubscribe(this.ceremonyEventListener);
     this.clearIntroTimers();
   }
 
@@ -125,8 +147,11 @@ export struct HomePage {
   }
 
   onPageShow(): void {
+    this.isPageActive = true;
+    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
     this.reloadHistory();
     this.reloadHeroImages();
+    this.playIntro();
   }
 
   refreshHomeData(): void {
@@ -573,10 +598,11 @@ export struct HomePage {
   }
 
   @Builder
-  StartReviewButton() {
+  StartReviewButtonContent() {
     PrimaryButton({
       label: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '导入照片，开始复盘',
       isDisabled: this.isPickingPhoto || this.isImportingPendingPhoto,
+      scaleOnPress: false,
       onTap: () => {
         this.startPhotoDraft();
       }
@@ -584,41 +610,79 @@ export struct HomePage {
   }
 
   @Builder
-  ImportPendingButton() {
+  StartReviewButton() {
+    PressReactive({
+      intensity: 'firm',
+      content: () => {
+        this.StartReviewButtonContent();
+      }
+    })
+      .width('100%')
+  }
+
+  @Builder
+  ImportPendingButtonContent() {
     SecondaryButton({
       label: this.isImportingPendingPhoto ? '正在加入待复盘…' : '导入待复盘',
       isDisabled: this.isPickingPhoto || this.isImportingPendingPhoto,
+      scaleOnPress: false,
       onTap: () => {
         this.importPendingPhoto();
       }
     })
   }
 
-  build() {
-    Column({ space: AppMetrics.sectionGap }) {
-      this.HeroPanel()
-
-      if (this.shouldShowHistoryDiagnostics()) {
-        this.DiagnosticsPanel()
+  @Builder
+  ImportPendingButton() {
+    PressReactive({
+      intensity: 'firm',
+      content: () => {
+        this.ImportPendingButtonContent();
       }
+    })
+      .width('100%')
+  }
 
-      if (this.shouldShowHistorySkeleton()) {
-        Column() {
-          this.HomeHistorySkeleton()
+  build() {
+    Stack() {
+      Column({ space: AppMetrics.sectionGap }) {
+        this.HeroPanel()
+
+        if (this.shouldShowHistoryDiagnostics()) {
+          this.DiagnosticsPanel()
         }
-          .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding })
-          .width('100%')
+
+        if (this.shouldShowHistorySkeleton()) {
+          Column() {
+            this.HomeHistorySkeleton()
+          }
+            .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding })
+            .width('100%')
+        }
+      }
+      .width('100%')
+      .height('100%')
+      .padding({
+        left: 0,
+        right: 0,
+        top: AppMetrics.pageTopPadding,
+        bottom: AppMetrics.tabContentBottomPadding
+      })
+      .alignItems(HorizontalAlign.Start)
+      .backgroundColor(AppColors.pageBackground)
+
+      if (this.ceremonyVisible) {
+        CeremonyBurst({
+          kind: 'review-done',
+          onFinish: () => {
+            this.ceremonyVisible = false;
+          }
+        })
+          .zIndex(20)
       }
     }
     .width('100%')
     .height('100%')
-    .padding({
-      left: 0,
-      right: 0,
-      top: AppMetrics.pageTopPadding,
-      bottom: AppMetrics.tabContentBottomPadding
-    })
-    .alignItems(HorizontalAlign.Start)
     .backgroundColor(AppColors.pageBackground)
   }
 }

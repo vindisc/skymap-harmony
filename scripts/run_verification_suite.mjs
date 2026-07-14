@@ -20,6 +20,7 @@ const smokeScripts = [
   'verify_long_form_export_template.mjs',
   'verify_main_tabs_ui_baseline.mjs',
   'verify_motion_components_shape.mjs',
+  'verify_motion_ceremony_hooks.mjs',
   'verify_motion_lifecycle_guards.mjs',
   'verify_motion_narrative_hooks.mjs',
   'verify_motion_tokens.mjs',

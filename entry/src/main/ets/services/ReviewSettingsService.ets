@@ -7,6 +7,7 @@ const REVIEWER_NAME_KEY: string = 'reviewer_name';
 const WIDGET_CARD_BACKGROUND_STYLE_KEY: string = 'widget_card_background_style';
 const SHATTER_ANIMATION_ENABLED_KEY: string = 'shatter_animation_enabled';
 const MOTION_QUALITY_KEY: string = 'motion_quality';
+const REVIEW_STREAK_RECORD_KEY: string = 'review_streak_record';
 
 export const REVIEW_WIDGET_CARD_BACKGROUND_PLAIN: string = 'plain';
 export const REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN: string = 'huiwen';
@@ -160,6 +161,31 @@ export class ReviewSettingsService {
     await ReviewSettingsService.persistValue(store, MOTION_QUALITY_KEY, normalizedValue);
     SettingsRefreshService.notifySettingsChanged('motion_quality_saved');
     return normalizedValue;
+  }
+
+  static async updateReviewStreakRecord(
+    context: common.UIAbilityContext,
+    streakDays: number
+  ): Promise<boolean> {
+    const normalizedStreakDays: number = Math.max(0, Math.floor(streakDays));
+    if (normalizedStreakDays <= 0) {
+      return false;
+    }
+    try {
+      const store = await ReviewSettingsService.getStore(context);
+      const rawValue = await store.get(REVIEW_STREAK_RECORD_KEY, 0);
+      const previousRecord: number = typeof rawValue === 'number' && Number.isFinite(rawValue)
+        ? Math.max(0, Math.floor(rawValue))
+        : 0;
+      if (normalizedStreakDays <= previousRecord) {
+        return false;
+      }
+      await ReviewSettingsService.persistValue(store, REVIEW_STREAK_RECORD_KEY, normalizedStreakDays);
+      return true;
+    } catch (error) {
+      console.warn(`[ReviewSettingsService] 保存连续复盘纪录失败：${error}`);
+      return false;
+    }
   }
 
   static resolveMotionQualityLabel(value: MotionQuality): string {

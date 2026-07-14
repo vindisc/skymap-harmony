@@ -42,6 +42,7 @@ import {
   ReviewLibraryBackupRestoreResult,
   ReviewLibraryBackupService
 } from '../services/ReviewLibraryBackupService';
+import { RippleTouch } from '../components/motion/RippleTouch';
 
 const APP_VERSION_TEXT: string = '0.1.0 Beta';
 const APP_BUILD_TEXT: string = 'Harmony Beta V1';
@@ -49,6 +50,13 @@ const APP_AUTHOR_QQ_TEXT: string = '921086628';
 const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;
 const MY_PAGE_BOTTOM_PADDING: number = AppMetrics.tabContentBottomPadding + AppMetrics.space16;
 const ABOUT_INFO_CARD_HEIGHT: number = 108;
+
+interface RippleSettingsLinkOptions {
+  title: string;
+  status: string;
+  tone: SettingsEntryTone;
+  onTap: () => void;
+}
 
 @Component
 export struct MyPage {
@@ -389,73 +397,88 @@ export struct MyPage {
   }
 
   @Builder
+  RippleSettingsLinkRowContent(options: RippleSettingsLinkOptions) {
+    SettingsLinkRow({
+      title: options.title,
+      status: options.status,
+      tone: options.tone,
+      dense: true,
+      scaleOnPress: false,
+      onTap: options.onTap
+    })
+  }
+
+  @Builder
+  RippleSettingsLinkRow(options: RippleSettingsLinkOptions) {
+    RippleTouch({
+      content: () => {
+        this.RippleSettingsLinkRowContent(options);
+      }
+    })
+      .width('100%')
+  }
+
+  @Builder
   SettingsSection() {
     Column({ space: AppMetrics.cardGap }) {
-      SettingsLinkRow({
+      this.RippleSettingsLinkRow({
         title: '复盘人',
         status: this.resolveReviewerSummary(),
         tone: this.resolveReviewerSummary() === '未设置' ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
-        dense: true,
         onTap: () => {
           this.openReviewerProfile();
         }
       })
 
-      SettingsLinkRow({
+      this.RippleSettingsLinkRow({
         title: '首页图片',
         status: this.resolveHomeHeroBadge(),
         tone: this.homeHeroImageCount <= 0 ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
-        dense: true,
         onTap: () => {
           this.openHomeHeroImage();
         }
       })
 
-      SettingsLinkRow({
+      this.RippleSettingsLinkRow({
         title: '卡片背景',
         status: this.resolveWidgetCardBackgroundBadge(),
         tone: SettingsEntryTone.DEFAULT,
-        dense: true,
         onTap: () => {
           this.openWidgetCardBackground();
         }
       })
 
-      SettingsLinkRow({
+      this.RippleSettingsLinkRow({
         title: '显示与动效',
         status: ReviewSettingsService.resolveMotionQualityLabel(this.motionQuality),
         tone: SettingsEntryTone.DEFAULT,
-        dense: true,
         onTap: () => {
           this.openMotionSettings();
         }
       })
 
-      SettingsLinkRow({
+      this.RippleSettingsLinkRow({
         title: '删除星河效果',
         status: this.resolveShatterAnimationBadge(),
         tone: this.shatterAnimationEnabled ? SettingsEntryTone.SUCCESS : SettingsEntryTone.MUTED,
-        dense: true,
         onTap: () => {
           this.toggleShatterAnimation();
         }
       })
 
-      SettingsLinkRow({
+      this.RippleSettingsLinkRow({
         title: '家庭存储',
         status: this.resolveHomeStorageBadge(),
         tone: this.resolveStorageTone(),
-        dense: true,
         onTap: () => {
           this.openHomeStorage();
         }
       })
 
-      SettingsLinkRow({
+      this.RippleSettingsLinkRow({
         title: '同步中心',
         status: this.resolveSyncBadge(),
         tone: this.resolveStorageTone(),
-        dense: true,
         onTap: () => {
           this.openSyncCenter();
         }
@@ -467,21 +490,19 @@ export struct MyPage {
   @Builder
   DataProtectionSection() {
     Column({ space: AppMetrics.cardGap }) {
-      SettingsLinkRow({
+      this.RippleSettingsLinkRow({
         title: '备份全部复盘',
         status: this.isBackupActionRunning ? '处理中' : `${this.backupItemTotal} 条`,
         tone: this.backupItemTotal > 0 ? SettingsEntryTone.SUCCESS : SettingsEntryTone.MUTED,
-        dense: true,
         onTap: () => {
           this.exportLibraryBackup();
         }
       })
 
-      SettingsLinkRow({
+      this.RippleSettingsLinkRow({
         title: '从备份恢复',
         status: this.isBackupActionRunning ? '处理中' : '选择文件',
         tone: SettingsEntryTone.DEFAULT,
-        dense: true,
         onTap: () => {
           this.selectLibraryBackup();
         }

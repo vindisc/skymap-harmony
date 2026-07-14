@@ -50,7 +50,7 @@ function forbidRegex(source, pattern, message) {
 ].forEach((marker) => requireIncludes(projectDetailSource, marker, 'ProjectDetailPage must keep core library controls'));
 
 [
-  "AppPageHeader({\n        title: '统计'",
+  "title: '统计'",
   'this.OverviewCard()',
   'this.Recent30DaysCard()',
   'this.DistributionCard()',

@@ -50,7 +50,8 @@ assert(previewSource.includes('private updatePressedAction(event: TouchEvent, ke
 assert(previewSource.includes('.shadow(isDisabled ? ElevationTokens.none : (this.isPressed(label) ? ElevationTokens.subtle : ElevationTokens.low))'),
   'Preview floating action bar should keep lightweight token-based button elevation.');
 assert(previewSource.includes('.scale({ x: this.isPressed(label) ? MotionTokens.scalePressed : 1'), 'Preview toolbar buttons should scale on press.');
-assert(previewSource.includes('.scale({ x: this.isPressed(label) ? MotionTokens.scaleSubtle : 1'), 'Preview export sheet rows should use subtle press scale.');
+assert(previewSource.includes('PressReactive({') && previewSource.includes("intensity: 'firm'"),
+  'Preview export sheet rows should use shared firm press feedback.');
 assert(previewSource.includes('.animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })'), 'Preview press feedback should use motion tokens.');
 
 assert(projectSource.includes('this.deleteHistory(document);'), 'Project detail delete action should execute directly.');

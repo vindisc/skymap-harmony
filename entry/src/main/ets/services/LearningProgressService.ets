@@ -2,6 +2,11 @@ import common from '@ohos.app.ability.common';
 import { ReviewCardHistoryItem } from '../model/ReviewCardModel';
 import { PendingReviewPhotoStats, PendingReviewPhotoStore } from './PendingReviewPhotoStore';
 import { ReviewCardHistoryService } from './ReviewCardHistoryService';
+import {
+  MotionCeremonyEventKind,
+  MotionCeremonyEventService
+} from './MotionCeremonyEventService';
+import { ReviewSettingsService } from './ReviewSettingsService';
 
 export interface LearningProgressSnapshot {
   pendingCount: number;
@@ -14,6 +19,11 @@ export interface LearningProgressSnapshot {
 export interface LearningProgressLoadResult {
   snapshot: LearningProgressSnapshot;
   reviewItems: Array<ReviewCardHistoryItem>;
+}
+
+export interface PendingReviewCompletionMotionResult {
+  pendingBecameEmpty: boolean;
+  handledBySubscriber: boolean;
 }
 
 export function createEmptyLearningProgressSnapshot(): LearningProgressSnapshot {
@@ -95,6 +105,33 @@ export class LearningProgressService {
   static async load(context: common.UIAbilityContext): Promise<LearningProgressSnapshot> {
     const result: LearningProgressLoadResult = await LearningProgressService.loadWithReviewItems(context);
     return result.snapshot;
+  }
+
+  static async notifyPendingReviewCompleted(
+    context: common.UIAbilityContext
+  ): Promise<PendingReviewCompletionMotionResult> {
+    const pendingStats: PendingReviewPhotoStats = await PendingReviewPhotoStore.getStats(context);
+    if (pendingStats.pendingCount > 0) {
+      return {
+        pendingBecameEmpty: false,
+        handledBySubscriber: false
+      };
+    }
+    return {
+      pendingBecameEmpty: true,
+      handledBySubscriber: MotionCeremonyEventService.emit(MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED)
+    };
+  }
+
+  static async detectAndNotifyStreakRecord(
+    context: common.UIAbilityContext,
+    streakDays: number
+  ): Promise<boolean> {
+    const recordBroken: boolean = await ReviewSettingsService.updateReviewStreakRecord(context, streakDays);
+    if (recordBroken) {
+      MotionCeremonyEventService.emit(MotionCeremonyEventKind.STREAK_RECORD);
+    }
+    return recordBroken;
   }
 
   static async loadWithReviewItems(context: common.UIAbilityContext): Promise<LearningProgressLoadResult> {

@@ -340,6 +340,7 @@ export struct SettingsLinkRow {
   @Prop tone: SettingsEntryTone = SettingsEntryTone.DEFAULT;
   @Prop showChevron: boolean = true;
   @Prop dense: boolean = false;
+  @Prop scaleOnPress: boolean = true;
   @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
@@ -405,7 +406,10 @@ export struct SettingsLinkRow {
     .backgroundColor(this.isPressed ? AppColors.surfaceMuted : AppColors.surfaceElevated)
     .border({ width: 1, color: AppColors.border })
     .shadow(this.isPressed ? ElevationTokens.medium : ElevationTokens.subtle)
-    .scale({ x: this.isPressed ? MotionTokens.scaleSubtle : 1, y: this.isPressed ? MotionTokens.scaleSubtle : 1 })
+    .scale({
+      x: this.isPressed && this.scaleOnPress ? MotionTokens.scaleSubtle : 1,
+      y: this.isPressed && this.scaleOnPress ? MotionTokens.scaleSubtle : 1
+    })
     .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
     .onTouch((event: TouchEvent) => {
       if (event.type === TouchType.Down) {
@@ -426,6 +430,7 @@ export struct SettingsLinkRow {
 export struct PrimaryButton {
   @Prop label: string = '';
   @Prop isDisabled: boolean = false;
+  @Prop scaleOnPress: boolean = true;
   @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
@@ -440,7 +445,10 @@ export struct PrimaryButton {
         .backgroundColor(this.isDisabled ? AppColors.primaryDisabled : AppColors.primary)
         .border({ width: 1, color: this.isDisabled ? AppColors.primaryDisabled : AppColors.primaryPressed })
         .shadow(this.isDisabled ? ElevationTokens.none : (this.isPressed ? ElevationTokens.subtle : ElevationTokens.low))
-        .scale({ x: this.isPressed ? MotionTokens.scalePressed : 1, y: this.isPressed ? MotionTokens.scalePressed : 1 })
+        .scale({
+          x: this.isPressed && this.scaleOnPress ? MotionTokens.scalePressed : 1,
+          y: this.isPressed && this.scaleOnPress ? MotionTokens.scalePressed : 1
+        })
         .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
         .opacity(this.isDisabled ? 0.72 : 1)
         .enabled(!this.isDisabled)
@@ -471,6 +479,7 @@ export struct PrimaryButton {
 export struct SecondaryButton {
   @Prop label: string = '';
   @Prop isDisabled: boolean = false;
+  @Prop scaleOnPress: boolean = true;
   @State isPressed: boolean = false;
   onTap: () => void = () => {};
 
@@ -485,7 +494,10 @@ export struct SecondaryButton {
         .backgroundColor(this.isPressed ? AppColors.surfaceMuted : AppColors.surfaceElevated)
         .border({ width: 1, color: AppColors.border })
         .shadow(this.isDisabled ? ElevationTokens.none : ElevationTokens.subtle)
-        .scale({ x: this.isPressed ? MotionTokens.scaleSoftPressed : 1, y: this.isPressed ? MotionTokens.scaleSoftPressed : 1 })
+        .scale({
+          x: this.isPressed && this.scaleOnPress ? MotionTokens.scaleSoftPressed : 1,
+          y: this.isPressed && this.scaleOnPress ? MotionTokens.scaleSoftPressed : 1
+        })
         .animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })
         .opacity(this.isDisabled ? 0.72 : 1)
         .enabled(!this.isDisabled)

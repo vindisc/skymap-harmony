@@ -42,6 +42,8 @@ import { ShatterOverlay } from '../components/ShatterOverlay';
 import { formatReviewTime, getImageRatioLabel, hasDisplayableImageUri } from '../utils/ImageLayoutUtils';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { ShimmerBox } from '../components/motion/ShimmerBox';
+import { RippleTouch } from '../components/motion/RippleTouch';
+import { StaggeredEnter } from '../components/motion/StaggeredEnter';
 import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
 const DELETE_SWIPE_ACTION_WIDTH: number = 92;
@@ -120,7 +122,7 @@ export struct ProjectDetailPage {
     try {
       const enabled: boolean = await ReviewSettingsService.loadShatterAnimationEnabled(this.getAbilityContext());
       if (this.isPageAlive) {
-        this.shatterEnabled = enabled;
+        this.shatterEnabled = MotionQualityContext.shouldPlayShatter(enabled);
       }
     } catch (error) {
       if (this.isPageAlive) {
@@ -361,7 +363,7 @@ export struct ProjectDetailPage {
 
     this.deletingPendingPhotoId = photo.id;
     const componentId: string = `shatter-pending-${photo.id}`;
-    const useShatter: boolean = this.shatterEnabled;
+    const useShatter: boolean = MotionQualityContext.shouldPlayShatter(this.shatterEnabled);
     if (useShatter) {
       this.markCardHidden(photo.id);
       this.beginShatter(componentId);
@@ -415,7 +417,7 @@ export struct ProjectDetailPage {
 
     this.deletingReviewKey = deletingKey;
     const componentId: string = `shatter-history-${deletingKey}`;
-    const useShatter: boolean = this.shatterEnabled;
+    const useShatter: boolean = MotionQualityContext.shouldPlayShatter(this.shatterEnabled);
     if (useShatter) {
       this.markCardHidden(deletingKey);
       this.beginShatter(componentId);
@@ -800,6 +802,84 @@ export struct ProjectDetailPage {
     })
   }
 
+  @Builder
+  PendingReviewListCardContent(photo: PendingReviewPhoto) {
+    Stack() {
+      Stack() {
+        this.PendingReviewPhotoCard(photo)
+      }
+        .width('100%')
+        .visibility(this.isCardHidden(photo.id) ? Visibility.Hidden : Visibility.Visible)
+
+      if (this.activeShatterId === `shatter-pending-${photo.id}`) {
+        ShatterOverlay({
+          quality: 'medium'
+        })
+          .width('100%')
+          .height('100%')
+          .position({ x: 0, y: 0 })
+          .hitTestBehavior(HitTestMode.None)
+      }
+    }
+    .width('100%')
+    .constraintSize({
+      minHeight: AppMetrics.listCardMinHeight,
+      maxHeight: AppMetrics.listCardMaxHeight
+    })
+    .clip(true)
+  }
+
+  @Builder
+  PendingReviewListCard(photo: PendingReviewPhoto) {
+    RippleTouch({
+      content: () => {
+        this.PendingReviewListCardContent(photo);
+      }
+    })
+      .width('100%')
+  }
+
+  @Builder
+  HistoryReviewListCardContent(item: ReviewCardHistoryItem) {
+    Stack() {
+      ProjectReviewCard({
+        item: item,
+        onTap: () => {
+          this.openHistory(item.document);
+        }
+      })
+        .visibility(this.isCardHidden(getReviewDocumentKey(item.document))
+          ? Visibility.Hidden
+          : Visibility.Visible)
+
+      if (this.activeShatterId === `shatter-history-${getReviewDocumentKey(item.document)}`) {
+        ShatterOverlay({
+          quality: 'medium'
+        })
+          .width('100%')
+          .height('100%')
+          .position({ x: 0, y: 0 })
+          .hitTestBehavior(HitTestMode.None)
+      }
+    }
+    .width('100%')
+    .constraintSize({
+      minHeight: AppMetrics.listCardMinHeight,
+      maxHeight: AppMetrics.listCardMaxHeight
+    })
+    .clip(true)
+  }
+
+  @Builder
+  HistoryReviewListCard(item: ReviewCardHistoryItem) {
+    RippleTouch({
+      content: () => {
+        this.HistoryReviewListCardContent(item);
+      }
+    })
+      .width('100%')
+  }
+
   build() {
     Stack() {
       Column() {
@@ -863,31 +943,17 @@ export struct ProjectDetailPage {
         .layoutWeight(1)
       } else if (this.isPendingFilter()) {
         List({ space: AppMetrics.cardGap }) {
-          ForEach(this.resolveVisiblePendingItems(), (photo: PendingReviewPhoto) => {
+          ForEach(this.resolveVisiblePendingItems(), (photo: PendingReviewPhoto, index: number) => {
             ListItem() {
-              Stack() {
-                Stack() {
-                  this.PendingReviewPhotoCard(photo)
+              StaggeredEnter({
+                batchIndex: index,
+                batchSize: 1,
+                delayMs: MotionTokens.durationStagger,
+                content: () => {
+                  this.PendingReviewListCard(photo);
                 }
-                  .width('100%')
-                  .visibility(this.isCardHidden(photo.id) ? Visibility.Hidden : Visibility.Visible)
-
-                if (this.activeShatterId === `shatter-pending-${photo.id}`) {
-                  ShatterOverlay({
-                    quality: 'medium'
-                  })
-                    .width('100%')
-                    .height('100%')
-                    .position({ x: 0, y: 0 })
-                    .hitTestBehavior(HitTestMode.None)
-                }
-              }
-              .width('100%')
-              .constraintSize({
-                minHeight: AppMetrics.listCardMinHeight,
-                maxHeight: AppMetrics.listCardMaxHeight
               })
-              .clip(true)
+                .width('100%')
             }
             .id(`shatter-pending-${photo.id}`)
             .animation({
@@ -949,35 +1015,17 @@ export struct ProjectDetailPage {
         .layoutWeight(1)
       } else {
         List({ space: AppMetrics.cardGap }) {
-          ForEach(this.filteredItems, (item: ReviewCardHistoryItem) => {
+          ForEach(this.filteredItems, (item: ReviewCardHistoryItem, index: number) => {
             ListItem() {
-              Stack() {
-                ProjectReviewCard({
-                  item: item,
-                  onTap: () => {
-                    this.openHistory(item.document);
-                  }
-                })
-                  .visibility(this.isCardHidden(getReviewDocumentKey(item.document))
-                    ? Visibility.Hidden
-                    : Visibility.Visible)
-
-                if (this.activeShatterId === `shatter-history-${getReviewDocumentKey(item.document)}`) {
-                  ShatterOverlay({
-                    quality: 'medium'
-                  })
-                    .width('100%')
-                    .height('100%')
-                    .position({ x: 0, y: 0 })
-                    .hitTestBehavior(HitTestMode.None)
+              StaggeredEnter({
+                batchIndex: index,
+                batchSize: 1,
+                delayMs: MotionTokens.durationStagger,
+                content: () => {
+                  this.HistoryReviewListCard(item);
                 }
-              }
-              .width('100%')
-              .constraintSize({
-                minHeight: AppMetrics.listCardMinHeight,
-                maxHeight: AppMetrics.listCardMaxHeight
               })
-              .clip(true)
+                .width('100%')
             }
             .id(`shatter-history-${getReviewDocumentKey(item.document)}`)
             .animation({

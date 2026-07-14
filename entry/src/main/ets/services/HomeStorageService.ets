@@ -9,6 +9,10 @@ import {
 import { HomeStorageSecretService } from './HomeStorageSecretService';
 import { Smb2Client, Smb2UploadBytesOptions, Smb2UploadFileOptions, Smb2UploadOptions } from './Smb2Client';
 import { SettingsRefreshService } from './SettingsRefreshService';
+import {
+  MotionCeremonyEventKind,
+  MotionCeremonyEventService
+} from './MotionCeremonyEventService';
 
 const PREFERENCES_NAME: string = 'home_storage_settings';
 const USERNAME_KEY: string = 'username';
@@ -20,6 +24,7 @@ const SMB_PORT_KEY: string = 'smb_port';
 const SMB_SHARE_NAME_KEY: string = 'smb_share_name';
 const SMB_DOMAIN_KEY: string = 'smb_domain';
 const LAST_UPLOADED_AT_KEY: string = 'last_uploaded_at';
+const SMB_FIRST_CONNECTION_CEREMONY_SHOWN_KEY: string = 'smb_first_connection_ceremony_shown';
 const DEFAULT_REMOTE_DIRECTORY: string = '';
 const DEFAULT_SMB_PORT: string = '445';
 
@@ -658,6 +663,21 @@ export class HomeStorageService {
     await HomeStorageService.flushPreferences(store);
   }
 
+  private static async notifyFirstSuccessfulConnection(context: common.UIAbilityContext): Promise<void> {
+    try {
+      const store = await HomeStorageService.getStore(context);
+      const rawValue = await store.get(SMB_FIRST_CONNECTION_CEREMONY_SHOWN_KEY, 'false');
+      if (String(rawValue) === 'true') {
+        return;
+      }
+      await HomeStorageService.putPreference(store, SMB_FIRST_CONNECTION_CEREMONY_SHOWN_KEY, 'true');
+      await HomeStorageService.flushPreferences(store);
+      MotionCeremonyEventService.emit(MotionCeremonyEventKind.SMB_FIRST_CONNECT);
+    } catch (error) {
+      console.warn(`[HomeStorageService] 保存首次连接动效状态失败：${error}`);
+    }
+  }
+
   static validateSettings(settings: HomeStorageSettings): string {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
     const port: number = parsePort(normalized.smbPort);
@@ -743,7 +763,10 @@ export class HomeStorageService {
     return '未配置';
   }
 
-  static async testConnection(settings: HomeStorageSettings): Promise<HomeStorageOperationResult> {
+  static async testConnection(
+    settings: HomeStorageSettings,
+    context?: common.UIAbilityContext
+  ): Promise<HomeStorageOperationResult> {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
     const validationMessage: string = HomeStorageService.validateSettings(normalized);
     if (validationMessage.length > 0) {
@@ -753,6 +776,9 @@ export class HomeStorageService {
     const client: Smb2Client = new Smb2Client();
     try {
       await client.testConnection(createSmbUploadOptions(normalized, 'connection-test.review.json', '{}'));
+      if (context !== undefined) {
+        await HomeStorageService.notifyFirstSuccessfulConnection(context);
+      }
       return createOperationResult(true, `\\\\${normalized.smbHost}\\${normalized.smbShareName}`, '家庭存储连接成功');
     } catch (error) {
       await client.close();

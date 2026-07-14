@@ -20,6 +20,12 @@ import {
   FEEDBACK_HOME_STORAGE_SAVE_FAILED_TEXT,
   FEEDBACK_HOME_STORAGE_SAVE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
+import { CeremonyBurst } from '../components/motion/CeremonyBurst';
+import { MotionQualityContext } from '../theme/MotionQualityContext';
+import {
+  MotionCeremonyEventKind,
+  MotionCeremonyEventService
+} from '../services/MotionCeremonyEventService';
 
 const SETTINGS_INPUT_SCROLL_DELAY: number = 220;
 const SETTINGS_INPUT_BLOCK_HEIGHT: number = 78;
@@ -40,6 +46,16 @@ struct HomeStoragePage {
   private isPageAlive: boolean = false;
   private loadRequestId: number = 0;
   private feedbackDismissTimer: number = -1;
+  private ceremonyEventListener: (kind: MotionCeremonyEventKind) => boolean = (
+    kind: MotionCeremonyEventKind
+  ): boolean => {
+    if (!this.isPageAlive || kind !== MotionCeremonyEventKind.SMB_FIRST_CONNECT ||
+      !MotionQualityContext.shouldPlayCeremony()) {
+      return false;
+    }
+    this.ceremonyVisible = true;
+    return true;
+  };
   @State homeStorageHost: string = '';
   @State homeStoragePort: string = '';
   @State homeStorageShareName: string = '';
@@ -54,6 +70,7 @@ struct HomeStoragePage {
   @State formStatusTone: StatusBannerTone = StatusBannerTone.INFO;
   @State keyboardHeight: number = 0;
   @State focusedInputIndex: number = -1;
+  @State ceremonyVisible: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -61,6 +78,7 @@ struct HomeStoragePage {
 
   aboutToAppear(): void {
     this.isPageAlive = true;
+    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
     this.disableSystemKeyboardAvoidance();
     this.registerKeyboardHeightObserver();
     this.loadSettings();
@@ -72,6 +90,7 @@ struct HomeStoragePage {
 
   aboutToDisappear(): void {
     this.isPageAlive = false;
+    MotionCeremonyEventService.unsubscribe(this.ceremonyEventListener);
     this.clearFeedbackTimer();
     this.unregisterKeyboardHeightObserver();
     this.restoreSystemKeyboardAvoidance();
@@ -210,7 +229,10 @@ struct HomeStoragePage {
 
     this.isTestingHomeStorage = true;
     try {
-      const result: HomeStorageOperationResult = await HomeStorageService.testConnection(this.currentHomeStorageSettings());
+      const result: HomeStorageOperationResult = await HomeStorageService.testConnection(
+        this.currentHomeStorageSettings(),
+        this.getAbilityContext()
+      );
       this.setActionFeedback(result.message, result.success ? 'success' : 'error');
     } finally {
       this.isTestingHomeStorage = false;
@@ -441,6 +463,16 @@ struct HomeStoragePage {
             this.testHomeStorage();
           }
         })
+      }
+
+      if (this.ceremonyVisible) {
+        CeremonyBurst({
+          kind: 'smb-first-connect',
+          onFinish: () => {
+            this.ceremonyVisible = false;
+          }
+        })
+          .zIndex(20)
       }
     }
     .width('100%')

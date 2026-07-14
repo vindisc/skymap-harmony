@@ -16,6 +16,10 @@ import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
 import { LearningProgressFormService } from '../services/LearningProgressFormService';
 import {
+  LearningProgressService,
+  PendingReviewCompletionMotionResult
+} from '../services/LearningProgressService';
+import {
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_PENDING_TEXT,
   REVIEW_FLOW_SAVE_SUCCESS_TEXT
@@ -33,6 +37,7 @@ import { estimateReviewTextLineCount, estimateReviewTextWrapUnitsPerLine } from 
 import { ToastService } from '../services/ToastService';
 import { DialogService, DialogTone } from '../services/DialogService';
 import { CeremonyBurst } from '../components/motion/CeremonyBurst';
+import { PressReactive } from '../components/motion/PressReactive';
 import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
 const EDITOR_PAGE_HORIZONTAL_PADDING: number = AppMetrics.pagePadding;
@@ -261,15 +266,26 @@ struct EditorPage {
     this.isSaving = true;
     let keepSavingLockedForCeremony: boolean = false;
     const completesPendingReview: boolean = this.pendingPhotoId.length > 0;
+    let ceremonyHandledBySubscriber: boolean = false;
     this.syncDocumentFromInput();
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
     try {
       await ReviewCardHistoryService.saveDocument(this.getAbilityContext(), this.document);
-      await this.markPendingPhotoReviewedQuietly();
+      const pendingReviewCompleted: boolean = await this.markPendingPhotoReviewedQuietly();
       await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
+      if (pendingReviewCompleted) {
+        try {
+          const motionResult: PendingReviewCompletionMotionResult =
+            await LearningProgressService.notifyPendingReviewCompleted(this.getAbilityContext());
+          ceremonyHandledBySubscriber = motionResult.pendingBecameEmpty && motionResult.handledBySubscriber;
+        } catch (error) {
+          console.warn(`[EditorPage] 待复盘归零动效判定失败：${error}`);
+        }
+      }
       this.isDirty = false;
       ToastService.success(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
-      if (completesPendingReview && MotionQualityContext.shouldPlayCeremony()) {
+      if (completesPendingReview && pendingReviewCompleted &&
+        !ceremonyHandledBySubscriber && MotionQualityContext.shouldPlayCeremony()) {
         keepSavingLockedForCeremony = true;
         this.ceremonyVisible = true;
       } else {
@@ -290,9 +306,9 @@ struct EditorPage {
     });
   }
 
-  private async markPendingPhotoReviewedQuietly(): Promise<void> {
+  private async markPendingPhotoReviewedQuietly(): Promise<boolean> {
     if (this.pendingPhotoId.length <= 0) {
-      return;
+      return false;
     }
 
     try {
@@ -303,8 +319,10 @@ struct EditorPage {
       );
       ReviewCardStore.clearCurrentPendingPhotoId();
       this.pendingPhotoId = '';
+      return true;
     } catch (error) {
       console.warn(`[EditorPage] 正式复盘已保存，但待复盘状态更新失败：${error}`);
+      return false;
     }
   }
 
@@ -653,15 +671,27 @@ struct EditorPage {
   }
 
   @Builder
+  SaveActionContent() {
+    PrimaryButton({
+      label: this.isSaving ? REVIEW_FLOW_SAVE_PENDING_TEXT : '保存并进入阅读',
+      isDisabled: this.isSaving,
+      scaleOnPress: false,
+      onTap: () => {
+        this.saveAndPreview();
+      }
+    })
+  }
+
+  @Builder
   SaveActionSection() {
     Column() {
-      PrimaryButton({
-        label: this.isSaving ? REVIEW_FLOW_SAVE_PENDING_TEXT : '保存并进入阅读',
-        isDisabled: this.isSaving,
-        onTap: () => {
-          this.saveAndPreview();
+      PressReactive({
+        intensity: 'firm',
+        content: () => {
+          this.SaveActionContent();
         }
       })
+        .width('100%')
     }
     .width('100%')
   }

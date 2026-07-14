@@ -22,7 +22,12 @@ import {
 } from '../services/LearningProgressService';
 import { CountUpText } from '../components/motion/CountUpText';
 import { ShimmerBox } from '../components/motion/ShimmerBox';
+import { CeremonyBurst } from '../components/motion/CeremonyBurst';
 import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
+import {
+  MotionCeremonyEventKind,
+  MotionCeremonyEventService
+} from '../services/MotionCeremonyEventService';
 
 const STATS_OVERVIEW_MIN_HEIGHT: number = 120;
 const STATS_LEARNING_OVERVIEW_MIN_HEIGHT: number = 132;
@@ -35,22 +40,44 @@ const STATS_PAGE_TOP_PADDING: number = AppMetrics.pageTopPadding - AppMetrics.sp
 @Component
 export struct StatsPage {
   private loadRequestId: number = 0;
+  private isPageActive: boolean = false;
+  private ceremonyEventListener: (kind: MotionCeremonyEventKind) => boolean = (
+    kind: MotionCeremonyEventKind
+  ): boolean => {
+    if (!this.isPageActive || kind !== MotionCeremonyEventKind.STREAK_RECORD ||
+      !MotionQualityContext.shouldPlayCeremony()) {
+      return false;
+    }
+    this.ceremonyVisible = true;
+    return true;
+  };
   @Prop @Watch('refreshStatsData') refreshToken: number = 0;
   @State feedback: ReviewStatsFeedback = createEmptyReviewStatsFeedback();
   @State learningStats: LearningProgressSnapshot = createEmptyLearningProgressSnapshot();
   @State statsLoadFailed: boolean = false;
   @State isStatsLoading: boolean = false;
   @State isPickingPhoto: boolean = false;
+  @State ceremonyVisible: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
   }
 
   aboutToAppear(): void {
+    this.isPageActive = true;
+    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
     this.reloadStats();
   }
 
+  aboutToDisappear(): void {
+    this.isPageActive = false;
+    this.loadRequestId += 1;
+    MotionCeremonyEventService.unsubscribe(this.ceremonyEventListener);
+  }
+
   onPageShow(): void {
+    this.isPageActive = true;
+    MotionCeremonyEventService.subscribe(this.ceremonyEventListener);
     this.reloadStats();
   }
 
@@ -70,6 +97,13 @@ export struct StatsPage {
       }
       this.learningStats = progressResult.snapshot;
       this.feedback = ReviewProjectService.buildStatsFeedback(progressResult.reviewItems);
+      await LearningProgressService.detectAndNotifyStreakRecord(
+        context,
+        progressResult.snapshot.reviewStreakDays
+      );
+      if (requestId !== this.loadRequestId) {
+        return;
+      }
       this.statsLoadFailed = false;
       this.isStatsLoading = false;
     } catch (error) {
@@ -563,59 +597,74 @@ export struct StatsPage {
   }
 
   build() {
-    Column() {
-      AppPageHeader({
-        title: '统计'
-      })
-        .padding({
-          left: AppMetrics.pagePadding,
-          right: AppMetrics.pagePadding,
-          top: STATS_PAGE_TOP_PADDING,
-          bottom: STATS_TITLE_CONTENT_GAP
+    Stack() {
+      Column() {
+        AppPageHeader({
+          title: '统计'
         })
+          .padding({
+            left: AppMetrics.pagePadding,
+            right: AppMetrics.pagePadding,
+            top: STATS_PAGE_TOP_PADDING,
+            bottom: STATS_TITLE_CONTENT_GAP
+          })
 
-      Scroll() {
-        Column({ space: AppMetrics.cardGap }) {
-          this.LearningOverviewCard()
+        Scroll() {
+          Column({ space: AppMetrics.cardGap }) {
+            this.LearningOverviewCard()
 
-          if (this.shouldShowStatsSkeleton()) {
-            this.StatsSkeleton()
-          } else if (this.statsLoadFailed) {
-            EmptyState({
-              title: '统计暂时无法刷新',
-              message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
-            })
-          } else if (this.hasStatsData()) {
-            this.OverviewCard()
-            this.Recent30DaysCard()
-            this.DistributionCard()
-            this.BlockersCard()
-          } else {
-            EmptyState({
-              title: this.hasLearningData() ? '还没有完成复盘' : '还没有复盘数据',
-              message: this.hasLearningData() ? '从待复盘照片进入编辑并保存后，这里会显示判断变化。' : '完成第一张照片复盘后，这里会显示你的判断变化。',
-              actionLabel: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '去创建第一条复盘',
-              isActionDisabled: this.isPickingPhoto,
-              onAction: () => {
-                this.openCreateFirstReview();
-              }
-            })
+            if (this.shouldShowStatsSkeleton()) {
+              this.StatsSkeleton()
+            } else if (this.statsLoadFailed) {
+              EmptyState({
+                title: '统计暂时无法刷新',
+                message: '稍后返回本页会自动重试，已保存的复盘不会受影响。'
+              })
+            } else if (this.hasStatsData()) {
+              this.OverviewCard()
+              this.Recent30DaysCard()
+              this.DistributionCard()
+              this.BlockersCard()
+            } else {
+              EmptyState({
+                title: this.hasLearningData() ? '还没有完成复盘' : '还没有复盘数据',
+                message: this.hasLearningData() ? '从待复盘照片进入编辑并保存后，这里会显示判断变化。' : '完成第一张照片复盘后，这里会显示你的判断变化。',
+                actionLabel: this.isPickingPhoto ? REVIEW_FLOW_IMPORT_PENDING_TEXT : '去创建第一条复盘',
+                isActionDisabled: this.isPickingPhoto,
+                onAction: () => {
+                  this.openCreateFirstReview();
+                }
+              })
+            }
           }
+          .alignItems(HorizontalAlign.Start)
+          .padding({
+            left: AppMetrics.pagePadding,
+            right: AppMetrics.pagePadding,
+            bottom: AppMetrics.tabContentBottomPadding
+          })
+          .width('100%')
+          .constraintSize({ minHeight: '100%' })
+          .justifyContent(FlexAlign.Start)
         }
-        .alignItems(HorizontalAlign.Start)
-        .padding({
-          left: AppMetrics.pagePadding,
-          right: AppMetrics.pagePadding,
-          bottom: AppMetrics.tabContentBottomPadding
-        })
         .width('100%')
-        .constraintSize({ minHeight: '100%' })
-        .justifyContent(FlexAlign.Start)
+        .layoutWeight(1)
+        .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
       }
       .width('100%')
-      .layoutWeight(1)
-      .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.Spring)
+      .height('100%')
+      .backgroundColor(AppColors.pageBackground)
+
+      if (this.ceremonyVisible) {
+        CeremonyBurst({
+          kind: 'streak-record',
+          onFinish: () => {
+            this.ceremonyVisible = false;
+          }
+        })
+          .zIndex(20)
+      }
     }
     .width('100%')
     .height('100%')
