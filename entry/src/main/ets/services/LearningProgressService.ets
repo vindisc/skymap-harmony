@@ -117,6 +117,7 @@ export class LearningProgressService {
         ceremonyScheduled: false
       };
     }
+    // 必须直接入队而非 emit：EditorPage 触发时，负责消费的 HomePage 尚未回到前台。
     MotionCeremonyEventService.enqueue(MotionCeremonyEventKind.REVIEW_QUEUE_CLEARED);
     return {
       pendingBecameEmpty: true,

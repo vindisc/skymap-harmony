@@ -6,11 +6,18 @@ const sources = new Map([
     'STREAK_RECORD',
     'SMB_FIRST_CONNECT',
     'pendingKinds',
+    'interface MotionCeremonyPendingEvent',
+    'enqueuedAt: number;',
+    'MOTION_CEREMONY_PENDING_TTL_MS: number = 60_000',
+    'now - pendingEvent.enqueuedAt <= MOTION_CEREMONY_PENDING_TTL_MS',
     'static enqueue(kind: MotionCeremonyEventKind): void',
     'static consumePending(listener: MotionCeremonyEventListener): void',
     'if (!handled)',
     'static emit(kind: MotionCeremonyEventKind): boolean',
-    'listener 已订阅，已跳过重复注册'
+    'listener 已订阅，已跳过重复注册',
+    'emit(kind)：发一次事件',
+    'enqueue(kind)：直接入队',
+    'consumePending(listener)：subscribe 内部会自动调用'
   ]],
   ['entry/src/main/ets/services/LearningProgressService.ets', [
     'notifyPendingReviewCompleted',
@@ -52,10 +59,9 @@ const sources = new Map([
     "kind: 'smb-first-connect'"
   ]],
   ['entry/src/main/ets/pages/EditorPage.ets', [
-    'PendingReviewCompletionMotionResult',
     'pendingReviewCompleted',
-    'ceremonyScheduledElsewhere',
-    '!ceremonyScheduledElsewhere'
+    'LearningProgressService.notifyPendingReviewCompleted',
+    'this.openPreview()'
   ]],
   ['entry/src/main/ets/pages/SyncCenterPage.ets', [
     'HomeStorageService.testConnection(',
@@ -64,9 +70,14 @@ const sources = new Map([
 ]);
 
 const homeStorageSource = fs.readFileSync('entry/src/main/ets/services/HomeStorageService.ets', 'utf8');
+const editorSource = fs.readFileSync('entry/src/main/ets/pages/EditorPage.ets', 'utf8');
 if (homeStorageSource.includes('context?: common.UIAbilityContext') ||
   !homeStorageSource.includes('HomeStorageService.testConnection(settings, context)')) {
   throw new Error('HomeStorageService.testConnection 必须要求 context，内部可用性检查也必须传入。');
+}
+if (editorSource.includes("import { CeremonyBurst }") || editorSource.includes('@State ceremonyVisible') ||
+  editorSource.includes('keepSavingLockedForCeremony')) {
+  throw new Error('EditorPage 不得保留已迁移到 HomePage 的仪式死代码。');
 }
 
 for (const [path, markers] of sources.entries()) {

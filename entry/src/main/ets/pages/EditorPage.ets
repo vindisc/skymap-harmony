@@ -15,10 +15,7 @@ import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
 import { LearningProgressFormService } from '../services/LearningProgressFormService';
-import {
-  LearningProgressService,
-  PendingReviewCompletionMotionResult
-} from '../services/LearningProgressService';
+import { LearningProgressService } from '../services/LearningProgressService';
 import {
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_PENDING_TEXT,
@@ -36,7 +33,6 @@ import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { estimateReviewTextLineCount, estimateReviewTextWrapUnitsPerLine } from '../utils/ReviewTextMetrics';
 import { ToastService } from '../services/ToastService';
 import { DialogService, DialogTone } from '../services/DialogService';
-import { CeremonyBurst } from '../components/motion/CeremonyBurst';
 import { PressReactive } from '../components/motion/PressReactive';
 import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
@@ -110,7 +106,6 @@ struct EditorPage {
   @State isDirty: boolean = false;
   @State pendingPhotoId: string = '';
   @State introStage: number = 0;
-  @State ceremonyVisible: boolean = false;
   private introTimerIds: Array<number> = [];
 
   private getAbilityContext(): common.UIAbilityContext {
@@ -264,9 +259,6 @@ struct EditorPage {
     }
 
     this.isSaving = true;
-    let keepSavingLockedForCeremony: boolean = false;
-    const completesPendingReview: boolean = this.pendingPhotoId.length > 0;
-    let ceremonyScheduledElsewhere: boolean = false;
     this.syncDocumentFromInput();
     this.document = ReviewCardStore.saveCurrentDocument(this.document);
     try {
@@ -275,28 +267,18 @@ struct EditorPage {
       await LearningProgressFormService.refreshAllForms(this.getAbilityContext());
       if (pendingReviewCompleted) {
         try {
-          const motionResult: PendingReviewCompletionMotionResult =
-            await LearningProgressService.notifyPendingReviewCompleted(this.getAbilityContext());
-          ceremonyScheduledElsewhere = motionResult.pendingBecameEmpty && motionResult.ceremonyScheduled;
+          await LearningProgressService.notifyPendingReviewCompleted(this.getAbilityContext());
         } catch (error) {
           console.warn(`[EditorPage] 待复盘归零动效判定失败：${error}`);
         }
       }
       this.isDirty = false;
       ToastService.success(this.getUIContext(), REVIEW_FLOW_SAVE_SUCCESS_TEXT);
-      if (completesPendingReview && pendingReviewCompleted &&
-        !ceremonyScheduledElsewhere && MotionQualityContext.shouldPlayCeremony()) {
-        keepSavingLockedForCeremony = true;
-        this.ceremonyVisible = true;
-      } else {
-        this.openPreview();
-      }
+      this.openPreview();
     } catch (error) {
       ToastService.error(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
-      if (!keepSavingLockedForCeremony) {
-        this.isSaving = false;
-      }
+      this.isSaving = false;
     }
   }
 
@@ -814,17 +796,6 @@ struct EditorPage {
         .hitTestBehavior(HitTestMode.Transparent)
       }
 
-      if (this.ceremonyVisible) {
-        CeremonyBurst({
-          kind: 'review-done',
-          onFinish: () => {
-            this.ceremonyVisible = false;
-            this.isSaving = false;
-            this.openPreview();
-          }
-        })
-          .zIndex(20)
-      }
     }
     .width('100%')
     .height('100%')

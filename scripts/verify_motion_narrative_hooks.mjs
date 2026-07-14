@@ -3,9 +3,9 @@ import fs from 'node:fs';
 const checks = new Map([
   ['entry/src/main/ets/entryability/EntryAbility.ets', ['initializeMotionAndLoadContent', 'MotionQualityContext.initialize']],
   ['entry/src/main/ets/pages/AppShellPage.ets', ['playTabIconPulse', 'MotionCurveRole.SPRING_SOFT']],
-  ['entry/src/main/ets/pages/HomePage.ets', ['playIntro', 'scaleHeroIntro', 'ShimmerBox', 'PressReactive']],
+  ['entry/src/main/ets/pages/HomePage.ets', ['playIntro', 'scaleHeroIntro', 'ShimmerBox', 'PressReactive', "kind: 'review-done'"]],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ['StaggeredEnter', 'RippleTouch', 'delayMs: MotionTokens.durationStagger']],
-  ['entry/src/main/ets/pages/EditorPage.ets', ['geometryTransition(`review-hero-${this.resolveHeroTag()}`)', 'completesPendingReview', "kind: 'review-done'", 'PressReactive']],
+  ['entry/src/main/ets/pages/EditorPage.ets', ['geometryTransition(`review-hero-${this.resolveHeroTag()}`)', 'LearningProgressService.notifyPendingReviewCompleted', 'PressReactive']],
   ['entry/src/main/ets/pages/PreviewPage.ets', ['BottomSheetContainer', 'ExportMenuContent', 'PressReactive']],
   ['entry/src/main/ets/pages/StatsPage.ets', ['CountUpText', 'ShimmerBox', 'playIntro', 'introStage', 'InsightsIntro', 'MotionCurveRole.LANDING']],
   ['entry/src/main/ets/pages/MyPage.ets', ['RippleTouch', 'RippleSettingsLinkRow']],

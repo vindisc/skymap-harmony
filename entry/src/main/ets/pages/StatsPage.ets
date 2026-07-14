@@ -87,7 +87,6 @@ export struct StatsPage {
   onPageShow(): void {
     this.isPageActive = true;
     this.ensureCeremonySubscription();
-    this.playIntro();
     this.reloadStats();
   }
 

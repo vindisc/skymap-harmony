@@ -1,14 +1,191 @@
 # 交互动效后续排查与实现清单
 
 > 面向：下一轮实现 Agent（Codex）
-> 版本：v2（2026-07-14 追加）
+> 版本：v3（2026-07-14 追加）
 > v1 起源：`docs/spec-for-codex/plan-motion-narrative-upgrade.md` 落地至 `885c357` 后的 code review 结论
 > v2 起源：v1 落地至 `31239c8` 后的 code review 结论。新增 P0-V2、P1-V2、P2-V2 三组条目（编号带 `V2-` 前缀），原 P0/P1/P2 保持不变。
+> v3 起源：v2 落地至 `be1f978` 后的 code review 结论。新增 V3 组条目（编号带 `V3-` 前缀），原 v1/v2 内容保持不变。
 
 按"可直接派单"的粒度整理。分三档：**P0 排查**、**P1 补齐欠账**、**P2 卫生与决策**。
 每条给出：类别 · 动作 · 完成判定 · 文件锚点 · 背景。
 
 ---
+
+## v3 追加条目（针对 `be1f978` 复盘）
+
+背景：v2 的 8 条追加条目全部按方向修完，且 Codex 顺手修了一个我漏抓的
+RippleTouch 布局 bug（240vp `Circle` 从主流 Stack 撑大 ListItem，改为
+`.overlay(...)` 叠加）。剩下 5 条都是**决策 / 观察**，不是回归 bug，但值得
+写入清单，防止未来读代码的人一头雾水或踩坑。
+
+### V3-P1-1. StatsPage 与 HomePage 的 `onPageShow` 策略对齐（决策 + 实现）
+
+- **类别**：决策 + 实现
+- **问题**：v2 落地时 HomePage 在 `onPageShow` 里删除了 `playIntro`（子页返回不
+  重放）；但 **StatsPage 仍然在 `onPageShow` 里 `playIntro`**（子页返回会重放）。
+  `verify_motion_lifecycle_guards.mjs` 里只有 HomePage 的"不重放"断言，StatsPage
+  没锁——真机路径 Stats → MyPage → 返回 Stats 会重放入场，Home → Editor → 返回
+  Home 不会。**两页策略不一致，且都没显式声明**。
+- **动作**：产品负责人拍板后二选一：
+  - **方案 A（推荐 · 对称）**：StatsPage 也删掉 `onPageShow` 中的 `playIntro`，
+    只保留 `aboutToAppear`。verify 脚本加一条断言"StatsPage onPageShow must not
+    call playIntro"。
+  - **方案 B**：在方案文档里写明"StatsPage 是数据展示页，每次进入重放入场；
+    HomePage 是叙事起点，只在 Tab 切换重放"，并给 HomePage 补对称的"是"断言。
+- **完成判定**：
+  - 方案 A：两页均只在 `aboutToAppear` 触发 playIntro；两条 verify 断言存在
+  - 方案 B：`docs/spec-for-codex/plan-motion-narrative-upgrade.md` 有段落
+    描述该差异；HomePage / StatsPage 双向 verify 断言存在
+- **锚点**：
+  - `entry/src/main/ets/pages/StatsPage.ets` `onPageShow`
+  - `entry/src/main/ets/pages/HomePage.ets` `onPageShow`
+  - `scripts/verify_motion_lifecycle_guards.mjs`
+
+### V3-P1-2. `pendingKinds` 加过期时间戳（防止跨长时段"补播"）
+
+- **类别**：实现
+- **问题**：`MotionCeremonyEventService.pendingKinds` 是静态字段（Ability 生命周期
+  级），只有在进程被 kill 时才清空。可能的用户路径：
+  - 用户完成复盘 → 切后台 15 分钟去做别的事 → 回来点开应用停在 EditorPage → 从
+    EditorPage 返回 Home → **一进 Home 就播「完成仪式」**，用户觉得突兀。
+  - 连续几天没打开 App 后一进入 Home，也会看到"补播"。
+- **动作**：把 `pendingKinds` 从 `Array<MotionCeremonyEventKind>` 改成
+  `Array<{ kind: MotionCeremonyEventKind, enqueuedAt: number }>`。`enqueue` 时记
+  `Date.now()`；`consumePending` 消费前判断 `Date.now() - enqueuedAt <= 60_000`
+  （60 秒过期），过期直接丢弃并不通知。
+- **完成判定**：
+  - 单元层测试或 verify 脚本断言：`pendingKinds` 元素含 `enqueuedAt` 字段；
+    `consumePending` 中出现 `Date.now() - ` 相关计算
+  - 60 秒 window 值放到常量（例如 `MOTION_CEREMONY_PENDING_TTL_MS = 60_000`），
+    不允许 magic number
+- **锚点**：`entry/src/main/ets/services/MotionCeremonyEventService.ets`
+- **背景**：v2 pending queue 选方案 A 后的边界收口。60 秒是保守值——
+  "用户完成复盘并在 1 分钟内回到 Home"仍能看到仪式；超过 1 分钟意味着用户
+  已经分心去做别的事，补播反而突兀。
+
+### V3-P2-1. EditorPage 的 `CeremonyBurst` 死代码清理
+
+- **类别**：卫生
+- **问题**：v2 之后 `EditorPage.saveAndPreview` 里的：
+  ```typescript
+  if (completesPendingReview && pendingReviewCompleted &&
+    !ceremonyScheduledElsewhere && MotionQualityContext.shouldPlayCeremony()) {
+    keepSavingLockedForCeremony = true;
+    this.ceremonyVisible = true;
+  }
+  ```
+  实际上**永远不会成立**——只要 `pendingReviewCompleted=true`，`notifyPendingReviewCompleted`
+  就 enqueue 事件、`ceremonyScheduled=true`，`!ceremonyScheduledElsewhere` 为 false；
+  只有 `pendingReviewCompleted=false`（marker 更新失败）时才能进这个 if，但此时
+  `pendingReviewCompleted && ...` 又为 false。**EditorPage 里的 CeremonyBurst
+  组件挂载点现在是死代码**。
+- **动作**：二选一：
+  - **方案 A（推荐）**：删除 EditorPage 里的 `CeremonyBurst` import、
+    `@State ceremonyVisible`、`keepSavingLockedForCeremony` 相关整套逻辑；
+    `saveAndPreview` 收到 `ceremonyScheduled=true` 后直接 `openPreview()`；
+    `isSaving` 保持在 finally 里释放
+  - **方案 B**：保留但在 `saveAndPreview` 的 if 分支上方加一段注释：
+    ```
+    // 兜底：仅当 pending 归零写入 preferences 失败（pendingReviewCompleted=false）
+    // 但业务上确实完成了复盘时才进入。正常路径由 pending queue 派发到 HomePage。
+    ```
+    并且 verify 脚本加断言"该分支不能被误改为常规路径"
+- **推荐**：方案 A，代码更干净；EditorPage 已经很复杂，少一个死状态是好事。
+- **完成判定**：
+  - 方案 A：`EditorPage.ets` 中不再 import `CeremonyBurst`；`ceremonyVisible`
+    字段消失；`scripts/verify_motion_narrative_hooks.mjs` 中原本对 EditorPage
+    `kind: 'review-done'` 的断言改为对 HomePage 的断言（因为仪式挂载点已迁移
+    到 HomePage）
+  - 方案 B：注释存在；verify 脚本有断言
+- **锚点**：
+  - `entry/src/main/ets/pages/EditorPage.ets` `saveAndPreview` +
+    `@Builder` 中的 `CeremonyBurst`
+  - `scripts/verify_motion_narrative_hooks.mjs`
+
+### V3-P2-2. `RippleTouch.clipRadius` 业务调用点补齐圆角
+
+- **类别**：卫生（观感优化）
+- **问题**：v2 追加时新增了 `@Prop clipRadius: number = 0`，用于配合 `.clip(true)`
+  给水波纹裁切圆角。但当前所有业务调用点（ProjectDetailPage 两处、MyPage
+  SettingsLinkRow）**都用默认值 0**——意味着点击圆角卡片时，ripple 的裁切边界
+  仍是矩形，Circle 溢出到卡片圆角外的部分会被裁掉直角。真机上可能看到"水波纹
+  超出圆角边界一小截"的视觉瑕疵。
+- **动作**：调用点补齐 `clipRadius`：
+  - ProjectDetailPage 的 `PendingReviewListCard` / `HistoryReviewListCard`：
+    传 `clipRadius: AppMetrics.cardRadius`（或该卡片实际用的圆角常量）
+  - MyPage 的 `RippleSettingsLinkRow`：传 `clipRadius: AppMetrics.cardRadius`
+- **完成判定**：
+  - 三处调用点均带 `clipRadius`
+  - `scripts/verify_ripple_layout_contract.mjs` 加一条断言 "business
+    integrations must pass a non-zero clipRadius when the wrapped container
+    has borderRadius"
+- **锚点**：
+  - `entry/src/main/ets/pages/ProjectDetailPage.ets`
+  - `entry/src/main/ets/pages/MyPage.ets` `RippleSettingsLinkRow`
+  - `entry/src/main/ets/components/motion/RippleTouch.ets` `clipRadius`
+- **背景**：v2 的 RippleTouch 布局修复用 `.overlay(...)` 解决了尺寸撑大问题，
+  同时 `clipRadius` 已经预留，但只做了 API 未做接入。
+
+### V3-P2-3. `MotionCeremonyEventService.emit` 返回值语义与 pending queue 的关系文档化
+
+- **类别**：文档
+- **问题**：v2 落地后 `emit` 的语义**变了**：
+  - 之前：`emit` 返回"是否被订阅方 handled"，业务代码据此决定是否让位
+  - 之后：`LearningProgressService.notifyPendingReviewCompleted` 已改为**直接
+    `enqueue`**，完全不走 `emit` 路径；但 `emit` 方法本身仍存在，且当无人 handled
+    时会**自动 enqueue**
+  - 结果：`emit` 现在是"发一次事件，如果当场没人接就自动排队"；而对
+    `REVIEW_QUEUE_CLEARED` 这条 kind，业务代码根本不用 emit
+- **动作**：在 `MotionCeremonyEventService.ets` 顶部注释里补充：
+  ```
+  // 使用契约（v2 之后）：
+  //   - emit(kind)：发一次事件；若无订阅方 handled 则自动入队，等下次
+  //     订阅时立即消费。用于「订阅方可能已在场也可能没在场」的通用场景。
+  //   - enqueue(kind)：直接入队，不尝试即时派发。用于「明确知道订阅方需要
+  //     切换页面后才能接」的场景，例如 REVIEW_QUEUE_CLEARED 在 EditorPage
+  //     触发但由 HomePage 消费。
+  //   - consumePending(listener)：subscribe 内部自动调用，不建议业务层直接调用。
+  ```
+  同时把 `LearningProgressService.notifyPendingReviewCompleted` 中的
+  `enqueue` 调用上方加一行注释说明"必须用 enqueue 而不是 emit：EditorPage
+  触发时 HomePage 不在前台"。
+- **完成判定**：注释存在；无代码逻辑改动
+- **锚点**：
+  - `entry/src/main/ets/services/MotionCeremonyEventService.ets`
+  - `entry/src/main/ets/services/LearningProgressService.ets`
+    `notifyPendingReviewCompleted`
+
+---
+
+## v3 建议派单顺序
+
+1. **V3-P1-2 pending queue 过期时间**——最高优先级，防止用户在长时间不
+   使用后突然被"补播"仪式吓到；60 秒 TTL 一次改到位
+2. **V3-P2-1 EditorPage 死代码清理**——推荐方案 A，代码干净是长期红利
+3. **V3-P1-1 StatsPage / HomePage onPageShow 对齐**——产品拍板后一次改到位
+4. **V3-P2-2 RippleTouch clipRadius 接入**——低优先级观感优化
+5. **V3-P2-3 emit / enqueue 语义文档化**——纯注释，卫生工作
+
+---
+
+## Codex v3 执行记录（2026-07-14）
+
+| 条目 | 状态 | 结论 |
+| --- | --- | --- |
+| V3-P1-1 页面重入策略 | 已完成（A） | `StatsPage.onPageShow` 不再调用 `playIntro`，与首页保持一致；两页都只在组件重新创建时分层入场，从子页返回仅刷新数据和消费事件。生命周期门禁已锁住两页的“不重播”策略。 |
+| V3-P1-2 pending 过期 | 已完成 | pending 元素改为 `{ kind, enqueuedAt }`，TTL 固定为 60 秒；消费前静默清理过期事件，同 kind 再次入队会替换旧项并刷新时间戳。 |
+| V3-P2-1 编辑页死代码 | 已完成（A） | 删除 `EditorPage` 的 `CeremonyBurst` import、状态、保存锁和不可达分支；保存成功后直接进入预览，待复盘归零仪式统一由首页消费。 |
+| V3-P2-2 Ripple 圆角 | 基线已完成 | 指派描述与 `be1f978` 代码不符：复盘库两处及“我的”设置行已传 `AppMetrics.cardRadius`，`verify_ripple_layout_contract.mjs` 也已精确断言三处非零业务参数，本轮无需重复修改。 |
+| V3-P2-3 事件契约 | 已完成 | 事件服务已写明 `emit` 即时派发并在未处理时排队、`enqueue` 直接排队、`consumePending` 由订阅流程驱动；待复盘归零调用点补充了必须直接排队的原因。 |
+
+本地验证：聚焦动效门禁通过；`bash scripts/test_app.sh --quick` 通过 45/45；
+`bash scripts/test_app.sh --all` 通过 62/62，主模块与 `entry@ohosTest` 均完成 ArkTS
+编译和 HAP 打包。HDC 仍返回 `Connect server failed`，Stats 子页返回、60 秒过期和
+首页仪式消费仍需设备恢复后做最终真机时序复测。
+
+---
+
+
 
 ## v2 追加条目（针对 `31239c8` 复盘）
 
