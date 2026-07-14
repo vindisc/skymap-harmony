@@ -1,11 +1,6 @@
 import common from '@ohos.app.ability.common';
-import {
-  APPEARANCE_SETTINGS_PAGE,
-  BACKUP_CENTER_PAGE,
-  HOME_STORAGE_PAGE,
-  REVIEWER_PROFILE_PAGE,
-  SYNC_CENTER_PAGE
-} from '../app/AppRouter';
+import { APPEARANCE_SETTINGS_PAGE, BACKUP_CENTER_PAGE, HOME_STORAGE_PAGE, REVIEWER_PROFILE_PAGE,
+  SYNC_CENTER_PAGE } from '../app/AppRouter';
 import {
   AppColors,
   AppMetrics,
@@ -276,18 +271,23 @@ export struct MyPage {
   }
 
   @Builder
+  RippleSettingsLinkRowContent(options: RippleSettingsLinkOptions) {
+    SettingsLinkRow({
+      title: options.title,
+      status: options.status,
+      tone: options.tone,
+      dense: true,
+      scaleOnPress: false,
+      onTap: options.onTap
+    })
+  }
+
+  @Builder
   RippleSettingsLinkRow(options: RippleSettingsLinkOptions) {
     RippleTouch({
       clipRadius: AppMetrics.cardRadius,
       content: () => {
-        SettingsLinkRow({
-          title: options.title,
-          status: options.status,
-          tone: options.tone,
-          dense: true,
-          scaleOnPress: false,
-          onTap: options.onTap
-        })
+        this.RippleSettingsLinkRowContent(options);
       }
     })
       .width('100%')

@@ -25,5 +25,17 @@ assert(
   '复盘库的待复盘与历史列表都必须按卡片圆角裁剪水波纹。'
 );
 assert(mySource.includes('clipRadius: AppMetrics.cardRadius'), '“我的”设置行必须按卡片圆角裁剪水波纹。');
+assert(
+  mySource.includes('@Builder\n  RippleSettingsLinkRowContent(options: RippleSettingsLinkOptions)'),
+  '“我的”设置行内容必须使用稳定的实例 Builder。'
+);
+assert(
+  mySource.includes('this.RippleSettingsLinkRowContent(options);'),
+  'RippleTouch 闭包必须调用绑定当前页面实例的设置行 Builder。'
+);
+assert(
+  !/content: \(\) => \{\s*SettingsLinkRow\(\{/.test(mySource),
+  '不得在 RippleTouch 的 BuilderParam 闭包内直接创建 SettingsLinkRow。'
+);
 
 console.log('ripple layout contract verified: overlay does not inflate list rows and card radius clips feedback');

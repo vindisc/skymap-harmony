@@ -204,6 +204,17 @@
 会清空数据的 UI 测试；MyPage 一屏容纳效果及“发光星尘扩散 + 慢漂尾巴”仍需设备
 恢复连接后做最终真机验收。
 
+### V4 我的页面闪退跟进（2026-07-15）
+
+用户真机反馈切换到“我的”页面闪退。回看 V4 首帧新增路径后，`MyPage` 是全仓唯一
+在 `RippleTouch` 的 `@BuilderParam` 闭包内直接创建 `SettingsLinkRow` 的页面；该写法
+可以通过 ArkTS 编译，但与项目其余 Ripple 行统一采用的“独立 `@Builder` + 绑定当前
+实例的闭包调用”不同。已恢复 `RippleSettingsLinkRowContent` 稳定 Builder，并在
+`verify_ripple_layout_contract.mjs` 中禁止再次内联；通过收拢 import 保持
+`MyPage.ets` 为 500 行。`test_app.sh --all` 再次通过 63/63，主模块、
+`entry@ohosTest` 和 Debug 签名 HAP 均构建成功。HDC 当前枚举结果为 `[Empty]`，尚未
+取得设备崩溃栈或完成保数据覆盖安装，最终真机复测状态保持待确认。
+
 ---
 
 ## v3 追加条目（针对 `be1f978` 复盘）
