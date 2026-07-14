@@ -23,7 +23,7 @@ assert(feedbackSource.includes("REVIEW_FLOW_IMPORT_PENDING_TEXT: string = '正�
 assert(feedbackSource.includes("REVIEW_FLOW_SAVE_PENDING_TEXT: string = '保存中…'"), 'Save pending copy must be centralized.');
 assert(feedbackSource.includes("REVIEW_FLOW_EXPORT_PENDING_TEXT: string = '导出中…'"), 'Export pending copy must be centralized.');
 assert(feedbackSource.includes("REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT: string = '已保存到图库最近项目'"), 'Image export success copy must say where the user can find the result.');
-assert(feedbackSource.includes("REVIEW_FLOW_DELETE_CONFIRM_MESSAGE: string ="), 'Delete scope copy must be centralized.');
+assert(!feedbackSource.includes('REVIEW_FLOW_DELETE_CONFIRM_'), 'Delete confirmation copy must stay retired.');
 
 assert(homeSource.includes('REVIEW_FLOW_IMPORT_PENDING_TEXT'), 'Home page should use shared import pending copy.');
 assert(homeSource.includes('REVIEW_FLOW_HOME_RELOAD_FAILED_TEXT'), 'Home page failure panel should use non-technical copy.');
@@ -53,9 +53,8 @@ assert(previewSource.includes('.scale({ x: this.isPressed(label) ? MotionTokens.
 assert(previewSource.includes('.scale({ x: this.isPressed(label) ? MotionTokens.scaleSubtle : 1'), 'Preview export sheet rows should use subtle press scale.');
 assert(previewSource.includes('.animation({ duration: MotionTokens.durationInstant, curve: MotionTokens.curveDecelerate })'), 'Preview press feedback should use motion tokens.');
 
-assert(projectSource.includes('REVIEW_FLOW_DELETE_CONFIRM_TITLE'), 'Project detail delete dialog should use shared confirm title.');
-assert(projectSource.includes('REVIEW_FLOW_DELETE_CONFIRM_MESSAGE'), 'Project detail delete dialog should use shared scope copy.');
-assert(projectSource.includes('tone: DialogTone.DANGER'), 'Project detail destructive confirmation should use danger tone.');
+assert(projectSource.includes('this.deleteHistory(document);'), 'Project detail delete action should execute directly.');
+assert(!projectSource.includes('confirmDeleteHistory'), 'Project detail delete action must not show a second confirmation.');
 assert(projectSource.includes('MotionTokens.shatterDurationMs'), 'Project detail delete action should wait for the visible removal animation.');
 assert(projectSource.includes('REVIEW_FLOW_IMPORT_PENDING_TEXT'), 'Project detail create-first-review action should reuse import pending copy.');
 

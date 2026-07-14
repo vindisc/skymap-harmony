@@ -86,22 +86,33 @@ function ensureExportDirectory(context: common.UIAbilityContext): string {
 }
 
 function writeReviewJson(outputPath: string, rawText: string): void {
-  const file = fs.openSync(outputPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
-    fs.writeSync(file.fd, encodeUtf8(rawText));
-  } finally {
-    fs.closeSync(file);
+    const file = fs.openSync(outputPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+    try {
+      fs.writeSync(file.fd, encodeUtf8(rawText));
+    } finally {
+      fs.closeSync(file);
+    }
+  } catch (error) {
+    throw new Error(`写入复盘 JSON 失败：${error}`);
   }
 }
 
 function copySandboxFileToUri(sourcePath: string, targetUri: string): void {
-  const sourceFile = fs.openSync(sourcePath, fs.OpenMode.READ_ONLY);
-  const targetFile = fs.openSync(targetUri, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
-    fs.copyFileSync(sourceFile.fd, targetFile.fd);
-  } finally {
-    fs.closeSync(sourceFile);
-    fs.closeSync(targetFile);
+    const sourceFile = fs.openSync(sourcePath, fs.OpenMode.READ_ONLY);
+    try {
+      const targetFile = fs.openSync(targetUri, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+      try {
+        fs.copyFileSync(sourceFile.fd, targetFile.fd);
+      } finally {
+        fs.closeSync(targetFile);
+      }
+    } finally {
+      fs.closeSync(sourceFile);
+    }
+  } catch (error) {
+    throw new Error(`复制复盘 JSON 失败：${error}`);
   }
 }
 

@@ -414,19 +414,47 @@ export class ReviewCardHistoryService {
   private static cachedItems: Array<ReviewCardHistoryItem> = [];
 
   private static async getStore(context: common.UIAbilityContext): Promise<preferences.Preferences> {
-    return preferences.getPreferences(context, { name: PREFERENCES_NAME });
+    try {
+      return await preferences.getPreferences(context, { name: PREFERENCES_NAME });
+    } catch (error) {
+      throw new Error(`打开复盘历史索引失败：${error}`);
+    }
+  }
+
+  private static async getPreference(
+    store: preferences.Preferences,
+    key: string,
+    fallback: preferences.ValueType
+  ): Promise<preferences.ValueType> {
+    try {
+      return await store.get(key, fallback);
+    } catch (error) {
+      throw new Error(`读取复盘历史索引 ${key} 失败：${error}`);
+    }
+  }
+
+  private static async persistPreference(
+    store: preferences.Preferences,
+    key: string,
+    value: preferences.ValueType
+  ): Promise<void> {
+    try {
+      await store.put(key, value);
+      await store.flush();
+    } catch (error) {
+      throw new Error(`保存复盘历史索引 ${key} 失败：${error}`);
+    }
   }
 
   private static async isRdbMainIndexReady(context: common.UIAbilityContext): Promise<boolean> {
     const store = await ReviewCardHistoryService.getStore(context);
-    const readyValue = await store.get(RDB_MAIN_INDEX_READY_KEY, false);
+    const readyValue = await ReviewCardHistoryService.getPreference(store, RDB_MAIN_INDEX_READY_KEY, false);
     return readyValue === true;
   }
 
   private static async markRdbMainIndexReady(context: common.UIAbilityContext): Promise<void> {
     const store = await ReviewCardHistoryService.getStore(context);
-    await store.put(RDB_MAIN_INDEX_READY_KEY, true);
-    await store.flush();
+    await ReviewCardHistoryService.persistPreference(store, RDB_MAIN_INDEX_READY_KEY, true);
   }
 
   private static listReviewJsonBackupFileNames(diagnostics: ReviewCardHistoryDiagnostics): Array<string> {
@@ -469,7 +497,7 @@ export class ReviewCardHistoryService {
     diagnostics: ReviewCardHistoryDiagnostics,
     shouldForceReload: boolean = false
   ): Promise<Array<ReviewCardHistoryItem>> {
-    const importedValue = await store.get(BACKUP_IMPORT_COMPLETED_KEY, false);
+    const importedValue = await ReviewCardHistoryService.getPreference(store, BACKUP_IMPORT_COMPLETED_KEY, false);
     diagnostics.backupImportCompleted = importedValue === true;
     diagnostics.forcedBackupReload = shouldForceReload;
     if (importedValue === true && !shouldForceReload) {
@@ -478,8 +506,7 @@ export class ReviewCardHistoryService {
 
     const backupItems: Array<ReviewCardHistoryItem> =
       ReviewCardHistoryService.loadReviewJsonBackupItemsWithDiagnostics(diagnostics);
-    await store.put(BACKUP_IMPORT_COMPLETED_KEY, true);
-    await store.flush();
+    await ReviewCardHistoryService.persistPreference(store, BACKUP_IMPORT_COMPLETED_KEY, true);
     return backupItems;
   }
 
@@ -519,7 +546,7 @@ export class ReviewCardHistoryService {
     diagnostics: ReviewCardHistoryDiagnostics
   ): Promise<ReviewCardHistoryLoadResult> {
     const store = await ReviewCardHistoryService.getStore(context);
-    const rawValue = await store.get(HISTORY_KEY, '[]');
+    const rawValue = await ReviewCardHistoryService.getPreference(store, HISTORY_KEY, '[]');
     diagnostics.rawHistoryType = typeof rawValue;
     diagnostics.rawHistoryLength = typeof rawValue === 'string' ? rawValue.length : 0;
     const historyItems: Array<ReviewCardHistoryItem> = parseStoredHistory(rawValue);

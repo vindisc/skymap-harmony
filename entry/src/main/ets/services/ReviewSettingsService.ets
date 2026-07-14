@@ -51,7 +51,24 @@ function normalizeWidgetCardBackgroundStyle(value: string | undefined): string {
 
 export class ReviewSettingsService {
   private static async getStore(context: common.UIAbilityContext): Promise<preferences.Preferences> {
-    return preferences.getPreferences(context, { name: PREFERENCES_NAME });
+    try {
+      return await preferences.getPreferences(context, { name: PREFERENCES_NAME });
+    } catch (error) {
+      throw new Error(`打开复盘设置失败：${error}`);
+    }
+  }
+
+  private static async persistValue(
+    store: preferences.Preferences,
+    key: string,
+    value: preferences.ValueType
+  ): Promise<void> {
+    try {
+      await store.put(key, value);
+      await store.flush();
+    } catch (error) {
+      throw new Error(`保存复盘设置 ${key} 失败：${error}`);
+    }
   }
 
   static async loadReviewerName(context: common.UIAbilityContext): Promise<string> {
@@ -70,8 +87,7 @@ export class ReviewSettingsService {
   static async saveReviewerName(context: common.UIAbilityContext, reviewerName: string): Promise<string> {
     const normalizedName = normalizeReviewerName(reviewerName);
     const store = await ReviewSettingsService.getStore(context);
-    await store.put(REVIEWER_NAME_KEY, normalizedName);
-    await store.flush();
+    await ReviewSettingsService.persistValue(store, REVIEWER_NAME_KEY, normalizedName);
     SettingsRefreshService.notifySettingsChanged('reviewer_name_saved');
     return normalizedName;
   }
@@ -92,8 +108,7 @@ export class ReviewSettingsService {
   static async saveWidgetCardBackgroundStyle(context: common.UIAbilityContext, style: string): Promise<string> {
     const normalizedStyle: string = normalizeWidgetCardBackgroundStyle(style);
     const store = await ReviewSettingsService.getStore(context);
-    await store.put(WIDGET_CARD_BACKGROUND_STYLE_KEY, normalizedStyle);
-    await store.flush();
+    await ReviewSettingsService.persistValue(store, WIDGET_CARD_BACKGROUND_STYLE_KEY, normalizedStyle);
     SettingsRefreshService.notifySettingsChanged('widget_card_background_saved');
     return normalizedStyle;
   }
@@ -121,8 +136,7 @@ export class ReviewSettingsService {
 
   static async saveShatterAnimationEnabled(context: common.UIAbilityContext, enabled: boolean): Promise<boolean> {
     const store = await ReviewSettingsService.getStore(context);
-    await store.put(SHATTER_ANIMATION_ENABLED_KEY, enabled ? 'true' : 'false');
-    await store.flush();
+    await ReviewSettingsService.persistValue(store, SHATTER_ANIMATION_ENABLED_KEY, enabled ? 'true' : 'false');
     SettingsRefreshService.notifySettingsChanged('shatter_animation_saved');
     return enabled;
   }
@@ -143,8 +157,7 @@ export class ReviewSettingsService {
   ): Promise<MotionQuality> {
     const normalizedValue: MotionQuality = normalizeMotionQuality(value);
     const store = await ReviewSettingsService.getStore(context);
-    await store.put(MOTION_QUALITY_KEY, normalizedValue);
-    await store.flush();
+    await ReviewSettingsService.persistValue(store, MOTION_QUALITY_KEY, normalizedValue);
     SettingsRefreshService.notifySettingsChanged('motion_quality_saved');
     return normalizedValue;
   }

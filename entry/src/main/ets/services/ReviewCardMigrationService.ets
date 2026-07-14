@@ -130,9 +130,13 @@ function parseStoredHistory(rawValue: preferences.ValueType): Array<ReviewCardHi
 
 export class ReviewCardMigrationService {
   static async countPreferenceHistoryItems(context: common.UIAbilityContext): Promise<number> {
-    const store: preferences.Preferences = await preferences.getPreferences(context, { name: PREFERENCES_NAME });
-    const rawValue: preferences.ValueType = await store.get(HISTORY_KEY, '[]');
-    return parseStoredHistory(rawValue).length;
+    try {
+      const store: preferences.Preferences = await preferences.getPreferences(context, { name: PREFERENCES_NAME });
+      const rawValue: preferences.ValueType = await store.get(HISTORY_KEY, '[]');
+      return parseStoredHistory(rawValue).length;
+    } catch (error) {
+      throw new Error(`读取待迁移复盘数量失败：${error}`);
+    }
   }
 
   static async migrateFromPreferencesToRdb(context: common.UIAbilityContext): Promise<MigrationResult> {
@@ -209,8 +213,12 @@ export class ReviewCardMigrationService {
   }
 
   private static async loadMigrationSource(context: common.UIAbilityContext): Promise<Array<ReviewCardHistoryItem>> {
-    const store: preferences.Preferences = await preferences.getPreferences(context, { name: PREFERENCES_NAME });
-    const rawValue: preferences.ValueType = await store.get(HISTORY_KEY, '[]');
-    return parseStoredHistory(rawValue);
+    try {
+      const store: preferences.Preferences = await preferences.getPreferences(context, { name: PREFERENCES_NAME });
+      const rawValue: preferences.ValueType = await store.get(HISTORY_KEY, '[]');
+      return parseStoredHistory(rawValue);
+    } catch (error) {
+      throw new Error(`读取复盘迁移源失败：${error}`);
+    }
   }
 }

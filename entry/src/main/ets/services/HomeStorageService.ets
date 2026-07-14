@@ -438,7 +438,43 @@ export class HomeStorageService {
   private static hasCachedSettings: boolean = false;
 
   private static async getStore(context: common.UIAbilityContext): Promise<preferences.Preferences> {
-    return preferences.getPreferences(context, { name: PREFERENCES_NAME });
+    try {
+      return await preferences.getPreferences(context, { name: PREFERENCES_NAME });
+    } catch (error) {
+      throw new Error(`打开家庭存储设置失败：${error}`);
+    }
+  }
+
+  private static async getPreference(
+    store: preferences.Preferences,
+    key: string,
+    fallback: preferences.ValueType
+  ): Promise<preferences.ValueType> {
+    try {
+      return await store.get(key, fallback);
+    } catch (error) {
+      throw new Error(`读取家庭存储设置 ${key} 失败：${error}`);
+    }
+  }
+
+  private static async putPreference(
+    store: preferences.Preferences,
+    key: string,
+    value: preferences.ValueType
+  ): Promise<void> {
+    try {
+      await store.put(key, value);
+    } catch (error) {
+      throw new Error(`保存家庭存储设置 ${key} 失败：${error}`);
+    }
+  }
+
+  private static async flushPreferences(store: preferences.Preferences): Promise<void> {
+    try {
+      await store.flush();
+    } catch (error) {
+      throw new Error(`提交家庭存储设置失败：${error}`);
+    }
   }
 
   private static async clearLegacyPassword(store: preferences.Preferences): Promise<void> {
@@ -449,7 +485,7 @@ export class HomeStorageService {
   }
 
   private static async migrateLegacyPassword(store: preferences.Preferences): Promise<string> {
-    const legacyPassword = await store.get(LEGACY_PASSWORD_KEY, '');
+    const legacyPassword = await HomeStorageService.getPreference(store, LEGACY_PASSWORD_KEY, '');
     if (typeof legacyPassword !== 'string' || legacyPassword.length === 0) {
       return '';
     }
@@ -457,7 +493,7 @@ export class HomeStorageService {
     try {
       await HomeStorageSecretService.savePassword(legacyPassword);
       await HomeStorageService.clearLegacyPassword(store);
-      await store.flush();
+      await HomeStorageService.flushPreferences(store);
       return legacyPassword;
     } catch (error) {
       return legacyPassword;
@@ -575,12 +611,12 @@ export class HomeStorageService {
   ): Promise<HomeStorageSettings> {
     const normalized: HomeStorageSettings = normalizeSettings(settings);
     const store = await HomeStorageService.getStore(context);
-    await store.put(USERNAME_KEY, normalized.username);
-    await store.put(REMOTE_DIRECTORY_KEY, normalized.remoteDirectory);
-    await store.put(SMB_HOST_KEY, normalized.smbHost);
-    await store.put(SMB_PORT_KEY, normalized.smbPort);
-    await store.put(SMB_SHARE_NAME_KEY, normalized.smbShareName);
-    await store.put(SMB_DOMAIN_KEY, normalized.smbDomain);
+    await HomeStorageService.putPreference(store, USERNAME_KEY, normalized.username);
+    await HomeStorageService.putPreference(store, REMOTE_DIRECTORY_KEY, normalized.remoteDirectory);
+    await HomeStorageService.putPreference(store, SMB_HOST_KEY, normalized.smbHost);
+    await HomeStorageService.putPreference(store, SMB_PORT_KEY, normalized.smbPort);
+    await HomeStorageService.putPreference(store, SMB_SHARE_NAME_KEY, normalized.smbShareName);
+    await HomeStorageService.putPreference(store, SMB_DOMAIN_KEY, normalized.smbDomain);
 
     let passwordSavedSecurely: boolean = false;
     try {
@@ -592,11 +628,11 @@ export class HomeStorageService {
     if (passwordSavedSecurely || normalized.password.length === 0) {
       await HomeStorageService.clearLegacyPassword(store);
     } else {
-      await store.put(LEGACY_PASSWORD_KEY, normalized.password);
+      await HomeStorageService.putPreference(store, LEGACY_PASSWORD_KEY, normalized.password);
     }
 
-    await store.put(SETTINGS_SNAPSHOT_KEY, HomeStorageService.createSettingsSnapshot(normalized));
-    await store.flush();
+    await HomeStorageService.putPreference(store, SETTINGS_SNAPSHOT_KEY, HomeStorageService.createSettingsSnapshot(normalized));
+    await HomeStorageService.flushPreferences(store);
     const savedSettings: HomeStorageSettings = HomeStorageService.rememberSettings(normalized);
     SettingsRefreshService.notifySettingsChanged('home_storage_saved');
     return savedSettings;
@@ -618,8 +654,8 @@ export class HomeStorageService {
 
   private static async markLastUploadedAt(context: common.UIAbilityContext, timestamp: number): Promise<void> {
     const store = await HomeStorageService.getStore(context);
-    await store.put(LAST_UPLOADED_AT_KEY, timestamp);
-    await store.flush();
+    await HomeStorageService.putPreference(store, LAST_UPLOADED_AT_KEY, timestamp);
+    await HomeStorageService.flushPreferences(store);
   }
 
   static validateSettings(settings: HomeStorageSettings): string {

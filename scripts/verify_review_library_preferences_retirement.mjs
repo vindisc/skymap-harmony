@@ -55,7 +55,7 @@ assert(loadFromRdbBody.includes('isRdbMainIndexReady(context)'), 'RDB ready mark
 assert(loadFromRdbBody.includes('migrateFromPreferencesToRdb(context)'), 'RDB empty and not-ready path must still migrate old Preferences data.');
 
 const loadLegacyBody = extractMethodBody(historyServiceSource, 'private static async loadLegacyWithDiagnostics');
-assert(loadLegacyBody.includes('store.get(HISTORY_KEY'), 'Legacy fallback must still read Preferences for old data and diagnostics.');
+assert(loadLegacyBody.includes('getPreference(store, HISTORY_KEY'), 'Legacy fallback must still read Preferences for old data and diagnostics.');
 assert(loadLegacyBody.includes('loadBackupItemsOnce'), 'Legacy fallback must still use review_exchange limited recovery.');
 assert(loadLegacyBody.includes('migrateRecoveredBackupItemsToRdb'), 'review_exchange recovery should migrate into RDB instead of writing Preferences.');
 assert(!loadLegacyBody.includes('persist(context'), 'Legacy fallback must not persist merged records back to Preferences.');

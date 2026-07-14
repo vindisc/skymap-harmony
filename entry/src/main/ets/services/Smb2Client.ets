@@ -718,18 +718,22 @@ class Smb2Transport {
     this.tcpSocket.on('error', () => {
       this.rejectPending(new Error('SMB 连接异常'));
     });
-    await this.tcpSocket.connect({
-      address: {
-        address: host,
-        port: port,
-        family: host.indexOf(':') >= 0 ? 2 : 1
-      },
-      timeout: SOCKET_TIMEOUT_MS
-    });
-    await this.tcpSocket.setExtraOptions({
-      TCPNoDelay: true,
-      keepAlive: true
-    });
+    try {
+      await this.tcpSocket.connect({
+        address: {
+          address: host,
+          port: port,
+          family: host.indexOf(':') >= 0 ? 2 : 1
+        },
+        timeout: SOCKET_TIMEOUT_MS
+      });
+      await this.tcpSocket.setExtraOptions({
+        TCPNoDelay: true,
+        keepAlive: true
+      });
+    } catch (error) {
+      throw new Error(`SMB 建立连接失败：${error}`);
+    }
   }
 
   async close(): Promise<void> {
@@ -740,7 +744,11 @@ class Smb2Transport {
   }
 
   async request(packet: Array<number>): Promise<Array<number>> {
-    await this.tcpSocket.send({ data: bytesToArrayBuffer(this.withNetBiosHeader(packet)) });
+    try {
+      await this.tcpSocket.send({ data: bytesToArrayBuffer(this.withNetBiosHeader(packet)) });
+    } catch (error) {
+      throw new Error(`SMB 发送请求失败：${error}`);
+    }
     return await this.receivePacket();
   }
 
@@ -1121,7 +1129,12 @@ export class Smb2Client {
     }
 
     const buffer = new ArrayBuffer(length);
-    const readLength: number = fs.readSync(file.fd, buffer);
+    let readLength: number = 0;
+    try {
+      readLength = fs.readSync(file.fd, buffer);
+    } catch (error) {
+      throw new Error(`读取待上传文件失败：${error}`);
+    }
     const view = new Uint8Array(buffer);
     const result: Array<number> = [];
     const actualLength: number = Math.max(0, Math.min(readLength, view.length));
@@ -1132,24 +1145,28 @@ export class Smb2Client {
   }
 
   private async writeFileFromPath(fileId: Array<number>, localPath: string, byteSize: number): Promise<void> {
-    const file = fs.openSync(localPath, fs.OpenMode.READ_ONLY);
     try {
-      let offset: number = 0;
-      let chunkIndex: number = 0;
-      const totalBytes: number = Math.max(0, byteSize);
-      const totalChunks: number = Math.max(1, Math.ceil(totalBytes / SMB2_WRITE_CHUNK_SIZE));
-      while (offset < totalBytes || (totalBytes === 0 && chunkIndex === 0)) {
-        const expectedLength: number = totalBytes === 0 ? 0 : Math.min(SMB2_WRITE_CHUNK_SIZE, totalBytes - offset);
-        const chunk: Array<number> = this.readChunkBytes(file, expectedLength);
-        await this.writeFileChunk(fileId, chunk, offset, chunkIndex + 1, totalChunks);
-        offset += chunk.length;
-        chunkIndex += 1;
-        if (totalBytes === 0 || chunk.length <= 0) {
-          break;
+      const file = fs.openSync(localPath, fs.OpenMode.READ_ONLY);
+      try {
+        let offset: number = 0;
+        let chunkIndex: number = 0;
+        const totalBytes: number = Math.max(0, byteSize);
+        const totalChunks: number = Math.max(1, Math.ceil(totalBytes / SMB2_WRITE_CHUNK_SIZE));
+        while (offset < totalBytes || (totalBytes === 0 && chunkIndex === 0)) {
+          const expectedLength: number = totalBytes === 0 ? 0 : Math.min(SMB2_WRITE_CHUNK_SIZE, totalBytes - offset);
+          const chunk: Array<number> = this.readChunkBytes(file, expectedLength);
+          await this.writeFileChunk(fileId, chunk, offset, chunkIndex + 1, totalChunks);
+          offset += chunk.length;
+          chunkIndex += 1;
+          if (totalBytes === 0 || chunk.length <= 0) {
+            break;
+          }
         }
+      } finally {
+        fs.closeSync(file);
       }
-    } finally {
-      fs.closeSync(file);
+    } catch (error) {
+      throw new Error(`上传本地文件失败：${error}`);
     }
   }
 

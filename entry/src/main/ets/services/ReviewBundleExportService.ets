@@ -136,15 +136,31 @@ function encodeUtf8(value: string): ArrayBuffer {
 }
 
 function ensureDirectory(path: string): void {
-  fs.mkdirSync(path, true);
+  try {
+    fs.mkdirSync(path, true);
+  } catch (error) {
+    throw new Error(`创建复盘包目录失败：${error}`);
+  }
 }
 
 function writeTextFile(path: string, value: string): void {
-  const file = fs.openSync(path, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
-    fs.writeSync(file.fd, encodeUtf8(value));
-  } finally {
-    fs.closeSync(file);
+    const file = fs.openSync(path, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+    try {
+      fs.writeSync(file.fd, encodeUtf8(value));
+    } finally {
+      fs.closeSync(file);
+    }
+  } catch (error) {
+    throw new Error(`写入复盘包文件失败：${error}`);
+  }
+}
+
+function readTextFile(path: string): string {
+  try {
+    return fs.readTextSync(path);
+  } catch (error) {
+    throw new Error(`读取复盘包文件失败：${error}`);
   }
 }
 
@@ -235,7 +251,7 @@ function verifyBundle(paths: ReviewBundlePaths): void {
   assertFileExists(paths.reviewJson, 'review.json');
   assertFileExists(paths.thumbnail, THUMBNAIL_PATH);
 
-  const manifestText: string = fs.readTextSync(paths.manifest);
+  const manifestText: string = readTextFile(paths.manifest);
   const manifest: ReviewBundleManifestV1 = JSON.parse(manifestText) as ReviewBundleManifestV1;
   if (manifest.bundleVersion !== 1 ||
     typeof manifest.bundleId !== 'string' ||
@@ -250,7 +266,7 @@ function verifyBundle(paths: ReviewBundlePaths): void {
     throw new Error('manifest.json 字段不完整');
   }
 
-  JSON.parse(fs.readTextSync(paths.reviewJson)) as Object;
+  JSON.parse(readTextFile(paths.reviewJson)) as Object;
 }
 
 function buildUploadFiles(paths: ReviewBundlePaths): Array<HomeStorageUploadFileEntry> {
@@ -264,6 +280,7 @@ function buildUploadFiles(paths: ReviewBundlePaths): Array<HomeStorageUploadFile
 export class ReviewBundleExportService {
   static async exportReviewBundleToHomeStorage(
     context: common.UIAbilityContext,
+    uiContext: UIContext,
     document: ReviewCardDocument,
     reviewerText: string,
     componentId: string,
@@ -300,6 +317,7 @@ export class ReviewBundleExportService {
       writeTextFile(paths.reviewJson, stringifyReviewCardExchangeSchemaV1(document, reviewerText));
       console.info(`[ReviewBundleExport] review_json_written path=${paths.reviewJson} bytes=${fileSize(paths.reviewJson)}`);
       const snapshotResult: ReviewCardBundleSnapshotResult = await ReviewCardExportService.exportBundleSnapshot(
+        uiContext,
         componentId,
         paths.thumbnail,
         onSnapshotReady

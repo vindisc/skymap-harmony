@@ -40,11 +40,8 @@ assert(files.preview.includes('result.cancelled'), 'Preview export flow should d
 assert(files.preview.includes('exportState'), 'Preview should use a shared export state gate.');
 assert(files.preview.includes('ReviewCardHistoryService.markExported'), 'Preview export must mark exported state.');
 
-assert(files.library.includes('REVIEW_FLOW_DELETE_CONFIRM_TITLE'), 'Delete dialog title must match deletion scope.');
-assert(
-  files.library.includes('REVIEW_FLOW_DELETE_CONFIRM_MESSAGE'),
-  'Delete dialog must explain original photos and exported images are untouched.'
-);
+assert(files.library.includes('this.deleteHistory(document);'), 'Library delete must execute directly from the swipe action.');
+assert(!files.library.includes('confirmDeleteHistory'), 'Library delete must not keep a second confirmation dialog.');
 assert(files.library.includes('@State deletingReviewKey'), 'Library delete must keep a busy key.');
 assert(files.library.includes('REVIEW_FLOW_DELETE_SUCCESS_TEXT'), 'Library delete success toast must be present.');
 assert(files.library.includes('REVIEW_FLOW_DELETE_FAILED_TEXT'), 'Library delete failure toast must be present.');

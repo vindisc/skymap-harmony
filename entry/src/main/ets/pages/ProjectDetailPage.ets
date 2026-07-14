@@ -27,8 +27,6 @@ import { pickSinglePhoto, PickedPhotoResult } from '../services/PhotoPickerServi
 import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
 import { LearningProgressFormService } from '../services/LearningProgressFormService';
 import {
-  REVIEW_FLOW_DELETE_CONFIRM_MESSAGE,
-  REVIEW_FLOW_DELETE_CONFIRM_TITLE,
   REVIEW_FLOW_DELETE_FAILED_TEXT,
   REVIEW_FLOW_DELETE_SUCCESS_TEXT,
   REVIEW_FLOW_IMPORT_PENDING_TEXT,
@@ -36,7 +34,6 @@ import {
   REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT
 } from '../services/ReviewFlowFeedback';
 import { ToastService } from '../services/ToastService';
-import { DialogService, DialogTone } from '../services/DialogService';
 import {
   ReviewSettingsService,
   SHATTER_ANIMATION_DEFAULT
@@ -410,23 +407,6 @@ export struct ProjectDetailPage {
     }
   }
 
-  private confirmDeleteHistory(document: ReviewCardDocument): void {
-    if (this.deletingReviewKey.length > 0) {
-      return;
-    }
-
-    DialogService.confirm(this.getUIContext(), {
-      title: REVIEW_FLOW_DELETE_CONFIRM_TITLE,
-      message: REVIEW_FLOW_DELETE_CONFIRM_MESSAGE,
-      cancelText: '取消',
-      confirmText: '删除',
-      tone: DialogTone.DANGER,
-      onConfirm: () => {
-        this.deleteHistory(document);
-      }
-    });
-  }
-
   private async deleteHistory(document: ReviewCardDocument): Promise<void> {
     const deletingKey: string = getReviewDocumentKey(document);
     if (this.deletingReviewKey.length > 0) {
@@ -543,7 +523,7 @@ export struct ProjectDetailPage {
           if (this.deletingReviewKey.length > 0) {
             return;
           }
-          this.confirmDeleteHistory(document);
+          this.deleteHistory(document);
         })
     }
     .width(DELETE_SWIPE_ACTION_WIDTH)

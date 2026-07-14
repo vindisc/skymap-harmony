@@ -57,7 +57,7 @@ requireIncludes(projectDetailSource, 'Visibility.Hidden', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'ReviewSettingsService.loadShatterAnimationEnabled', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'private isPageAlive: boolean = false;', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'if (!this.isPageAlive)', 'ProjectDetailPage');
-requireIncludes(projectDetailSource, 'this.confirmDeleteHistory(document);', 'ProjectDetailPage');
+requireIncludes(projectDetailSource, 'this.deleteHistory(document);', 'ProjectDetailPage');
 
 const myPageSource = readOrFail(myPagePath);
 requireIncludes(myPageSource, "'删除星河效果'", 'MyPage');
@@ -74,4 +74,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('shatter animation verified: local overlay, lifecycle guards, confirmation, preference, and list integration present');
+console.log('shatter animation verified: local overlay, lifecycle guards, direct deletion, preference, and list integration present');

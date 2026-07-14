@@ -145,9 +145,9 @@ const requiredHomeStorageTokens = [
   "createOperationResult(true, remotePath, '已上传家庭存储')",
   "message: '已上传共享根目录'",
   'let passwordSavedSecurely: boolean = false;',
-  'await store.put(LEGACY_PASSWORD_KEY, normalized.password);',
+  'HomeStorageService.putPreference(store, LEGACY_PASSWORD_KEY, normalized.password)',
   'private static async loadSettingsSnapshot(store: preferences.Preferences): Promise<HomeStorageSettings | null> {',
-  'await store.put(SETTINGS_SNAPSHOT_KEY, HomeStorageService.createSettingsSnapshot(normalized));',
+  'HomeStorageService.putPreference(store, SETTINGS_SNAPSHOT_KEY, HomeStorageService.createSettingsSnapshot(normalized))',
   "isMissingRemoteDirectoryError(primaryResult.message)",
   'client.uploadFile(createSmbUploadFileOptions('
 ];

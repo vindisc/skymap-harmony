@@ -172,11 +172,31 @@ function ensureDirectory(path: string): void {
 }
 
 function writeTextFile(path: string, value: string): void {
-  const file = fs.openSync(path, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
-    fs.writeSync(file.fd, encodeUtf8(value));
-  } finally {
+    const file = fs.openSync(path, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+    try {
+      fs.writeSync(file.fd, encodeUtf8(value));
+    } finally {
+      fs.closeSync(file);
+    }
+  } catch (error) {
+    throw new Error(`写入含原图复盘包文件失败：${error}`);
+  }
+}
+
+function readTextFile(path: string): string {
+  try {
+    return fs.readTextSync(path);
+  } catch (error) {
+    throw new Error(`读取含原图复盘包文件失败：${error}`);
+  }
+}
+
+function closeFile(file: fs.File): void {
+  try {
     fs.closeSync(file);
+  } catch (error) {
+    console.error(`[ReviewBundleOriginalPhotoExportService] 关闭文件失败：${error}`);
   }
 }
 
@@ -344,10 +364,10 @@ function copyOriginalPhoto(sourceUri: string, targetPath: string): OriginalPhoto
     );
   } finally {
     if (targetFile !== null) {
-      fs.closeSync(targetFile);
+      closeFile(targetFile);
     }
     if (sourceFile !== null) {
-      fs.closeSync(sourceFile);
+      closeFile(sourceFile);
     }
   }
   return createCopySuccessResult();
@@ -443,8 +463,8 @@ function verifyBundle(paths: ReviewBundleOriginalPhotoPaths, originalRelativePat
   assertFileExists(paths.reviewJson, 'review.json');
   assertFileExists(paths.originalPhoto, originalRelativePath);
 
-  const manifestText: string = fs.readTextSync(paths.manifest);
-  const reviewJsonText: string = fs.readTextSync(paths.reviewJson);
+  const manifestText: string = readTextFile(paths.manifest);
+  const reviewJsonText: string = readTextFile(paths.reviewJson);
   validateReviewBundleV2Texts(manifestText, reviewJsonText, originalRelativePath);
   const manifest: ReviewBundleManifestV2 = JSON.parse(manifestText) as ReviewBundleManifestV2;
 

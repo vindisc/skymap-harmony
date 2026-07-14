@@ -223,6 +223,7 @@ struct PreviewPage {
       this.setFloatingStatus(FEEDBACK_PROGRESS_SAVE_TO_GALLERY_TEXT, StatusBannerTone.PROGRESS);
       const result: ReviewCardExportResult = await ReviewCardExportService.exportSnapshot(
         this.getAbilityContext(),
+        this.getUIContext(),
         this.getExportComponentId(),
         () => {
           this.isExportSnapshotMode = false;
@@ -277,6 +278,7 @@ struct PreviewPage {
       const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
       const result: ReviewBundleExportResult = await ReviewBundleExportService.exportReviewBundleToHomeStorage(
         context,
+        this.getUIContext(),
         this.document,
         reviewerName,
         this.getExportComponentId(),

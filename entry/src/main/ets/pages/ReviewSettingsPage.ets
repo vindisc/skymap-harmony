@@ -77,14 +77,25 @@ struct ReviewSettingsPage {
       }
     };
 
-    window.getLastWindow(this.getAbilityContext()).then((targetWindow: window.Window) => {
+    this.attachKeyboardHeightObserver();
+  }
+
+  private async attachKeyboardHeightObserver(): Promise<void> {
+    try {
+      const targetWindow: window.Window = await window.getLastWindow(this.getAbilityContext());
       if (!this.isPageAlive || this.keyboardHeightChangeCallback === null) {
         return;
       }
 
       this.hostWindow = targetWindow;
-      targetWindow.on('keyboardHeightChange', this.keyboardHeightChangeCallback);
-    });
+      try {
+        targetWindow.on('keyboardHeightChange', this.keyboardHeightChangeCallback);
+      } catch (error) {
+        console.error(`[ReviewSettingsPage] 监听键盘高度失败：${error}`);
+      }
+    } catch (error) {
+      console.error(`[ReviewSettingsPage] 获取应用窗口失败：${error}`);
+    }
   }
 
   private unregisterKeyboardHeightObserver(): void {

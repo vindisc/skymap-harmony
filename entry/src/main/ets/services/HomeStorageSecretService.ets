@@ -118,7 +118,11 @@ export class HomeStorageSecretService {
     attributes.set(asset.Tag.AUTH_TYPE, asset.AuthType.NONE);
     attributes.set(asset.Tag.SYNC_TYPE, asset.SyncType.NEVER);
     attributes.set(asset.Tag.CONFLICT_RESOLUTION, asset.ConflictResolution.OVERWRITE);
-    await asset.add(attributes);
+    try {
+      await asset.add(attributes);
+    } catch (error) {
+      throw new Error(`安全保存家庭存储密码失败：${error}`);
+    }
   }
 
   static async clearPassword(): Promise<void> {

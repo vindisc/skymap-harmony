@@ -31,10 +31,6 @@ export const REVIEW_FLOW_DELETE_SUCCESS_TEXT: string = '复盘已删除';
 export const REVIEW_FLOW_DELETE_FAILED_TEXT: string = '删除失败，请重试';
 export const REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT: string = '待复盘照片已删除';
 export const REVIEW_FLOW_PENDING_DELETE_FAILED_TEXT: string = '删除失败，请重试';
-export const REVIEW_FLOW_DELETE_CONFIRM_TITLE: string = '删除这条复盘？';
-export const REVIEW_FLOW_DELETE_CONFIRM_MESSAGE: string =
-  '只会删除复盘记录和应用内备份，不会删除原始照片或你已经导出的图片。';
-
 export const REVIEW_FLOW_HOME_RELOAD_FAILED_TEXT: string = '复盘记录暂时无法刷新，可稍后重试。';
 export const REVIEW_FLOW_HOME_COPY_ISSUE_TEXT: string = '复制问题信息';
 export const REVIEW_FLOW_HOME_COPY_ISSUE_SUCCESS_TEXT: string = '已复制问题信息';

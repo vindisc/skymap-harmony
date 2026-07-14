@@ -1,4 +1,3 @@
-import componentSnapshot from '@ohos.arkui.componentSnapshot';
 import image from '@ohos.multimedia.image';
 import fs from '@ohos.file.fs';
 import fileUri from '@ohos.file.fileuri';
@@ -43,11 +42,15 @@ function saveJpgToSandbox(context: common.UIAbilityContext, data: ArrayBuffer, t
   }
 
   const outputPath = `${outputDir}/${title}.${EXPORT_EXTENSION}`;
-  const file = fs.openSync(outputPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
-    fs.writeSync(file.fd, data);
-  } finally {
-    fs.closeSync(file);
+    const file = fs.openSync(outputPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+    try {
+      fs.writeSync(file.fd, data);
+    } finally {
+      fs.closeSync(file);
+    }
+  } catch (error) {
+    throw new Error(`保存导出图片备份失败：${error}`);
   }
   return outputPath;
 }
@@ -65,11 +68,15 @@ function ensureParentDirectory(outputPath: string): void {
 
 function writeImageToSandbox(outputPath: string, data: ArrayBuffer): string {
   ensureParentDirectory(outputPath);
-  const file = fs.openSync(outputPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
   try {
-    fs.writeSync(file.fd, data);
-  } finally {
-    fs.closeSync(file);
+    const file = fs.openSync(outputPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+    try {
+      fs.writeSync(file.fd, data);
+    } finally {
+      fs.closeSync(file);
+    }
+  } catch (error) {
+    throw new Error(`写入复盘包预览图失败：${error}`);
   }
   return outputPath;
 }
@@ -81,13 +88,20 @@ function assertImageBytes(label: string, data: ArrayBuffer): void {
 }
 
 function copySandboxFileToMediaUri(sourcePath: string, mediaUri: string): void {
-  const sourceFile = fs.openSync(sourcePath, fs.OpenMode.READ_ONLY);
-  const targetFile = fs.openSync(mediaUri, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
   try {
-    fs.copyFileSync(sourceFile.fd, targetFile.fd);
-  } finally {
-    fs.closeSync(sourceFile);
-    fs.closeSync(targetFile);
+    const sourceFile = fs.openSync(sourcePath, fs.OpenMode.READ_ONLY);
+    try {
+      const targetFile = fs.openSync(mediaUri, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      try {
+        fs.copyFileSync(sourceFile.fd, targetFile.fd);
+      } finally {
+        fs.closeSync(targetFile);
+      }
+    } finally {
+      fs.closeSync(sourceFile);
+    }
+  } catch (error) {
+    throw new Error(`写入系统图库失败：${error}`);
   }
 }
 
@@ -110,6 +124,8 @@ async function saveJpgToPhotoLibrary(context: common.UIAbilityContext, outputPat
       copySandboxFileToMediaUri(outputPath, mediaUri);
     }
     return mediaUri;
+  } catch (error) {
+    throw new Error(`保存图片到系统图库失败：${error}`);
   } finally {
     try {
       await helper.release();
@@ -123,6 +139,7 @@ export class ReviewCardExportService {
 
   static async exportSnapshot(
     context: common.UIAbilityContext,
+    uiContext: UIContext,
     componentId: string,
     onSnapshotReady: () => void = () => {}
   ): Promise<ReviewCardExportResult> {
@@ -142,7 +159,7 @@ export class ReviewCardExportService {
     let packer: image.ImagePacker | undefined = undefined;
     let backupPath: string = '';
     try {
-      pixelMap = await componentSnapshot.get(componentId);
+      pixelMap = await uiContext.getComponentSnapshot().get(componentId);
       packer = image.createImagePacker();
       const data = await packer.packToData(pixelMap, {
         format: EXPORT_MIME_TYPE,
@@ -204,6 +221,7 @@ export class ReviewCardExportService {
   }
 
   static async exportBundleSnapshot(
+    uiContext: UIContext,
     componentId: string,
     thumbnailPath: string,
     onSnapshotReady: () => void = () => {}
@@ -220,7 +238,7 @@ export class ReviewCardExportService {
     let pixelMap: image.PixelMap | undefined = undefined;
     let packer: image.ImagePacker | undefined = undefined;
     try {
-      pixelMap = await componentSnapshot.get(componentId);
+      pixelMap = await uiContext.getComponentSnapshot().get(componentId);
       packer = image.createImagePacker();
       const thumbnailData = await packer.packToData(pixelMap, {
         format: BUNDLE_THUMBNAIL_MIME_TYPE,
