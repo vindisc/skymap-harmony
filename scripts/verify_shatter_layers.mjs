@@ -2,6 +2,7 @@ import fs from 'node:fs';
 
 const overlaySource = fs.readFileSync('entry/src/main/ets/components/ShatterOverlay.ets', 'utf8');
 const tokenSource = fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8');
+const shatterTokenSource = tokenSource.slice(tokenSource.indexOf('export class ShatterTokens {'));
 
 function requireIncludes(source, marker, message) {
   if (!source.includes(marker)) {
@@ -78,17 +79,31 @@ if (readNumber('mainCountMedium') + readNumber('haloCountMedium') + readNumber('
 
 [
   '@State flashVisible: boolean = false;',
-  '@State scrimActive: boolean = false;',
+  '@State glowWashActive: boolean = false;',
   '@State particlesVisible: boolean = false;',
   'this.clearTimers();',
   'this.flashScale = 0.3;',
   'this.flashOpacity = 0.9;',
   'Circle()',
   ".width('40%')",
-  ".backgroundColor(this.scrimActive ? '#14000000' : '#00000000')",
+  '.backgroundColor(this.glowWashActive ? ShatterTokens.washColorActive : ShatterTokens.washColorIdle)',
   'MotionTokens.durationStagger',
   'MotionTokens.shatterDurationMs'
-].forEach((marker) => requireIncludes(overlaySource, marker, 'ShatterOverlay 缺少闪光或暗化节奏'));
+].forEach((marker) => requireIncludes(overlaySource, marker, 'ShatterOverlay 缺少闪光或清透暖光节奏'));
+requireIncludes(shatterTokenSource,
+  "static readonly washColorActive: string = '#0CFFD98A';",
+  'ShatterTokens 必须使用低透明度暖金光洗底色');
+requireIncludes(shatterTokenSource,
+  "static readonly washColorIdle: string = '#00FFFFFF';",
+  'ShatterTokens 闲置洗底必须保持完全透明');
+
+const shatterVisualSource = `${overlaySource}\n${shatterTokenSource}`;
+const translucentBlackColors = [...shatterVisualSource.matchAll(/#([0-9A-Fa-f]{2})000000/g)]
+  .map((match) => match[0])
+  .filter((color) => color.slice(1, 3).toUpperCase() !== '00');
+if (translucentBlackColors.length > 0) {
+  throw new Error(`删除粒子层禁止使用半透明黑底：${translucentBlackColors.join(', ')}`);
+}
 requireIncludes(tokenSource,
   "static readonly mainColorRange: ParticleTuple<ResourceColor, ResourceColor> = ['#FFFFFF', '#FFD98A'];",
   'ShatterTokens 主爆必须使用白到暖金色');

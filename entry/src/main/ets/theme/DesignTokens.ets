@@ -163,6 +163,8 @@ export class MotionTokens {
 }
 
 export class ShatterTokens {
+  static readonly washColorActive: string = '#0CFFD98A';
+  static readonly washColorIdle: string = '#00FFFFFF';
   static readonly mainRadius: number = 2;
   static readonly mainCountLow: number = 48;
   static readonly mainCountMedium: number = 72;
