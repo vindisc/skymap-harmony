@@ -220,57 +220,6 @@ export struct MyPage {
   }
 
   @Builder
-  ReviewerCardContent() {
-    Row({ space: AppMetrics.cardGap }) {
-      Column({ space: AppMetrics.space4 }) {
-        Text('复盘人')
-          .fontSize(AppTypography.caption)
-          .fontColor(AppColors.secondaryText)
-          .lineHeight(AppTypography.captionLineHeight)
-          .width('100%')
-
-        Text(this.resolveReviewerSummary())
-          .fontSize(AppTypography.cardTitle)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.text)
-          .lineHeight(AppTypography.cardTitleLineHeight)
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .width('100%')
-      }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-
-      Text('›')
-        .fontSize(20)
-        .fontColor(AppColors.primary)
-        .opacity(0.7)
-    }
-    .alignItems(VerticalAlign.Center)
-    .padding(AppMetrics.cardPadding)
-    .width('100%')
-    .constraintSize({ minHeight: 76 })
-    .borderRadius(AppMetrics.cardRadius)
-    .backgroundColor(AppColors.primarySoft)
-    .border({ width: 1, color: AppColors.primary })
-    .shadow(ElevationTokens.low)
-    .onClick(() => {
-      this.openPage(REVIEWER_PROFILE_PAGE, '打开复盘人设置失败');
-    })
-  }
-
-  @Builder
-  ReviewerCard() {
-    RippleTouch({
-      clipRadius: AppMetrics.cardRadius,
-      content: () => {
-        this.ReviewerCardContent();
-      }
-    })
-      .width('100%')
-  }
-
-  @Builder
   RippleSettingsLinkRowContent(options: RippleSettingsLinkOptions) {
     SettingsLinkRow({
       title: options.title,
@@ -296,7 +245,14 @@ export struct MyPage {
   @Builder
   SettingsSection() {
     Column({ space: AppMetrics.cardGap }) {
-      this.ReviewerCard()
+      this.RippleSettingsLinkRow({
+        title: '复盘人',
+        status: this.resolveReviewerSummary(),
+        tone: this.resolveReviewerSummary() === '未设置' ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
+        onTap: () => {
+          this.openPage(REVIEWER_PROFILE_PAGE, '打开复盘人设置失败');
+        }
+      })
 
       this.RippleSettingsLinkRow({
         title: '外观与动效',

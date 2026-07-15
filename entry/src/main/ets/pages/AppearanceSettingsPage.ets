@@ -11,7 +11,8 @@ import {
   AppTypography,
   SettingsEntryTone,
   SettingsLinkRow,
-  SettingsPageHeader
+  SettingsPageHeader,
+  SettingsScrollContainer
 } from '../components/AppDesign';
 import { RippleTouch } from '../components/motion/RippleTouch';
 import { HomeHeroImageService } from '../services/HomeHeroImageService';
@@ -211,30 +212,21 @@ struct AppearanceSettingsPage {
     .width('100%')
   }
 
+  @Builder
+  AppearanceSettingsContent() {
+    SettingsPageHeader({ title: '外观与动效' })
+    this.AppearanceSettings()
+  }
+
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
 
-      Scroll() {
-        Column({ space: AppMetrics.sectionGap }) {
-          SettingsPageHeader({ title: '外观与动效' })
-          this.AppearanceSettings()
+      SettingsScrollContainer({
+        content: () => {
+          this.AppearanceSettingsContent();
         }
-        .alignItems(HorizontalAlign.Start)
-        .width('100%')
-        .padding({
-          left: AppMetrics.pagePadding,
-          right: AppMetrics.pagePadding,
-          top: AppMetrics.pageTopPadding,
-          bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
-        })
-        .justifyContent(FlexAlign.Start)
-      }
-      .width('100%')
-      .height('100%')
-      .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.Spring)
-      .backgroundColor(AppColors.pageBackground)
+      })
     }
     .width('100%')
     .height('100%')

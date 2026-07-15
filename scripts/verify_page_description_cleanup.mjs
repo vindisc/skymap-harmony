@@ -67,8 +67,8 @@ forbidIncludes(statsPageSource, 'this.RecentReviewsCard()', 'StatsPage must not 
   "Column() {\n      AppPageHeader({ title: '我的' })",
   'bottom: MY_PAGE_TITLE_CONTENT_GAP',
   'top: AppMetrics.pageTopPadding',
-  'this.ReviewerCard()',
-  "Text('复盘人')",
+  "title: '复盘人'",
+  'status: this.resolveReviewerSummary()',
   "title: '外观与动效'",
   "title: '家庭存储'",
   "title: '同步中心'",
@@ -134,7 +134,7 @@ requireIncludes(myPageSource, 'bottom: MY_PAGE_TITLE_CONTENT_GAP', 'MyPage fixed
 ['AppMetrics.space4', 'AppMetrics.space12'].forEach((marker) => {
   forbidIncludes(projectDetailSource, marker, 'ProjectDetailPage must keep existing spacing scale');
 });
-requireIncludes(myPageSource, 'AppMetrics.space4', 'MyPage identity and diagnostics cards must use shared compact spacing.');
+requireIncludes(myPageSource, 'AppMetrics.space4', 'MyPage diagnostics card must use shared compact spacing.');
 forbidIncludes(statsPageSource, 'AppMetrics.space4', 'StatsPage must keep existing spacing scale');
 requireIncludes(statsPageSource, 'AppMetrics.space12', 'StatsPage may use shared 12vp rhythm for production metric groups');
 

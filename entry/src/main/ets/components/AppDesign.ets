@@ -207,6 +207,38 @@ export struct AppBottomSafeAreaFill {
   }
 }
 
+@Builder
+function EmptySettingsScrollContent() {
+}
+
+@Component
+export struct SettingsScrollContainer {
+  @BuilderParam content: () => void = EmptySettingsScrollContent;
+
+  build() {
+    Scroll() {
+      Column({ space: AppMetrics.sectionGap }) {
+        this.content()
+      }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
+      .constraintSize({ minHeight: '100%' })
+      .padding({
+        left: AppMetrics.pagePadding,
+        right: AppMetrics.pagePadding,
+        top: AppMetrics.pageTopPadding,
+        bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
+      })
+      .justifyContent(FlexAlign.Start)
+    }
+    .width('100%')
+    .height('100%')
+    .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Spring)
+    .backgroundColor(AppColors.pageBackground)
+  }
+}
+
 @Component
 export struct AppPageHeader {
   @Prop title: string = '';

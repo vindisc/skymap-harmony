@@ -43,10 +43,14 @@ function extractStructBody(source, structName) {
 }
 
 const settingsPageHeaderBody = extractStructBody(appDesignSource, 'SettingsPageHeader');
+const settingsScrollContainerBody = extractStructBody(appDesignSource, 'SettingsScrollContainer');
 
 assert(appDesignSource.includes('export struct SettingsPageHeader'), 'Shared settings page header must exist.');
 assert(appDesignSource.includes('export struct SettingsSectionHeader'), 'Shared settings section header must exist.');
 assert(appDesignSource.includes('export struct SettingsLinkRow'), 'Shared settings link row must exist.');
+assert(appDesignSource.includes('export struct SettingsScrollContainer'), 'Shared settings scroll container must exist.');
+assert(settingsScrollContainerBody.includes(".constraintSize({ minHeight: '100%' })"), 'SettingsScrollContainer must fill the viewport height.');
+assert(settingsScrollContainerBody.includes('.justifyContent(FlexAlign.Start)'), 'SettingsScrollContainer must pin content to the top.');
 assert(!appDesignSource.includes("Button('‹')"), 'SettingsPageHeader must not render a back arrow.');
 assert(!appDesignSource.includes('showBack'), 'SettingsPageHeader must not expose back-arrow controls.');
 assert(settingsPageHeaderBody.includes('.fontSize(AppTypography.sectionTitle)'), 'SettingsPageHeader title must keep compact section title scale for settings subpages.');
@@ -80,8 +84,9 @@ assert(!myPageSource.includes('reviewCount'), 'MyPage must not keep reviewCount 
 assert(!myPageSource.includes('validReviewCount'), 'MyPage must not keep validReviewCount state.');
 assert(myPageSource.includes('this.SettingsSection()'), 'MyPage must group settings entries.');
 assert(myPageSource.includes('this.AboutSection()'), 'MyPage must group app/developer entries.');
-assert(myPageSource.includes('this.ReviewerCard()'), 'MyPage must expose the reviewer identity card.');
-assert(myPageSource.includes("Text('复盘人')"), 'MyPage reviewer identity card must keep its label.');
+assert(myPageSource.includes("title: '复盘人'"), 'MyPage must expose the reviewer settings entry.');
+assert(myPageSource.includes('status: this.resolveReviewerSummary()'), 'MyPage reviewer entry must keep its current status.');
+assert(!myPageSource.includes('ReviewerCard()'), 'MyPage must not restore the separate reviewer identity card.');
 assert(myPageSource.includes("title: '外观与动效'"), 'MyPage must expose appearance settings entry.');
 assert(myPageSource.includes('this.openPage(APPEARANCE_SETTINGS_PAGE'), 'MyPage appearance entry must keep navigation.');
 assert(myPageSource.includes("title: '家庭存储'"), 'MyPage must expose home storage entry.');
@@ -100,14 +105,23 @@ assert(myPageSource.includes('.justifyContent(FlexAlign.Start)'), 'MyPage scroll
 for (const [name, source] of [
   ['ReviewerProfilePage', reviewerProfileSource],
   ['HomeStoragePage', homeStorageSource],
-  ['SyncCenterPage', syncCenterSource],
-  ['AppearanceSettingsPage', appearanceSource],
-  ['BackupCenterPage', backupSource]
+  ['SyncCenterPage', syncCenterSource]
 ]) {
   assert(source.includes('SettingsPageHeader({'), `${name} must use shared settings header.`);
   assert(!source.includes('showBack: true'), `${name} must not show a back arrow.`);
   assert(!source.includes('router.back()'), `${name} must not wire a custom back arrow.`);
   assert(source.includes('.justifyContent(FlexAlign.Start)'), `${name} must pin content to the top.`);
+  assert(!source.includes('.justifyContent(FlexAlign.Center)'), `${name} must not vertically center content.`);
+}
+
+for (const [name, source] of [
+  ['AppearanceSettingsPage', appearanceSource],
+  ['BackupCenterPage', backupSource]
+]) {
+  assert(source.includes('SettingsPageHeader({'), `${name} must use shared settings header.`);
+  assert(source.includes('SettingsScrollContainer({'), `${name} must use the shared top-aligned scroll container.`);
+  assert(!source.includes('showBack: true'), `${name} must not show a back arrow.`);
+  assert(!source.includes('router.back()'), `${name} must not wire a custom back arrow.`);
   assert(!source.includes('.justifyContent(FlexAlign.Center)'), `${name} must not vertically center content.`);
 }
 
@@ -137,4 +151,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('my page rework: reviewer card, compact V4 aggregation, routed settings and deep feedback verified');
+console.log('my page rework: unified reviewer row, compact V5 aggregation, routed settings and deep feedback verified');

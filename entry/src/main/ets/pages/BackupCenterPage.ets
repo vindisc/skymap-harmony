@@ -5,7 +5,8 @@ import {
   AppMetrics,
   SettingsEntryTone,
   SettingsLinkRow,
-  SettingsPageHeader
+  SettingsPageHeader,
+  SettingsScrollContainer
 } from '../components/AppDesign';
 import { RippleTouch } from '../components/motion/RippleTouch';
 import { DialogService } from '../services/DialogService';
@@ -181,30 +182,21 @@ struct BackupCenterPage {
     .width('100%')
   }
 
+  @Builder
+  BackupCenterContent() {
+    SettingsPageHeader({ title: '备份与恢复' })
+    this.BackupActions()
+  }
+
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
 
-      Scroll() {
-        Column({ space: AppMetrics.sectionGap }) {
-          SettingsPageHeader({ title: '备份与恢复' })
-          this.BackupActions()
+      SettingsScrollContainer({
+        content: () => {
+          this.BackupCenterContent();
         }
-        .alignItems(HorizontalAlign.Start)
-        .width('100%')
-        .padding({
-          left: AppMetrics.pagePadding,
-          right: AppMetrics.pagePadding,
-          top: AppMetrics.pageTopPadding,
-          bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
-        })
-        .justifyContent(FlexAlign.Start)
-      }
-      .width('100%')
-      .height('100%')
-      .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.Spring)
-      .backgroundColor(AppColors.pageBackground)
+      })
     }
     .width('100%')
     .height('100%')

@@ -53,7 +53,8 @@ const checks = [
   'verify_ui_production_completion.mjs',
   'verify_image_layout.mjs',
   'verify_feedback_semantics.mjs',
-  'verify_shatter_animation.mjs'
+  'verify_shatter_animation.mjs',
+  'verify_settings_scroll_pattern.mjs'
 ];
 
 for (const check of checks) {

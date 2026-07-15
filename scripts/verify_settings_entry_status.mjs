@@ -39,7 +39,7 @@ expectIncludes(
   'HomeStorageService.resolveEntryStatusLabel(',
   'MyPage'
 );
-expectIncludes(myPageSource, 'Text(this.resolveReviewerSummary())', 'MyPage');
+expectIncludes(myPageSource, 'status: this.resolveReviewerSummary()', 'MyPage');
 
 expectIncludes(appShellSource, '@State myRefreshToken: number = 0;', 'AppShellPage');
 expectIncludes(appShellSource, 'this.myRefreshToken += 1;', 'AppShellPage');

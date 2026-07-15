@@ -6,7 +6,8 @@ import {
   AppTypography,
   SettingsEntryTone,
   SettingsLinkRow,
-  SettingsPageHeader
+  SettingsPageHeader,
+  SettingsScrollContainer
 } from '../components/AppDesign';
 import { MotionQuality, ReviewSettingsService } from '../services/ReviewSettingsService';
 import { ToastService } from '../services/ToastService';
@@ -63,44 +64,34 @@ struct MotionSettingsPage {
     })
   }
 
+  @Builder
+  MotionSettingsContent() {
+    SettingsPageHeader({ title: '显示与动效' })
+
+    Text('动效强度')
+      .fontSize(AppTypography.cardTitle)
+      .fontWeight(FontWeight.Bold)
+      .fontColor(AppColors.text)
+      .width('100%')
+
+    Column({ space: AppMetrics.cardGap }) {
+      this.MotionOption('完整', MotionQuality.FULL)
+      this.MotionOption('舒缓', MotionQuality.CALM)
+      this.MotionOption('最少', MotionQuality.MINIMAL)
+    }
+    .width('100%')
+    .opacity(this.isSaving ? 0.68 : 1)
+  }
+
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
 
-      Scroll() {
-        Column({ space: AppMetrics.sectionGap }) {
-          SettingsPageHeader({ title: '显示与动效' })
-
-          Text('动效强度')
-            .fontSize(AppTypography.cardTitle)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(AppColors.text)
-            .width('100%')
-
-          Column({ space: AppMetrics.cardGap }) {
-            this.MotionOption('完整', MotionQuality.FULL)
-            this.MotionOption('舒缓', MotionQuality.CALM)
-            this.MotionOption('最少', MotionQuality.MINIMAL)
-          }
-          .width('100%')
-          .opacity(this.isSaving ? 0.68 : 1)
+      SettingsScrollContainer({
+        content: () => {
+          this.MotionSettingsContent();
         }
-        .alignItems(HorizontalAlign.Start)
-        .width('100%')
-        .padding({
-          left: AppMetrics.pagePadding,
-          right: AppMetrics.pagePadding,
-          top: AppMetrics.pageTopPadding,
-          bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
-        })
-        .height('100%')
-        .justifyContent(FlexAlign.Start)
-      }
-      .width('100%')
-      .height('100%')
-      .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.Spring)
-      .backgroundColor(AppColors.pageBackground)
+      })
     }
     .width('100%')
     .height('100%')

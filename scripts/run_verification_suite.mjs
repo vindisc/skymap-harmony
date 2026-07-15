@@ -47,6 +47,7 @@ const smokeScripts = [
   'verify_review_project_service_tests.mjs',
   'verify_scroll_edge_feedback.mjs',
   'verify_settings_entry_status.mjs',
+  'verify_settings_scroll_pattern.mjs',
   'verify_settings_refresh_flow.mjs',
   'verify_shatter_animation.mjs',
   'verify_shatter_layers.mjs',

@@ -117,7 +117,7 @@ for (const marker of ["label: '首'", "label: '库'", "label: '我'", "icon: '�
   "title: '我的'",
   'this.SettingsSection()',
   'this.AboutSection()',
-  'this.ReviewerCard()',
+  "title: '复盘人'",
   "title: '外观与动效'",
   'APPEARANCE_SETTINGS_PAGE',
   "title: '同步中心'",

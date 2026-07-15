@@ -32,9 +32,8 @@ function countOccurrences(source, marker) {
 
 [
   "AppPageHeader({ title: '我的' })",
-  'this.ReviewerCard()',
-  "Text('复盘人')",
-  'Text(this.resolveReviewerSummary())',
+  "title: '复盘人'",
+  'status: this.resolveReviewerSummary()',
   "title: '外观与动效'",
   "title: '家庭存储'",
   "title: '同步中心'",
@@ -45,7 +44,7 @@ function countOccurrences(source, marker) {
 
 const topLevelSettingsRows = countOccurrences(myPageSource, 'this.RippleSettingsLinkRow({');
 assert(topLevelSettingsRows <= 5, `MyPage 顶层设置行不得超过 5 条，当前为 ${topLevelSettingsRows}。`);
-assert(topLevelSettingsRows === 4, `MyPage 应保留外观、家庭存储、同步和备份 4 个入口，当前为 ${topLevelSettingsRows}。`);
+assert(topLevelSettingsRows === 5, `MyPage 应保留复盘人、外观、家庭存储、同步和备份 5 个入口，当前为 ${topLevelSettingsRows}。`);
 const myPageLineCount = myPageSource.trimEnd().split('\n').length;
 assert(myPageLineCount <= 500, `MyPage 必须收敛到 500 行以内，当前为 ${myPageLineCount} 行。`);
 assert(myPageSource.indexOf("title: '我的'") < myPageSource.indexOf('Scroll() {'),
@@ -55,6 +54,11 @@ assert(myPageSource.indexOf('this.SettingsSection()') < myPageSource.indexOf('th
 assert(myPageSource.includes('bottom: MY_PAGE_BOTTOM_PADDING'), 'MyPage 必须为底部标签栏预留空间。');
 assert(myPageSource.includes('.layoutWeight(1)'), 'MyPage 滚动区必须填充标题下方空间。');
 assert(!myPageSource.includes('List()'), 'MyPage 不得恢复会拉大稀疏间距的顶层 List。');
+assert(!myPageSource.includes('ReviewerCardContent'), 'MyPage 不得恢复独立复盘人身份卡内容。');
+assert(!myPageSource.includes('ReviewerCard()'), 'MyPage 不得恢复独立复盘人身份卡。');
+assert(!(myPageSource.includes('backgroundColor(AppColors.primarySoft)') &&
+  myPageSource.includes('border({ width: 1, color: AppColors.primary })')),
+  'MyPage 不得恢复蓝底蓝框复盘人身份卡样式。');
 
 [
   'HOME_HERO_IMAGE_PAGE',
@@ -123,4 +127,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('my page information architecture verified: compact V4 aggregation, routed secondary pages and migrated actions');
+console.log('my page information architecture verified: compact V5 settings rows, routed secondary pages and migrated actions');

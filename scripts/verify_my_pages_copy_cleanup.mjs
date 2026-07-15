@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 const readPage = (name) => fs.readFileSync(`entry/src/main/ets/pages/${name}.ets`, 'utf8');
+const appDesign = fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8');
 const pages = {
   motion: readPage('MotionSettingsPage'),
   my: readPage('MyPage'),
@@ -62,8 +63,10 @@ forbid(pages.legacySettings, '连接与凭据', 'ReviewSettingsPage');
 assert(!pages.sync.includes('SettingsLinkRow'), 'SyncCenterPage 不应保留与详情卡重复的摘要说明卡');
 
 assert(
-  /SettingsPageHeader\(\{ title: '显示与动效' \}\)[\s\S]*?\.height\('100%'\)\s*\.justifyContent\(FlexAlign\.Start\)/.test(pages.motion),
-  'MotionSettingsPage 内容必须全高并固定从顶部开始布局'
+  pages.motion.includes('SettingsScrollContainer({') &&
+    appDesign.includes(".constraintSize({ minHeight: '100%' })") &&
+    appDesign.includes('.justifyContent(FlexAlign.Start)'),
+  'MotionSettingsPage 必须通过共享容器全高并固定从顶部开始布局'
 );
 
 [

@@ -142,7 +142,7 @@ requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatu
   'const MY_PAGE_TITLE_CONTENT_GAP: number = AppMetrics.space10;',
   'this.SettingsSection()',
   'this.AboutSection()',
-  'this.ReviewerCard()',
+  "title: '复盘人'",
   "title: '外观与动效'",
   "title: '家庭存储'",
   "title: '同步中心'",
