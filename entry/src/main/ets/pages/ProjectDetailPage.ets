@@ -77,6 +77,7 @@ export struct ProjectDetailPage {
   @State shatterEnabled: boolean = SHATTER_ANIMATION_DEFAULT;
   @State activeShatterId: string = '';
   @State hiddenCardKeys: Array<string> = [];
+  @State collapsingIds: Array<string> = [];
   @State filterPulseValue: string = '';
   private filterPulseTimerId: number = -1;
 
@@ -99,6 +100,9 @@ export struct ProjectDetailPage {
   aboutToDisappear(): void {
     this.isPageAlive = false;
     this.loadRequestId += 1;
+    this.collapsingIds = [];
+    this.hiddenCardKeys = [];
+    this.endShatter();
     if (this.filterPulseTimerId >= 0) {
       clearTimeout(this.filterPulseTimerId);
       this.filterPulseTimerId = -1;
@@ -151,6 +155,20 @@ export struct ProjectDetailPage {
 
   private isCardHidden(key: string): boolean {
     return this.hiddenCardKeys.indexOf(key) >= 0;
+  }
+
+  private isCollapsing(id: string): boolean {
+    return this.collapsingIds.indexOf(id) >= 0;
+  }
+
+  private beginCollapse(id: string): void {
+    if (!this.isCollapsing(id)) {
+      this.collapsingIds = this.collapsingIds.concat([id]);
+    }
+  }
+
+  private endCollapse(id: string): void {
+    this.collapsingIds = this.collapsingIds.filter((existing: string): boolean => existing !== id);
   }
 
   refreshReviewLibraryData(): void {
@@ -384,9 +402,19 @@ export struct ProjectDetailPage {
       if (!this.isPageAlive) {
         return;
       }
+      if (useShatter) {
+        this.beginCollapse(photo.id);
+        await new Promise<void>((resolve: () => void): void => {
+          setTimeout(resolve, MotionQualityContext.resolveDuration(MotionTokens.durationStandard));
+        });
+        if (!this.isPageAlive) {
+          return;
+        }
+      }
       this.pendingItems = this.pendingItems.filter((item: PendingReviewPhoto): boolean => item.id !== photo.id);
       this.libraryStats.pendingCount = Math.max(0, this.libraryStats.pendingCount - 1);
       if (useShatter) {
+        this.endCollapse(photo.id);
         this.markCardVisible(photo.id);
       }
       ToastService.success(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT);
@@ -395,9 +423,8 @@ export struct ProjectDetailPage {
       if (!this.isPageAlive) {
         return;
       }
-      if (useShatter) {
-        this.markCardVisible(photo.id);
-      }
+      this.endCollapse(photo.id);
+      this.markCardVisible(photo.id);
       ToastService.error(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_FAILED_TEXT);
     } finally {
       if (this.isPageAlive && useShatter) {
@@ -441,6 +468,15 @@ export struct ProjectDetailPage {
       if (!this.isPageAlive) {
         return;
       }
+      if (useShatter) {
+        this.beginCollapse(deletingKey);
+        await new Promise<void>((resolve: () => void): void => {
+          setTimeout(resolve, MotionQualityContext.resolveDuration(MotionTokens.durationStandard));
+        });
+        if (!this.isPageAlive) {
+          return;
+        }
+      }
       const nextItems: Array<ReviewCardHistoryItem> = previousItems.filter((item: ReviewCardHistoryItem): boolean => {
         return getReviewDocumentKey(item.document) !== deletingKey;
       });
@@ -479,6 +515,7 @@ export struct ProjectDetailPage {
           : createDefaultReviewCardDocument());
       }
       if (useShatter) {
+        this.endCollapse(deletingKey);
         this.markCardVisible(deletingKey);
       }
       ToastService.success(this.getUIContext(), REVIEW_FLOW_DELETE_SUCCESS_TEXT);
@@ -487,9 +524,8 @@ export struct ProjectDetailPage {
       if (!this.isPageAlive) {
         return;
       }
-      if (useShatter) {
-        this.markCardVisible(deletingKey);
-      }
+      this.endCollapse(deletingKey);
+      this.markCardVisible(deletingKey);
       ToastService.error(this.getUIContext(), REVIEW_FLOW_DELETE_FAILED_TEXT);
       this.reloadData();
     } finally {
@@ -822,9 +858,15 @@ export struct ProjectDetailPage {
       }
     }
     .width('100%')
+    .height(this.isCollapsing(photo.id) ? 0 : undefined)
     .constraintSize({
-      minHeight: AppMetrics.listCardMinHeight,
-      maxHeight: AppMetrics.listCardMaxHeight
+      minHeight: this.isCollapsing(photo.id) ? 0 : AppMetrics.listCardMinHeight,
+      maxHeight: this.isCollapsing(photo.id) ? 0 : AppMetrics.listCardMaxHeight
+    })
+    .opacity(this.isCollapsing(photo.id) ? 0 : 1)
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
     })
     .clip(true)
   }
@@ -864,9 +906,15 @@ export struct ProjectDetailPage {
       }
     }
     .width('100%')
+    .height(this.isCollapsing(getReviewDocumentKey(item.document)) ? 0 : undefined)
     .constraintSize({
-      minHeight: AppMetrics.listCardMinHeight,
-      maxHeight: AppMetrics.listCardMaxHeight
+      minHeight: this.isCollapsing(getReviewDocumentKey(item.document)) ? 0 : AppMetrics.listCardMinHeight,
+      maxHeight: this.isCollapsing(getReviewDocumentKey(item.document)) ? 0 : AppMetrics.listCardMaxHeight
+    })
+    .opacity(this.isCollapsing(getReviewDocumentKey(item.document)) ? 0 : 1)
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
     })
     .clip(true)
   }

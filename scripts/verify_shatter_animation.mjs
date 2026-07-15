@@ -31,6 +31,31 @@ function requireIncludes(source, marker, context) {
   }
 }
 
+function extractMethod(source, methodName) {
+  const signature = `private async ${methodName}`;
+  const start = source.indexOf(signature);
+  if (start < 0) {
+    return '';
+  }
+  const bodyStart = source.indexOf('{', start);
+  let depth = 0;
+  for (let index = bodyStart; index < source.length; index += 1) {
+    if (source[index] === '{') {
+      depth += 1;
+    } else if (source[index] === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return source.slice(bodyStart, index + 1);
+      }
+    }
+  }
+  return '';
+}
+
+function countOccurrences(source, marker) {
+  return source.split(marker).length - 1;
+}
+
 if (!fs.existsSync(shatterOverlayPath)) {
   fail(`${shatterOverlayPath}: ShatterOverlay component file must exist.`);
 }
@@ -62,6 +87,33 @@ requireIncludes(projectDetailSource, 'MotionQualityContext.shouldPlayShatter', '
 requireIncludes(projectDetailSource, 'private isPageAlive: boolean = false;', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'if (!this.isPageAlive)', 'ProjectDetailPage');
 requireIncludes(projectDetailSource, 'this.deleteHistory(document);', 'ProjectDetailPage');
+requireIncludes(projectDetailSource, '@State collapsingIds: Array<string>', 'ProjectDetailPage collapse state');
+requireIncludes(projectDetailSource, 'private beginCollapse(id: string): void', 'ProjectDetailPage collapse state');
+requireIncludes(projectDetailSource, 'private endCollapse(id: string): void', 'ProjectDetailPage collapse state');
+requireIncludes(projectDetailSource, 'MotionCurveRole.SPRING_SOFT', 'ProjectDetailPage collapse animation');
+
+const pendingDeleteSource = extractMethod(projectDetailSource, 'deletePendingPhoto');
+const historyDeleteSource = extractMethod(projectDetailSource, 'deleteHistory');
+const pendingCollapseIndex = pendingDeleteSource.indexOf('this.beginCollapse(photo.id);');
+const pendingRemovalIndex = pendingDeleteSource.indexOf('this.pendingItems = this.pendingItems.filter');
+const historyCollapseIndex = historyDeleteSource.indexOf('this.beginCollapse(deletingKey);');
+const historyRemovalIndex = historyDeleteSource.indexOf('const nextItems: Array<ReviewCardHistoryItem> = previousItems.filter');
+if (pendingCollapseIndex < 0 || pendingRemovalIndex < 0 || pendingCollapseIndex >= pendingRemovalIndex) {
+  fail('deletePendingPhoto must begin collapse before removing the pending item.');
+}
+if (historyCollapseIndex < 0 || historyRemovalIndex < 0 || historyCollapseIndex >= historyRemovalIndex) {
+  fail('deleteHistory must begin collapse before removing the history item.');
+}
+const pendingCatchSource = pendingDeleteSource.slice(pendingDeleteSource.indexOf('} catch'));
+const historyCatchSource = historyDeleteSource.slice(historyDeleteSource.indexOf('} catch'));
+requireIncludes(pendingCatchSource, 'this.endCollapse(photo.id);', 'deletePendingPhoto catch recovery');
+requireIncludes(pendingCatchSource, 'this.markCardVisible(photo.id);', 'deletePendingPhoto catch recovery');
+requireIncludes(historyCatchSource, 'this.endCollapse(deletingKey);', 'deleteHistory catch recovery');
+requireIncludes(historyCatchSource, 'this.markCardVisible(deletingKey);', 'deleteHistory catch recovery');
+if (countOccurrences(projectDetailSource, '.height(this.isCollapsing(') < 2 ||
+  countOccurrences(projectDetailSource, '.opacity(this.isCollapsing(') < 2) {
+  fail('Both pending and history card shells must animate height and opacity while collapsing.');
+}
 
 const appearanceSettingsSource = readOrFail(appearanceSettingsPath);
 requireIncludes(appearanceSettingsSource, "Text('删除星河效果')", 'AppearanceSettingsPage');
