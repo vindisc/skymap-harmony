@@ -2,6 +2,7 @@ import fs from 'node:fs';
 
 const overlaySource = fs.readFileSync('entry/src/main/ets/components/ShatterOverlay.ets', 'utf8');
 const tokenSource = fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8');
+const appDesignSource = fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8');
 const shatterTokenSource = tokenSource.slice(tokenSource.indexOf('export class ShatterTokens {'));
 
 function requireIncludes(source, marker, message) {
@@ -16,6 +17,29 @@ function readNumber(name) {
     throw new Error(`ShatterTokens 缺少数值：${name}`);
   }
   return Number(match[1]);
+}
+
+function readHexColor(source, name) {
+  const match = source.match(new RegExp(`static readonly ${name}: string = '(#[0-9A-Fa-f]{6})';`));
+  if (match === null) {
+    throw new Error(`缺少十六进制颜色：${name}`);
+  }
+  return match[1];
+}
+
+function relativeLuminance(hexColor) {
+  const channels = [1, 3, 5].map((index) => Number.parseInt(hexColor.slice(index, index + 2), 16) / 255)
+    .map((channel) => channel <= 0.04045
+      ? channel / 12.92
+      : Math.pow((channel + 0.055) / 1.055, 2.4));
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function contrastRatio(firstColor, secondColor) {
+  const firstLuminance = relativeLuminance(firstColor);
+  const secondLuminance = relativeLuminance(secondColor);
+  return (Math.max(firstLuminance, secondLuminance) + 0.05) /
+    (Math.min(firstLuminance, secondLuminance) + 0.05);
 }
 
 function extractBuilder(source, builderName) {
@@ -79,23 +103,18 @@ if (readNumber('mainCountMedium') + readNumber('haloCountMedium') + readNumber('
 
 [
   '@State flashVisible: boolean = false;',
-  '@State glowWashActive: boolean = false;',
   '@State particlesVisible: boolean = false;',
   'this.clearTimers();',
   'this.flashScale = 0.3;',
   'this.flashOpacity = 0.9;',
   'Circle()',
   ".width('40%')",
-  '.backgroundColor(this.glowWashActive ? ShatterTokens.washColorActive : ShatterTokens.washColorIdle)',
-  'MotionTokens.durationStagger',
-  'MotionTokens.shatterDurationMs'
-].forEach((marker) => requireIncludes(overlaySource, marker, 'ShatterOverlay 缺少闪光或清透暖光节奏'));
-requireIncludes(shatterTokenSource,
-  "static readonly washColorActive: string = '#0CFFD98A';",
-  'ShatterTokens 必须使用低透明度暖金光洗底色');
-requireIncludes(shatterTokenSource,
-  "static readonly washColorIdle: string = '#00FFFFFF';",
-  'ShatterTokens 闲置洗底必须保持完全透明');
+  '.fill(ShatterTokens.flashColor)',
+  'MotionTokens.durationStagger'
+].forEach((marker) => requireIncludes(overlaySource, marker, 'ShatterOverlay 缺少闪光或粒子节奏'));
+if (overlaySource.includes('.backgroundColor(')) {
+  throw new Error('删除粒子层禁止渲染整块背景，必须依靠粒子自身与页面形成对比。');
+}
 
 const shatterVisualSource = `${overlaySource}\n${shatterTokenSource}`;
 const translucentBlackColors = [...shatterVisualSource.matchAll(/#([0-9A-Fa-f]{2})000000/g)]
@@ -105,8 +124,24 @@ if (translucentBlackColors.length > 0) {
   throw new Error(`删除粒子层禁止使用半透明黑底：${translucentBlackColors.join(', ')}`);
 }
 requireIncludes(tokenSource,
-  "static readonly mainColorRange: ParticleTuple<ResourceColor, ResourceColor> = ['#FFFFFF', '#FFD98A'];",
-  'ShatterTokens 主爆必须使用白到暖金色');
+  "static readonly mainColorRange: ParticleTuple<ResourceColor, ResourceColor> = ['#365F75', '#D47A18'];",
+  'ShatterTokens 主爆必须使用品牌深蓝到高对比琥珀金');
+requireIncludes(tokenSource, 'static readonly mainRadius: number = 3;', 'ShatterTokens 主爆粒径必须保持可见性');
+requireIncludes(tokenSource, 'static readonly driftRadius: number = 1.5;', 'ShatterTokens 慢漂粒径必须保持可见性');
+
+const pageBackground = readHexColor(appDesignSource, 'pageBackground');
+const particleColors = [
+  readHexColor(shatterTokenSource, 'haloColorStart'),
+  readHexColor(shatterTokenSource, 'haloColorEnd'),
+  readHexColor(shatterTokenSource, 'driftColorStart'),
+  readHexColor(shatterTokenSource, 'driftColorEnd')
+];
+for (const particleColor of ['#365F75', '#D47A18', ...particleColors]) {
+  const ratio = contrastRatio(pageBackground, particleColor);
+  if (ratio < 2.5) {
+    throw new Error(`粒子颜色 ${particleColor} 与页面背景 ${pageBackground} 对比度仅 ${ratio.toFixed(2)}:1。`);
+  }
+}
 
 const mainLayerSource = extractBuilder(overlaySource, 'MainBurstLayer');
 const haloLayerSource = extractBuilder(overlaySource, 'HaloLayer');

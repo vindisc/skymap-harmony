@@ -163,14 +163,13 @@ export class MotionTokens {
 }
 
 export class ShatterTokens {
-  static readonly washColorActive: string = '#0CFFD98A';
-  static readonly washColorIdle: string = '#00FFFFFF';
-  static readonly mainRadius: number = 2;
+  static readonly flashColor: string = '#F0A83A';
+  static readonly mainRadius: number = 3;
   static readonly mainCountLow: number = 48;
   static readonly mainCountMedium: number = 72;
   static readonly mainCountHigh: number = 96;
   static readonly mainLifetimeMs: number = 700;
-  static readonly mainColorRange: ParticleTuple<ResourceColor, ResourceColor> = ['#FFFFFF', '#FFD98A'];
+  static readonly mainColorRange: ParticleTuple<ResourceColor, ResourceColor> = ['#365F75', '#D47A18'];
   static readonly mainOpacityStart: number = 1;
   static readonly mainOpacityHold: number = 1;
   static readonly mainOpacityEnd: number = 0;
@@ -185,8 +184,8 @@ export class ShatterTokens {
   static readonly haloCountMedium: number = 24;
   static readonly haloCountHigh: number = 40;
   static readonly haloLifetimeMs: number = 900;
-  static readonly haloColorStart: string = '#FFFFFF';
-  static readonly haloColorEnd: string = '#FFFFFF';
+  static readonly haloColorStart: string = '#4E7185';
+  static readonly haloColorEnd: string = '#7658A6';
   static readonly haloOpacityStart: number = 0.9;
   static readonly haloOpacityHold: number = 0.6;
   static readonly haloOpacityEnd: number = 0;
@@ -196,13 +195,13 @@ export class ShatterTokens {
   static readonly haloSpeedMin: number = 8;
   static readonly haloSpeedMax: number = 24;
 
-  static readonly driftRadius: number = 1;
+  static readonly driftRadius: number = 1.5;
   static readonly driftCountLow: number = 30;
   static readonly driftCountMedium: number = 60;
   static readonly driftCountHigh: number = 90;
   static readonly driftLifetimeMs: number = 1200;
-  static readonly driftColorStart: string = '#FFFFFF';
-  static readonly driftColorEnd: string = '#B8B8FF';
+  static readonly driftColorStart: string = '#5E8194';
+  static readonly driftColorEnd: string = '#A85F34';
   static readonly driftOpacityStart: number = 0.8;
   static readonly driftOpacityHold: number = 0.8;
   static readonly driftOpacityEnd: number = 0;

@@ -41,26 +41,18 @@ export struct ShatterOverlay {
   @State flashVisible: boolean = false;
   @State flashScale: number = 0.3;
   @State flashOpacity: number = 0.9;
-  @State glowWashActive: boolean = false;
   @State particlesVisible: boolean = false;
 
   private readonly layerCount: number = MotionQualityContext.resolveShatterLayerCount();
-  private glowWashStartTimerId: number = -1;
   private burstStartTimerId: number = -1;
   private flashEndTimerId: number = -1;
-  private glowWashEndTimerId: number = -1;
 
   aboutToAppear(): void {
     this.clearTimers();
     this.flashVisible = true;
     this.flashScale = 0.3;
     this.flashOpacity = 0.9;
-    this.glowWashActive = false;
     this.particlesVisible = false;
-    this.glowWashStartTimerId = setTimeout(() => {
-      this.glowWashActive = true;
-      this.glowWashStartTimerId = -1;
-    }, MotionTokens.durationFrame);
     this.burstStartTimerId = setTimeout(() => {
       this.flashScale = 1.4;
       this.flashOpacity = 0;
@@ -71,10 +63,6 @@ export struct ShatterOverlay {
       this.flashVisible = false;
       this.flashEndTimerId = -1;
     }, MotionTokens.durationStagger + MotionTokens.durationInstant * 2 + 20);
-    this.glowWashEndTimerId = setTimeout(() => {
-      this.glowWashActive = false;
-      this.glowWashEndTimerId = -1;
-    }, MotionTokens.shatterDurationMs);
   }
 
   aboutToDisappear(): void {
@@ -82,10 +70,6 @@ export struct ShatterOverlay {
   }
 
   private clearTimers(): void {
-    if (this.glowWashStartTimerId >= 0) {
-      clearTimeout(this.glowWashStartTimerId);
-      this.glowWashStartTimerId = -1;
-    }
     if (this.burstStartTimerId >= 0) {
       clearTimeout(this.burstStartTimerId);
       this.burstStartTimerId = -1;
@@ -93,10 +77,6 @@ export struct ShatterOverlay {
     if (this.flashEndTimerId >= 0) {
       clearTimeout(this.flashEndTimerId);
       this.flashEndTimerId = -1;
-    }
-    if (this.glowWashEndTimerId >= 0) {
-      clearTimeout(this.glowWashEndTimerId);
-      this.glowWashEndTimerId = -1;
     }
   }
 
@@ -278,18 +258,11 @@ export struct ShatterOverlay {
 
   build() {
     Stack() {
-      Column()
-        .width('100%')
-        .height('100%')
-        .backgroundColor(this.glowWashActive ? ShatterTokens.washColorActive : ShatterTokens.washColorIdle)
-        .animation({ duration: 200, curve: MotionTokens.curveDecelerate })
-        .hitTestBehavior(HitTestMode.None)
-
       if (this.flashVisible) {
         Circle()
           .width('40%')
           .height('40%')
-          .fill('#FFFFFF')
+          .fill(ShatterTokens.flashColor)
           .opacity(this.flashOpacity)
           .scale({ x: this.flashScale, y: this.flashScale })
           .animation({
