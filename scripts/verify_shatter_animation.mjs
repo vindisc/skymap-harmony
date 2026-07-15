@@ -102,7 +102,9 @@ requireIncludes(projectDetailSource, 'private beginCollapse(id: string): void', 
 requireIncludes(projectDetailSource, 'private endCollapse(id: string): void', 'ProjectDetailPage collapse state');
 requireIncludes(projectDetailSource, 'MotionCurveRole.SPRING_SOFT', 'ProjectDetailPage collapse animation');
 requireIncludes(projectDetailSource, 'private beginDeleteLayoutTransaction(): void', 'ProjectDetailPage delete layout transaction');
-requireIncludes(projectDetailSource, 'private settleDeleteLayout(): void', 'ProjectDetailPage delete layout transaction');
+requireIncludes(projectDetailSource, 'private settleDeleteLayout(deletedKey: string): void', 'ProjectDetailPage delete layout transaction');
+requireIncludes(projectDetailSource, 'private clearSettledCardVisualState(): void', 'ProjectDetailPage delete visual cleanup');
+requireIncludes(projectDetailSource, '@State isDeleteLayoutSettling: boolean = false;', 'ProjectDetailPage delete settling state');
 requireIncludes(projectDetailSource, 'this.isDeleteLayoutSettling || this.collapsingIds.length > 0', 'ProjectDetailPage pagination guard');
 requireIncludes(projectDetailSource, '.padding({ bottom: this.isCollapsing(photo.id) ? 0 : AppMetrics.cardGap })',
   'Pending list gap collapse');
@@ -114,6 +116,9 @@ requireIncludes(projectDetailSource,
   'History list stable identity');
 if (countOccurrences(projectDetailSource, 'List({ space: 0 })') < 2) {
   fail('Pending and history lists must keep inter-item gaps inside the collapsing ListItem.');
+}
+if (countOccurrences(projectDetailSource, '.opacity(this.isDeleteLayoutSettling ? 0 : 1)') < 3) {
+  fail('Pending, history, and filtered empty states must fade in after delete layout settling.');
 }
 forbidIncludes(projectDetailSource, 'List({ space: AppMetrics.cardGap })',
   'ProjectDetailPage must not keep non-collapsing List space');
@@ -136,8 +141,12 @@ const pendingSuccessSource = pendingDeleteSource.slice(0, pendingDeleteSource.in
 const historySuccessSource = historyDeleteSource.slice(0, historyDeleteSource.indexOf('} catch'));
 forbidIncludes(pendingSuccessSource, 'this.reloadData();', 'deletePendingPhoto success path');
 forbidIncludes(historySuccessSource, 'this.reloadData();', 'deleteHistory success path');
-requireIncludes(pendingSuccessSource, 'this.settleDeleteLayout();', 'deletePendingPhoto success path');
-requireIncludes(historySuccessSource, 'this.settleDeleteLayout();', 'deleteHistory success path');
+forbidIncludes(pendingSuccessSource, 'this.endCollapse(photo.id);', 'deletePendingPhoto success path must not restore a removed card');
+forbidIncludes(pendingSuccessSource, 'this.markCardVisible(photo.id);', 'deletePendingPhoto success path must not reveal a removed card');
+forbidIncludes(historySuccessSource, 'this.endCollapse(deletingKey);', 'deleteHistory success path must not restore a removed card');
+forbidIncludes(historySuccessSource, 'this.markCardVisible(deletingKey);', 'deleteHistory success path must not reveal a removed card');
+requireIncludes(pendingSuccessSource, 'this.settleDeleteLayout(photo.id);', 'deletePendingPhoto success path');
+requireIncludes(historySuccessSource, 'this.settleDeleteLayout(deletingKey);', 'deleteHistory success path');
 requireIncludes(pendingCatchSource, 'this.endCollapse(photo.id);', 'deletePendingPhoto catch recovery');
 requireIncludes(pendingCatchSource, 'this.markCardVisible(photo.id);', 'deletePendingPhoto catch recovery');
 requireIncludes(historyCatchSource, 'this.endCollapse(deletingKey);', 'deleteHistory catch recovery');

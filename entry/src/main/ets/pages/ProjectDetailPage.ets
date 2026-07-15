@@ -79,9 +79,10 @@ export struct ProjectDetailPage {
   @State hiddenCardKeys: Array<string> = [];
   @State collapsingIds: Array<string> = [];
   @State filterPulseValue: string = '';
+  @State isDeleteLayoutSettling: boolean = false;
   private filterPulseTimerId: number = -1;
   private deleteLayoutSettleTimerId: number = -1;
-  private isDeleteLayoutSettling: boolean = false;
+  private settlingDeletedCardKey: string = '';
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -181,20 +182,30 @@ export struct ProjectDetailPage {
       clearTimeout(this.deleteLayoutSettleTimerId);
       this.deleteLayoutSettleTimerId = -1;
     }
+    this.clearSettledCardVisualState();
     this.isDeleteLayoutSettling = true;
   }
 
-  private settleDeleteLayout(): void {
+  private clearSettledCardVisualState(): void {
+    if (this.settlingDeletedCardKey.length === 0) {
+      return;
+    }
+    const deletedKey: string = this.settlingDeletedCardKey;
+    this.settlingDeletedCardKey = '';
+    this.endCollapse(deletedKey);
+    this.markCardVisible(deletedKey);
+  }
+
+  private settleDeleteLayout(deletedKey: string): void {
     if (this.deleteLayoutSettleTimerId >= 0) {
       clearTimeout(this.deleteLayoutSettleTimerId);
     }
-    const duration: number = MotionQualityContext.resolveDuration(MotionTokens.shatterRippleBackMs);
-    if (duration <= 0) {
-      this.isDeleteLayoutSettling = false;
-      this.deleteLayoutSettleTimerId = -1;
-      return;
-    }
+    this.clearSettledCardVisualState();
+    this.settlingDeletedCardKey = deletedKey;
+    const duration: number = Math.max(0,
+      MotionQualityContext.resolveDuration(MotionTokens.shatterRippleBackMs));
     this.deleteLayoutSettleTimerId = setTimeout(() => {
+      this.clearSettledCardVisualState();
       this.isDeleteLayoutSettling = false;
       this.deleteLayoutSettleTimerId = -1;
     }, duration);
@@ -205,6 +216,7 @@ export struct ProjectDetailPage {
       clearTimeout(this.deleteLayoutSettleTimerId);
       this.deleteLayoutSettleTimerId = -1;
     }
+    this.clearSettledCardVisualState();
     this.isDeleteLayoutSettling = false;
   }
 
@@ -452,11 +464,7 @@ export struct ProjectDetailPage {
       }
       this.pendingItems = this.pendingItems.filter((item: PendingReviewPhoto): boolean => item.id !== photo.id);
       this.libraryStats.pendingCount = Math.max(0, this.libraryStats.pendingCount - 1);
-      if (useShatter) {
-        this.endCollapse(photo.id);
-        this.markCardVisible(photo.id);
-      }
-      this.settleDeleteLayout();
+      this.settleDeleteLayout(photo.id);
       ToastService.success(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT);
     } catch (error) {
       if (!this.isPageAlive) {
@@ -555,11 +563,7 @@ export struct ProjectDetailPage {
           ? nextItems[0].document
           : createDefaultReviewCardDocument());
       }
-      if (useShatter) {
-        this.endCollapse(deletingKey);
-        this.markCardVisible(deletingKey);
-      }
-      this.settleDeleteLayout();
+      this.settleDeleteLayout(deletingKey);
       ToastService.success(this.getUIContext(), REVIEW_FLOW_DELETE_SUCCESS_TEXT);
     } catch (error) {
       if (!this.isPageAlive) {
@@ -1033,6 +1037,11 @@ export struct ProjectDetailPage {
         .width('100%')
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
+        .opacity(this.isDeleteLayoutSettling ? 0 : 1)
+        .animation({
+          duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+          curve: MotionTokens.curveDecelerate
+        })
       } else if (this.isPendingFilter()) {
         List({ space: 0 }) {
           ForEach(this.resolveVisiblePendingItems(), (photo: PendingReviewPhoto, index: number) => {
@@ -1099,6 +1108,11 @@ export struct ProjectDetailPage {
         .width('100%')
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
+        .opacity(this.isDeleteLayoutSettling ? 0 : 1)
+        .animation({
+          duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+          curve: MotionTokens.curveDecelerate
+        })
       } else if (this.filteredItems.length === 0) {
         Column() {
           EmptyState({
@@ -1110,6 +1124,11 @@ export struct ProjectDetailPage {
         .width('100%')
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
+        .opacity(this.isDeleteLayoutSettling ? 0 : 1)
+        .animation({
+          duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+          curve: MotionTokens.curveDecelerate
+        })
       } else {
         List({ space: 0 }) {
           ForEach(this.filteredItems, (item: ReviewCardHistoryItem, index: number) => {
