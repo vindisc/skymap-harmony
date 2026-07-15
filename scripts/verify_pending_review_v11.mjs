@@ -80,11 +80,23 @@ assert(!homePageSource.includes('PendingReviewPhotoStore.addPhoto('),
   "this.FilterChip('成立', ReviewJudgementStatus.VALID)",
   "this.FilterChip('待判断', ReviewJudgementStatus.UNSURE)",
   "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)",
+  'private isAllFilter(): boolean',
+  'private isDeletingAnyItem(): boolean',
+  'if (this.isAllFilter()) {',
   'this.filteredItems = this.isPendingFilter() ? [] : result.items;',
   'ReviewCardStore.createPendingPhotoDraft(',
   "Text('图片不可访问')",
   'PendingReviewPhotoStore.delete('
-].forEach((marker) => requireIncludes(projectDetailPageSource, marker, 'Review library must manage Pending without mixing it into all reviews'));
+].forEach((marker) => requireIncludes(projectDetailPageSource, marker,
+  'Review library must keep Pending data separate while aggregating it into the all view'));
+
+const allListStart = projectDetailPageSource.indexOf('if (this.isAllFilter()) {');
+const allPendingIndex = projectDetailPageSource.indexOf('ForEach(this.resolveVisiblePendingItems()', allListStart);
+const allHistoryIndex = projectDetailPageSource.indexOf('ForEach(this.filteredItems', allListStart);
+assert(allListStart >= 0 && allPendingIndex > allListStart && allHistoryIndex > allPendingIndex,
+  'All filter must render pending cards before every loaded history status.');
+assert(projectDetailPageSource.split('if (this.isDeletingAnyItem())').length - 1 >= 4,
+  'Mixed all-view deletion must use one lock across pending and history actions.');
 
 [
   'private static currentPendingPhotoId: string =',

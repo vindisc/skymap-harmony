@@ -279,9 +279,17 @@ export struct ProjectDetailPage {
     return this.decisionFilter === PENDING_REVIEW_FILTER;
   }
 
+  private isAllFilter(): boolean {
+    return this.decisionFilter === 'all';
+  }
+
+  private isDeletingAnyItem(): boolean {
+    return this.deletingReviewKey.length > 0 || this.deletingPendingPhotoId.length > 0;
+  }
+
   private async loadMoreItems(): Promise<void> {
     if (this.isLibraryLoading || this.isLoadingMore || !this.hasMoreItems || this.libraryLoadFailed ||
-      this.deletingReviewKey.length > 0 || this.isDeleteLayoutSettling || this.collapsingIds.length > 0) {
+      this.isDeletingAnyItem() || this.isDeleteLayoutSettling || this.collapsingIds.length > 0) {
       return;
     }
 
@@ -424,7 +432,7 @@ export struct ProjectDetailPage {
   }
 
   private async deletePendingPhoto(photo: PendingReviewPhoto): Promise<void> {
-    if (this.deletingPendingPhotoId.length > 0) {
+    if (this.isDeletingAnyItem()) {
       return;
     }
 
@@ -485,7 +493,7 @@ export struct ProjectDetailPage {
 
   private async deleteHistory(document: ReviewCardDocument): Promise<void> {
     const deletingKey: string = getReviewDocumentKey(document);
-    if (this.deletingReviewKey.length > 0) {
+    if (this.isDeletingAnyItem()) {
       return;
     }
 
@@ -600,10 +608,10 @@ export struct ProjectDetailPage {
           offsetX: 0,
           offsetY: 3
         })
-        .stateEffect(this.deletingReviewKey.length === 0)
-        .enabled(this.deletingReviewKey.length === 0)
+        .stateEffect(!this.isDeletingAnyItem())
+        .enabled(!this.isDeletingAnyItem())
         .onClick(() => {
-          if (this.deletingReviewKey.length > 0) {
+          if (this.isDeletingAnyItem()) {
             return;
           }
           this.deleteHistory(document);
@@ -635,10 +643,10 @@ export struct ProjectDetailPage {
           offsetX: 0,
           offsetY: 3
         })
-        .stateEffect(this.deletingPendingPhotoId.length === 0)
-        .enabled(this.deletingPendingPhotoId.length === 0)
+        .stateEffect(!this.isDeletingAnyItem())
+        .enabled(!this.isDeletingAnyItem())
         .onClick(() => {
-          if (this.deletingPendingPhotoId.length > 0) {
+          if (this.isDeletingAnyItem()) {
             return;
           }
           this.deletePendingPhoto(photo);
@@ -689,6 +697,7 @@ export struct ProjectDetailPage {
         .layoutWeight(1)
         .height(AppMetrics.searchHeight)
         .fontSize(AppTypography.inputText)
+        .placeholderFont({ size: AppTypography.meta })
         .fontColor(AppColors.text)
         .placeholderColor(AppColors.placeholderText)
         .backgroundColor(AppColors.transparent)
@@ -1076,7 +1085,8 @@ export struct ProjectDetailPage {
         .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
         .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: LIBRARY_LIST_TOP_GAP })
-      } else if (this.summary.recordCount === 0 && !this.hasActiveFilters()) {
+      } else if (this.summary.recordCount === 0 && this.resolveVisiblePendingItems().length === 0 &&
+        !this.hasActiveFilters()) {
         Column() {
           EmptyState({
             title: '暂无复盘记录',
@@ -1104,7 +1114,8 @@ export struct ProjectDetailPage {
           duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
           curve: MotionTokens.curveDecelerate
         })
-      } else if (this.filteredItems.length === 0) {
+      } else if (this.filteredItems.length === 0 &&
+        (!this.isAllFilter() || this.resolveVisiblePendingItems().length === 0)) {
         Column() {
           EmptyState({
             title: '没有找到匹配的复盘',
@@ -1122,6 +1133,30 @@ export struct ProjectDetailPage {
         })
       } else {
         List({ space: 0 }) {
+          if (this.isAllFilter()) {
+            ForEach(this.resolveVisiblePendingItems(), (photo: PendingReviewPhoto) => {
+              ListItem() {
+                this.PendingReviewListCard(photo)
+              }
+              .id(`shatter-pending-${photo.id}`)
+              .padding({ bottom: this.isCollapsing(photo.id) ? 0 : AppMetrics.cardGap })
+              .animation({
+                duration: this.isCollapsing(photo.id)
+                  ? MotionQualityContext.resolveDuration(MotionTokens.durationStandard)
+                  : MotionTokens.shatterRippleBackMs,
+                curve: this.isCollapsing(photo.id)
+                  ? MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+                  : MotionTokens.curveDecelerate
+              })
+              .swipeAction({
+                end: () => {
+                  this.PendingDeleteSwipeAction(photo);
+                },
+                edgeEffect: SwipeEdgeEffect.Spring
+              })
+            }, (photo: PendingReviewPhoto) => photo.id)
+          }
+
           ForEach(this.filteredItems, (item: ReviewCardHistoryItem) => {
             ListItem() {
               this.HistoryReviewListCard(item)

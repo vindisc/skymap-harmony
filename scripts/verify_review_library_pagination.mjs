@@ -20,7 +20,10 @@ assert(pageSource.includes('offset: this.filteredItems.length'), 'Load-more must
 assert(pageSource.includes('.onReachEnd(() =>'), 'List must load more when reaching the end.');
 assert(pageSource.includes('this.loadMoreItems();'), 'Reach-end handler must call loadMoreItems.');
 assert(pageSource.includes('this.filteredItems.length < result.totalCount'), 'Page must track whether more records are available.');
-assert(pageSource.includes("summary.recordCount === 0 && !this.hasActiveFilters()"), 'Filtered empty state must not be treated as an empty library.');
+assert(pageSource.includes('summary.recordCount === 0 && this.resolveVisiblePendingItems().length === 0 &&'),
+  'All-view empty state must account for pending and history records.');
+assert(pageSource.includes('(!this.isAllFilter() || this.resolveVisiblePendingItems().length === 0)'),
+  'A pending match must keep the aggregate all-view list visible.');
 assert(pageSource.includes('libraryStats: ReviewLibraryStats'), 'ProjectDetailPage must keep whole-library judgement stats.');
 assert(pageSource.includes('return `已判断 ${this.libraryStats.works + this.libraryStats.notWorks}/${this.libraryStats.total} · 待复盘 ${this.libraryStats.pendingCount}`;'), 'Header badge must show decided and pending counts.');
 assert(!pageSource.includes('return `${this.filteredItems.length}/${this.summary.recordCount}`;'), 'Header badge must not show loaded-or-filtered item count over total count.');

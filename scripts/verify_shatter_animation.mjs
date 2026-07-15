@@ -105,6 +105,7 @@ requireIncludes(projectDetailSource, 'private beginDeleteLayoutTransaction(): vo
 requireIncludes(projectDetailSource, 'private settleDeleteLayout(deletedKey: string): void', 'ProjectDetailPage delete layout transaction');
 requireIncludes(projectDetailSource, 'private clearSettledCardVisualState(): void', 'ProjectDetailPage delete visual cleanup');
 requireIncludes(projectDetailSource, '@State isDeleteLayoutSettling: boolean = false;', 'ProjectDetailPage delete settling state');
+requireIncludes(projectDetailSource, 'private isDeletingAnyItem(): boolean', 'ProjectDetailPage mixed-list delete lock');
 requireIncludes(projectDetailSource, 'this.isDeleteLayoutSettling || this.collapsingIds.length > 0', 'ProjectDetailPage pagination guard');
 requireIncludes(projectDetailSource, '.padding({ bottom: this.isCollapsing(photo.id) ? 0 : AppMetrics.cardGap })',
   'Pending list gap collapse');
