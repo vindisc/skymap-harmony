@@ -1,14 +1,301 @@
 # 交互动效后续排查与实现清单
 
 > 面向：下一轮实现 Agent（Codex）
-> 版本：v4（2026-07-15 追加）
+> 版本：v5（2026-07-15 追加）
 > v1 起源：`docs/spec-for-codex/plan-motion-narrative-upgrade.md` 落地至 `885c357` 后的 code review 结论
 > v2 起源：v1 落地至 `31239c8` 后的 code review 结论。新增 P0-V2、P1-V2、P2-V2 三组条目（编号带 `V2-` 前缀），原 P0/P1/P2 保持不变。
 > v3 起源：v2 落地至 `be1f978` 后的 code review 结论。新增 V3 组条目（编号带 `V3-` 前缀），原 v1/v2 内容保持不变。
 > v4 起源：v3 落地至 `c3ec2be` 后的用户新需求：我的页面收拢、星河效果升级、`consumePending` 冗余 `.slice()`。
+> v5 起源：v4 落地后用户真机截图反馈：复盘人卡片样式突兀、二级页内容居中、星河仍差点意思、删除后相邻卡片抖动。
 
 按"可直接派单"的粒度整理。分三档：**P0 排查**、**P1 补齐欠账**、**P2 卫生与决策**。
 每条给出：类别 · 动作 · 完成判定 · 文件锚点 · 背景。
+
+---
+
+## v5 追加条目（针对 v4 真机截图反馈）
+
+### V5-P0-1. 二级页 `Scroll > Column` 未设 minHeight 导致内容居中（老坑再犯 · 抽象收口）
+
+- **类别**：修 bug + 防复发抽象
+- **问题**：`AppearanceSettingsPage.ets:218-232` 与 `BackupCenterPage.ets:188-202` 的
+  `Scroll` 内 `Column` 缺少 `constraintSize({ minHeight: '100%' })`，导致 Column
+  按内容高度渲染，被 Scroll 视口居中显示。真机上表现为「标题和卡片挂在屏幕中间」，
+  与 StatsPage / HomeStoragePage 的顶对齐行为不一致。
+- **根因**：ArkUI 的 `Scroll > Column` 需要子 Column 显式声明 `minHeight: '100%'`，
+  否则 `.justifyContent(FlexAlign.Start)` 无效（Column 自身没有多余空间可分配）。
+  StatsPage 有这行、Codex 新写的两个页面漏了。**用户反馈这是 recurring 老坑**。
+- **动作**：
+  1. **立即修 bug**：`AppearanceSettingsPage` 与 `BackupCenterPage` 各自的 build 里，
+     在 `Scroll > Column` 上补一行 `.constraintSize({ minHeight: '100%' })`
+  2. **防复发抽象**：在 `entry/src/main/ets/components/AppDesign.ets` 抽一个
+     `SettingsScrollContainer` 组件：
+     ```typescript
+     @Component
+     export struct SettingsScrollContainer {
+       @BuilderParam content: () => void = () => {};
+       build() {
+         Scroll() {
+           Column({ space: AppMetrics.sectionGap }) {
+             this.content()
+           }
+           .alignItems(HorizontalAlign.Start)
+           .width('100%')
+           .constraintSize({ minHeight: '100%' })
+           .padding({
+             left: AppMetrics.pagePadding,
+             right: AppMetrics.pagePadding,
+             top: AppMetrics.pageTopPadding,
+             bottom: AppMetrics.pageBottomPadding + AppMetrics.space24
+           })
+           .justifyContent(FlexAlign.Start)
+         }
+         .width('100%')
+         .height('100%')
+         .scrollBar(BarState.Off)
+         .edgeEffect(EdgeEffect.Spring)
+         .backgroundColor(AppColors.pageBackground)
+       }
+     }
+     ```
+  3. **两个页面改用抽象**：AppearanceSettingsPage / BackupCenterPage 的 build 直接
+     用 `SettingsScrollContainer({ content: () => { ... } })` 包裹内容
+  4. **verify 门禁**：新增或扩展 `scripts/verify_ui_closure.mjs`，断言：
+     - 任何 `entry/src/main/ets/pages/*SettingsPage.ets` **不允许**出现裸 `Scroll() {` 结构
+       （必须走 `SettingsScrollContainer`）
+     - 除非文件内明确注释 `// eslint-disable-next-line settings-scroll`（保留后门）
+- **完成判定**：
+  - 真机上外观与动效、备份与恢复两页标题从屏幕顶部开始，卡片紧随其下
+  - `SettingsScrollContainer` 已抽象，两个页面 build 各自不超过 15 行
+  - verify 断言存在，故意在 AppearanceSettingsPage 里写 `Scroll()` 试测能挂
+- **锚点**：
+  - `entry/src/main/ets/pages/AppearanceSettingsPage.ets:214-243`
+  - `entry/src/main/ets/pages/BackupCenterPage.ets:184-213`
+  - `entry/src/main/ets/components/AppDesign.ets`（新增 `SettingsScrollContainer`）
+  - `scripts/verify_ui_closure.mjs` 或新增 `scripts/verify_settings_scroll_pattern.mjs`
+- **背景**：用户明确说"这个问题反反复复很多遍了，只要一改这边它就是这个死样子"。
+  抽象组件 + verify 断言组合是唯一能让这个坑不再复发的办法。仅修 bug 不做抽象，
+  下次新加设置页仍会踩坑。
+
+### V5-P0-2. MyPage 复盘人卡片改为普通设置行（去除蓝框差异化）
+
+- **类别**：修 UI（信息架构对称）
+- **问题**：`MyPage.ets:222-260` 的 `ReviewerCardContent` 自建一套样式——
+  `backgroundColor(AppColors.primarySoft)`（淡蓝底）+ `border(AppColors.primary)`
+  （蓝框）+ 独立 Row 布局；与下方所有走 `RippleSettingsLinkRow → SettingsLinkRow`
+  的白底灰边卡片视觉突兀不一致。用户反馈"这个不需要，和其他的保持一致就可以了"。
+- **决策已定**：**去除差异化**，复盘人也走 `RippleSettingsLinkRow`。
+- **动作**：
+  1. 删除 `MyPage.ets` 中的 `@Builder ReviewerCardContent` 与 `@Builder ReviewerCard`
+  2. 在 `SettingsSection` @Builder 顶部（外观与动效之前）插入：
+     ```typescript
+     this.RippleSettingsLinkRow({
+       title: '复盘人',
+       status: this.resolveReviewerSummary(),
+       tone: this.resolveReviewerSummary() === '未设置' ? SettingsEntryTone.MUTED : SettingsEntryTone.SUCCESS,
+       onTap: () => { this.openPage(REVIEWER_PROFILE_PAGE, '打开复盘人设置失败'); }
+     })
+     ```
+  3. build() 里删除对 `this.ReviewerCard()` 的调用
+  4. 更新 v4 里加的 `verify_my_page_information_architecture.mjs` 断言：
+     - **禁止** `MyPage.ets` 出现 `backgroundColor(AppColors.primarySoft)` 与
+       `border({ width: 1, color: AppColors.primary })` 的组合（防止 identity 卡样式
+       被恢复）
+     - 顶层设置行数应为 5 条（复盘人 + 外观与动效 + 家庭存储 + 同步中心 + 备份与恢复），
+       全部走 `RippleSettingsLinkRow`
+- **完成判定**：
+  - 真机上 MyPage 顶部无蓝框卡片，所有条目统一米白底/灰边
+  - MyPage.ets 行数进一步下降约 30 行
+- **锚点**：
+  - `entry/src/main/ets/pages/MyPage.ets:222-271` `ReviewerCardContent` /
+    `ReviewerCard`
+  - `entry/src/main/ets/pages/MyPage.ets` `SettingsSection` @Builder
+  - `scripts/verify_my_page_information_architecture.mjs`
+- **背景**：v4 决策时保留 identity 卡样式是我的判断错误（"用户身份中频高价值需要突出"），
+  真机上视觉突兀。设计的一致性 > 想象中的突出。
+
+### V5-P1-1. 删除后相邻卡片抖动 → 加 collapse 阶段
+
+- **类别**：修 bug（观感）
+- **问题**：`ProjectDetailPage.ets:387`（`deletePendingPhoto`）与第 442 行附近
+  （`deleteHistory`）在粒子 `shatterDurationMs` 播完后**一次性** `pendingItems.filter(...)`
+  从数据源移除 item。ArkUI 里 ListItem 硬消失，相邻 item 瞬移到新位置，用户看到
+  "抖动"。外层挂的 `.animation({ duration: shatterRippleBackMs })`（第 961 行）
+  只能补位剩余 item 的**位置变化**，无法补位**被删 item 高度收缩**（它已从 List 数据里
+  移除，animation 挂点已不存在）。
+- **动作**：在粒子完成与数据源 splice 之间**插入 `durationStandard` 的 collapse
+  动画**——被删 item 高度平滑收到 0 + opacity 淡出，之后再从数据源移除。
+  1. **新增 state**：
+     ```typescript
+     @State collapsingIds: Array<string> = [];
+     private isCollapsing(id: string): boolean { return this.collapsingIds.indexOf(id) >= 0; }
+     private beginCollapse(id: string): void {
+       if (this.collapsingIds.indexOf(id) < 0) {
+         this.collapsingIds = this.collapsingIds.concat([id]);
+       }
+     }
+     private endCollapse(id: string): void {
+       this.collapsingIds = this.collapsingIds.filter((existing: string): boolean => existing !== id);
+     }
+     ```
+  2. **改造 `deletePendingPhoto` / `deleteHistory` 的流程**（以 pending 为例）：
+     ```typescript
+     await Promise.all([deleteTask, animationTask]);   // 粒子播完
+     await LearningProgressFormService.refreshAllForms(context);
+     if (!this.isPageAlive) return;
+     if (useShatter) {
+       this.beginCollapse(photo.id);
+       await new Promise<void>((resolve) =>
+         setTimeout(resolve, MotionQualityContext.resolveDuration(MotionTokens.durationStandard)));
+       if (!this.isPageAlive) return;
+     }
+     this.pendingItems = this.pendingItems.filter(...);   // 原来的 splice，现在延后
+     this.libraryStats.pendingCount = Math.max(0, this.libraryStats.pendingCount - 1);
+     if (useShatter) {
+       this.endCollapse(photo.id);
+       this.markCardVisible(photo.id);
+     }
+     ToastService.success(...);
+     this.reloadData();
+     ```
+  3. **改造 `PendingReviewListCardContent` / `HistoryReviewListCardContent` @Builder**，
+     在最外层 Stack 上加：
+     ```typescript
+     .height(this.isCollapsing(photo.id) ? 0 : undefined)
+     .opacity(this.isCollapsing(photo.id) ? 0 : 1)
+     .animation({
+       duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+       curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+     })
+     ```
+  4. **异常路径 endCollapse 兜底**：如果 deleteTask 抛错，catch 分支里要
+     `endCollapse(id)` + `markCardVisible(id)`，否则失败重试后 item 仍处于
+     collapse 视觉态
+  5. **verify 断言**：`scripts/verify_shatter_animation.mjs` 加断言：
+     - `deletePendingPhoto` 与 `deleteHistory` 必须在 splice 前触发 `beginCollapse`
+     - 两个方法的 catch 分支必须调 `endCollapse`
+- **完成判定**：
+  - 真机上删除任意卡片：粒子（1300ms）→ 卡片位置高度平滑收到 0（250ms · spring
+    补位）→ 相邻卡片跟随滑上，无一帧跳变
+  - 删除失败（模拟 PendingReviewPhotoStore.delete 抛错）时卡片高度恢复，不留
+    collapse 残影
+- **锚点**：
+  - `entry/src/main/ets/pages/ProjectDetailPage.ets:359-410` `deletePendingPhoto`
+  - `entry/src/main/ets/pages/ProjectDetailPage.ets:412-460` `deleteHistory`
+  - `entry/src/main/ets/pages/ProjectDetailPage.ets:800-880`
+    `PendingReviewListCardContent` / `HistoryReviewListCardContent`
+  - `scripts/verify_shatter_animation.mjs`
+- **背景**：用户反馈"粒子完了之后腾出面会抖动一下，这个不够丝滑"。当前的
+  `.animation({ duration: shatterRippleBackMs })` 只对剩余 item 生效，不覆盖
+  被删 item 的高度收缩帧。collapse 阶段是标准补法。
+
+### V5-P1-2. 星河再强化：中心闪光 + 暖金主爆 + 椭圆分布 + 密度上调
+
+- **类别**：实现（视觉再迭代）
+- **问题**：v4 三层叠加代码落地，但用户真机反馈"还是差点意思，还是不够炫"。
+  诊断三个具体缺口：
+  1. **缺"爆点"**——三层都是均匀扩散，没有中心亮源；真实爆发第一瞬间应有一个亮闪
+  2. **米色背景吃亮度**——`#F5F1E9` 应用背景偏暖偏亮，纯白粒子在上面对比度不够
+  3. **粒子分布均匀**——RECTANGLE emitter 全区域均匀发射，像"下雪"不像"炸开"
+- **动作**：在 v4 三层基础上**追加以下 5 处改造**：
+
+  **1) 新增中心闪光帧**（在 `ShatterOverlay.build` 的 Stack 里，粒子层之前）：
+  ```typescript
+  @State flashVisible: boolean = false;
+  @State flashScale: number = 0.3;
+  @State flashOpacity: number = 0.9;
+  // aboutToAppear 里立即触发一次：
+  this.flashVisible = true;
+  this.flashScale = 1.4;
+  this.flashOpacity = 0;
+  // build 里：
+  if (this.flashVisible) {
+    Circle()
+      .width('40%').height('40%')
+      .fill('#FFFFFF')
+      .opacity(this.flashOpacity)
+      .scale({ x: this.flashScale, y: this.flashScale })
+      .animation({
+        duration: MotionTokens.durationInstant * 2 + 20,   // 180ms
+        curve: MotionQualityContext.resolveCurve(MotionCurveRole.EMPHASIZED)
+      })
+  }
+  ```
+  180ms 内完成 `scale 0.3→1.4 + opacity 0.9→0`，40ms 后主爆粒子接棒。
+
+  **2) 暗化背景 scrim**：在闪光 Circle 之前加一层 Column：
+  ```typescript
+  Column()
+    .width('100%').height('100%')
+    .backgroundColor(this.scrimActive ? '#14000000' : '#00000000')
+    .animation({ duration: 200, curve: MotionTokens.curveDecelerate })
+  ```
+  aboutToAppear 后 `scrimActive = true`；粒子完成后设 false 淡出。让白/金粒子在
+  略暗背景上更亮。
+
+  **3) 主爆改暖金色**：`ShatterTokens.mainColorRange` 从
+  `['#FFFFFF', '#C7D4FF']` 改成 `['#FFFFFF', '#FFD98A']`（白到暖金）。慢漂层
+  保留 `['#FFFFFF', '#B8B8FF']` 不改，形成"金爆 + 紫尾"层次感。
+
+  **4) 光晕层 emitter 改 ELLIPSE**：`ParticleEmitterShape.RECTANGLE`
+  → `ParticleEmitterShape.ELLIPSE`；ELLIPSE 天然中央密集向外稀疏，粒子分布
+  更像"炸开"而非"下雪"。**只改光晕层**，主爆和慢漂保持 RECTANGLE 铺满卡片。
+
+  **5) 密度上调**：光晕层 count 12→24，慢漂层 40→60（低/中/高档等比上调）。
+  总粒子数从 124 → 156，观感差别明显。
+
+- **完成判定**：
+  - `ShatterOverlay.ets` 内包含闪光帧 Circle + scrim Column + 三层粒子（emitter
+    形状按上表）
+  - `ShatterTokens` 内 `mainColorRange = ['#FFFFFF', '#FFD98A']`，其他色不变
+  - `verify_shatter_layers.mjs` 加断言：
+    - 闪光帧存在（regex 匹配 `flashVisible` + `Circle()` + width '40%'）
+    - `mainColorRange` 包含 `#FFD98A`
+    - 光晕层 emitter 使用 `ParticleEmitterShape.ELLIPSE`
+    - 慢漂层 count ≥ 60
+  - 真机上再次触发删除，与 v4 版本对比：应能看到明显的"中心闪光→炸开"节奏，
+    而非"淡淡一片扩散"
+- **锚点**：
+  - `entry/src/main/ets/components/ShatterOverlay.ets`
+  - `entry/src/main/ets/theme/DesignTokens.ets`（`ShatterTokens.mainColorRange`）
+  - `scripts/verify_shatter_layers.mjs`（新增断言）
+- **背景**：
+  - "中心闪光帧"是各家游戏/影视爆炸镜头的通用手法。一颗爆点先亮再炸，比全域
+    均匀扩散有力得多
+  - 暖金主爆的取舍：米色背景 (`#F5F1E9`) 上，暖色（金、橙）对比度 > 冷色（白、蓝）。
+    冒险星河风被暖金替代**不影响整体审美方向**——慢漂层保留冷紫，仍是"星河"
+    但从"清冷星河"变为"星爆 + 星河"
+  - 若真机后觉得暖金太"打" 干扰塔伽花米色系，可退回主爆用白到淡蓝金
+    `['#FFFFFF', '#FFF5D6']`（近白暖），保留闪光帧与暗化 scrim 的对比感
+
+---
+
+## v5 建议派单顺序
+
+1. **V5-P0-1** 二级页居中（1 分钟修 bug + 抽 `SettingsScrollContainer` + verify
+   防复发）——最优先，是**老坑收口**
+2. **V5-P0-2** 复盘人卡片对称化（10 行删除 + 换 RippleSettingsLinkRow + verify）
+3. **V5-P1-1** 删除 collapse 阶段（中等改动，观感立竿见影）
+4. **V5-P1-2** 星河再强化 5 处（最后做，视觉再迭代）
+
+V5-P0-1 与 V5-P0-2 都是 MyPage / 二级设置页范围，可**打一个 commit**；
+V5-P1-1 与 V5-P1-2 各自独立提交、独立回退。
+
+---
+
+## Codex v5 执行记录（2026-07-15）
+
+| 条目 | 状态 | 结论 |
+| --- | --- | --- |
+| V5-P0-1 二级设置页顶部布局 | 代码完成 | 新增共享 `SettingsScrollContainer`，统一声明 `constraintSize({ minHeight: '100%' })` 与顶部对齐；外观、备份和显示与动效三页均已迁移。新增 `verify_settings_scroll_pattern.mjs`，禁止 `*SettingsPage.ets` 恢复裸 `Scroll()`，同时保留显式豁免注释。 |
+| V5-P0-2 复盘人设置行 | 代码完成 | 删除独立 `ReviewerCardContent` / `ReviewerCard` 蓝底蓝框身份卡，复盘人改为第 1 条 `RippleSettingsLinkRow`；MyPage 顶层 5 条设置行统一，文件由 500 行降至 456 行，并继续通过 Builder 闭包闪退回归门禁。 |
+| V5-P1-1 删除 collapse | 代码完成，待真机 | 待复盘与历史删除均改为“后端删除 + 1300ms 粒子 → 250ms 高度/透明度收缩 → 数据源移除”；收缩时 min/maxHeight 同步归零，异常路径恢复 collapse 与卡片可见状态，页面离开会清理临时视觉状态。 |
+| V5-P1-2 星河强化 | 代码完成，待真机 | 新增 40ms 中心闪光前导、暗化 scrim、暖金主爆 `['#FFFFFF', '#FFD98A']` 和椭圆光晕；光晕由 `6/12/20` 等比增至 `12/24/40`，慢漂由 `20/40/60` 等比增至 `30/60/90`，中档总粒子数由 124 增至 156。计时器在组件离开时统一清理。 |
+
+本地验证：`bash scripts/test_app.sh --quick` 通过 47/47；
+`bash scripts/test_app.sh --all` 通过 64/64，主模块与 `entry@ohosTest` 均完成
+ArkTS 编译和 HAP 打包。HDC `--check-only` 只读枚举在保护窗口内超时，未执行安装、
+启动、卸载或清空数据；二级页顶对齐、collapse 连贯性与星河观感仍需设备恢复后真机复测。
 
 ---
 

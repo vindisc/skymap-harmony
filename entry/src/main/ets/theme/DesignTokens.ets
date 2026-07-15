@@ -168,8 +168,7 @@ export class ShatterTokens {
   static readonly mainCountMedium: number = 72;
   static readonly mainCountHigh: number = 96;
   static readonly mainLifetimeMs: number = 700;
-  static readonly mainColorStart: string = '#FFFFFF';
-  static readonly mainColorEnd: string = '#C7D4FF';
+  static readonly mainColorRange: ParticleTuple<ResourceColor, ResourceColor> = ['#FFFFFF', '#FFD98A'];
   static readonly mainOpacityStart: number = 1;
   static readonly mainOpacityHold: number = 1;
   static readonly mainOpacityEnd: number = 0;
@@ -180,9 +179,9 @@ export class ShatterTokens {
   static readonly mainSpeedMax: number = 72;
 
   static readonly haloImageSize: number = 32;
-  static readonly haloCountLow: number = 6;
-  static readonly haloCountMedium: number = 12;
-  static readonly haloCountHigh: number = 20;
+  static readonly haloCountLow: number = 12;
+  static readonly haloCountMedium: number = 24;
+  static readonly haloCountHigh: number = 40;
   static readonly haloLifetimeMs: number = 900;
   static readonly haloColorStart: string = '#FFFFFF';
   static readonly haloColorEnd: string = '#FFFFFF';
@@ -196,9 +195,9 @@ export class ShatterTokens {
   static readonly haloSpeedMax: number = 24;
 
   static readonly driftRadius: number = 1;
-  static readonly driftCountLow: number = 20;
-  static readonly driftCountMedium: number = 40;
-  static readonly driftCountHigh: number = 60;
+  static readonly driftCountLow: number = 30;
+  static readonly driftCountMedium: number = 60;
+  static readonly driftCountHigh: number = 90;
   static readonly driftLifetimeMs: number = 1200;
   static readonly driftColorStart: string = '#FFFFFF';
   static readonly driftColorEnd: string = '#B8B8FF';

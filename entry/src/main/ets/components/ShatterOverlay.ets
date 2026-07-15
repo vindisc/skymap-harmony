@@ -1,5 +1,5 @@
-import { ShatterTokens } from '../theme/DesignTokens';
-import { MotionQualityContext } from '../theme/MotionQualityContext';
+import { MotionTokens, ShatterTokens } from '../theme/DesignTokens';
+import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
 export type ShatterQuality = 'low' | 'medium' | 'high';
 
@@ -38,8 +38,67 @@ function resolveShatterEmitRate(count: number): number {
 @Component
 export struct ShatterOverlay {
   @Prop quality: ShatterQuality = 'medium';
+  @State flashVisible: boolean = false;
+  @State flashScale: number = 0.3;
+  @State flashOpacity: number = 0.9;
+  @State scrimActive: boolean = false;
+  @State particlesVisible: boolean = false;
 
   private readonly layerCount: number = MotionQualityContext.resolveShatterLayerCount();
+  private scrimStartTimerId: number = -1;
+  private burstStartTimerId: number = -1;
+  private flashEndTimerId: number = -1;
+  private scrimEndTimerId: number = -1;
+
+  aboutToAppear(): void {
+    this.clearTimers();
+    this.flashVisible = true;
+    this.flashScale = 0.3;
+    this.flashOpacity = 0.9;
+    this.scrimActive = false;
+    this.particlesVisible = false;
+    this.scrimStartTimerId = setTimeout(() => {
+      this.scrimActive = true;
+      this.scrimStartTimerId = -1;
+    }, MotionTokens.durationFrame);
+    this.burstStartTimerId = setTimeout(() => {
+      this.flashScale = 1.4;
+      this.flashOpacity = 0;
+      this.particlesVisible = true;
+      this.burstStartTimerId = -1;
+    }, MotionTokens.durationStagger);
+    this.flashEndTimerId = setTimeout(() => {
+      this.flashVisible = false;
+      this.flashEndTimerId = -1;
+    }, MotionTokens.durationStagger + MotionTokens.durationInstant * 2 + 20);
+    this.scrimEndTimerId = setTimeout(() => {
+      this.scrimActive = false;
+      this.scrimEndTimerId = -1;
+    }, MotionTokens.shatterDurationMs);
+  }
+
+  aboutToDisappear(): void {
+    this.clearTimers();
+  }
+
+  private clearTimers(): void {
+    if (this.scrimStartTimerId >= 0) {
+      clearTimeout(this.scrimStartTimerId);
+      this.scrimStartTimerId = -1;
+    }
+    if (this.burstStartTimerId >= 0) {
+      clearTimeout(this.burstStartTimerId);
+      this.burstStartTimerId = -1;
+    }
+    if (this.flashEndTimerId >= 0) {
+      clearTimeout(this.flashEndTimerId);
+      this.flashEndTimerId = -1;
+    }
+    if (this.scrimEndTimerId >= 0) {
+      clearTimeout(this.scrimEndTimerId);
+      this.scrimEndTimerId = -1;
+    }
+  }
 
   @Builder
   MainBurstLayer() {
@@ -61,7 +120,7 @@ export struct ShatterOverlay {
             shape: ParticleEmitterShape.RECTANGLE
           },
           color: {
-            range: [ShatterTokens.mainColorStart, ShatterTokens.mainColorEnd]
+            range: ShatterTokens.mainColorRange
           },
           opacity: {
             range: [ShatterTokens.mainOpacityStart, ShatterTokens.mainOpacityHold],
@@ -118,7 +177,7 @@ export struct ShatterOverlay {
             emitRate: resolveShatterEmitRate(resolveShatterDensity(this.quality).halo),
             position: [0, 0],
             size: ['100%', '100%'],
-            shape: ParticleEmitterShape.RECTANGLE
+            shape: ParticleEmitterShape.ELLIPSE
           },
           color: {
             range: [ShatterTokens.haloColorStart, ShatterTokens.haloColorEnd]
@@ -219,14 +278,37 @@ export struct ShatterOverlay {
 
   build() {
     Stack() {
-      this.MainBurstLayer()
+      Column()
+        .width('100%')
+        .height('100%')
+        .backgroundColor(this.scrimActive ? '#14000000' : '#00000000')
+        .animation({ duration: 200, curve: MotionTokens.curveDecelerate })
+        .hitTestBehavior(HitTestMode.None)
 
-      if (this.layerCount >= 2) {
-        this.HaloLayer()
+      if (this.flashVisible) {
+        Circle()
+          .width('40%')
+          .height('40%')
+          .fill('#FFFFFF')
+          .opacity(this.flashOpacity)
+          .scale({ x: this.flashScale, y: this.flashScale })
+          .animation({
+            duration: MotionTokens.durationInstant * 2 + 20,
+            curve: MotionQualityContext.resolveCurve(MotionCurveRole.EMPHASIZED)
+          })
+          .hitTestBehavior(HitTestMode.None)
       }
 
-      if (this.layerCount >= 3) {
-        this.DriftLayer()
+      if (this.particlesVisible) {
+        this.MainBurstLayer()
+
+        if (this.layerCount >= 2) {
+          this.HaloLayer()
+        }
+
+        if (this.layerCount >= 3) {
+          this.DriftLayer()
+        }
       }
     }
     .width('100%')
