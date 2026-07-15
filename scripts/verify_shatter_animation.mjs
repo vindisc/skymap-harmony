@@ -5,6 +5,7 @@ const shatterOverlayPath = 'entry/src/main/ets/components/ShatterOverlay.ets';
 const projectDetailPath = 'entry/src/main/ets/pages/ProjectDetailPage.ets';
 const appearanceSettingsPath = 'entry/src/main/ets/pages/AppearanceSettingsPage.ets';
 const settingsServicePath = 'entry/src/main/ets/services/ReviewSettingsService.ets';
+const historyServicePath = 'entry/src/main/ets/services/ReviewCardHistoryService.ets';
 const designTokensPath = 'entry/src/main/ets/theme/DesignTokens.ets';
 const motionQualityPath = 'entry/src/main/ets/theme/MotionQualityContext.ets';
 const haloResourcePath = 'entry/src/main/resources/base/media/particle_halo.png';
@@ -31,8 +32,13 @@ function requireIncludes(source, marker, context) {
   }
 }
 
-function extractMethod(source, methodName) {
-  const signature = `private async ${methodName}`;
+function forbidIncludes(source, marker, context) {
+  if (source.includes(marker)) {
+    fail(`${context}: forbidden marker ${marker}`);
+  }
+}
+
+function extractMethodBySignature(source, signature) {
   const start = source.indexOf(signature);
   if (start < 0) {
     return '';
@@ -50,6 +56,10 @@ function extractMethod(source, methodName) {
     }
   }
   return '';
+}
+
+function extractMethod(source, methodName) {
+  return extractMethodBySignature(source, `private async ${methodName}`);
 }
 
 function countOccurrences(source, marker) {
@@ -91,6 +101,22 @@ requireIncludes(projectDetailSource, '@State collapsingIds: Array<string>', 'Pro
 requireIncludes(projectDetailSource, 'private beginCollapse(id: string): void', 'ProjectDetailPage collapse state');
 requireIncludes(projectDetailSource, 'private endCollapse(id: string): void', 'ProjectDetailPage collapse state');
 requireIncludes(projectDetailSource, 'MotionCurveRole.SPRING_SOFT', 'ProjectDetailPage collapse animation');
+requireIncludes(projectDetailSource, 'private beginDeleteLayoutTransaction(): void', 'ProjectDetailPage delete layout transaction');
+requireIncludes(projectDetailSource, 'private settleDeleteLayout(): void', 'ProjectDetailPage delete layout transaction');
+requireIncludes(projectDetailSource, 'this.isDeleteLayoutSettling || this.collapsingIds.length > 0', 'ProjectDetailPage pagination guard');
+requireIncludes(projectDetailSource, '.padding({ bottom: this.isCollapsing(photo.id) ? 0 : AppMetrics.cardGap })',
+  'Pending list gap collapse');
+requireIncludes(projectDetailSource,
+  'bottom: this.isCollapsing(getReviewDocumentKey(item.document)) ? 0 : AppMetrics.cardGap',
+  'History list gap collapse');
+requireIncludes(projectDetailSource,
+  '}, (item: ReviewCardHistoryItem) => getReviewDocumentKey(item.document))',
+  'History list stable identity');
+if (countOccurrences(projectDetailSource, 'List({ space: 0 })') < 2) {
+  fail('Pending and history lists must keep inter-item gaps inside the collapsing ListItem.');
+}
+forbidIncludes(projectDetailSource, 'List({ space: AppMetrics.cardGap })',
+  'ProjectDetailPage must not keep non-collapsing List space');
 
 const pendingDeleteSource = extractMethod(projectDetailSource, 'deletePendingPhoto');
 const historyDeleteSource = extractMethod(projectDetailSource, 'deleteHistory');
@@ -106,6 +132,12 @@ if (historyCollapseIndex < 0 || historyRemovalIndex < 0 || historyCollapseIndex 
 }
 const pendingCatchSource = pendingDeleteSource.slice(pendingDeleteSource.indexOf('} catch'));
 const historyCatchSource = historyDeleteSource.slice(historyDeleteSource.indexOf('} catch'));
+const pendingSuccessSource = pendingDeleteSource.slice(0, pendingDeleteSource.indexOf('} catch'));
+const historySuccessSource = historyDeleteSource.slice(0, historyDeleteSource.indexOf('} catch'));
+forbidIncludes(pendingSuccessSource, 'this.reloadData();', 'deletePendingPhoto success path');
+forbidIncludes(historySuccessSource, 'this.reloadData();', 'deleteHistory success path');
+requireIncludes(pendingSuccessSource, 'this.settleDeleteLayout();', 'deletePendingPhoto success path');
+requireIncludes(historySuccessSource, 'this.settleDeleteLayout();', 'deleteHistory success path');
 requireIncludes(pendingCatchSource, 'this.endCollapse(photo.id);', 'deletePendingPhoto catch recovery');
 requireIncludes(pendingCatchSource, 'this.markCardVisible(photo.id);', 'deletePendingPhoto catch recovery');
 requireIncludes(historyCatchSource, 'this.endCollapse(deletingKey);', 'deleteHistory catch recovery');
@@ -114,6 +146,15 @@ if (countOccurrences(projectDetailSource, '.height(this.isCollapsing(') < 2 ||
   countOccurrences(projectDetailSource, '.opacity(this.isCollapsing(') < 2) {
   fail('Both pending and history card shells must animate height and opacity while collapsing.');
 }
+
+const historyServiceSource = readOrFail(historyServicePath);
+const historyServiceDeleteSource = extractMethodBySignature(historyServiceSource, 'static async deleteDocument');
+requireIncludes(historyServiceSource,
+  'static async deleteDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<void>',
+  'ReviewCardHistoryService delete contract');
+forbidIncludes(historyServiceDeleteSource,
+  'const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);',
+  'ReviewCardHistoryService delete must not reload the full library');
 
 const appearanceSettingsSource = readOrFail(appearanceSettingsPath);
 requireIncludes(appearanceSettingsSource, "Text('删除星河效果')", 'AppearanceSettingsPage');
@@ -138,4 +179,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('shatter animation verified: three-layer overlay, quality fallback, halo resource, preference, and list integration present');
+console.log('shatter animation verified: overlay, collapse transaction, synchronized gaps, stable list identity, and no success reload');

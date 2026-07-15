@@ -290,12 +290,13 @@ V5-P1-1 与 V5-P1-2 各自独立提交、独立回退。
 | V5-P0-1 二级设置页顶部布局 | 代码完成 | 新增共享 `SettingsScrollContainer`，统一声明 `constraintSize({ minHeight: '100%' })` 与顶部对齐；外观、备份和显示与动效三页均已迁移。新增 `verify_settings_scroll_pattern.mjs`，禁止 `*SettingsPage.ets` 恢复裸 `Scroll()`，同时保留显式豁免注释。 |
 | V5-P0-2 复盘人设置行 | 代码完成 | 删除独立 `ReviewerCardContent` / `ReviewerCard` 蓝底蓝框身份卡，复盘人改为第 1 条 `RippleSettingsLinkRow`；MyPage 顶层 5 条设置行统一，文件由 500 行降至 456 行，并继续通过 Builder 闭包闪退回归门禁。 |
 | V5-P1-1 删除 collapse | 代码完成，待真机 | 待复盘与历史删除均改为“后端删除 + 1300ms 粒子 → 250ms 高度/透明度收缩 → 数据源移除”；收缩时 min/maxHeight 同步归零，异常路径恢复 collapse 与卡片可见状态，页面离开会清理临时视觉状态。 |
+| V5-P1-1 删除后二次抖动追加修复 | 代码完成，待真机 | 删除成功后不再 `reloadData()` 重查并替换首屏，历史删除服务也不再额外读取完整资料库；`List` 固定间距迁入各卡片 `ListItem` 并随高度同步收缩，删除事务会取消并拦截并发分页、在 280ms 回位窗口内禁止 `onReachEnd`，历史列表身份改用 `getReviewDocumentKey`，避免幸存卡片重建和入场动画重播。失败链路仍会恢复卡片并重新对账。 |
 | V5-P1-2 星河强化 | 代码完成，待真机 | 新增 40ms 中心闪光前导、暗化 scrim、暖金主爆 `['#FFFFFF', '#FFD98A']` 和椭圆光晕；光晕由 `6/12/20` 等比增至 `12/24/40`，慢漂由 `20/40/60` 等比增至 `30/60/90`，中档总粒子数由 124 增至 156。计时器在组件离开时统一清理。 |
 
 本地验证：`bash scripts/test_app.sh --quick` 通过 47/47；
 `bash scripts/test_app.sh --all` 通过 64/64，主模块与 `entry@ohosTest` 均完成
 ArkTS 编译和 HAP 打包。HDC `--check-only` 只读枚举在保护窗口内超时，未执行安装、
-启动、卸载或清空数据；二级页顶对齐、collapse 连贯性与星河观感仍需设备恢复后真机复测。
+启动、卸载或清空数据；二级页顶对齐、删除后一次性回位与星河观感仍需设备恢复后真机复测。
 
 ---
 

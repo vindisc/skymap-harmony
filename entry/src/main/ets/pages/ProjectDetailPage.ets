@@ -80,6 +80,8 @@ export struct ProjectDetailPage {
   @State collapsingIds: Array<string> = [];
   @State filterPulseValue: string = '';
   private filterPulseTimerId: number = -1;
+  private deleteLayoutSettleTimerId: number = -1;
+  private isDeleteLayoutSettling: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -107,6 +109,7 @@ export struct ProjectDetailPage {
       clearTimeout(this.filterPulseTimerId);
       this.filterPulseTimerId = -1;
     }
+    this.cancelDeleteLayoutSettle();
   }
 
   private selectFilter(value: string): void {
@@ -171,6 +174,40 @@ export struct ProjectDetailPage {
     this.collapsingIds = this.collapsingIds.filter((existing: string): boolean => existing !== id);
   }
 
+  private beginDeleteLayoutTransaction(): void {
+    this.loadRequestId += 1;
+    this.isLoadingMore = false;
+    if (this.deleteLayoutSettleTimerId >= 0) {
+      clearTimeout(this.deleteLayoutSettleTimerId);
+      this.deleteLayoutSettleTimerId = -1;
+    }
+    this.isDeleteLayoutSettling = true;
+  }
+
+  private settleDeleteLayout(): void {
+    if (this.deleteLayoutSettleTimerId >= 0) {
+      clearTimeout(this.deleteLayoutSettleTimerId);
+    }
+    const duration: number = MotionQualityContext.resolveDuration(MotionTokens.shatterRippleBackMs);
+    if (duration <= 0) {
+      this.isDeleteLayoutSettling = false;
+      this.deleteLayoutSettleTimerId = -1;
+      return;
+    }
+    this.deleteLayoutSettleTimerId = setTimeout(() => {
+      this.isDeleteLayoutSettling = false;
+      this.deleteLayoutSettleTimerId = -1;
+    }, duration);
+  }
+
+  private cancelDeleteLayoutSettle(): void {
+    if (this.deleteLayoutSettleTimerId >= 0) {
+      clearTimeout(this.deleteLayoutSettleTimerId);
+      this.deleteLayoutSettleTimerId = -1;
+    }
+    this.isDeleteLayoutSettling = false;
+  }
+
   refreshReviewLibraryData(): void {
     this.applyInitialFilter();
     this.reloadData();
@@ -232,7 +269,8 @@ export struct ProjectDetailPage {
   }
 
   private async loadMoreItems(): Promise<void> {
-    if (this.isLibraryLoading || this.isLoadingMore || !this.hasMoreItems || this.libraryLoadFailed) {
+    if (this.isLibraryLoading || this.isLoadingMore || !this.hasMoreItems || this.libraryLoadFailed ||
+      this.deletingReviewKey.length > 0 || this.isDeleteLayoutSettling || this.collapsingIds.length > 0) {
       return;
     }
 
@@ -380,6 +418,7 @@ export struct ProjectDetailPage {
     }
 
     this.deletingPendingPhotoId = photo.id;
+    this.beginDeleteLayoutTransaction();
     const componentId: string = `shatter-pending-${photo.id}`;
     const useShatter: boolean = MotionQualityContext.shouldPlayShatter(this.shatterEnabled);
     if (useShatter) {
@@ -417,14 +456,15 @@ export struct ProjectDetailPage {
         this.endCollapse(photo.id);
         this.markCardVisible(photo.id);
       }
+      this.settleDeleteLayout();
       ToastService.success(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_SUCCESS_TEXT);
-      this.reloadData();
     } catch (error) {
       if (!this.isPageAlive) {
         return;
       }
       this.endCollapse(photo.id);
       this.markCardVisible(photo.id);
+      this.cancelDeleteLayoutSettle();
       ToastService.error(this.getUIContext(), REVIEW_FLOW_PENDING_DELETE_FAILED_TEXT);
     } finally {
       if (this.isPageAlive && useShatter) {
@@ -443,6 +483,7 @@ export struct ProjectDetailPage {
     }
 
     this.deletingReviewKey = deletingKey;
+    this.beginDeleteLayoutTransaction();
     const componentId: string = `shatter-history-${deletingKey}`;
     const useShatter: boolean = MotionQualityContext.shouldPlayShatter(this.shatterEnabled);
     if (useShatter) {
@@ -455,7 +496,7 @@ export struct ProjectDetailPage {
     const previousLibraryStats: ReviewLibraryStats = this.libraryStats;
     const context: common.UIAbilityContext = this.getAbilityContext();
     try {
-      const deleteTask: Promise<Array<ReviewCardHistoryItem>> = ReviewCardHistoryService.deleteDocument(context, document);
+      const deleteTask: Promise<void> = ReviewCardHistoryService.deleteDocument(context, document);
       if (useShatter) {
         const animationTask: Promise<void> = new Promise<void>((resolve: () => void): void => {
           setTimeout(resolve, MotionTokens.shatterDurationMs);
@@ -518,14 +559,15 @@ export struct ProjectDetailPage {
         this.endCollapse(deletingKey);
         this.markCardVisible(deletingKey);
       }
+      this.settleDeleteLayout();
       ToastService.success(this.getUIContext(), REVIEW_FLOW_DELETE_SUCCESS_TEXT);
-      this.reloadData();
     } catch (error) {
       if (!this.isPageAlive) {
         return;
       }
       this.endCollapse(deletingKey);
       this.markCardVisible(deletingKey);
+      this.cancelDeleteLayoutSettle();
       ToastService.error(this.getUIContext(), REVIEW_FLOW_DELETE_FAILED_TEXT);
       this.reloadData();
     } finally {
@@ -992,7 +1034,7 @@ export struct ProjectDetailPage {
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
       } else if (this.isPendingFilter()) {
-        List({ space: AppMetrics.cardGap }) {
+        List({ space: 0 }) {
           ForEach(this.resolveVisiblePendingItems(), (photo: PendingReviewPhoto, index: number) => {
             ListItem() {
               StaggeredEnter({
@@ -1006,9 +1048,14 @@ export struct ProjectDetailPage {
                 .width('100%')
             }
             .id(`shatter-pending-${photo.id}`)
+            .padding({ bottom: this.isCollapsing(photo.id) ? 0 : AppMetrics.cardGap })
             .animation({
-              duration: MotionTokens.shatterRippleBackMs,
-              curve: MotionTokens.curveDecelerate
+              duration: this.isCollapsing(photo.id)
+                ? MotionQualityContext.resolveDuration(MotionTokens.durationStandard)
+                : MotionTokens.shatterRippleBackMs,
+              curve: this.isCollapsing(photo.id)
+                ? MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+                : MotionTokens.curveDecelerate
             })
             .swipeAction({
               end: () => {
@@ -1064,7 +1111,7 @@ export struct ProjectDetailPage {
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
       } else {
-        List({ space: AppMetrics.cardGap }) {
+        List({ space: 0 }) {
           ForEach(this.filteredItems, (item: ReviewCardHistoryItem, index: number) => {
             ListItem() {
               StaggeredEnter({
@@ -1078,9 +1125,16 @@ export struct ProjectDetailPage {
                 .width('100%')
             }
             .id(`shatter-history-${getReviewDocumentKey(item.document)}`)
+            .padding({
+              bottom: this.isCollapsing(getReviewDocumentKey(item.document)) ? 0 : AppMetrics.cardGap
+            })
             .animation({
-              duration: MotionTokens.shatterRippleBackMs,
-              curve: MotionTokens.curveDecelerate
+              duration: this.isCollapsing(getReviewDocumentKey(item.document))
+                ? MotionQualityContext.resolveDuration(MotionTokens.durationStandard)
+                : MotionTokens.shatterRippleBackMs,
+              curve: this.isCollapsing(getReviewDocumentKey(item.document))
+                ? MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+                : MotionTokens.curveDecelerate
             })
             .swipeAction({
               end: () => {
@@ -1088,7 +1142,7 @@ export struct ProjectDetailPage {
               },
               edgeEffect: SwipeEdgeEffect.Spring
             })
-          }, (item: ReviewCardHistoryItem) => `${item.document.createdAt}`)
+          }, (item: ReviewCardHistoryItem) => getReviewDocumentKey(item.document))
       ListItem() {
         Column()
           .height(this.isLoadingMore ? AppMetrics.space32 : 1)

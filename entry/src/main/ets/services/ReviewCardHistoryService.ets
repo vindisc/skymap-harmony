@@ -890,14 +890,12 @@ export class ReviewCardHistoryService {
     }
   }
 
-  static async deleteDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
+  static async deleteDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<void> {
     try {
       await ReviewCardRdbService.deleteReview(context, getReviewDocumentKey(document));
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
       ReviewCardHistoryService.deleteRecoverableBackup(context, document);
-      const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
       notifyReviewLibraryChanged('delete_document');
-      return latestItems;
     } catch (error) {
       console.error(`[ReviewCardHistoryService] RDB 删除失败，已停止 Preferences 主索引回退：${error}`);
       throw createRdbWriteError('删除', error as Error | Object | string | undefined);
