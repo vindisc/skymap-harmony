@@ -120,7 +120,8 @@ baselineImagePaths.forEach((imagePath) => {
   'ProjectReviewCard({'
 ].forEach((marker) => requireIncludes(sources.library, marker, 'Review library must keep compact search, filters and cards'));
 requireOrder(sources.library, 'this.SearchField()', "this.FilterChip('全部', 'all')", 'Review library search must appear before filters.');
-requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)", 'this.HistoryReviewListCard(item);', 'Review library list should appear directly after filters.');
+requireOrder(sources.library, "this.FilterChip('不成立', ReviewJudgementStatus.INVALID)", 'List({ space: 0 })', 'Review library list should appear directly after filters.');
+requireOrder(sources.library, 'List({ space: 0 })', 'this.HistoryReviewListCard(item)', 'Review library cards must render directly inside stable list items.');
 
 [
   "title: '统计'",

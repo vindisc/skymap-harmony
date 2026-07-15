@@ -4,7 +4,7 @@ const checks = new Map([
   ['entry/src/main/ets/entryability/EntryAbility.ets', ['initializeMotionAndLoadContent', 'MotionQualityContext.initialize']],
   ['entry/src/main/ets/pages/AppShellPage.ets', ['playTabIconPulse', 'MotionCurveRole.SPRING_SOFT']],
   ['entry/src/main/ets/pages/HomePage.ets', ['playIntro', 'scaleHeroIntro', 'ShimmerBox', 'PressReactive', "kind: 'review-done'"]],
-  ['entry/src/main/ets/pages/ProjectDetailPage.ets', ['StaggeredEnter', 'RippleTouch', 'delayMs: MotionTokens.durationStagger']],
+  ['entry/src/main/ets/pages/ProjectDetailPage.ets', ['RippleTouch', 'MotionTokens.shatterRippleBackMs', 'MotionCurveRole.SPRING_SOFT']],
   ['entry/src/main/ets/pages/EditorPage.ets', ['geometryTransition(`review-hero-${this.resolveHeroTag()}`)', 'LearningProgressService.notifyPendingReviewCompleted', 'PressReactive']],
   ['entry/src/main/ets/pages/PreviewPage.ets', ['BottomSheetContainer', 'ExportMenuContent', 'PressReactive']],
   ['entry/src/main/ets/pages/StatsPage.ets', ['CountUpText', 'ShimmerBox', 'playIntro', 'introStage', 'InsightsIntro', 'MotionCurveRole.LANDING']],
@@ -21,4 +21,9 @@ for (const [path, markers] of checks.entries()) {
   }
 }
 
-console.log('motion narrative hooks verified: tabs, CTA press, list stagger/ripple, preview, stats and settings');
+const projectDetailSource = fs.readFileSync('entry/src/main/ets/pages/ProjectDetailPage.ets', 'utf8');
+if (projectDetailSource.includes('StaggeredEnter')) {
+  throw new Error('ProjectDetailPage 动态列表禁止恢复可重播的 StaggeredEnter，避免删除后幸存卡片整批闪烁');
+}
+
+console.log('motion narrative hooks verified: tabs, CTA press, list collapse/ripple, preview, stats and settings');

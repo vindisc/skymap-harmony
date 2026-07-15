@@ -122,6 +122,8 @@ if (countOccurrences(projectDetailSource, '.opacity(this.isDeleteLayoutSettling 
 }
 forbidIncludes(projectDetailSource, 'List({ space: AppMetrics.cardGap })',
   'ProjectDetailPage must not keep non-collapsing List space');
+forbidIncludes(projectDetailSource, 'StaggeredEnter',
+  'ProjectDetailPage dynamic list items must not replay enter animations after deletion');
 
 const pendingDeleteSource = extractMethod(projectDetailSource, 'deletePendingPhoto');
 const historyDeleteSource = extractMethod(projectDetailSource, 'deleteHistory');

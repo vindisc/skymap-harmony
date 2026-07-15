@@ -43,7 +43,6 @@ import { formatReviewTime, getImageRatioLabel, hasDisplayableImageUri } from '..
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { ShimmerBox } from '../components/motion/ShimmerBox';
 import { RippleTouch } from '../components/motion/RippleTouch';
-import { StaggeredEnter } from '../components/motion/StaggeredEnter';
 import { MotionCurveRole, MotionQualityContext } from '../theme/MotionQualityContext';
 
 const DELETE_SWIPE_ACTION_WIDTH: number = 92;
@@ -1044,17 +1043,9 @@ export struct ProjectDetailPage {
         })
       } else if (this.isPendingFilter()) {
         List({ space: 0 }) {
-          ForEach(this.resolveVisiblePendingItems(), (photo: PendingReviewPhoto, index: number) => {
+          ForEach(this.resolveVisiblePendingItems(), (photo: PendingReviewPhoto) => {
             ListItem() {
-              StaggeredEnter({
-                batchIndex: index,
-                batchSize: 1,
-                delayMs: MotionTokens.durationStagger,
-                content: () => {
-                  this.PendingReviewListCard(photo);
-                }
-              })
-                .width('100%')
+              this.PendingReviewListCard(photo)
             }
             .id(`shatter-pending-${photo.id}`)
             .padding({ bottom: this.isCollapsing(photo.id) ? 0 : AppMetrics.cardGap })
@@ -1131,17 +1122,9 @@ export struct ProjectDetailPage {
         })
       } else {
         List({ space: 0 }) {
-          ForEach(this.filteredItems, (item: ReviewCardHistoryItem, index: number) => {
+          ForEach(this.filteredItems, (item: ReviewCardHistoryItem) => {
             ListItem() {
-              StaggeredEnter({
-                batchIndex: index,
-                batchSize: 1,
-                delayMs: MotionTokens.durationStagger,
-                content: () => {
-                  this.HistoryReviewListCard(item);
-                }
-              })
-                .width('100%')
+              this.HistoryReviewListCard(item)
             }
             .id(`shatter-history-${getReviewDocumentKey(item.document)}`)
             .padding({
