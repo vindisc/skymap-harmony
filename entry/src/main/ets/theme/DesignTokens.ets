@@ -163,7 +163,8 @@ export class MotionTokens {
 }
 
 export class ShatterTokens {
-  static readonly flashColor: string = '#F0A83A';
+  static readonly flashColor: string = '#D47A18';
+  static readonly flashOpacityStart: number = 0.9;
   static readonly mainRadius: number = 3;
   static readonly mainCountLow: number = 48;
   static readonly mainCountMedium: number = 72;
@@ -187,7 +188,7 @@ export class ShatterTokens {
   static readonly haloColorStart: string = '#4E7185';
   static readonly haloColorEnd: string = '#7658A6';
   static readonly haloOpacityStart: number = 0.9;
-  static readonly haloOpacityHold: number = 0.6;
+  static readonly haloOpacityHold: number = 0.7;
   static readonly haloOpacityEnd: number = 0;
   static readonly haloOpacityHoldEndMs: number = 500;
   static readonly haloScaleMin: number = 0.8;

@@ -141,7 +141,7 @@
   2. **改造 `deletePendingPhoto` / `deleteHistory` 的流程**（以 pending 为例）：
      ```typescript
      await Promise.all([deleteTask, animationTask]);   // 粒子播完
-     await LearningProgressFormService.refreshAllForms(context);
+     this.refreshLearningProgressFormsAfterDelete(context); // best-effort，不阻塞或回滚删除
      if (!this.isPageAlive) return;
      if (useShatter) {
        this.beginCollapse(photo.id);
@@ -297,6 +297,7 @@ V5-P1-1 与 V5-P1-2 各自独立提交、独立回退。
 | V5-P1-2 星河强化 | 代码完成，待真机 | 新增 40ms 中心闪光前导、暗化 scrim、暖金主爆 `['#FFFFFF', '#FFD98A']` 和椭圆光晕；光晕由 `6/12/20` 等比增至 `12/24/40`，慢漂由 `20/40/60` 等比增至 `30/60/90`，中档总粒子数由 124 增至 156。计时器在组件离开时统一清理。 |
 | V5-P1-2 黑底灰雾追加修复 | 代码完成，待真机 | 删除粒子层原 `#14000000` 半透明黑色 scrim，改为 `#0CFFD98A` 低透明度暖金光洗底，闲置态使用透明白；保留中心闪光与三层粒子节奏但不再压暗卡片区域。门禁会拒绝粒子组件及其 token 恢复任何非零透明度黑底。 |
 | V5-P1-2 浅底粒子辨识度追加修复 | 代码完成，待真机 | 对 4.18 秒真机录屏按 10fps 检视后确认：暖金洗底形成浅米色卡片矩形，而主爆、光晕、慢漂三层均含白色端点，导致多数粒子与 `#F5F1E9` 页面融色。现彻底删除整块洗底，主爆改为品牌深蓝/琥珀金，光晕与慢漂改为蓝紫/棕金，并将主爆、慢漂粒径由 `2/1` 提升到 `3/1.5`。门禁要求所有粒子端点与页面背景对比度不低于 2.5:1，并禁止 Overlay 恢复任何整块背景。 |
+| V5 审查问题闭环（2026-07-16） | 代码完成，待真机 | 删除成功后的学习进度服务卡片刷新改为独立 best-effort 任务，刷新失败只记录诊断，不再延迟 collapse、恢复已删除卡片或误报删除失败；粒子门禁按保持阶段透明度与页面底色合成后计算真实对比度，并覆盖中心闪光；`ShatterTokens` 扫描范围收紧到类体，避免后续无关 token 触发误报。 |
 
 本地验证：`bash scripts/test_app.sh --quick` 通过 47/47；
 `bash scripts/test_app.sh --all` 通过 64/64，主模块与 `entry@ohosTest` 均完成

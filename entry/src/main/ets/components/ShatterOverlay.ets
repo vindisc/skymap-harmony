@@ -40,7 +40,7 @@ export struct ShatterOverlay {
   @Prop quality: ShatterQuality = 'medium';
   @State flashVisible: boolean = false;
   @State flashScale: number = 0.3;
-  @State flashOpacity: number = 0.9;
+  @State flashOpacity: number = ShatterTokens.flashOpacityStart;
   @State particlesVisible: boolean = false;
 
   private readonly layerCount: number = MotionQualityContext.resolveShatterLayerCount();
@@ -51,7 +51,7 @@ export struct ShatterOverlay {
     this.clearTimers();
     this.flashVisible = true;
     this.flashScale = 0.3;
-    this.flashOpacity = 0.9;
+    this.flashOpacity = ShatterTokens.flashOpacityStart;
     this.particlesVisible = false;
     this.burstStartTimerId = setTimeout(() => {
       this.flashScale = 1.4;

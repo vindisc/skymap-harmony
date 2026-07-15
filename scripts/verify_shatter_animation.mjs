@@ -128,6 +128,10 @@ forbidIncludes(projectDetailSource, 'StaggeredEnter',
 
 const pendingDeleteSource = extractMethod(projectDetailSource, 'deletePendingPhoto');
 const historyDeleteSource = extractMethod(projectDetailSource, 'deleteHistory');
+const postDeleteFormRefreshSource = extractMethodBySignature(
+  projectDetailSource,
+  'private refreshLearningProgressFormsAfterDelete'
+);
 const pendingCollapseIndex = pendingDeleteSource.indexOf('this.beginCollapse(photo.id);');
 const pendingRemovalIndex = pendingDeleteSource.indexOf('this.pendingItems = this.pendingItems.filter');
 const historyCollapseIndex = historyDeleteSource.indexOf('this.beginCollapse(deletingKey);');
@@ -144,6 +148,18 @@ const pendingSuccessSource = pendingDeleteSource.slice(0, pendingDeleteSource.in
 const historySuccessSource = historyDeleteSource.slice(0, historyDeleteSource.indexOf('} catch'));
 forbidIncludes(pendingSuccessSource, 'this.reloadData();', 'deletePendingPhoto success path');
 forbidIncludes(historySuccessSource, 'this.reloadData();', 'deleteHistory success path');
+forbidIncludes(pendingDeleteSource, 'await LearningProgressFormService.refreshAllForms(context);',
+  'deletePendingPhoto must not let service widget refresh delay or roll back deletion');
+forbidIncludes(historyDeleteSource, 'await LearningProgressFormService.refreshAllForms(context);',
+  'deleteHistory must not let service widget refresh delay or roll back deletion');
+if (countOccurrences(projectDetailSource, 'this.refreshLearningProgressFormsAfterDelete(context);') !== 2) {
+  fail('Pending and history deletion must both start the shared best-effort service widget refresh.');
+}
+requireIncludes(postDeleteFormRefreshSource,
+  'LearningProgressFormService.refreshAllForms(context).catch((error: Error)',
+  'Post-delete service widget refresh must contain its own failure');
+requireIncludes(postDeleteFormRefreshSource, 'console.warn(',
+  'Post-delete service widget refresh must preserve diagnostics');
 forbidIncludes(pendingSuccessSource, 'this.endCollapse(photo.id);', 'deletePendingPhoto success path must not restore a removed card');
 forbidIncludes(pendingSuccessSource, 'this.markCardVisible(photo.id);', 'deletePendingPhoto success path must not reveal a removed card');
 forbidIncludes(historySuccessSource, 'this.endCollapse(deletingKey);', 'deleteHistory success path must not restore a removed card');

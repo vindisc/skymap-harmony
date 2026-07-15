@@ -3,7 +3,6 @@ import fs from 'node:fs';
 const overlaySource = fs.readFileSync('entry/src/main/ets/components/ShatterOverlay.ets', 'utf8');
 const tokenSource = fs.readFileSync('entry/src/main/ets/theme/DesignTokens.ets', 'utf8');
 const appDesignSource = fs.readFileSync('entry/src/main/ets/components/AppDesign.ets', 'utf8');
-const shatterTokenSource = tokenSource.slice(tokenSource.indexOf('export class ShatterTokens {'));
 
 function requireIncludes(source, marker, message) {
   if (!source.includes(marker)) {
@@ -12,11 +11,21 @@ function requireIncludes(source, marker, message) {
 }
 
 function readNumber(name) {
-  const match = tokenSource.match(new RegExp(`static readonly ${name}: number = ([0-9.]+);`));
+  const match = shatterTokenSource.match(new RegExp(`static readonly ${name}: number = ([0-9.]+);`));
   if (match === null) {
     throw new Error(`ShatterTokens 缺少数值：${name}`);
   }
   return Number(match[1]);
+}
+
+function readHexColorTuple(source, name) {
+  const match = source.match(new RegExp(
+    `static readonly ${name}:[^=]+ = \\['(#[0-9A-Fa-f]{6})', '(#[0-9A-Fa-f]{6})'\\];`
+  ));
+  if (match === null) {
+    throw new Error(`缺少十六进制颜色范围：${name}`);
+  }
+  return [match[1], match[2]];
 }
 
 function readHexColor(source, name) {
@@ -42,8 +51,19 @@ function contrastRatio(firstColor, secondColor) {
     (Math.min(firstLuminance, secondLuminance) + 0.05);
 }
 
-function extractBuilder(source, builderName) {
-  const start = source.indexOf(`@Builder\n  ${builderName}()`);
+function compositeHexColor(foreground, background, opacity) {
+  const foregroundChannels = [1, 3, 5]
+    .map((index) => Number.parseInt(foreground.slice(index, index + 2), 16));
+  const backgroundChannels = [1, 3, 5]
+    .map((index) => Number.parseInt(background.slice(index, index + 2), 16));
+  const compositeChannels = foregroundChannels.map((channel, index) => {
+    return Math.round(channel * opacity + backgroundChannels[index] * (1 - opacity));
+  });
+  return `#${compositeChannels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function extractBlock(source, signature) {
+  const start = source.indexOf(signature);
   if (start < 0) {
     return '';
   }
@@ -60,6 +80,15 @@ function extractBuilder(source, builderName) {
     }
   }
   return '';
+}
+
+function extractBuilder(source, builderName) {
+  return extractBlock(source, `@Builder\n  ${builderName}()`);
+}
+
+const shatterTokenSource = extractBlock(tokenSource, 'export class ShatterTokens');
+if (shatterTokenSource.length <= 0) {
+  throw new Error('DesignTokens 缺少完整 ShatterTokens 类体。');
 }
 
 const mainLifetime = readNumber('mainLifetimeMs');
@@ -106,7 +135,7 @@ if (readNumber('mainCountMedium') + readNumber('haloCountMedium') + readNumber('
   '@State particlesVisible: boolean = false;',
   'this.clearTimers();',
   'this.flashScale = 0.3;',
-  'this.flashOpacity = 0.9;',
+  'this.flashOpacity = ShatterTokens.flashOpacityStart;',
   'Circle()',
   ".width('40%')",
   '.fill(ShatterTokens.flashColor)',
@@ -130,16 +159,44 @@ requireIncludes(tokenSource, 'static readonly mainRadius: number = 3;', 'Shatter
 requireIncludes(tokenSource, 'static readonly driftRadius: number = 1.5;', 'ShatterTokens 慢漂粒径必须保持可见性');
 
 const pageBackground = readHexColor(appDesignSource, 'pageBackground');
-const particleColors = [
-  readHexColor(shatterTokenSource, 'haloColorStart'),
-  readHexColor(shatterTokenSource, 'haloColorEnd'),
-  readHexColor(shatterTokenSource, 'driftColorStart'),
-  readHexColor(shatterTokenSource, 'driftColorEnd')
+const mainColors = readHexColorTuple(shatterTokenSource, 'mainColorRange');
+const contrastCases = [
+  {
+    label: '中心闪光',
+    color: readHexColor(shatterTokenSource, 'flashColor'),
+    opacity: readNumber('flashOpacityStart')
+  },
+  { label: '主爆起点', color: mainColors[0], opacity: readNumber('mainOpacityHold') },
+  { label: '主爆终点', color: mainColors[1], opacity: readNumber('mainOpacityHold') },
+  {
+    label: '光晕起点',
+    color: readHexColor(shatterTokenSource, 'haloColorStart'),
+    opacity: readNumber('haloOpacityHold')
+  },
+  {
+    label: '光晕终点',
+    color: readHexColor(shatterTokenSource, 'haloColorEnd'),
+    opacity: readNumber('haloOpacityHold')
+  },
+  {
+    label: '慢漂起点',
+    color: readHexColor(shatterTokenSource, 'driftColorStart'),
+    opacity: readNumber('driftOpacityHold')
+  },
+  {
+    label: '慢漂终点',
+    color: readHexColor(shatterTokenSource, 'driftColorEnd'),
+    opacity: readNumber('driftOpacityHold')
+  }
 ];
-for (const particleColor of ['#365F75', '#D47A18', ...particleColors]) {
-  const ratio = contrastRatio(pageBackground, particleColor);
+for (const contrastCase of contrastCases) {
+  const compositeColor = compositeHexColor(contrastCase.color, pageBackground, contrastCase.opacity);
+  const ratio = contrastRatio(pageBackground, compositeColor);
   if (ratio < 2.5) {
-    throw new Error(`粒子颜色 ${particleColor} 与页面背景 ${pageBackground} 对比度仅 ${ratio.toFixed(2)}:1。`);
+    throw new Error(
+      `${contrastCase.label} ${contrastCase.color} 在透明度 ${contrastCase.opacity} 下与页面背景 ` +
+      `${pageBackground} 的合成对比度仅 ${ratio.toFixed(2)}:1。`
+    );
   }
 }
 

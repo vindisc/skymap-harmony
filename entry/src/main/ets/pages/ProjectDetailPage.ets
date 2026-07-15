@@ -138,6 +138,12 @@ export struct ProjectDetailPage {
     }
   }
 
+  private refreshLearningProgressFormsAfterDelete(context: common.UIAbilityContext): void {
+    LearningProgressFormService.refreshAllForms(context).catch((error: Error) => {
+      console.warn(`[ProjectDetailPage] 删除后学习进度服务卡片同步失败：${error.message}`);
+    });
+  }
+
   private beginShatter(id: string): void {
     this.activeShatterId = id;
   }
@@ -456,7 +462,7 @@ export struct ProjectDetailPage {
       } else {
         await deleteTask;
       }
-      await LearningProgressFormService.refreshAllForms(context);
+      this.refreshLearningProgressFormsAfterDelete(context);
       if (!this.isPageAlive) {
         return;
       }
@@ -520,7 +526,7 @@ export struct ProjectDetailPage {
       } else {
         await deleteTask;
       }
-      await LearningProgressFormService.refreshAllForms(context);
+      this.refreshLearningProgressFormsAfterDelete(context);
       if (!this.isPageAlive) {
         return;
       }
