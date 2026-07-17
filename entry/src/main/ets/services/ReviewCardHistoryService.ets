@@ -22,7 +22,6 @@ import { ReviewCardRdbMapper, ReviewLibraryStats, ReviewListQuery } from './Revi
 import { ReviewJsonBackupResult, ReviewJsonExportService } from './ReviewJsonExportService';
 import { ReviewLibraryRefreshService } from './ReviewLibraryRefreshService';
 import { PendingReviewPhotoStore } from './PendingReviewPhotoStore';
-import { upgradeVersionOnPersist } from './VersionUpgrader';
 
 const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
@@ -835,40 +834,38 @@ export class ReviewCardHistoryService {
   }
 
   static async saveDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
-    const persistedDocument: ReviewCardDocument = upgradeVersionOnPersist(document);
     try {
       const existingItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      const savedItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.buildSavedItems(existingItems, persistedDocument);
+      const savedItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.buildSavedItems(existingItems, document);
       const savedItem: ReviewCardHistoryItem = savedItems[0];
-      await ReviewCardRdbService.upsertReview(context, savedItem, getReviewDocumentKey(persistedDocument));
+      await ReviewCardRdbService.upsertReview(context, savedItem, getReviewDocumentKey(document));
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
-      await ReviewCardHistoryService.writeRecoverableBackup(context, persistedDocument);
+      await ReviewCardHistoryService.writeRecoverableBackup(context, document);
       notifyReviewLibraryChanged('save_document');
       return ReviewCardHistoryService.load(context);
     } catch (error) {
-      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, persistedDocument);
+      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, document);
       console.error(`[ReviewCardHistoryService] RDB 保存失败，已停止 Preferences 主索引回退，backup=${backupResult.success}, path=${backupResult.path}, error=${error}`);
       throw createRdbWriteError('保存', error as Error | Object | string | undefined);
     }
   }
 
   static async updateDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
-    const persistedDocument: ReviewCardDocument = upgradeVersionOnPersist(document);
     try {
-      const key = getReviewDocumentKey(persistedDocument);
+      const key = getReviewDocumentKey(document);
       const existingItem: ReviewCardHistoryItem | undefined = await ReviewCardRdbService.getReview(context, key);
       await ReviewCardRdbService.upsertReview(
         context,
-        createHistoryItem(persistedDocument, existingItem ? existingItem.exportedPath : ''),
+        createHistoryItem(document, existingItem ? existingItem.exportedPath : ''),
         key
       );
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
       const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      await ReviewCardHistoryService.writeRecoverableBackup(context, persistedDocument);
+      await ReviewCardHistoryService.writeRecoverableBackup(context, document);
       notifyReviewLibraryChanged('update_document');
       return latestItems;
     } catch (error) {
-      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, persistedDocument);
+      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, document);
       console.error(`[ReviewCardHistoryService] RDB 更新失败，已停止 Preferences 主索引回退，backup=${backupResult.success}, path=${backupResult.path}, error=${error}`);
       throw createRdbWriteError('更新', error as Error | Object | string | undefined);
     }
