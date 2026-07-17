@@ -1,6 +1,7 @@
 import UIAbility from '@ohos.app.ability.UIAbility';
 import AbilityConstant from '@ohos.app.ability.AbilityConstant';
 import Want from '@ohos.app.ability.Want';
+import { font } from '@kit.ArkUI';
 import window from '@ohos.window';
 import { FormLaunchIntentService } from '../services/FormLaunchIntentService';
 import { LearningProgressFormService } from '../services/LearningProgressFormService';
@@ -16,6 +17,22 @@ export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     FormLaunchIntentService.captureWant(want);
     DebugLaunchScenarioService.captureWant(want, this.context.applicationInfo.debug);
+    this.registerV2Fonts();
+  }
+
+  private registerV2Fonts(): void {
+    try {
+      font.registerFont({
+        familyName: 'NotoSansSC-Regular',
+        familySrc: '/font/NotoSansSC-Regular.ttf'
+      });
+      font.registerFont({
+        familyName: 'NotoSansSC-Bold',
+        familySrc: '/font/NotoSansSC-Bold.ttf'
+      });
+    } catch (error) {
+      console.warn(`[EntryAbility] 思源黑体注册失败：${error}`);
+    }
   }
 
   onNewWant(want: Want): void {

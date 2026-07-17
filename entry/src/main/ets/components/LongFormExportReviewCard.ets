@@ -318,6 +318,7 @@ export struct LongFormExportReviewCard {
   @Builder
   JudgementPill() {
     Text(getExportJudgementText(this.document.content.judgement))
+      .fontFamily('NotoSansSC-Regular')
       .fontSize(19)
       .fontWeight(FontWeight.Medium)
       .fontColor(ExportCardColors.judgementText)
@@ -342,6 +343,7 @@ export struct LongFormExportReviewCard {
         })
 
         Text(this.getMetaText())
+          .fontFamily('NotoSansSC-Regular')
           .fontSize(EXPORT_CARD_META_SIZE)
           .lineHeight(EXPORT_CARD_META_LINE_HEIGHT)
           .fontColor(ExportCardColors.metaText)
@@ -370,6 +372,7 @@ export struct LongFormExportReviewCard {
     if (this.hasValue(value)) {
       Column() {
         Text(label)
+          .fontFamily('NotoSansSC-Regular')
           .fontSize(CompactReviewTextStyle.labelSize)
           .lineHeight(CompactReviewTextStyle.labelLineHeight)
           .fontWeight(FontWeight.Medium)
@@ -378,6 +381,7 @@ export struct LongFormExportReviewCard {
           .width('100%')
 
         Text(cleanExportDisplayText(value))
+          .fontFamily('NotoSansSC-Regular')
           .fontSize(CompactReviewTextStyle.bodySize)
           .lineHeight(CompactReviewTextStyle.bodyLineHeight)
           .fontColor(ExportCardColors.bodyText)
@@ -444,6 +448,7 @@ export struct LongFormExportReviewCard {
 
       Row() {
         Text(formatReviewTime(this.document.updatedAt))
+          .fontFamily('NotoSansSC-Regular')
           .fontSize(EXPORT_CARD_META_SIZE)
           .lineHeight(EXPORT_CARD_META_LINE_HEIGHT)
           .fontColor(ExportCardColors.metaText)
@@ -452,6 +457,7 @@ export struct LongFormExportReviewCard {
         Blank()
 
         Text(getExportJudgementText(this.document.content.judgement))
+          .fontFamily('NotoSansSC-Regular')
           .fontSize(EXPORT_CARD_META_SIZE)
           .lineHeight(EXPORT_CARD_META_LINE_HEIGHT)
           .fontColor(ExportCardColors.metaText)

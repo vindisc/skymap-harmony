@@ -28,6 +28,7 @@ export struct ReviewInfoItem {
           .margin({ bottom: this.dividerBottomGap })
       }
       Text(this.label)
+        .fontFamily('NotoSansSC-Regular')
         .fontSize(this.labelSize)
         .fontWeight(FontWeight.Medium)
         .fontColor(this.labelColor)
@@ -37,6 +38,7 @@ export struct ReviewInfoItem {
         .lineBreakStrategy(LineBreakStrategy.HIGH_QUALITY)
         .textOverflow({ overflow: TextOverflow.Clip })
       Text(this.value.length > 0 ? this.value : '待填写')
+        .fontFamily('NotoSansSC-Regular')
         .fontSize(this.bodySize)
         .fontWeight(FontWeight.Regular)
         .fontColor(this.value.length > 0 ? this.bodyColor : this.labelColor)

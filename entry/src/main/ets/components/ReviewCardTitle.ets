@@ -10,6 +10,7 @@ export struct ReviewCardTitle {
 
   build() {
     Text(this.title.length > 0 ? this.title : DEFAULT_REVIEW_TITLE)
+      .fontFamily('NotoSansSC-Bold')
       .fontSize(this.titleSize)
       .fontWeight(FontWeight.Bold)
       .fontColor(this.titleColor)

@@ -50,6 +50,7 @@ export struct ReadingReviewRecord {
   @Builder
   MetaTag(label: string) {
     Text(label)
+      .fontFamily('NotoSansSC-Regular')
       .fontSize(AppTypography.caption)
       .fontWeight(FontWeight.Medium)
       .fontColor(label === '成立' ? AppColors.tagGreenText : (label === '不成立' ? AppColors.tagAmberText : AppColors.secondaryText))
@@ -62,6 +63,7 @@ export struct ReadingReviewRecord {
   SaveStateTag() {
     if (this.saveStateLabel.length > 0) {
       Text(this.saveStateLabel)
+        .fontFamily('NotoSansSC-Regular')
         .fontSize(AppTypography.caption)
         .fontWeight(FontWeight.Medium)
         .fontColor(this.getSaveStateTextColor())
@@ -85,12 +87,14 @@ export struct ReadingReviewRecord {
       }
 
       Text(label)
+        .fontFamily('NotoSansSC-Regular')
         .fontSize(AppTypography.auxiliary)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.mutedText)
         .width('100%')
 
       Text(value.length > 0 ? value : '待补充')
+        .fontFamily('NotoSansSC-Regular')
         .fontSize(AppTypography.body)
         .fontColor(value.length > 0 ? AppColors.text : AppColors.secondaryText)
         .lineHeight(AppTypography.bodyLineHeight)
@@ -120,6 +124,7 @@ export struct ReadingReviewRecord {
 
       Column() {
         Text(this.document.content.title.length > 0 ? this.document.content.title : '这张照片是否成立')
+          .fontFamily('NotoSansSC-Bold')
           .fontSize(AppTypography.level2)
           .fontWeight(FontWeight.Bold)
           .fontColor(AppColors.text)
@@ -130,6 +135,7 @@ export struct ReadingReviewRecord {
 
         Row({ space: AppMetrics.space16 }) {
           Text(formatReviewTime(this.document.updatedAt))
+            .fontFamily('NotoSansSC-Regular')
             .fontSize(AppTypography.auxiliary)
             .fontColor(AppColors.secondaryText)
             .layoutWeight(1)
