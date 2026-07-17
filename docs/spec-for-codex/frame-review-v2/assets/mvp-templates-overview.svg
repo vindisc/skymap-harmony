@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480" font-family="-apple-system, 'Noto Sans SC', sans-serif">
+  <defs>
+    <linearGradient id="photoA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d6d3cd"/>
+      <stop offset="100%" stop-color="#b8b4ac"/>
+    </linearGradient>
+    <linearGradient id="photoB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c9c1b0"/>
+      <stop offset="100%" stop-color="#9e957f"/>
+    </linearGradient>
+    <linearGradient id="cardShadow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00000000"/>
+      <stop offset="100%" stop-color="#00000018"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="480" fill="#f5f4f2"/>
+  <text x="480" y="34" font-size="18" fill="#161616" font-weight="600" text-anchor="middle">MVP · 四模板缩略图总览</text>
+  <text x="480" y="54" font-size="12" fill="#8a8680" text-anchor="middle">L0 相框 → L1 参数 → L2 一句话 → L3 复盘</text>
+
+  <!-- L0 · white_equal -->
+  <g transform="translate(60, 90)">
+    <rect x="0" y="0" width="180" height="330" fill="#ffffff" stroke="#e0dcd4" stroke-width="1"/>
+    <rect x="0" y="0" width="180" height="330" fill="url(#cardShadow)"/>
+    <rect x="18" y="18" width="144" height="240" fill="url(#photoA)"/>
+    <circle cx="60" cy="70" r="12" fill="#f0e6d0" opacity="0.75"/>
+    <polygon points="18,258 50,190 88,222 128,180 162,258" fill="#8b8578" opacity="0.85"/>
+
+    <!-- 标签 -->
+    <text x="90" y="380" font-size="14" fill="#161616" font-weight="600" text-anchor="middle">纯白画廊</text>
+    <text x="90" y="400" font-size="11" fill="#8a8680" text-anchor="middle">L0 · white_equal</text>
+    <text x="90" y="420" font-size="10" fill="#8a8680" text-anchor="middle">0 字段 · 等宽白框</text>
+  </g>
+
+  <!-- L1 · meta_bottom -->
+  <g transform="translate(280, 90)">
+    <rect x="0" y="0" width="180" height="330" fill="#ffffff" stroke="#e0dcd4" stroke-width="1"/>
+    <rect x="0" y="0" width="180" height="330" fill="url(#cardShadow)"/>
+    <rect x="14" y="14" width="152" height="228" fill="url(#photoA)"/>
+    <circle cx="60" cy="60" r="12" fill="#f0e6d0" opacity="0.75"/>
+    <polygon points="14,242 50,180 88,210 128,170 166,242" fill="#8b8578" opacity="0.85"/>
+    <text x="14" y="272" font-size="10" fill="#161616" font-weight="700">SONY A7M4</text>
+    <text x="166" y="272" font-size="9" fill="#5f6368" text-anchor="end">35mm f/2.8 1/500 ISO400</text>
+
+    <text x="90" y="380" font-size="14" fill="#161616" font-weight="600" text-anchor="middle">参数底栏</text>
+    <text x="90" y="400" font-size="11" fill="#8a8680" text-anchor="middle">L1 · meta_bottom</text>
+    <text x="90" y="420" font-size="10" fill="#8a8680" text-anchor="middle">0 字段 · EXIF 参数</text>
+  </g>
+
+  <!-- L2 · signature_overlay -->
+  <g transform="translate(500, 90)">
+    <rect x="0" y="0" width="180" height="330" fill="#f6f1e8" stroke="#e0dcd4" stroke-width="1"/>
+    <rect x="0" y="0" width="180" height="330" fill="url(#cardShadow)"/>
+    <rect x="16" y="16" width="148" height="228" fill="url(#photoB)"/>
+    <circle cx="60" cy="62" r="12" fill="#e0d0a8" opacity="0.75"/>
+    <polygon points="16,244 50,180 88,214 128,170 164,244" fill="#75705f" opacity="0.85"/>
+    <text x="90" y="284" font-size="13" fill="#3a2e1f" font-style="italic" text-anchor="middle" font-family="'Noto Serif SC', serif">—— 秋的第一场雨 ——</text>
+
+    <text x="90" y="380" font-size="14" fill="#161616" font-weight="600" text-anchor="middle">手写签名</text>
+    <text x="90" y="400" font-size="11" fill="#8a8680" text-anchor="middle">L2 · signature_overlay</text>
+    <text x="90" y="420" font-size="10" fill="#8a8680" text-anchor="middle">1 字段 · 一句话</text>
+  </g>
+
+  <!-- L3 · adaptive_review_card -->
+  <g transform="translate(720, 90)">
+    <rect x="0" y="0" width="180" height="330" rx="4" fill="#ffffff" stroke="#e0dcd4" stroke-width="1"/>
+    <rect x="0" y="0" width="180" height="330" rx="4" fill="url(#cardShadow)"/>
+    <rect x="12" y="12" width="156" height="140" fill="url(#photoA)"/>
+    <circle cx="52" cy="42" r="10" fill="#f0e6d0" opacity="0.75"/>
+    <polygon points="12,152 44,110 78,132 116,102 168,152" fill="#8b8578" opacity="0.85"/>
+    <!-- 标题 -->
+    <text x="12" y="176" font-size="11" fill="#161616" font-weight="700">这张照片是否成立</text>
+    <text x="12" y="188" font-size="8" fill="#5f6368">2026-07-16 · 见遇 · 成立</text>
+
+    <!-- 字段 mockup -->
+    <g font-size="8">
+      <text x="12" y="206" fill="#8a8680">视觉落点</text>
+      <line x1="52" y1="204" x2="168" y2="204" stroke="#c9c6c1" stroke-width="0.6"/>
+      <text x="12" y="220" fill="#8a8680">落点原因</text>
+      <line x1="52" y1="218" x2="168" y2="218" stroke="#c9c6c1" stroke-width="0.6"/>
+      <text x="12" y="234" fill="#8a8680">视线路径</text>
+      <line x1="52" y1="232" x2="168" y2="232" stroke="#c9c6c1" stroke-width="0.6"/>
+      <text x="12" y="248" fill="#8a8680">画面事实</text>
+      <line x1="52" y1="246" x2="168" y2="246" stroke="#c9c6c1" stroke-width="0.6"/>
+      <text x="12" y="262" fill="#8a8680">核心关系</text>
+      <line x1="52" y1="260" x2="168" y2="260" stroke="#c9c6c1" stroke-width="0.6"/>
+      <text x="12" y="276" fill="#8a8680">延伸理解</text>
+      <line x1="52" y1="274" x2="168" y2="274" stroke="#c9c6c1" stroke-width="0.6"/>
+      <text x="12" y="290" fill="#8a8680">当前卡点</text>
+      <line x1="52" y1="288" x2="168" y2="288" stroke="#c9c6c1" stroke-width="0.6"/>
+    </g>
+
+    <text x="90" y="380" font-size="14" fill="#161616" font-weight="600" text-anchor="middle">摄影复盘卡</text>
+    <text x="90" y="400" font-size="11" fill="#8a8680" text-anchor="middle">L3 · adaptive_review_card</text>
+    <text x="90" y="420" font-size="10" fill="#8a8680" text-anchor="middle">8 字段 · 完整复盘</text>
+  </g>
+
+  <!-- 底部说明 -->
+  <text x="480" y="460" font-size="10" fill="#8a8680" text-anchor="middle">相对尺寸公式详见 spec-20260716-frame-review-v2-mvp-templates.md · 第 7 节</text>
+</svg>
