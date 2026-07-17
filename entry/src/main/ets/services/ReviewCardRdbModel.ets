@@ -6,6 +6,7 @@ import {
   ReviewCardHistoryItem,
   ReviewJudgementStatus
 } from '../model/ReviewCardModel';
+import { upgradeVersionOnPersist } from './VersionUpgrader';
 
 export const REVIEW_LIBRARY_RDB_NAME: string = 'review_library.db';
 export const REVIEW_LIBRARY_RDB_TABLE: string = 'reviews';
@@ -121,7 +122,7 @@ export class ReviewCardRdbMapper {
     reviewId?: string,
     backupJsonPath: string = ''
   ): ReviewCardRdbRow {
-    const document: ReviewCardDocument = cloneReviewCardDocument(item.document);
+    const document: ReviewCardDocument = upgradeVersionOnPersist(item.document);
     const content = document.content;
     const rawDocumentJson: string = JSON.stringify(document);
     return {

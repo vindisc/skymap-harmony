@@ -22,6 +22,7 @@ import { ReviewCardRdbMapper, ReviewLibraryStats, ReviewListQuery } from './Revi
 import { ReviewJsonBackupResult, ReviewJsonExportService } from './ReviewJsonExportService';
 import { ReviewLibraryRefreshService } from './ReviewLibraryRefreshService';
 import { PendingReviewPhotoStore } from './PendingReviewPhotoStore';
+import { upgradeVersionOnPersist } from './VersionUpgrader';
 
 const PREFERENCES_NAME: string = 'review_card_history';
 const HISTORY_KEY: string = 'items';
@@ -834,38 +835,40 @@ export class ReviewCardHistoryService {
   }
 
   static async saveDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
+    const persistedDocument: ReviewCardDocument = upgradeVersionOnPersist(document);
     try {
       const existingItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      const savedItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.buildSavedItems(existingItems, document);
+      const savedItems: Array<ReviewCardHistoryItem> = ReviewCardHistoryService.buildSavedItems(existingItems, persistedDocument);
       const savedItem: ReviewCardHistoryItem = savedItems[0];
-      await ReviewCardRdbService.upsertReview(context, savedItem, getReviewDocumentKey(document));
+      await ReviewCardRdbService.upsertReview(context, savedItem, getReviewDocumentKey(persistedDocument));
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
-      await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+      await ReviewCardHistoryService.writeRecoverableBackup(context, persistedDocument);
       notifyReviewLibraryChanged('save_document');
       return ReviewCardHistoryService.load(context);
     } catch (error) {
-      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, persistedDocument);
       console.error(`[ReviewCardHistoryService] RDB 保存失败，已停止 Preferences 主索引回退，backup=${backupResult.success}, path=${backupResult.path}, error=${error}`);
       throw createRdbWriteError('保存', error as Error | Object | string | undefined);
     }
   }
 
   static async updateDocument(context: common.UIAbilityContext, document: ReviewCardDocument): Promise<Array<ReviewCardHistoryItem>> {
+    const persistedDocument: ReviewCardDocument = upgradeVersionOnPersist(document);
     try {
-      const key = getReviewDocumentKey(document);
+      const key = getReviewDocumentKey(persistedDocument);
       const existingItem: ReviewCardHistoryItem | undefined = await ReviewCardRdbService.getReview(context, key);
       await ReviewCardRdbService.upsertReview(
         context,
-        createHistoryItem(document, existingItem ? existingItem.exportedPath : ''),
+        createHistoryItem(persistedDocument, existingItem ? existingItem.exportedPath : ''),
         key
       );
       await ReviewCardHistoryService.markRdbMainIndexReady(context);
       const latestItems: Array<ReviewCardHistoryItem> = await ReviewCardHistoryService.load(context);
-      await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+      await ReviewCardHistoryService.writeRecoverableBackup(context, persistedDocument);
       notifyReviewLibraryChanged('update_document');
       return latestItems;
     } catch (error) {
-      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, document);
+      const backupResult: RecoverableBackupResult = await ReviewCardHistoryService.writeRecoverableBackup(context, persistedDocument);
       console.error(`[ReviewCardHistoryService] RDB 更新失败，已停止 Preferences 主索引回退，backup=${backupResult.success}, path=${backupResult.path}, error=${error}`);
       throw createRdbWriteError('更新', error as Error | Object | string | undefined);
     }
@@ -924,6 +927,9 @@ export class ReviewCardHistoryService {
     return ReviewCardHistoryService.rememberItems(restoredItems);
   }
 
+  // v2 扩展字段说明：本备份遵循 Review JSON Schema v1，不含 frame /
+  // templateLevel / exif。若 RDB 损坏后从此备份恢复，用户会失去 v2
+  // 模板与 EXIF 状态。此降级已在 schema-alignment §5 显式接受。
   private static async writeRecoverableBackup(
     context: common.UIAbilityContext,
     document: ReviewCardDocument

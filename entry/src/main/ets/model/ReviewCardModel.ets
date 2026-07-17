@@ -1,3 +1,7 @@
+import { EXIF_PAYLOAD_EMPTY, ExifPayload, normalizeExifPayload } from './ExifPayloadModel';
+import { FrameConfigSpec, normalizeFrameConfig } from './FrameConfigModel';
+import { resolveTemplate, TemplateLevel } from './TemplateModel';
+
 export enum ReviewCardLayoutMode {
   AUTO = 'auto',
   HORIZONTAL_PHOTO_BOTTOM_TEXT = 'horizontalPhotoBottomText',
@@ -66,6 +70,8 @@ export interface ReviewCardConfig {
   layoutMode: ReviewCardLayoutMode;
   background: ReviewCardBackground;
   textSize: ReviewCardTextSize;
+  frame?: FrameConfigSpec;
+  templateLevel?: TemplateLevel;
 }
 
 export interface ReviewCardDocument {
@@ -79,6 +85,7 @@ export interface ReviewCardDocument {
   config: ReviewCardConfig;
   createdAt: number;
   updatedAt: number;
+  exif?: ExifPayload;
 }
 
 export interface ReviewCardHistoryItem {
@@ -165,7 +172,7 @@ export function createDefaultReviewContent(): ReviewContent {
 export function createDefaultReviewCardDocument(): ReviewCardDocument {
   const now: number = Date.now();
   return {
-    version: '0.1.0',
+    version: '0.2.0',
     projectId: DEFAULT_PROJECT_ID,
     imageUri: '',
     imageWidth: 1600,
@@ -187,6 +194,8 @@ export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCar
   const fallbackDocument = createDefaultReviewCardDocument();
   const sourceContent = document.content ? document.content : createDefaultReviewContent();
   const sourceConfig = document.config ? document.config : fallbackDocument.config;
+  const templateId = normalizeReviewText(sourceConfig.templateId, fallbackDocument.config.templateId);
+  const template = resolveTemplate(templateId);
   const extendedUnderstanding = normalizeReviewText(sourceContent.extendedUnderstanding);
   const judgement = normalizeReviewJudgement(normalizeReviewText(sourceContent.judgement, extendedUnderstanding));
   return {
@@ -208,13 +217,18 @@ export function cloneReviewCardDocument(document: ReviewCardDocument): ReviewCar
       currentBlocker: normalizeReviewText(sourceContent.currentBlocker, normalizeReviewText(sourceContent.blocker))
     },
     config: {
-      templateId: normalizeReviewText(sourceConfig.templateId, fallbackDocument.config.templateId),
+      templateId: templateId,
       layoutMode: sourceConfig.layoutMode ? sourceConfig.layoutMode : fallbackDocument.config.layoutMode,
       background: sourceConfig.background ? sourceConfig.background : fallbackDocument.config.background,
-      textSize: sourceConfig.textSize ? sourceConfig.textSize : fallbackDocument.config.textSize
+      textSize: sourceConfig.textSize ? sourceConfig.textSize : fallbackDocument.config.textSize,
+      frame: sourceConfig.frame !== undefined
+        ? normalizeFrameConfig(sourceConfig.frame, template.defaults.frame)
+        : normalizeFrameConfig(undefined, template.defaults.frame),
+      templateLevel: template.level
     },
     createdAt: normalizeReviewNumber(document.createdAt, fallbackDocument.createdAt),
-    updatedAt: normalizeReviewNumber(document.updatedAt, fallbackDocument.updatedAt)
+    updatedAt: normalizeReviewNumber(document.updatedAt, fallbackDocument.updatedAt),
+    exif: document.exif !== undefined ? normalizeExifPayload(document.exif) : normalizeExifPayload(EXIF_PAYLOAD_EMPTY)
   };
 }
 
