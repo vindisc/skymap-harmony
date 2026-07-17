@@ -42,12 +42,14 @@ export enum DebugTestScenario {
   WIDGET_CARD_SETTINGS = 'widget_card_settings',
   HOME_STORAGE = 'home_storage',
   REVIEW_SETTINGS = 'review_settings',
-  SYNC_CENTER = 'sync_center'
+  SYNC_CENTER = 'sync_center',
+  CANVAS_SPIKE = 'canvas_spike'
 }
 
 export class DebugLaunchScenarioService {
   private static pendingInitialPage: string = '';
   private static automatedTestLaunch: boolean = false;
+  private static canvasSpikeScenario: boolean = false;
 
   static captureWant(want: Want | undefined, isDebugBuild: boolean): void {
     if (!isDebugBuild) {
@@ -56,6 +58,7 @@ export class DebugLaunchScenarioService {
     const scenarioValue: Object | undefined = want?.parameters?.[DEBUG_TEST_SCENARIO_KEY];
     const scenario: string = `${scenarioValue ?? ''}`;
     DebugLaunchScenarioService.automatedTestLaunch = scenario.length > 0;
+    DebugLaunchScenarioService.canvasSpikeScenario = scenario === DebugTestScenario.CANVAS_SPIKE;
     DebugLaunchScenarioService.pendingInitialPage = DebugLaunchScenarioService.resolveDirectPage(scenario);
     if (DebugLaunchScenarioService.pendingInitialPage.length > 0) {
       DebugLaunchScenarioService.prepareDraft(scenario);
@@ -76,6 +79,10 @@ export class DebugLaunchScenarioService {
 
   static isAutomatedTestLaunch(): boolean {
     return DebugLaunchScenarioService.automatedTestLaunch;
+  }
+
+  static isCanvasSpikeScenario(): boolean {
+    return DebugLaunchScenarioService.canvasSpikeScenario;
   }
 
   private static resolveRoute(scenario: string): string {
@@ -115,6 +122,9 @@ export class DebugLaunchScenarioService {
     }
     if (scenario === DebugTestScenario.SYNC_CENTER) {
       return SYNC_CENTER_PAGE;
+    }
+    if (scenario === DebugTestScenario.CANVAS_SPIKE) {
+      return APP_SHELL_PAGE;
     }
     return '';
   }

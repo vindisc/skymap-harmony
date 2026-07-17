@@ -26,7 +26,7 @@
 
 **阻塞阶段 A**（PR 1~3 启动前必须由用户回答）
 
-1. **Canvas 合成性能 / 内存 spike**（data-model §8 阻塞 A · 第 1 项）：目标 SDK 6.1.1(24) `OffscreenCanvas` + `context.getPixelMap` API 通路已确认可用，待验证的是原图 7008×4672 尺寸下的内存 / 耗时是否可接受，需一次真机 spike。
+1. **Canvas 合成性能 / 内存 spike**（data-model §8 阻塞 A · 第 1 项）：目标 SDK 6.1.1(24) `OffscreenCanvas` + `context.getPixelMap` API 通路已确认可用，待验证的是原图 7008×4672 尺寸下的内存 / 耗时是否可接受，需一次真机 spike。**Spike 触发方式**：`hdc shell aa start -a EntryAbility -b com.vindisc.skymap --ps testScenario canvas_spike`，跑完后用 `hdc shell hilog | grep CanvasSpike` 抓输出，或执行 `hdc file recv /data/storage/el2/base/files/canvas-spike-report.json` 拉取报告。
 2. **老 RDB `raw_document_json` 中的 `config` 是否升级重写**（data-model §8 阻塞 A · 第 2 项）：默认不重写，读取走 fallback 分支。
 3. **阶段 A 完成后是否切分支冻结**（data-model §8 阻塞 A · 第 3 项）：建议切，作为回退基线。
 4. **思源黑体 CN 资产入口**（data-model §8 阻塞 A · 第 4 项）：`rawfile/` vs `resources/base/font/`。**影响 PR 2 与 PR 3**：PR 2 顺带切 L3 组件族（精确文件清单见 mvp §10 PR 2，13 个文件）的字体到 `NotoSansSC-*`；PR 3 L3 Canvas 通路首次输出用最终字体交人工审查建立回归基线 —— 两者都要字体资产先入库。若无法在 A 阶段引入，则 PR 2/3 用系统字体，未来正式换字体时需重新人工审查并**更新导出图回归基线**（不再是"重跑 diff"，因为首次验收是人工审查而非 pixel diff）。

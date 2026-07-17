@@ -6,6 +6,7 @@ import window from '@ohos.window';
 import { FormLaunchIntentService } from '../services/FormLaunchIntentService';
 import { LearningProgressFormService } from '../services/LearningProgressFormService';
 import { DebugLaunchScenarioService } from '../services/DebugLaunchScenarioService';
+import { CanvasSpikeService } from '../services/CanvasSpikeService';
 import { MotionQualityContext } from '../theme/MotionQualityContext';
 
 const APP_PAGE_BACKGROUND: string = '#F5F1E9';
@@ -64,6 +65,11 @@ export default class EntryAbility extends UIAbility {
       windowStage,
       debugInitialPage.length > 0 ? debugInitialPage : 'pages/AppShellPage'
     );
+    if (DebugLaunchScenarioService.isCanvasSpikeScenario()) {
+      CanvasSpikeService.runSpike(this.context).catch((error: Error) => {
+        console.error(`[CanvasSpike] 失败：${error.message}`);
+      });
+    }
     LearningProgressFormService.refreshAllForms(this.context).catch((error: Error) => {
       console.warn(`[EntryAbility] 学习进度服务卡片同步失败：${error.message}`);
     });
