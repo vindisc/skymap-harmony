@@ -7,6 +7,7 @@ import { FormLaunchIntentService } from '../services/FormLaunchIntentService';
 import { LearningProgressFormService } from '../services/LearningProgressFormService';
 import { DebugLaunchScenarioService } from '../services/DebugLaunchScenarioService';
 import { CanvasSpikeService } from '../services/CanvasSpikeService';
+import { CanvasSpikeV2Service } from '../services/CanvasSpikeV2Service';
 import { MotionQualityContext } from '../theme/MotionQualityContext';
 
 const APP_PAGE_BACKGROUND: string = '#F5F1E9';
@@ -65,7 +66,11 @@ export default class EntryAbility extends UIAbility {
       windowStage,
       debugInitialPage.length > 0 ? debugInitialPage : 'pages/AppShellPage'
     );
-    if (DebugLaunchScenarioService.isCanvasSpikeScenario()) {
+    if (DebugLaunchScenarioService.isCanvasSpikeV2Scenario()) {
+      CanvasSpikeV2Service.runEncoderPoC(this.context).catch((error: Error) => {
+        console.error(`[CanvasSpikeV2] 失败：${error.message}`);
+      });
+    } else if (DebugLaunchScenarioService.isCanvasSpikeScenario()) {
       CanvasSpikeService.runSpike(this.context).catch((error: Error) => {
         console.error(`[CanvasSpike] 失败：${error.message}`);
       });

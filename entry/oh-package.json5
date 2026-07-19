@@ -5,5 +5,7 @@
   "main": "",
   "author": "skymap",
   "license": "UNLICENSED",
-  "dependencies": {}
+  "dependencies": {
+    "libjpeg_encoder.so": "file:./src/main/cpp/types/libjpeg_encoder"
+  }
 }

@@ -1,0 +1,6 @@
+{
+  "name": "libjpeg_encoder.so",
+  "version": "1.0.0",
+  "description": "Skymap libjpeg-turbo scan-line encoder NAPI types",
+  "types": "./Index.d.ts"
+}

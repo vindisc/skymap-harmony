@@ -3,6 +3,7 @@
 .ohpm/
 build/
 entry/build/
+entry/.cxx/
 entry/.test/
 oh_modules/
 .DS_Store
