@@ -703,7 +703,12 @@ Preview 页顶部保留现有的"导出"入口，改造为下拉菜单：
 - PR 4：L0 `white_equal` 模板落地（TEMPLATE_REGISTRY 已填，本 PR 补 Canvas 合成实现 + 模板缩略图 chip + 新增 `utils/TemplateApply.ets` 中的 `applyTemplateToDocument(document, templateId): ReviewCardDocument` 工具函数，用于跨页面切模板；本函数不修改入参 document，返回新对象）
 - PR 5：L1 `meta_bottom` 模板 + EXIF 读取服务（`ExifReaderService` 基于 `image.ImageSource.getImageProperty`）+ **独立的 `ExifSheet` 组件**（作为可复用组件文件交付，本 PR 不接入编辑器 UI —— 编辑器骨架在 PR 6 才创建）。**明确**：EditorPage `aboutToAppear()` 调用 EXIF 服务、把 payload 合并进 document 状态属**PR 6 责任**，PR 5 不动 EditorPage
 - PR 6：编辑器一屏三区改造第一版（区 A 预览 + 区 B1 档位 tab 显示 **L0/L1/L2/L3 四档**（**L2 chip 灰置不可点，PR 8 才启用**）+ 区 B2 模板横滑 + 区 C 抽屉入口 + L0/L1/L3 三档切换 + **接入 PR 5 交付的 `ExifSheet` 组件到抽屉入口** + EditorPage aboutToAppear 内调用 EXIF 服务与状态合并）
-- PR 7：Preview 页导出下拉菜单（原图 / 屏幕分辨率 / 复盘包 / 复盘包含原图）
+- PR 7：Preview 页导出下拉菜单（原图 / 屏幕分辨率 / 复盘包 / 复盘包含原图）+ **我的页面全局默认开关（2026-07-19 追加）**：在"我的页面 · 复盘设置"里加一个开关"默认走原图分辨率导出" ON/OFF。语义：
+  - 开关 ON（默认 OFF）：用户点导出按钮**跳过下拉菜单**，直接按原图分辨率合成走 `exportOriginalResolution` 服务
+  - 开关 OFF：保留 PR 7 原设计的**下拉菜单**（原图 / 屏幕分辨率 / 复盘包 / 复盘包含原图 四选一）
+  - 两种模式并存不冲突：开关 = 全局默认路径，下拉菜单 = 单次临时选择
+  - 落位：Preferences 里新增布尔字段 `exportDefaultOriginalResolution`，由"我的页面 · 复盘设置"里读写；PreviewPage 导出按钮 tap handler 里先读该字段决定分支
+  - **用户诉求来源**：PR 3 视觉验收后，用户反馈"我需要一个我的页面开关控制原图/压缩"
 
 **阶段 C · 深度扩展**
 
