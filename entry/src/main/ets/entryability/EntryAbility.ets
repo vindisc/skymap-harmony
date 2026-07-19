@@ -10,6 +10,7 @@ import { CanvasSpikeService } from '../services/CanvasSpikeService';
 import { CanvasSpikeV2Service } from '../services/CanvasSpikeV2Service';
 import { CanvasSpikeV2DecodeService } from '../services/CanvasSpikeV2DecodeService';
 import { CanvasSpikeV2L0ExportService } from '../services/CanvasSpikeV2L0ExportService';
+import { CanvasSpikeV2L1ExportService } from '../services/CanvasSpikeV2L1ExportService';
 import { CanvasSpikeV2L3ExportService } from '../services/CanvasSpikeV2L3ExportService';
 import { MotionQualityContext } from '../theme/MotionQualityContext';
 
@@ -69,7 +70,11 @@ export default class EntryAbility extends UIAbility {
       windowStage,
       debugInitialPage.length > 0 ? debugInitialPage : 'pages/AppShellPage'
     );
-    if (DebugLaunchScenarioService.isCanvasSpikeV2L0ExportScenario()) {
+    if (DebugLaunchScenarioService.isCanvasSpikeV2L1ExportScenario()) {
+      CanvasSpikeV2L1ExportService.runL1ExportPoC(this.context).catch((error: Error) => {
+        console.error(`[CanvasSpikeV2L1Export] 失败：${error.message}`);
+      });
+    } else if (DebugLaunchScenarioService.isCanvasSpikeV2L0ExportScenario()) {
       CanvasSpikeV2L0ExportService.runL0ExportPoC(this.context).catch((error: Error) => {
         console.error(`[CanvasSpikeV2L0Export] 失败：${error.message}`);
       });

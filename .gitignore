@@ -35,3 +35,7 @@ test-artifacts/*
 !test-artifacts/pixel-diff-baseline/
 !test-artifacts/pixel-diff-baseline/export/
 !test-artifacts/pixel-diff-baseline/export/README.md
+
+# IDE / native build 本地生成
+.clangd
+.clang-tidy
