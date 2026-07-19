@@ -46,7 +46,8 @@ export enum DebugTestScenario {
   CANVAS_SPIKE = 'canvas_spike',
   CANVAS_SPIKE_V2 = 'canvas_spike_v2',
   CANVAS_SPIKE_V2_DECODE = 'canvas_spike_v2_decode',
-  CANVAS_SPIKE_V2_L3_EXPORT = 'canvas_spike_v2_l3_export'
+  CANVAS_SPIKE_V2_L3_EXPORT = 'canvas_spike_v2_l3_export',
+  CANVAS_SPIKE_V2_L0_EXPORT = 'canvas_spike_v2_l0_export'
 }
 
 export class DebugLaunchScenarioService {
@@ -56,6 +57,7 @@ export class DebugLaunchScenarioService {
   private static canvasSpikeV2Scenario: boolean = false;
   private static canvasSpikeV2DecodeScenario: boolean = false;
   private static canvasSpikeV2L3ExportScenario: boolean = false;
+  private static canvasSpikeV2L0ExportScenario: boolean = false;
 
   static captureWant(want: Want | undefined, isDebugBuild: boolean): void {
     if (!isDebugBuild) {
@@ -70,6 +72,8 @@ export class DebugLaunchScenarioService {
       scenario === DebugTestScenario.CANVAS_SPIKE_V2_DECODE;
     DebugLaunchScenarioService.canvasSpikeV2L3ExportScenario =
       scenario === DebugTestScenario.CANVAS_SPIKE_V2_L3_EXPORT;
+    DebugLaunchScenarioService.canvasSpikeV2L0ExportScenario =
+      scenario === DebugTestScenario.CANVAS_SPIKE_V2_L0_EXPORT;
     DebugLaunchScenarioService.pendingInitialPage = DebugLaunchScenarioService.resolveDirectPage(scenario);
     if (DebugLaunchScenarioService.pendingInitialPage.length > 0) {
       DebugLaunchScenarioService.prepareDraft(scenario);
@@ -106,6 +110,10 @@ export class DebugLaunchScenarioService {
 
   static isCanvasSpikeV2L3ExportScenario(): boolean {
     return DebugLaunchScenarioService.canvasSpikeV2L3ExportScenario;
+  }
+
+  static isCanvasSpikeV2L0ExportScenario(): boolean {
+    return DebugLaunchScenarioService.canvasSpikeV2L0ExportScenario;
   }
 
   private static resolveRoute(scenario: string): string {
@@ -156,6 +164,9 @@ export class DebugLaunchScenarioService {
       return APP_SHELL_PAGE;
     }
     if (scenario === DebugTestScenario.CANVAS_SPIKE_V2_L3_EXPORT) {
+      return APP_SHELL_PAGE;
+    }
+    if (scenario === DebugTestScenario.CANVAS_SPIKE_V2_L0_EXPORT) {
       return APP_SHELL_PAGE;
     }
     return '';
