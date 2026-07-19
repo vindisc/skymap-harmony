@@ -44,7 +44,8 @@ export enum DebugTestScenario {
   REVIEW_SETTINGS = 'review_settings',
   SYNC_CENTER = 'sync_center',
   CANVAS_SPIKE = 'canvas_spike',
-  CANVAS_SPIKE_V2 = 'canvas_spike_v2'
+  CANVAS_SPIKE_V2 = 'canvas_spike_v2',
+  CANVAS_SPIKE_V2_DECODE = 'canvas_spike_v2_decode'
 }
 
 export class DebugLaunchScenarioService {
@@ -52,6 +53,7 @@ export class DebugLaunchScenarioService {
   private static automatedTestLaunch: boolean = false;
   private static canvasSpikeScenario: boolean = false;
   private static canvasSpikeV2Scenario: boolean = false;
+  private static canvasSpikeV2DecodeScenario: boolean = false;
 
   static captureWant(want: Want | undefined, isDebugBuild: boolean): void {
     if (!isDebugBuild) {
@@ -62,6 +64,8 @@ export class DebugLaunchScenarioService {
     DebugLaunchScenarioService.automatedTestLaunch = scenario.length > 0;
     DebugLaunchScenarioService.canvasSpikeScenario = scenario === DebugTestScenario.CANVAS_SPIKE;
     DebugLaunchScenarioService.canvasSpikeV2Scenario = scenario === DebugTestScenario.CANVAS_SPIKE_V2;
+    DebugLaunchScenarioService.canvasSpikeV2DecodeScenario =
+      scenario === DebugTestScenario.CANVAS_SPIKE_V2_DECODE;
     DebugLaunchScenarioService.pendingInitialPage = DebugLaunchScenarioService.resolveDirectPage(scenario);
     if (DebugLaunchScenarioService.pendingInitialPage.length > 0) {
       DebugLaunchScenarioService.prepareDraft(scenario);
@@ -90,6 +94,10 @@ export class DebugLaunchScenarioService {
 
   static isCanvasSpikeV2Scenario(): boolean {
     return DebugLaunchScenarioService.canvasSpikeV2Scenario;
+  }
+
+  static isCanvasSpikeV2DecodeScenario(): boolean {
+    return DebugLaunchScenarioService.canvasSpikeV2DecodeScenario;
   }
 
   private static resolveRoute(scenario: string): string {
@@ -134,6 +142,9 @@ export class DebugLaunchScenarioService {
       return APP_SHELL_PAGE;
     }
     if (scenario === DebugTestScenario.CANVAS_SPIKE_V2) {
+      return APP_SHELL_PAGE;
+    }
+    if (scenario === DebugTestScenario.CANVAS_SPIKE_V2_DECODE) {
       return APP_SHELL_PAGE;
     }
     return '';
