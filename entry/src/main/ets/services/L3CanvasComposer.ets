@@ -2,6 +2,7 @@ import common from '@ohos.app.ability.common';
 import { BusinessError } from '@ohos.base';
 import fs from '@ohos.file.fs';
 import image from '@ohos.multimedia.image';
+import { LengthMetricsUnit } from '@kit.ArkUI';
 import libjpegEncoder, { JpegEncoderHandle } from 'libjpeg_encoder.so';
 import { AppColors, ExportCardColors } from '../components/AppDesign';
 import { CompactReviewTextStyle } from '../components/LongFormExportReviewCard';
@@ -37,7 +38,8 @@ interface SourceImageLayout {
 interface TextCommand {
   text: string;
   x: number;
-  baselineY: number;
+  topY: number;
+  heightPx: number;
   font: string;
   color: string;
   align: CanvasTextAlign;
@@ -258,19 +260,20 @@ function appendTextLines(
   align: CanvasTextAlign = 'left'
 ): number {
   const lines: Array<string> = wrapText(context, text, maxWidth, font);
-  let baselineY: number = startY;
+  let topY: number = startY;
   lines.forEach((line: string): void => {
     layout.texts.push({
       text: line,
       x: x,
-      baselineY: baselineY,
+      topY: topY,
+      heightPx: lineHeight,
       font: font,
       color: color,
       align: align
     });
-    baselineY += lineHeight;
+    topY += lineHeight;
   });
-  return baselineY;
+  return topY;
 }
 
 function createReviewField(label: string, value: string): ReviewField {
@@ -329,7 +332,7 @@ function buildTextLayout(
   const metaText: string = normalizeText(reviewerName).length > 0
     ? `${formatReviewTime(document.updatedAt)} / ${normalizeText(reviewerName)}`
     : formatReviewTime(document.updatedAt);
-  let cursorY: number = geometry.photoOffsetY + geometry.photoHeight + 20 * scale;
+  let cursorY: number = geometry.photoOffsetY + geometry.photoHeight + 8 * scale;
 
   if (geometry.isHorizontal) {
     const titlePanelHeight: number = 108 * scale;
@@ -397,10 +400,10 @@ function buildTextLayout(
         }
         fieldY = appendTextLines(result, measureContext, field.label, columnX, fieldY, columnWidth,
           labelFont, ExportCardColors.labelText, labelLineHeight);
-        fieldY += 4 * scale;
+        fieldY += 12 * scale;
         fieldY = appendTextLines(result, measureContext, field.value, columnX, fieldY, columnWidth,
           bodyFont, ExportCardColors.bodyText, bodyLineHeight);
-        fieldY += 9 * scale;
+        fieldY += 20 * scale;
       });
     });
   } else {
@@ -415,10 +418,10 @@ function buildTextLayout(
     allFields(document).forEach((field: ReviewField): void => {
       cursorY = appendTextLines(result, measureContext, field.label, contentX, cursorY,
         contentWidth, labelFont, ExportCardColors.metaText, labelLineHeight);
-      cursorY += 4 * scale;
+      cursorY += 12 * scale;
       cursorY = appendTextLines(result, measureContext, field.value, contentX, cursorY,
         contentWidth, bodyFont, ReviewCardStyleTokens.bodyColor, bodyLineHeight);
-      cursorY += 16 * scale;
+      cursorY += 24 * scale;
     });
   }
   return result;
@@ -439,12 +442,12 @@ function renderGlobalTextLayout(
     }
   });
   layout.texts.forEach((command: TextCommand): void => {
-    if (command.baselineY >= stripY && command.baselineY < stripY + stripHeight) {
+    if (command.topY + command.heightPx > stripY && command.topY < stripY + stripHeight) {
       context.font = command.font;
       context.fillStyle = command.color;
       context.textAlign = command.align;
-      context.textBaseline = 'alphabetic';
-      context.fillText(command.text, command.x, command.baselineY - stripY);
+      context.textBaseline = 'top';
+      context.fillText(command.text, command.x, command.topY - stripY);
     }
   });
 }
@@ -518,7 +521,7 @@ export class L3CanvasComposer {
       console.info(`[L3CanvasComposer] step 6: encoder handle=${encoderHandle.handleId}`);
 
       activeStage = 'buildTextLayout';
-      const measureCanvas: OffscreenCanvas = new OffscreenCanvas(1, 1);
+      const measureCanvas: OffscreenCanvas = new OffscreenCanvas(1, 1, LengthMetricsUnit.PX);
       const measureContext: OffscreenCanvasRenderingContext2D = measureCanvas.getContext('2d');
       const textLayout: TextLayout = buildTextLayout(input.document, input.reviewerName, geometry, measureContext);
       console.info('[L3CanvasComposer] step 7: text layout ok');
@@ -531,7 +534,11 @@ export class L3CanvasComposer {
         console.info(
           `[L3CanvasComposer] step 8.${stripIndex}: strip y=${stripY} h=${actualStripHeight} start`
         );
-        const canvas: OffscreenCanvas = new OffscreenCanvas(outputWidth, actualStripHeight);
+        const canvas: OffscreenCanvas = new OffscreenCanvas(
+          outputWidth,
+          actualStripHeight,
+          LengthMetricsUnit.PX
+        );
         const context: OffscreenCanvasRenderingContext2D = canvas.getContext('2d');
         activeStage = 'fillBackground';
         context.fillStyle = geometry.bgColorHex;
@@ -555,9 +562,25 @@ export class L3CanvasComposer {
           console.info(`[L3CanvasComposer] step 8.${stripIndex}.decode ok`);
           activeStage = 'getDecodedImageInfo';
           const decodedInfo: image.ImageInfo = await currentPhotoPixelMap.getImageInfo();
-          if (decodedInfo.size.width !== geometry.photoWidth || decodedInfo.size.height !== photoStripHeight) {
+          const decodedBytes: number = currentPhotoPixelMap.getPixelBytesNumber();
+          const decodedRowBytes: number = currentPhotoPixelMap.getBytesNumberPerRow();
+          const expectedDecodedRowBytes: number = geometry.photoWidth * RGBA_BYTES_PER_PIXEL;
+          const expectedDecodedBytes: number = expectedDecodedRowBytes * photoStripHeight;
+          console.info(
+            `[L3CanvasComposer] step 8.${stripIndex}.decodedInfo: ` +
+            `size=${decodedInfo.size.width}x${decodedInfo.size.height}, ` +
+            `pixelFormat=${decodedInfo.pixelFormat}, pixelBytes=${decodedBytes}, rowBytes=${decodedRowBytes}, ` +
+            `expected size=${geometry.photoWidth}x${photoStripHeight}, ` +
+            `expected pixelBytes=${expectedDecodedBytes}`
+          );
+          if (decodedInfo.size.width !== geometry.photoWidth ||
+            decodedInfo.size.height !== photoStripHeight ||
+            decodedInfo.pixelFormat !== image.PixelMapFormat.RGBA_8888 ||
+            decodedRowBytes < expectedDecodedRowBytes ||
+            decodedBytes < decodedRowBytes * photoStripHeight) {
             throw new Error(
-              `desiredRegion + rotate 尺寸异常：${decodedInfo.size.width}x${decodedInfo.size.height}`
+              `desiredRegion PixelMap 物理信息异常：size=${decodedInfo.size.width}x${decodedInfo.size.height}, ` +
+              `pixelFormat=${decodedInfo.pixelFormat}, pixelBytes=${decodedBytes}, rowBytes=${decodedRowBytes}`
             );
           }
           activeStage = 'drawImage';

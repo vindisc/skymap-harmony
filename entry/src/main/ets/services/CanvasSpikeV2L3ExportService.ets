@@ -7,7 +7,6 @@ import {
   ReviewJudgementStatus
 } from '../model/ReviewCardModel';
 import { L3CanvasComposeResult, L3CanvasComposer } from './L3CanvasComposer';
-import { CanvasSpikeV2Service } from './CanvasSpikeV2Service';
 
 export interface CanvasSpikeV2L3ExportReport {
   poc: 'l3_export';
@@ -29,7 +28,7 @@ export interface CanvasSpikeV2L3DecodeVerification {
   decodedHeight: number;
 }
 
-const SOURCE_FILE_NAME: string = 'canvas-spike-v2-encoder.jpg';
+const SOURCE_FILE_NAME: string = 'fixture-l3-photo.jpg';
 const OUTPUT_FILE_NAME: string = 'canvas-spike-v2-l3-export.jpg';
 const REPORT_FILE_NAME: string = 'canvas-spike-v2-l3-export-report.json';
 
@@ -66,11 +65,44 @@ function writeReport(context: common.UIAbilityContext, report: CanvasSpikeV2L3Ex
   }
 }
 
-function createFixtureDocument(sourcePath: string): ReviewCardDocument {
+async function ensureFixturePhotoInSandbox(context: common.UIAbilityContext): Promise<string> {
+  const sandboxPath: string = `${context.filesDir}/${SOURCE_FILE_NAME}`;
+  if (fs.accessSync(sandboxPath)) {
+    return sandboxPath;
+  }
+  const rawContent: Uint8Array = await context.resourceManager.getRawFileContent(SOURCE_FILE_NAME);
+  const contentBuffer: ArrayBuffer = new ArrayBuffer(rawContent.byteLength);
+  new Uint8Array(contentBuffer).set(rawContent);
+  const file: fs.File = fs.openSync(
+    sandboxPath,
+    fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC
+  );
+  try {
+    fs.writeSync(file.fd, contentBuffer);
+  } finally {
+    fs.closeSync(file);
+  }
+  return sandboxPath;
+}
+
+async function resolveFixtureImageSize(sourcePath: string): Promise<image.Size> {
+  const source: image.ImageSource = image.createImageSource(sourcePath);
+  try {
+    const info: image.ImageInfo = await source.getImageInfo();
+    return {
+      width: info.size.width,
+      height: info.size.height
+    };
+  } finally {
+    await source.release();
+  }
+}
+
+function createFixtureDocument(sourcePath: string, sourceSize: image.Size): ReviewCardDocument {
   const document: ReviewCardDocument = createDefaultReviewCardDocument();
   document.imageUri = sourcePath;
-  document.imageWidth = 7008;
-  document.imageHeight = 4672;
+  document.imageWidth = sourceSize.width;
+  document.imageHeight = sourceSize.height;
   document.content.title = '雨后街角的光线复盘';
   document.content.visualFocus = '人物与路面反光形成第一视觉落点';
   document.content.focusReason = '暖色人物与冷色环境之间的明暗反差明确';
@@ -100,7 +132,7 @@ async function verifyOutput(outputPath: string): Promise<CanvasSpikeV2L3DecodeVe
 export class CanvasSpikeV2L3ExportService {
   static async runL3ExportPoC(context: common.UIAbilityContext): Promise<CanvasSpikeV2L3ExportReport> {
     const startedAt: number = Date.now();
-    const sourcePath: string = `${context.filesDir}/${SOURCE_FILE_NAME}`;
+    const sourcePath: string = await ensureFixturePhotoInSandbox(context);
     const outputPath: string = `${context.filesDir}/${OUTPUT_FILE_NAME}`;
     const report: CanvasSpikeV2L3ExportReport = {
       poc: 'l3_export',
@@ -120,17 +152,10 @@ export class CanvasSpikeV2L3ExportService {
       notes: ''
     };
     try {
-      try {
-        fs.statSync(sourcePath);
-      } catch (error) {
-        const encoderReport = await CanvasSpikeV2Service.runEncoderPoC(context);
-        if (!encoderReport.passed) {
-          throw new Error(`前置 encoder PoC 失败：${encoderReport.notes}`);
-        }
-      }
+      const sourceSize: image.Size = await resolveFixtureImageSize(sourcePath);
       const composeResult: L3CanvasComposeResult = await L3CanvasComposer.compose({
         context: context,
-        document: createFixtureDocument(sourcePath),
+        document: createFixtureDocument(sourcePath, sourceSize),
         reviewerName: '示例复盘者',
         outputPath: outputPath
       });
