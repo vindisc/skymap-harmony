@@ -3,6 +3,8 @@ import fs from '@ohos.file.fs';
 import fileUri from '@ohos.file.fileuri';
 import photoAccessHelper from '@ohos.file.photoAccessHelper';
 import common from '@ohos.app.ability.common';
+import { ReviewCardDocument } from '../model/ReviewCardModel';
+import { L3CanvasComposeResult, L3CanvasComposer } from './L3CanvasComposer';
 
 export interface ReviewCardExportResult {
   success: boolean;
@@ -136,6 +138,80 @@ async function saveJpgToPhotoLibrary(context: common.UIAbilityContext, outputPat
 
 export class ReviewCardExportService {
   private static isExporting: boolean = false;
+
+  static async exportOriginalResolution(
+    context: common.UIAbilityContext,
+    document: ReviewCardDocument,
+    reviewerName: string
+  ): Promise<ReviewCardExportResult> {
+    if (ReviewCardExportService.isExporting) {
+      return {
+        success: false,
+        cancelled: false,
+        savedToPhotoLibrary: false,
+        path: '',
+        backupPath: '',
+        message: '导出进行中'
+      };
+    }
+
+    ReviewCardExportService.isExporting = true;
+    let backupPath: string = '';
+    try {
+      const timestamp: number = Date.now();
+      const outputDir: string = `${context.filesDir}/${EXPORT_DIR_NAME}`;
+      fs.mkdirSync(outputDir, true);
+      backupPath = `${outputDir}/${timestamp}-original.${EXPORT_EXTENSION}`;
+      const composeResult: L3CanvasComposeResult = await L3CanvasComposer.compose({
+        context: context,
+        document: document,
+        reviewerName: reviewerName,
+        outputPath: backupPath
+      });
+      if (!composeResult.success) {
+        return {
+          success: false,
+          cancelled: false,
+          savedToPhotoLibrary: false,
+          path: '',
+          backupPath: '',
+          message: composeResult.message
+        };
+      }
+
+      const title: string = createExportTitle();
+      const mediaUri: string = await saveJpgToPhotoLibrary(context, backupPath, title);
+      if (mediaUri.length === 0) {
+        return {
+          success: false,
+          cancelled: true,
+          savedToPhotoLibrary: false,
+          path: '',
+          backupPath: backupPath,
+          message: '已取消'
+        };
+      }
+      return {
+        success: true,
+        cancelled: false,
+        savedToPhotoLibrary: true,
+        path: mediaUri,
+        backupPath: backupPath,
+        message: '已导出到图库'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        cancelled: false,
+        savedToPhotoLibrary: false,
+        path: '',
+        backupPath: '',
+        message: error instanceof Error ? error.message : `${error}`
+      };
+    } finally {
+      ReviewCardExportService.isExporting = false;
+    }
+  }
 
   static async exportSnapshot(
     context: common.UIAbilityContext,

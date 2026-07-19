@@ -9,6 +9,7 @@ import { DebugLaunchScenarioService } from '../services/DebugLaunchScenarioServi
 import { CanvasSpikeService } from '../services/CanvasSpikeService';
 import { CanvasSpikeV2Service } from '../services/CanvasSpikeV2Service';
 import { CanvasSpikeV2DecodeService } from '../services/CanvasSpikeV2DecodeService';
+import { CanvasSpikeV2L3ExportService } from '../services/CanvasSpikeV2L3ExportService';
 import { MotionQualityContext } from '../theme/MotionQualityContext';
 
 const APP_PAGE_BACKGROUND: string = '#F5F1E9';
@@ -67,7 +68,11 @@ export default class EntryAbility extends UIAbility {
       windowStage,
       debugInitialPage.length > 0 ? debugInitialPage : 'pages/AppShellPage'
     );
-    if (DebugLaunchScenarioService.isCanvasSpikeV2DecodeScenario()) {
+    if (DebugLaunchScenarioService.isCanvasSpikeV2L3ExportScenario()) {
+      CanvasSpikeV2L3ExportService.runL3ExportPoC(this.context).catch((error: Error) => {
+        console.error(`[CanvasSpikeV2L3Export] 失败：${error.message}`);
+      });
+    } else if (DebugLaunchScenarioService.isCanvasSpikeV2DecodeScenario()) {
       CanvasSpikeV2DecodeService.runDecodeRegionPoC(this.context).catch((error: Error) => {
         console.error(`[CanvasSpikeV2Decode] 失败：${error.message}`);
       });

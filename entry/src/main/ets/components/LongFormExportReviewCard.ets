@@ -139,7 +139,7 @@ function getExportFieldValues(document: ReviewCardDocument): Array<string> {
   return fieldValues.filter((value: string): boolean => normalizeExportText(value).length > 0);
 }
 
-function isHorizontalExportPhoto(document: ReviewCardDocument): boolean {
+export function isHorizontalExportPhoto(document: ReviewCardDocument): boolean {
   return document.imageWidth > document.imageHeight;
 }
 

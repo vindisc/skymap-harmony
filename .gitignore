@@ -31,4 +31,7 @@ release-assets/submissions/
 release-assets/private/
 release-assets/*.pem
 release-assets/*.p7b
-test-artifacts/
+test-artifacts/*
+!test-artifacts/pixel-diff-baseline/
+!test-artifacts/pixel-diff-baseline/export/
+!test-artifacts/pixel-diff-baseline/export/README.md
