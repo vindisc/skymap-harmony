@@ -18,7 +18,6 @@ import { resolveTemplate, TemplateDescriptor, TemplateId, TemplateLevel } from '
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardPreview } from '../components/ReviewCardPreview';
 import { TemplateLevelTabBar } from '../components/TemplateLevelTabBar';
-import { TemplateChipStrip } from '../components/TemplateChipStrip';
 import { EditorEmptyPlaceholder } from '../components/EditorEmptyPlaceholder';
 import { FrameParamsSheet } from '../components/FrameParamsSheet';
 import { JudgementSheet } from '../components/JudgementSheet';
@@ -950,14 +949,6 @@ struct EditorPage {
           this.switchTemplateLevel(level);
         }
       })
-
-      TemplateChipStrip({
-        currentLevel: this.currentTemplateLevel,
-        currentCanonicalTemplateId: this.getCanonicalTemplateId(),
-        onTemplateTap: (templateId: string) => {
-          this.switchTemplate(templateId);
-        }
-      })
     }
     .width('100%')
     .backgroundColor(AppColors.surface)
@@ -1160,6 +1151,8 @@ struct EditorPage {
         Column() {
           this.PhotoHeader()
         }
+        .padding({ top: EDITOR_PHOTO_HEADER_TOP_PADDING })
+        .backgroundColor(AppColors.pageBackground)
         .geometryTransition(`review-hero-${this.resolveHeroTag()}`)
         .animation({
           duration: MotionQualityContext.resolveDuration(MotionTokens.durationHero),
