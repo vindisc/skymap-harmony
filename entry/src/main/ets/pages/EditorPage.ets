@@ -5,12 +5,25 @@ import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { PREVIEW_PAGE } from '../app/AppRouter';
 import {
   createDefaultReviewCardDocument,
+  cloneReviewCardDocument,
   DEFAULT_REVIEW_TITLE,
   getReviewDocumentKey,
   normalizeReviewJudgement,
-  ReviewCardDocument
+  ReviewCardDocument,
+  ReviewCardRenderMode
 } from '../model/ReviewCardModel';
+import { normalizeFrameConfig, FrameConfigSpec } from '../model/FrameConfigModel';
+import { ExifPayload, ExifSource, isExifPayloadEmpty, normalizeExifPayload } from '../model/ExifPayloadModel';
+import { resolveTemplate, TemplateDescriptor, TemplateId, TemplateLevel } from '../model/TemplateModel';
 import { ReviewInputForm } from '../components/ReviewInputForm';
+import { ReviewCardPreview } from '../components/ReviewCardPreview';
+import { TemplateLevelTabBar } from '../components/TemplateLevelTabBar';
+import { TemplateChipStrip } from '../components/TemplateChipStrip';
+import { EditorEmptyPlaceholder } from '../components/EditorEmptyPlaceholder';
+import { FrameParamsSheet } from '../components/FrameParamsSheet';
+import { JudgementSheet } from '../components/JudgementSheet';
+import { ExifSheet } from '../components/ExifSheet';
+import { BottomSheetContainer } from '../components/motion/BottomSheetContainer';
 import { ReviewCardStore } from '../services/ReviewCardStore';
 import { ReviewCardHistoryService } from '../services/ReviewCardHistoryService';
 import { PendingReviewPhotoStore } from '../services/PendingReviewPhotoStore';
@@ -19,15 +32,18 @@ import { LearningProgressService } from '../services/LearningProgressService';
 import {
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_PENDING_TEXT,
-  REVIEW_FLOW_SAVE_SUCCESS_TEXT
+  REVIEW_FLOW_SAVE_SUCCESS_TEXT,
+  REVIEW_FLOW_TEMPLATE_FRAME_RESET_TEXT
 } from '../services/ReviewFlowFeedback';
+import { ExifReaderService } from '../services/ExifReaderService';
+import { PickedPhotoResult } from '../services/PhotoPickerService';
+import { applyTemplateToDocument } from '../utils/TemplateApply';
 import {
   AppBottomSafeAreaFill,
   AppColors,
   AppMetrics,
   AppTypography,
-  PhotoWritingHero,
-  PrimaryButton
+  PhotoWritingHero
 } from '../components/AppDesign';
 import { ElevationTokens, MotionTokens } from '../theme/DesignTokens';
 import { estimateReviewTextLineCount, estimateReviewTextWrapUnitsPerLine } from '../utils/ReviewTextMetrics';
@@ -69,10 +85,17 @@ enum EditorFieldScrollIntent {
   CARET = 'caret'
 }
 
+enum EditorSheetType {
+  NONE = 'none',
+  FRAME = 'frame',
+  EXIF = 'exif',
+  JUDGEMENT = 'judgement'
+}
+
 @Entry
 @Component
 struct EditorPage {
-  private document: ReviewCardDocument = createDefaultReviewCardDocument();
+  @State document: ReviewCardDocument = createDefaultReviewCardDocument();
   private editorScroller: Scroller = new Scroller();
   private measuredFieldHeights: Map<string, number> = new Map();
   private measuredFieldLineCounts: Map<string, number> = new Map();
@@ -106,6 +129,8 @@ struct EditorPage {
   @State isDirty: boolean = false;
   @State pendingPhotoId: string = '';
   @State introStage: number = 0;
+  @State currentTemplateLevel: TemplateLevel = TemplateLevel.L3_REVIEW;
+  @State activeSheet: EditorSheetType = EditorSheetType.NONE;
   private introTimerIds: Array<number> = [];
 
   private getAbilityContext(): common.UIAbilityContext {
@@ -120,6 +145,7 @@ struct EditorPage {
     this.disableSystemKeyboardAvoidance();
     this.registerKeyboardHeightObserver();
     this.document = ReviewCardStore.getCurrentDocument();
+    this.currentTemplateLevel = resolveTemplate(this.document.config.templateId).level;
     this.pendingPhotoId = ReviewCardStore.getCurrentPendingPhotoId();
     this.imageUri = this.document.imageUri;
     this.imageWidth = this.document.imageWidth;
@@ -136,7 +162,9 @@ struct EditorPage {
     this.currentBlocker = this.document.content.currentBlocker;
     this.isDirty = false;
     this.shouldDiscardChanges = false;
+    this.activeSheet = EditorSheetType.NONE;
     this.playIntro();
+    this.loadExifIfNeeded();
   }
 
   private playIntro(): void {
@@ -148,7 +176,35 @@ struct EditorPage {
     const contentTimerId: number = setTimeout(() => {
       this.introStage = 2;
     }, MotionQualityContext.shouldPlayStagger() ? MotionTokens.durationInstant : 0);
-    this.introTimerIds = [heroTimerId, contentTimerId];
+    const actionTimerId: number = setTimeout(() => {
+      this.introStage = 3;
+    }, MotionQualityContext.shouldPlayStagger() ? MotionTokens.durationSlow : 0);
+    this.introTimerIds = [heroTimerId, contentTimerId, actionTimerId];
+  }
+
+  private async loadExifIfNeeded(): Promise<void> {
+    const existingExif: ExifPayload = normalizeExifPayload(this.document.exif);
+    if (this.document.exif !== undefined && !isExifPayloadEmpty(existingExif)) {
+      return;
+    }
+    if (this.document.imageUri.length === 0) {
+      return;
+    }
+
+    try {
+      const autoExif: ExifPayload = await ExifReaderService.read(this.document.imageUri);
+      if (!this.isPageAlive || isExifPayloadEmpty(autoExif)) {
+        return;
+      }
+      autoExif.source = ExifSource.AUTO;
+      autoExif.manuallyOverridden = [];
+      const nextDocument: ReviewCardDocument = cloneReviewCardDocument(this.document);
+      nextDocument.exif = normalizeExifPayload(autoExif);
+      this.document = nextDocument;
+      ReviewCardStore.setCurrentDocument(this.document);
+    } catch (error) {
+      console.warn(`[EditorPage] EXIF 初读失败：${error}`);
+    }
   }
 
   private clearIntroTimers(): void {
@@ -242,15 +298,152 @@ struct EditorPage {
   }
 
   private syncDocumentFromInput(): void {
-    this.document.content.title = this.title.length > 0 ? this.title : DEFAULT_REVIEW_TITLE;
-    this.document.content.visualFocus = this.visualFocus;
-    this.document.content.focusReason = this.focusReason;
-    this.document.content.visualPath = this.visualPath;
-    this.document.content.visibleFacts = this.visibleFacts;
-    this.document.content.coreRelation = this.coreRelation;
-    this.document.content.judgement = normalizeReviewJudgement(this.judgement);
-    this.document.content.extendedUnderstanding = this.extendedUnderstanding;
-    this.document.content.currentBlocker = this.currentBlocker;
+    this.document = this.getPreviewDocument();
+  }
+
+  private getPreviewDocument(): ReviewCardDocument {
+    const nextDocument: ReviewCardDocument = cloneReviewCardDocument(this.document);
+    nextDocument.imageUri = this.imageUri;
+    nextDocument.imageWidth = this.imageWidth;
+    nextDocument.imageHeight = this.imageHeight;
+    nextDocument.imageSizeFallbackUsed = this.imageSizeFallbackUsed;
+    nextDocument.content.title = this.title.length > 0 ? this.title : DEFAULT_REVIEW_TITLE;
+    nextDocument.content.visualFocus = this.visualFocus;
+    nextDocument.content.focusReason = this.focusReason;
+    nextDocument.content.visualPath = this.visualPath;
+    nextDocument.content.visibleFacts = this.visibleFacts;
+    nextDocument.content.coreRelation = this.coreRelation;
+    nextDocument.content.judgement = normalizeReviewJudgement(this.judgement);
+    nextDocument.content.extendedUnderstanding = this.extendedUnderstanding;
+    nextDocument.content.currentBlocker = this.currentBlocker;
+    return nextDocument;
+  }
+
+  private getCurrentDescriptor(): TemplateDescriptor {
+    return resolveTemplate(this.document.config.templateId);
+  }
+
+  private getCanonicalTemplateId(): string {
+    return this.getCurrentDescriptor().id;
+  }
+
+  private resolveDefaultTemplateId(level: TemplateLevel): TemplateId {
+    if (level === TemplateLevel.L0_FRAME) {
+      return TemplateId.WHITE_EQUAL;
+    }
+    if (level === TemplateLevel.L1_META) {
+      return TemplateId.META_BOTTOM;
+    }
+    if (level === TemplateLevel.L2_NOTE) {
+      return TemplateId.SIGNATURE_OVERLAY;
+    }
+    return TemplateId.ADAPTIVE_REVIEW_CARD;
+  }
+
+  private isFrameCustomized(): boolean {
+    const descriptor: TemplateDescriptor = this.getCurrentDescriptor();
+    const frame: FrameConfigSpec = normalizeFrameConfig(this.document.config.frame, descriptor.defaults.frame);
+    const defaults: FrameConfigSpec = descriptor.defaults.frame;
+    return frame.outerPaddingRatio !== defaults.outerPaddingRatio
+      || frame.innerPaddingRatio !== defaults.innerPaddingRatio
+      || frame.cornerRadiusRatio !== defaults.cornerRadiusRatio
+      || frame.backgroundColorHex !== defaults.backgroundColorHex
+      || frame.textColorHex !== defaults.textColorHex
+      || frame.secondaryTextColorHex !== defaults.secondaryTextColorHex
+      || frame.titleFontRatio !== defaults.titleFontRatio
+      || frame.bodyFontRatio !== defaults.bodyFontRatio
+      || frame.labelFontRatio !== defaults.labelFontRatio
+      || frame.lineSpacingRatio !== defaults.lineSpacingRatio
+      || frame.fieldSpacingRatio !== defaults.fieldSpacingRatio
+      || frame.logoAssetId !== defaults.logoAssetId
+      || frame.watermarkText !== defaults.watermarkText;
+  }
+
+  private applyDocumentState(nextDocument: ReviewCardDocument): void {
+    this.document = nextDocument;
+    this.currentTemplateLevel = resolveTemplate(nextDocument.config.templateId).level;
+    this.imageUri = nextDocument.imageUri;
+    this.imageWidth = nextDocument.imageWidth;
+    this.imageHeight = nextDocument.imageHeight;
+    this.imageSizeFallbackUsed = nextDocument.imageSizeFallbackUsed;
+    this.title = nextDocument.content.title;
+    this.visualFocus = nextDocument.content.visualFocus;
+    this.focusReason = nextDocument.content.focusReason;
+    this.visualPath = nextDocument.content.visualPath;
+    this.visibleFacts = nextDocument.content.visibleFacts;
+    this.coreRelation = nextDocument.content.coreRelation;
+    this.judgement = normalizeReviewJudgement(nextDocument.content.judgement);
+    this.extendedUnderstanding = nextDocument.content.extendedUnderstanding;
+    this.currentBlocker = nextDocument.content.currentBlocker;
+  }
+
+  private switchTemplate(rawTemplateId: string): void {
+    if (resolveTemplate(rawTemplateId).id === this.getCanonicalTemplateId()) {
+      return;
+    }
+    this.syncDocumentFromInput();
+    const shouldNotifyFrameReset: boolean = this.isFrameCustomized();
+    const nextDocument: ReviewCardDocument = applyTemplateToDocument(this.document, rawTemplateId);
+    this.applyDocumentState(nextDocument);
+    this.isDirty = true;
+    if (shouldNotifyFrameReset) {
+      ToastService.info(this.getUIContext(), REVIEW_FLOW_TEMPLATE_FRAME_RESET_TEXT);
+    }
+  }
+
+  private switchTemplateLevel(level: TemplateLevel): void {
+    if (level === TemplateLevel.L2_NOTE || level === this.currentTemplateLevel) {
+      return;
+    }
+    this.switchTemplate(this.resolveDefaultTemplateId(level));
+  }
+
+  private updateFrameDocument(nextDocument: ReviewCardDocument): void {
+    this.applyDocumentState(nextDocument);
+    this.isDirty = true;
+  }
+
+  private updateExif(exif: ExifPayload): void {
+    const nextDocument: ReviewCardDocument = this.getPreviewDocument();
+    nextDocument.exif = normalizeExifPayload(exif);
+    this.document = nextDocument;
+    this.isDirty = true;
+  }
+
+  private updateJudgement(value: string): void {
+    this.judgement = normalizeReviewJudgement(value);
+    this.isDirty = true;
+  }
+
+  private handlePickedPhoto(result: PickedPhotoResult): void {
+    if (!result.success) {
+      if (!result.cancelled) {
+        ToastService.error(this.getUIContext(), result.message);
+      }
+      return;
+    }
+    this.imageUri = result.imageUri;
+    this.imageWidth = result.imageWidth;
+    this.imageHeight = result.imageHeight;
+    this.imageSizeFallbackUsed = result.imageSizeFallbackUsed;
+    const nextDocument: ReviewCardDocument = this.getPreviewDocument();
+    nextDocument.imageUri = result.imageUri;
+    nextDocument.imageWidth = result.imageWidth;
+    nextDocument.imageHeight = result.imageHeight;
+    nextDocument.imageSizeFallbackUsed = result.imageSizeFallbackUsed;
+    nextDocument.exif = undefined;
+    this.document = nextDocument;
+    this.isDirty = true;
+    this.loadExifIfNeeded();
+  }
+
+  private openSheet(sheet: EditorSheetType): void {
+    this.focusedField = '';
+    this.activeSheet = sheet;
+  }
+
+  private closeSheet(): void {
+    this.activeSheet = EditorSheetType.NONE;
   }
 
   private async saveAndPreview(): Promise<void> {
@@ -653,34 +846,8 @@ struct EditorPage {
   }
 
   @Builder
-  SaveActionContent() {
-    PrimaryButton({
-      label: this.isSaving ? REVIEW_FLOW_SAVE_PENDING_TEXT : '保存并进入阅读',
-      isDisabled: this.isSaving,
-      scaleOnPress: false,
-      onTap: () => {
-        this.saveAndPreview();
-      }
-    })
-  }
-
-  @Builder
-  SaveActionSection() {
-    Column() {
-      PressReactive({
-        intensity: 'firm',
-        content: () => {
-          this.SaveActionContent();
-        }
-      })
-        .width('100%')
-    }
-    .width('100%')
-  }
-
-  @Builder
   PhotoHeader() {
-    Column() {
+    Row({ space: AppMetrics.space12 }) {
       Column() {
         PhotoWritingHero({
           imageUri: this.imageUri,
@@ -689,29 +856,300 @@ struct EditorPage {
           imageSizeFallbackUsed: this.imageSizeFallbackUsed,
           fixedFrame: true
         })
-          .width(this.getPhotoFrameWidth())
-          .height(this.getPhotoFrameHeight())
       }
-      .width(this.getPhotoFrameWidth())
-      .height(this.getPhotoFrameHeight())
-      .alignSelf(ItemAlign.Center)
-      .borderRadius(AppMetrics.cardRadius)
+      .width(40)
+      .height(40)
+      .borderRadius(AppMetrics.inputRadius)
       .clip(true)
-      .backgroundColor(AppColors.surfaceElevated)
       .border({ width: 1, color: AppColors.border })
-      .shadow(ElevationTokens.medium)
+
+      Column({ space: 2 }) {
+        Text('编辑复盘')
+          .fontFamily('NotoSansSC-Bold')
+          .fontSize(AppTypography.sectionTitle)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.text)
+
+        Text(this.getCurrentDescriptor().displayName)
+          .fontFamily('NotoSansSC-Regular')
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      if (this.isDirty) {
+        Text('未保存')
+          .fontFamily('NotoSansSC-Regular')
+          .fontSize(AppTypography.meta)
+          .fontColor(AppColors.primary)
+          .padding({ left: AppMetrics.space8, right: AppMetrics.space8, top: 4, bottom: 4 })
+          .borderRadius(AppMetrics.badgeRadius)
+          .backgroundColor(AppColors.primarySoft)
+      }
     }
-    .alignItems(HorizontalAlign.Start)
-    .padding({
-      left: EDITOR_PAGE_HORIZONTAL_PADDING,
-      right: EDITOR_PAGE_HORIZONTAL_PADDING,
-      top: EDITOR_PHOTO_HEADER_TOP_PADDING,
-      bottom: EDITOR_PHOTO_HEADER_BOTTOM_PADDING
-    })
+    .alignItems(VerticalAlign.Center)
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding })
     .width('100%')
-    .height(this.getPhotoHeaderHeight())
+    .height(56)
     .backgroundColor(AppColors.pageBackground)
-    .zIndex(2)
+    .shadow(ElevationTokens.subtle)
+  }
+
+  @Builder
+  PreviewSection() {
+    Column({ space: AppMetrics.space8 }) {
+      if (this.imageUri.length === 0) {
+        EditorEmptyPlaceholder({
+          onPicked: (result: PickedPhotoResult) => {
+            this.handlePickedPhoto(result);
+          }
+        })
+      } else {
+        Column() {
+          ReviewCardPreview({
+            document: this.getPreviewDocument(),
+            renderMode: ReviewCardRenderMode.MOBILE_READING
+          })
+        }
+        .justifyContent(FlexAlign.Center)
+        .width('100%')
+        .layoutWeight(1)
+        .clip(true)
+
+        Text(this.currentTemplateLevel === TemplateLevel.L3_REVIEW
+          ? '预览为屏幕缩略，导出保留原图分辨率。'
+          : '预览暂用复盘卡样式，导出按当前模板生成。')
+          .fontFamily('NotoSansSC-Regular')
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .textAlign(TextAlign.Center)
+          .width('100%')
+      }
+    }
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space8 })
+    .width('100%')
+    .layoutWeight(58)
+    .opacity(this.introStage >= 1 ? 1 : 0)
+    .scale({
+      x: this.introStage >= 1 ? 1 : MotionTokens.scaleHeroIntro,
+      y: this.introStage >= 1 ? 1 : MotionTokens.scaleHeroIntro
+    })
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationHero),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.LANDING)
+    })
+  }
+
+  @Builder
+  TemplateSelectorSection() {
+    Column() {
+      TemplateLevelTabBar({
+        currentLevel: this.currentTemplateLevel,
+        onLevelTap: (level: TemplateLevel) => {
+          this.switchTemplateLevel(level);
+        }
+      })
+
+      TemplateChipStrip({
+        currentLevel: this.currentTemplateLevel,
+        currentCanonicalTemplateId: this.getCanonicalTemplateId(),
+        onTemplateTap: (templateId: string) => {
+          this.switchTemplate(templateId);
+        }
+      })
+    }
+    .width('100%')
+    .backgroundColor(AppColors.surface)
+    .border({ width: { top: 1, bottom: 1 }, color: AppColors.border })
+    .opacity(this.introStage >= 2 ? 1 : 0)
+    .translate({ y: this.introStage >= 2 ? 0 : MotionTokens.offsetEnterYCard })
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+    })
+  }
+
+  @Builder
+  ActionChipContent(label: string, primary: boolean, onTap: () => void) {
+    Button(label)
+      .fontFamily(primary ? 'NotoSansSC-Bold' : 'NotoSansSC-Regular')
+      .fontSize(AppTypography.smallButtonText)
+      .fontWeight(primary ? FontWeight.Bold : FontWeight.Regular)
+      .fontColor(primary ? AppColors.onPrimary : AppColors.text)
+      .height(48)
+      .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
+      .borderRadius(AppMetrics.buttonRadius)
+      .backgroundColor(primary ? AppColors.primary : AppColors.surfaceTint)
+      .border({ width: 1, color: primary ? AppColors.primaryPressed : AppColors.border })
+      .enabled(!this.isSaving)
+      .onClick(() => {
+        onTap();
+      })
+  }
+
+  @Builder
+  ActionChip(label: string, primary: boolean, onTap: () => void) {
+    PressReactive({
+      intensity: primary ? 'firm' : 'soft',
+      content: () => {
+        this.ActionChipContent(label, primary, onTap);
+      }
+    })
+      .enabled(!this.isSaving)
+  }
+
+  @Builder
+  CompactActionRow() {
+    Row({ space: AppMetrics.space8 }) {
+      if (this.currentTemplateLevel !== TemplateLevel.L3_REVIEW) {
+        this.ActionChip('⚙ 边框参数', false, () => {
+          this.openSheet(EditorSheetType.FRAME);
+        })
+      }
+
+      if (this.currentTemplateLevel === TemplateLevel.L1_META) {
+        this.ActionChip('📷 EXIF', false, () => {
+          this.openSheet(EditorSheetType.EXIF);
+        })
+      }
+
+      if (this.currentTemplateLevel === TemplateLevel.L3_REVIEW) {
+        this.ActionChip('⚖ 判定', false, () => {
+          this.openSheet(EditorSheetType.JUDGEMENT);
+        })
+      }
+
+      Blank()
+
+      this.ActionChip(this.isSaving ? REVIEW_FLOW_SAVE_PENDING_TEXT : '💾 保存', true, () => {
+        this.saveAndPreview();
+      })
+    }
+    .alignItems(VerticalAlign.Center)
+    .width('100%')
+    .height(64)
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space8, bottom: AppMetrics.space8 })
+    .backgroundColor(AppColors.pageBackground)
+    .opacity(this.introStage >= 3 ? 1 : 0)
+    .translate({ y: this.introStage >= 3 ? 0 : MotionTokens.offsetEnterY })
+    .animation({
+      duration: MotionQualityContext.resolveDuration(MotionTokens.durationSlow),
+      curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+    })
+  }
+
+  @Builder
+  ReviewContentSection() {
+    Scroll(this.editorScroller) {
+      Column({ space: AppMetrics.space16 }) {
+        ReviewInputForm({
+          title: $title,
+          visualFocus: $visualFocus,
+          focusReason: $focusReason,
+          visualPath: $visualPath,
+          visibleFacts: $visibleFacts,
+          coreRelation: $coreRelation,
+          judgement: $judgement,
+          extendedUnderstanding: $extendedUnderstanding,
+          currentBlocker: $currentBlocker,
+          wrapUnitsPerLine: this.getTextAreaWrapUnitsPerLine(),
+          onFieldFocus: (field: string) => {
+            if (this.activeSheet === EditorSheetType.NONE) {
+              this.focusField(field);
+            }
+          },
+          onFieldChange: (field: string) => {
+            this.handleFieldChange(field);
+          },
+          onFieldHeightChange: (field: string, height: number) => {
+            this.handleFieldHeightChange(field, height);
+          },
+          onFieldBlur: () => {
+            this.focusedField = '';
+          }
+        })
+
+        this.CompactActionRow()
+      }
+      .padding({
+        left: AppMetrics.pagePadding,
+        right: AppMetrics.pagePadding,
+        top: AppMetrics.space12,
+        bottom: this.getEditorBottomPadding()
+      })
+      .width('100%')
+    }
+    .layoutWeight(42)
+    .width('100%')
+    .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Spring)
+  }
+
+  @Builder
+  CaptionContentSection() {
+    Column({ space: AppMetrics.space8 }) {
+      Text('✎ 一句话（可选 · 最多 30 字）')
+        .fontFamily('NotoSansSC-Regular')
+        .fontSize(AppTypography.inputLabel)
+        .fontColor(AppColors.secondaryText)
+        .width('100%')
+
+      TextInput({ text: this.title, placeholder: '写下一句照片背后的话' })
+        .height(AppMetrics.controlHeight)
+        .fontFamily('NotoSansSC-Regular')
+        .fontSize(AppTypography.inputText)
+        .fontColor(AppColors.text)
+        .backgroundColor(AppColors.surfaceTint)
+        .borderRadius(AppMetrics.inputRadius)
+        .padding({ left: AppMetrics.space12, right: AppMetrics.space12 })
+        .onChange((value: string) => {
+          this.title = value.slice(0, 30);
+          this.isDirty = true;
+        })
+
+      this.CompactActionRow()
+    }
+    .layoutWeight(42)
+    .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, top: AppMetrics.space12 })
+    .width('100%')
+  }
+
+  @Builder
+  ActiveSheetContent() {
+    if (this.activeSheet === EditorSheetType.FRAME) {
+      FrameParamsSheet({
+        document: this.getPreviewDocument(),
+        onUpdate: (nextDocument: ReviewCardDocument) => {
+          this.updateFrameDocument(nextDocument);
+        },
+        onClose: () => {
+          this.closeSheet();
+        }
+      })
+    } else if (this.activeSheet === EditorSheetType.EXIF) {
+      ExifSheet({
+        document: this.getPreviewDocument(),
+        imageUri: this.imageUri,
+        onUpdate: (exif: ExifPayload) => {
+          this.updateExif(exif);
+        },
+        onClose: () => {
+          this.closeSheet();
+        }
+      })
+        .height(Math.min(620, this.viewportHeight * 0.72))
+    } else if (this.activeSheet === EditorSheetType.JUDGEMENT) {
+      JudgementSheet({
+        value: this.judgement,
+        onUpdate: (value: string) => {
+          this.updateJudgement(value);
+        },
+        onClose: () => {
+          this.closeSheet();
+        }
+      })
+    }
   }
 
   build() {
@@ -722,80 +1160,35 @@ struct EditorPage {
         Column() {
           this.PhotoHeader()
         }
-          .geometryTransition(`review-hero-${this.resolveHeroTag()}`)
-          .animation({
-            duration: MotionQualityContext.resolveDuration(MotionTokens.durationHero),
-            curve: MotionQualityContext.resolveCurve(MotionCurveRole.LANDING)
-          })
-          .opacity(this.introStage >= 1 ? 1 : 0)
-          .scale({
-            x: this.introStage >= 1 ? 1 : MotionTokens.scaleHeroIntro,
-            y: this.introStage >= 1 ? 1 : MotionTokens.scaleHeroIntro
-          })
-
-        Scroll(this.editorScroller) {
-          Column({ space: AppMetrics.space16 }) {
-            ReviewInputForm({
-              title: $title,
-              visualFocus: $visualFocus,
-              focusReason: $focusReason,
-              visualPath: $visualPath,
-              visibleFacts: $visibleFacts,
-              coreRelation: $coreRelation,
-              judgement: $judgement,
-              extendedUnderstanding: $extendedUnderstanding,
-              currentBlocker: $currentBlocker,
-              wrapUnitsPerLine: this.getTextAreaWrapUnitsPerLine(),
-              onFieldFocus: (field: string) => {
-                this.focusField(field);
-              },
-              onFieldChange: (field: string) => {
-                this.handleFieldChange(field);
-              },
-              onFieldHeightChange: (field: string, height: number) => {
-                this.handleFieldHeightChange(field, height);
-              },
-              onFieldBlur: () => {
-                this.focusedField = '';
-              }
-            })
-          }
-          .padding({
-            left: AppMetrics.pagePadding,
-            right: AppMetrics.pagePadding,
-            top: 0,
-            bottom: this.getEditorBottomPadding()
-          })
-          .width('100%')
-        }
-        .layoutWeight(1)
-        .width('100%')
-        .scrollBar(BarState.Off)
-        .edgeEffect(EdgeEffect.Spring)
-        .opacity(this.introStage >= 2 ? 1 : 0)
-        .translate({ y: this.introStage >= 2 ? 0 : MotionTokens.offsetEnterYCard })
+        .geometryTransition(`review-hero-${this.resolveHeroTag()}`)
         .animation({
-          duration: MotionQualityContext.resolveDuration(MotionTokens.durationStandard),
-          curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
+          duration: MotionQualityContext.resolveDuration(MotionTokens.durationHero),
+          curve: MotionQualityContext.resolveCurve(MotionCurveRole.LANDING)
         })
+        this.PreviewSection()
+        this.TemplateSelectorSection()
+
+        if (this.currentTemplateLevel === TemplateLevel.L3_REVIEW) {
+          this.ReviewContentSection()
+        } else if (this.currentTemplateLevel === TemplateLevel.L2_NOTE) {
+          this.CaptionContentSection()
+        } else {
+          this.CompactActionRow()
+        }
       }
       .width('100%')
       .height('100%')
 
-      if (!this.isKeyboardActive()) {
-        Column() {
-          this.SaveActionSection()
+      BottomSheetContainer({
+        visible: this.activeSheet !== EditorSheetType.NONE,
+        content: () => {
+          this.ActiveSheetContent();
+        },
+        onClose: () => {
+          this.closeSheet();
         }
-        .padding({
-          left: AppMetrics.pagePadding,
-          right: AppMetrics.pagePadding,
-          top: AppMetrics.floatingDockTopMaskHeight,
-          bottom: AppMetrics.floatingDockBottomPadding
-        })
-        .width('100%')
-        .hitTestBehavior(HitTestMode.Transparent)
-      }
-
+      })
+        .zIndex(20)
     }
     .width('100%')
     .height('100%')

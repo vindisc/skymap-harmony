@@ -218,7 +218,7 @@ assertIncludes(
   'Preview floating actions must soften from low to subtle elevation when pressed.'
 );
 assertIncludes(previewPageSource, '@State pressedActionKey: string = \'\';', 'Preview actions must keep explicit press feedback state.');
-assertIncludes(editorPageSource, '.shadow(ElevationTokens.medium)', 'Editor photo header must keep medium elevation.');
+assertIncludes(editorPageSource, '.shadow(ElevationTokens.subtle)', 'Editor top header must keep subtle visual separation.');
 assertIncludes(editorPageSource, 'duration: MotionTokens.durationStandard', 'Editor focus scrolling must use shared motion tokens.');
 assertIncludes(reviewInputFormSource, 'struct ReviewTextAreaField', 'Review text fields must use an isolated @Link component.');
 assertIncludes(reviewInputFormSource, 'TextArea({ text: $$this.value', 'Review TextArea must keep true two-way binding.');

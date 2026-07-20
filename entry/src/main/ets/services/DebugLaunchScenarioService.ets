@@ -1,4 +1,6 @@
 import Want from '@ohos.app.ability.Want';
+import common from '@ohos.app.ability.common';
+import fs from '@ohos.file.fs';
 import {
   FormLaunchIntentService,
   IntentRouteSource
@@ -25,6 +27,9 @@ const WIDGET_CARD_BACKGROUND_PAGE: string = 'pages/WidgetCardBackgroundPage';
 const HOME_STORAGE_PAGE: string = 'pages/HomeStoragePage';
 const REVIEW_SETTINGS_PAGE: string = 'pages/ReviewSettingsPage';
 const SYNC_CENTER_PAGE: string = 'pages/SyncCenterPage';
+const DEBUG_FIXTURE_FILE_NAME: string = 'fixture-l3-photo.jpg';
+const DEBUG_FIXTURE_WIDTH: number = 7878;
+const DEBUG_FIXTURE_HEIGHT: number = 5252;
 
 export enum DebugTestScenario {
   HOME = 'home',
@@ -60,11 +65,17 @@ export class DebugLaunchScenarioService {
   private static canvasSpikeV2L3ExportScenario: boolean = false;
   private static canvasSpikeV2L0ExportScenario: boolean = false;
   private static canvasSpikeV2L1ExportScenario: boolean = false;
+  private static debugContext: common.UIAbilityContext | null = null;
 
-  static captureWant(want: Want | undefined, isDebugBuild: boolean): void {
+  static captureWant(
+    want: Want | undefined,
+    isDebugBuild: boolean,
+    context: common.UIAbilityContext
+  ): void {
     if (!isDebugBuild) {
       return;
     }
+    DebugLaunchScenarioService.debugContext = context;
     const scenarioValue: Object | undefined = want?.parameters?.[DEBUG_TEST_SCENARIO_KEY];
     const scenario: string = `${scenarioValue ?? ''}`;
     DebugLaunchScenarioService.automatedTestLaunch = scenario.length > 0;
@@ -187,8 +198,17 @@ export class DebugLaunchScenarioService {
     if (!scenario.startsWith('editor_') && !scenario.startsWith('preview_')) {
       return;
     }
+    const context: common.UIAbilityContext | null = DebugLaunchScenarioService.debugContext;
+    if (context === null) {
+      return;
+    }
     const kind: SampleImageKind = DebugLaunchScenarioService.resolveImageKind(scenario);
     const document: ReviewCardDocument = ReviewCardStore.createDraft(kind);
+    const fixturePath: string = DebugLaunchScenarioService.ensureFixturePhotoInSandbox(context);
+    document.imageUri = fixturePath;
+    document.imageWidth = DEBUG_FIXTURE_WIDTH;
+    document.imageHeight = DEBUG_FIXTURE_HEIGHT;
+    document.imageSizeFallbackUsed = false;
     document.content.title = '自动化测试复盘';
     document.content.visualFocus = '人物与窗边的高光';
     document.content.focusReason = '亮度反差形成第一视觉落点';
@@ -201,6 +221,26 @@ export class DebugLaunchScenarioService {
       ? '这是用于验证长文本换行、滚动边界、卡片高度和底部操作区不重叠的测试内容。'.repeat(8)
       : '人物右侧仍有少量无效空间';
     ReviewCardStore.setCurrentDocument(document);
+  }
+
+  private static ensureFixturePhotoInSandbox(context: common.UIAbilityContext): string {
+    const sandboxPath: string = `${context.filesDir}/${DEBUG_FIXTURE_FILE_NAME}`;
+    if (fs.accessSync(sandboxPath)) {
+      return sandboxPath;
+    }
+    const rawContent: Uint8Array = context.resourceManager.getRawFileContentSync(DEBUG_FIXTURE_FILE_NAME);
+    const contentBuffer: ArrayBuffer = new ArrayBuffer(rawContent.byteLength);
+    new Uint8Array(contentBuffer).set(rawContent);
+    const fixtureFile: fs.File = fs.openSync(
+      sandboxPath,
+      fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC
+    );
+    try {
+      fs.writeSync(fixtureFile.fd, contentBuffer);
+    } finally {
+      fs.closeSync(fixtureFile);
+    }
+    return sandboxPath;
   }
 
   private static resolveImageKind(scenario: string): SampleImageKind {

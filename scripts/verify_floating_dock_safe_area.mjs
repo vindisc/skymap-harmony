@@ -30,7 +30,6 @@ assertIncludes(
 
 for (const [name, source] of [
   ['SettingsActionBar', sources.settingsForm],
-  ['EditorPage', sources.editor],
   ['PreviewPage', sources.preview]
 ]) {
   assertIncludes(
@@ -39,6 +38,12 @@ for (const [name, source] of [
     `${name} must use the shared bottom safe padding instead of a local fixed value.`
   );
 }
+
+assertIncludes(
+  sources.editor,
+  'AppMetrics.floatingDockReservedHeight + AppMetrics.floatingDockScrollClearance',
+  'EditorPage inline action row must reserve the shared bottom safe-area clearance in scroll content.'
+);
 
 for (const [name, source] of [
   ['HomeStoragePage', sources.homeStorage],

@@ -148,11 +148,13 @@
 
 …（其余 6 字段同现有）…
 
-[ ⚙ 边框参数 ]  [ ⚖ 判定 ]  [ 💾 保存 ]
+[ ⚖ 判定 ]                          [ 💾 保存 ]
 ─────────────────────────────────────
 ```
 
 **L3 不显示 EXIF chip**（`adaptive_review_card.contentBinding.useExif = false`，与 mvp-templates §4.5 "不引入 EXIF 展示"一致；L3 的定位是复盘而非参数展示，EXIF 需求用户切到 L1 参数底栏即可）。
+
+**L3 不显示边框参数 chip**：B 方向下 L3 组件不消费 `config.frame`，隐藏入口以避免出现“参数可改但预览与导出不生效”的体验陷阱；以 mvp-templates §8 禁用矩阵为准。
 
 判定 chip 在 L3 才出现。其它形态判定隐藏（因为 `useJudgement=false`）。
 

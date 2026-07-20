@@ -64,6 +64,25 @@ export struct BottomSheetContainer {
         })
 
       Column() {
+        Column() {
+          Column()
+            .width(40)
+            .height(4)
+            .borderRadius(2)
+            .backgroundColor(AppColors.border)
+        }
+        .justifyContent(FlexAlign.Center)
+        .width('100%')
+        .height(24)
+        .gesture(
+          PanGesture({ direction: PanDirection.Down, distance: 8 })
+            .onActionEnd((event: GestureEvent) => {
+              if (event.offsetY >= 48) {
+                this.onClose();
+              }
+            })
+        )
+
         this.content()
       }
       .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space24 })

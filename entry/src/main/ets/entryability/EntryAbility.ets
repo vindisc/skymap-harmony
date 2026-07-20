@@ -22,7 +22,7 @@ export default class EntryAbility extends UIAbility {
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     FormLaunchIntentService.captureWant(want);
-    DebugLaunchScenarioService.captureWant(want, this.context.applicationInfo.debug);
+    DebugLaunchScenarioService.captureWant(want, this.context.applicationInfo.debug, this.context);
     this.registerV2Fonts();
   }
 
@@ -43,7 +43,7 @@ export default class EntryAbility extends UIAbility {
 
   onNewWant(want: Want): void {
     FormLaunchIntentService.captureWant(want);
-    DebugLaunchScenarioService.captureWant(want, this.context.applicationInfo.debug);
+    DebugLaunchScenarioService.captureWant(want, this.context.applicationInfo.debug, this.context);
     const initialPage: string = DebugLaunchScenarioService.consumeInitialPage();
     if (this.mainWindowStage && initialPage.length > 0) {
       this.mainWindowStage.loadContent(initialPage);

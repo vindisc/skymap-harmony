@@ -8,6 +8,7 @@ export const REVIEW_FLOW_PENDING_IMPORT_FAILED_TEXT: string = '加入待复盘�
 export const REVIEW_FLOW_SAVE_PENDING_TEXT: string = '保存中…';
 export const REVIEW_FLOW_SAVE_SUCCESS_TEXT: string = '复盘已保存';
 export const REVIEW_FLOW_SAVE_FAILED_TEXT: string = '保存失败，请稍后重试';
+export const REVIEW_FLOW_TEMPLATE_FRAME_RESET_TEXT: string = '已切换模板，边框参数已重置';
 
 export const REVIEW_FLOW_EXPORT_PENDING_TEXT: string = '导出中…';
 export const REVIEW_FLOW_EXPORT_SUCCESS_TEXT: string = '导出完成';

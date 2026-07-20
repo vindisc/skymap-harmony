@@ -73,10 +73,10 @@ assertIncludes(editorPageSource, 'duration: MotionTokens.durationStandard',
   'EditorPage focus scroll animation must use the shared motion duration.');
 assertIncludes(editorPageSource, 'curve: MotionTokens.curveDecelerate',
   'EditorPage focus scroll animation must use the shared motion curve.');
-assertIncludes(editorPageSource, '.shadow(ElevationTokens.medium)',
-  'EditorPage photo header must have production-level visual separation.');
-assertIncludes(editorPageSource, 'bottom: AppMetrics.floatingDockBottomPadding',
-  'EditorPage save action area must use the shared bottom safe-area padding.');
+assertIncludes(editorPageSource, '.shadow(ElevationTokens.subtle)',
+  'EditorPage top header must have lightweight visual separation.');
+assertIncludes(editorPageSource, 'AppMetrics.floatingDockReservedHeight + AppMetrics.floatingDockScrollClearance',
+  'EditorPage scroll content must reserve the shared bottom safe-area clearance.');
 
 assertIncludes(reviewInputFormSource, 'const REVIEW_FIELD_LABEL_GAP: number = AppMetrics.space8;', 'ReviewInputForm labels must sit closer to inputs.');
 assertIncludes(reviewInputFormSource, 'const REVIEW_FORM_FIELD_GAP: number = AppMetrics.space16;', 'ReviewInputForm field gaps must provide production-level breathing room.');

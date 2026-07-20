@@ -9,6 +9,7 @@ export default function reviewFlowSmokeTest(): void {
       await driver.assertComponentExist(ON.text('标题'));
       await driver.assertComponentExist(ON.text('视觉落点'));
       await driver.assertComponentExist(ON.hint('这张照片是否成立'));
+      await driver.assertComponentExist(ON.text('摄影复盘卡'));
     });
 
     it('savesEditorAndEntersPreview', 0, async (): Promise<void> => {
@@ -18,7 +19,7 @@ export default function reviewFlowSmokeTest(): void {
       await titleInput.inputText('UI 自动化完整链路');
       await driver.pressBack();
       const editorScroll = await driver.findComponent(ON.scrollable(true));
-      const saveButton = await editorScroll.scrollSearch(ON.text('保存并进入阅读'));
+      const saveButton = await editorScroll.scrollSearch(ON.text('💾 保存'));
       await saveButton.click();
       await driver.delayMs(900);
       await driver.assertComponentExist(ON.text('复盘记录'));
