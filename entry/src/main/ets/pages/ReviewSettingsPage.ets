@@ -27,8 +27,10 @@ struct ReviewSettingsPage {
   private isPageAlive: boolean = false;
   private loadRequestId: number = 0;
   @State reviewerName: string = '';
+  @State exportDefaultOriginalResolution: boolean = false;
   @State isSettingsLoaded: boolean = false;
   @State isSaving: boolean = false;
+  @State isSavingExportPreference: boolean = false;
   @State keyboardHeight: number = 0;
   @State focusedInputIndex: number = -1;
 
@@ -116,11 +118,15 @@ struct ReviewSettingsPage {
     const requestId = this.loadRequestId + 1;
     this.loadRequestId = requestId;
     this.isSettingsLoaded = false;
-    const reviewerName = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
+    const context = this.getAbilityContext();
+    const reviewerName = await ReviewSettingsService.loadReviewerName(context);
+    const exportDefaultOriginalResolution =
+      await ReviewSettingsService.loadExportDefaultOriginalResolution(context);
     if (requestId !== this.loadRequestId) {
       return;
     }
     this.reviewerName = reviewerName;
+    this.exportDefaultOriginalResolution = exportDefaultOriginalResolution;
     this.isSettingsLoaded = true;
   }
 
@@ -144,6 +150,30 @@ struct ReviewSettingsPage {
     this.getUIContext().getRouter().pushUrl({ url: HOME_STORAGE_PAGE }).catch((error: Error) => {
       console.error(`[ReviewSettingsPage] 打开家庭存储设置失败：${error.message}`);
     });
+  }
+
+  private async saveExportDefaultOriginalResolution(enabled: boolean): Promise<void> {
+    if (this.isSavingExportPreference || !this.isSettingsLoaded ||
+      enabled === this.exportDefaultOriginalResolution) {
+      return;
+    }
+
+    const previousValue: boolean = this.exportDefaultOriginalResolution;
+    this.exportDefaultOriginalResolution = enabled;
+    this.isSavingExportPreference = true;
+    try {
+      this.exportDefaultOriginalResolution =
+        await ReviewSettingsService.saveExportDefaultOriginalResolution(this.getAbilityContext(), enabled);
+      ToastService.success(
+        this.getUIContext(),
+        enabled ? '已默认使用原图分辨率导出' : '已恢复每次选择导出方式'
+      );
+    } catch (error) {
+      this.exportDefaultOriginalResolution = previousValue;
+      ToastService.error(this.getUIContext(), '导出偏好保存失败，请重试');
+    } finally {
+      this.isSavingExportPreference = false;
+    }
   }
 
   private isKeyboardActive(): boolean {
@@ -279,6 +309,43 @@ struct ReviewSettingsPage {
     })
   }
 
+  @Builder
+  ExportPreferenceToggle() {
+    Row({ space: AppMetrics.cardGap }) {
+      Column({ space: 3 }) {
+        Text('默认走原图分辨率导出')
+          .fontSize(AppTypography.body)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(AppColors.text)
+          .lineHeight(AppTypography.bodyLineHeight)
+          .width('100%')
+
+        Text('开启后，预览页点导出会直接生成原图尺寸 JPEG。')
+          .fontSize(AppTypography.caption)
+          .fontColor(AppColors.secondaryText)
+          .lineHeight(AppTypography.captionLineHeight)
+          .width('100%')
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      Toggle({ type: ToggleType.Switch, isOn: this.exportDefaultOriginalResolution })
+        .selectedColor(AppColors.primary)
+        .enabled(this.isSettingsLoaded && !this.isSavingExportPreference)
+        .opacity(this.isSavingExportPreference ? 0.64 : 1)
+        .onChange((enabled: boolean) => {
+          this.saveExportDefaultOriginalResolution(enabled);
+        })
+    }
+    .alignItems(VerticalAlign.Center)
+    .padding(AppMetrics.cardPadding)
+    .width('100%')
+    .constraintSize({ minHeight: 76 })
+    .borderRadius(AppMetrics.cardRadius)
+    .backgroundColor(AppColors.surface)
+    .border({ width: 1, color: AppColors.border })
+  }
+
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
       AppBottomSafeAreaFill()
@@ -295,6 +362,8 @@ struct ReviewSettingsPage {
             } else {
               this.LoadingSettings()
             }
+
+            this.ExportPreferenceToggle()
 
             this.HomeStorageLink()
           }

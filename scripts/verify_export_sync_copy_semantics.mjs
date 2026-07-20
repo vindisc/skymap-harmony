@@ -32,13 +32,14 @@ function assertNotIncludes(source, token, label) {
 
 assertIncludes(previewSource, "Text('导出当前复盘')", 'Preview export sheet');
 assertNotIncludes(previewSource, "Text('导出与同步')", 'Preview export sheet');
-assertIncludes(previewSource, "this.ActionButton(this.exportState === ExportState.IMAGE ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片'", 'Preview floating action bar');
+assertIncludes(previewSource, 'this.handleExportButtonTap();', 'Preview floating action bar');
 assertIncludes(previewSource, 'this.MoreActionButton(this.isActionBusy()', 'Preview floating action bar');
+assertIncludes(previewSource, "'导出到相册（原图分辨率 · JPEG）'", 'Preview export sheet');
+assertIncludes(previewSource, "'导出到相册（屏幕分辨率 · JPEG）'", 'Preview export sheet');
 assertIncludes(previewSource, "'导出复盘包'", 'Preview export sheet');
 assertIncludes(previewSource, "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'", 'Preview export sheet');
-assertIncludes(previewSource, "'复制复盘数据'", 'Preview export sheet');
-assertIncludes(previewSource, "'复制当前复盘的文本数据。'", 'Preview export sheet');
 assertIncludes(previewSource, "'导出复盘包（含原图）'", 'Preview export sheet');
+assertNotIncludes(previewSource, "'复制复盘数据'", 'Preview export sheet');
 
 assertNotIncludes(previewSource, "'上传家庭存储'", 'Preview export sheet');
 assertNotIncludes(previewSource, 'uploadReviewJsonToHomeStorage', 'Preview export sheet');
@@ -88,4 +89,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log('export/sync/copy semantics: labels, descriptions, sync-center scope, and data-model boundaries verified');
+console.log('export/sync semantics: four export choices, sync-center scope, and data-model boundaries verified');

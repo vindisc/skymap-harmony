@@ -40,7 +40,8 @@ assert(previewSource.includes('markExportedQuietly'), 'Preview should separate e
 assert(previewSource.includes('result.cancelled'), 'Preview should treat cancelled export separately from failed export.');
 assert(previewSource.includes('this.isSaving ||') && previewSource.includes('this.exportState !== ExportState.IDLE'), 'Preview busy gate should block repeated actions across save/export/bundle export.');
 assert(previewSource.includes('ExportSheetAction(label: string, description: string, isDisabled: boolean'), 'Preview export sheet actions should support descriptions and disabled state.');
-assert(previewSource.includes("this.ActionButton(this.exportState === ExportState.IMAGE ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {"), 'Preview primary action should export the image directly.');
+assert(previewSource.includes('this.handleExportButtonTap();'), 'Preview primary action should resolve the global export preference.');
+assert(previewSource.includes("loadExportDefaultOriginalResolution(this.getAbilityContext())"), 'Preview primary action should reload the global export preference.');
 assert(previewSource.includes('this.MoreActionButton(this.isActionBusy(), () => {'), 'Preview should keep secondary export choices behind a More action.');
 assert(previewSource.includes('REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT'), 'Preview image export should use user-visible photo-library success copy.');
 assert(previewSource.includes('REVIEW_FLOW_EXPORT_SUCCESS_TEXT'), 'Preview should use shared export success copy.');

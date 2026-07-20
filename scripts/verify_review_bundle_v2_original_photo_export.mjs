@@ -131,7 +131,8 @@ assertIncludes(previewSource, "'导出复盘包（含原图）'", 'PreviewPage')
 assertIncludes(previewSource, "'包含原始照片和复盘数据，适合在 Mac 端继续处理。'", 'PreviewPage');
 assertIncludes(previewSource, "'导出复盘包'", 'PreviewPage');
 assertIncludes(previewSource, "'包含复盘数据和导出图，用于家庭存储和 Mac 接力。'", 'PreviewPage');
-assertIncludes(previewSource, "'复制复盘数据'", 'PreviewPage');
+assertIncludes(previewSource, "'导出到相册（原图分辨率 · JPEG）'", 'PreviewPage');
+assertIncludes(previewSource, "'导出到相册（屏幕分辨率 · JPEG）'", 'PreviewPage');
 assertNotIncludes(previewSource, "'导出 review.json'", 'PreviewPage');
 
 for (const token of [

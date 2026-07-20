@@ -8,6 +8,7 @@ const WIDGET_CARD_BACKGROUND_STYLE_KEY: string = 'widget_card_background_style';
 const SHATTER_ANIMATION_ENABLED_KEY: string = 'shatter_animation_enabled';
 const MOTION_QUALITY_KEY: string = 'motion_quality';
 const REVIEW_STREAK_RECORD_KEY: string = 'review_streak_record';
+const EXPORT_DEFAULT_ORIGINAL_RESOLUTION_KEY: string = 'export_default_original_resolution';
 
 export const REVIEW_WIDGET_CARD_BACKGROUND_PLAIN: string = 'plain';
 export const REVIEW_WIDGET_CARD_BACKGROUND_HUIWEN: string = 'huiwen';
@@ -91,6 +92,26 @@ export class ReviewSettingsService {
     await ReviewSettingsService.persistValue(store, REVIEWER_NAME_KEY, normalizedName);
     SettingsRefreshService.notifySettingsChanged('reviewer_name_saved');
     return normalizedName;
+  }
+
+  static async loadExportDefaultOriginalResolution(context: common.UIAbilityContext): Promise<boolean> {
+    try {
+      const store = await ReviewSettingsService.getStore(context);
+      const rawValue = await store.get(EXPORT_DEFAULT_ORIGINAL_RESOLUTION_KEY, false);
+      return rawValue === true || String(rawValue) === 'true';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  static async saveExportDefaultOriginalResolution(
+    context: common.UIAbilityContext,
+    enabled: boolean
+  ): Promise<boolean> {
+    const store = await ReviewSettingsService.getStore(context);
+    await ReviewSettingsService.persistValue(store, EXPORT_DEFAULT_ORIGINAL_RESOLUTION_KEY, enabled);
+    SettingsRefreshService.notifySettingsChanged('export_default_original_resolution_saved');
+    return enabled;
   }
 
   static async loadWidgetCardBackgroundStyle(context: common.UIAbilityContext): Promise<string> {

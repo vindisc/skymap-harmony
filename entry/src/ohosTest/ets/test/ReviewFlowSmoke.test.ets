@@ -23,7 +23,7 @@ export default function reviewFlowSmokeTest(): void {
       await saveButton.click();
       await driver.delayMs(900);
       await driver.assertComponentExist(ON.text('复盘记录'));
-      await driver.assertComponentExist(ON.text('导出图片'));
+      await driver.assertComponentExist(ON.text('导出'));
       await driver.assertComponentExist(ON.text('UI 自动化完整链路'));
     });
 
@@ -34,6 +34,10 @@ export default function reviewFlowSmokeTest(): void {
       await moreButton.click();
       await driver.delayMs(250);
       await driver.assertComponentExist(ON.text('导出当前复盘'));
+      await driver.assertComponentExist(ON.text('导出到相册（原图分辨率 · JPEG）'));
+      await driver.assertComponentExist(ON.text('导出到相册（屏幕分辨率 · JPEG）'));
+      await driver.assertComponentExist(ON.text('导出复盘包'));
+      await driver.assertComponentExist(ON.text('导出复盘包（含原图）'));
       await driver.assertComponentExist(ON.text('取消'));
     });
 
@@ -41,7 +45,7 @@ export default function reviewFlowSmokeTest(): void {
       const driver: Driver = await launchTestScenario('preview_long_text');
       await driver.assertComponentExist(ON.text('自动化测试复盘'));
       await driver.assertComponentExist(ON.text('复盘记录'));
-      await driver.assertComponentExist(ON.text('导出图片'));
+      await driver.assertComponentExist(ON.text('导出'));
     });
   });
 }

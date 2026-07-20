@@ -43,7 +43,8 @@ const requiredCopy = [
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".constraintSize({ minWidth: value === 'all' ? 60 : 72 })"],
   ['entry/src/main/ets/pages/ProjectDetailPage.ets', ".fontSize(13)"],
   ['entry/src/main/ets/pages/PreviewPage.ets', ".height(AppMetrics.toolbarButtonHeight)"],
-  ['entry/src/main/ets/pages/PreviewPage.ets', "this.ExportSheetAction('复制复盘数据', '复制当前复盘的文本数据。', this.isActionBusy(), () => {"],
+  ['entry/src/main/ets/pages/PreviewPage.ets', "'导出到相册（原图分辨率 · JPEG）'"],
+  ['entry/src/main/ets/pages/PreviewPage.ets', "'导出到相册（屏幕分辨率 · JPEG）'"],
   ['entry/src/main/ets/pages/ReviewSettingsPage.ets', "Text('家庭存储')"],
   ['entry/src/main/ets/components/ReviewPhotoBlock.ets', "Text(hasDisplayableImageUri(this.imageUri) && this.loadFailed ? '照片暂不可见' : '照片')"]
 ];

@@ -1,5 +1,4 @@
 import common from '@ohos.app.ability.common';
-import pasteboard from '@ohos.pasteboard';
 import { EDITOR_PAGE } from '../app/AppRouter';
 import {
   cloneReviewCardDocument,
@@ -24,11 +23,8 @@ import {
   ReviewBundleOriginalPhotoExportResult,
   ReviewBundleOriginalPhotoExportService
 } from '../services/ReviewBundleOriginalPhotoExportService';
-import { stringifyReviewCardExchangeSchemaV1 } from '../services/ReviewCardExchangeSchema';
 import { ReviewSettingsService } from '../services/ReviewSettingsService';
 import {
-  FEEDBACK_CLIPBOARD_COPY_FAILED_TEXT,
-  FEEDBACK_CLIPBOARD_COPY_SUCCESS_TEXT,
   FEEDBACK_EXPORT_TIMEOUT_TEXT,
   FEEDBACK_PROGRESS_COLLECT_ORIGINAL_BUNDLE_TEXT,
   FEEDBACK_PROGRESS_RENDER_EXPORT_IMAGE_TEXT,
@@ -64,6 +60,7 @@ enum PreviewSaveState {
 enum ExportState {
   IDLE = 'idle',
   IMAGE = 'image',
+  ORIGINAL_IMAGE = 'originalImage',
   BUNDLE = 'bundle',
   ORIGINAL = 'original'
 }
@@ -83,6 +80,7 @@ struct PreviewPage {
   @State floatingStatusTone: StatusBannerTone = StatusBannerTone.PROGRESS;
   @State reviewerText: string = '';
   @State pressedActionKey: string = '';
+  @State isResolvingExportPreference: boolean = false;
 
   private getAbilityContext(): common.UIAbilityContext {
     return this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -251,16 +249,58 @@ struct PreviewPage {
     }
   }
 
-  private async copyReviewData(): Promise<void> {
-    try {
-      const reviewerName: string = await ReviewSettingsService.loadReviewerName(this.getAbilityContext());
-      const exchangeJson: string = stringifyReviewCardExchangeSchemaV1(this.document, reviewerName);
-      const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, exchangeJson);
-      await pasteboard.getSystemPasteboard().setData(data);
-      ToastService.success(this.getUIContext(), FEEDBACK_CLIPBOARD_COPY_SUCCESS_TEXT);
-    } catch (error) {
-      ToastService.error(this.getUIContext(), FEEDBACK_CLIPBOARD_COPY_FAILED_TEXT);
+  private async exportOriginalResolutionImage(): Promise<void> {
+    if (this.isActionBusy()) {
+      return;
     }
+
+    this.startExportAction(ExportState.ORIGINAL_IMAGE, '准备按原图分辨率导出…');
+    let timeoutId: number = this.startExportTimeout(ExportState.ORIGINAL_IMAGE);
+    try {
+      const context = this.getAbilityContext();
+      const reviewerName: string = await ReviewSettingsService.loadReviewerName(context);
+      this.reviewerText = reviewerName;
+      this.setFloatingStatus(FEEDBACK_PROGRESS_RENDER_EXPORT_IMAGE_TEXT, StatusBannerTone.PROGRESS);
+      const result: ReviewCardExportResult = await ReviewCardExportService.exportOriginalResolution(
+        context,
+        this.document,
+        reviewerName
+      );
+      if (result.savedToPhotoLibrary) {
+        await this.markExportedQuietly(result.path);
+        this.setFloatingStatus(REVIEW_FLOW_EXPORT_SUCCESS_TEXT, StatusBannerTone.SUCCESS);
+        ToastService.success(this.getUIContext(), REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT);
+      } else if (result.cancelled) {
+        this.clearFloatingStatus();
+      } else {
+        const failedText: string = '原图导出失败，建议使用屏幕分辨率';
+        this.setFloatingStatus(failedText, StatusBannerTone.ERROR);
+        ToastService.error(this.getUIContext(), failedText);
+      }
+    } catch (error) {
+      const failedText: string = '原图导出失败，建议使用屏幕分辨率';
+      this.setFloatingStatus(failedText, StatusBannerTone.ERROR);
+      ToastService.error(this.getUIContext(), failedText);
+    } finally {
+      clearTimeout(timeoutId);
+      this.finishExportAction(ExportState.ORIGINAL_IMAGE);
+    }
+  }
+
+  private async handleExportButtonTap(): Promise<void> {
+    if (this.isActionBusy()) {
+      return;
+    }
+
+    this.isResolvingExportPreference = true;
+    const shouldExportOriginal: boolean =
+      await ReviewSettingsService.loadExportDefaultOriginalResolution(this.getAbilityContext());
+    this.isResolvingExportPreference = false;
+    if (shouldExportOriginal) {
+      await this.exportOriginalResolutionImage();
+      return;
+    }
+    this.openExportMenu();
   }
 
   private async exportReviewBundleToHomeStorage(): Promise<void> {
@@ -405,6 +445,7 @@ struct PreviewPage {
 
   private isActionBusy(): boolean {
     return this.isSaving ||
+      this.isResolvingExportPreference ||
       this.exportState !== ExportState.IDLE;
   }
 
@@ -522,9 +563,15 @@ struct PreviewPage {
         .layoutWeight(1)
 
         Column() {
-          this.ActionButton(this.exportState === ExportState.IMAGE ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出图片', true, this.isActionBusy(), () => {
-            this.exportImage();
-          })
+          this.ActionButton(
+            this.exportState === ExportState.IMAGE || this.exportState === ExportState.ORIGINAL_IMAGE
+              ? REVIEW_FLOW_EXPORT_PENDING_TEXT
+              : '导出',
+            true,
+            this.isActionBusy(),
+            () => {
+              this.handleExportButtonTap();
+            })
         }
         .layoutWeight(2)
 
@@ -716,16 +763,28 @@ struct PreviewPage {
             .fontColor(AppColors.text)
             .width('100%')
 
+          this.ExportSheetAction(
+            this.exportState === ExportState.ORIGINAL_IMAGE ? '导出中…' : '导出到相册（原图分辨率 · JPEG）',
+            '按照片原始像素合成，适合归档和打印。',
+            this.isActionBusy(),
+            () => {
+              this.exportOriginalResolutionImage();
+            })
+
+          this.ExportSheetAction(
+            this.exportState === ExportState.IMAGE ? '导出中…' : '导出到相册（屏幕分辨率 · JPEG）',
+            '使用预览画面生成，原图导出异常时可选。',
+            this.isActionBusy(),
+            () => {
+              this.exportImage();
+            })
+
           this.ExportSheetAction(this.exportState === ExportState.BUNDLE ? '导出中…' : '导出复盘包', '包含复盘数据和导出图，用于家庭存储和 Mac 接力。', this.isActionBusy(), () => {
             this.exportReviewBundleToHomeStorage();
           })
 
           this.ExportSheetAction(this.exportState === ExportState.ORIGINAL ? '导出中…' : '导出复盘包（含原图）', '包含原始照片和复盘数据，适合在 Mac 端继续处理。', this.isActionBusy(), () => {
             this.exportOriginalPhotoReviewBundleToHomeStorage();
-          })
-
-          this.ExportSheetAction('复制复盘数据', '复制当前复盘的文本数据。', this.isActionBusy(), () => {
-            this.copyReviewData();
           })
         }
         .padding(AppMetrics.space16)

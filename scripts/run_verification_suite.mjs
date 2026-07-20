@@ -31,6 +31,7 @@ const smokeScripts = [
   'verify_my_pages_copy_cleanup.mjs',
   'verify_photo_import_crash_guard.mjs',
   'verify_preview_safe_area_actions.mjs',
+  'verify_preview_export_preferences.mjs',
   'verify_product_docs_cleanup.mjs',
   'verify_review_bundle_export.mjs',
   'verify_review_bundle_export_diagnostics.mjs',
