@@ -14,6 +14,7 @@ SIGNED_HAP="$REPO_ROOT/entry/build/default/outputs/default/entry-default-signed.
 CHECK_ONLY=false
 RESTORE_APP=false
 LAUNCH_APP=false
+NORMAL_APP_RESTORE_NEEDED=false
 SCENARIOS=(
   home
   pending
@@ -153,8 +154,39 @@ if [ "$RESTORE_APP" = true ]; then
   exit 0
 fi
 
+restore_normal_app() {
+  if [ "$NORMAL_APP_RESTORE_NEEDED" = false ]; then
+    return 0
+  fi
+
+  echo "正在退出测试场景并恢复正常应用入口..."
+  "${HDC_COMMAND[@]}" shell aa force-stop "$BUNDLE_NAME" >/dev/null 2>&1 || true
+  if "${HDC_COMMAND[@]}" shell aa start \
+    -a "$ABILITY_NAME" \
+    -b "$BUNDLE_NAME" \
+    -m "$MODULE_NAME"; then
+    NORMAL_APP_RESTORE_NEEDED=false
+    echo "已恢复正常应用入口，真机可直接继续使用。"
+    return 0
+  fi
+
+  echo "正常应用入口恢复失败，请保持设备在线后执行：bash scripts/smoke_device.sh --launch" >&2
+  return 1
+}
+
+cleanup_on_exit() {
+  local status=$?
+  trap - EXIT
+  if ! restore_normal_app && [ "$status" -eq 0 ]; then
+    status=1
+  fi
+  exit "$status"
+}
+
 echo "安装 Debug HAP..."
 "${HDC_COMMAND[@]}" install -r "$SIGNED_HAP"
+NORMAL_APP_RESTORE_NEEDED=true
+trap cleanup_on_exit EXIT
 
 launch_scenario() {
   local scenario="$1"
@@ -196,4 +228,5 @@ REPORT_PATH="$OUTPUT_DIR/report.md"
   done
 } > "$REPORT_PATH"
 
+restore_normal_app
 echo "设备冒烟完成，产物目录：$OUTPUT_DIR"

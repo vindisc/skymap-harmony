@@ -50,7 +50,9 @@ bash scripts/test_app.sh --device
 通过 `install -r` 覆盖安装应用，不主动卸载、不清理应用数据，再依次覆盖首页、
 待复盘、今日复盘、横竖方图
 编辑/预览、长文本预览以及六个设置页，并把截图、截图报告和 hilog 放到
-`test-artifacts/device-smoke/`。多个设备同时连接时，通过 `SKYMAP_HDC_TARGET` 指定设备。
+`test-artifacts/device-smoke/`。冒烟完成或中途失败后，脚本会退出测试场景并从正常
+应用入口重新启动，确保真机可以直接继续使用。多个设备同时连接时，通过
+`SKYMAP_HDC_TARGET` 指定设备。
 设备模式固定使用本机 Zulu 11，以兼容当前 Debug p12，不受终端已有 `JAVA_HOME`
 影响；如需更换，仅通过 `SKYMAP_DEVICE_JAVA_HOME` 显式指定。设备必须处于
 `Connected` 状态，仅能枚举到 `Offline` 设备时会在构建前终止。

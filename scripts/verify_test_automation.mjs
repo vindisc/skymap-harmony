@@ -81,6 +81,8 @@ requireIncludes(deviceScript, '--ps testScenario', 'smoke_device.sh debug scenar
 requireIncludes(deviceScript, '--check-only', 'smoke_device.sh device preflight');
 requireIncludes(deviceScript, '--restore-app', 'smoke_device.sh full app restore entry');
 requireIncludes(deviceScript, '--launch', 'smoke_device.sh normal signed launch entry');
+requireIncludes(deviceScript, 'restore_normal_app', 'smoke_device.sh normal entry restoration');
+requireIncludes(deviceScript, '已恢复正常应用入口，真机可直接继续使用', 'smoke_device.sh usable device handoff');
 requireIncludes(deviceScript, '卸载测试应用', 'smoke_device.sh test app uninstall');
 requireIncludes(deviceScript, '安装完整 Debug HAP', 'smoke_device.sh full app install');
 requireIncludes(deviceScript, 'Connected', 'smoke_device.sh online device guard');
