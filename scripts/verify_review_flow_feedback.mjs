@@ -32,7 +32,8 @@ assert(files.editor.includes('@State isSaving'), 'Editor must keep a saving stat
 assert(files.editor.includes('REVIEW_FLOW_SAVE_PENDING_TEXT'), 'Editor save button should show loading copy.');
 assert(files.editor.includes('REVIEW_FLOW_SAVE_SUCCESS_TEXT'), 'Editor save success toast must be present.');
 assert(files.editor.includes('REVIEW_FLOW_SAVE_FAILED_TEXT'), 'Editor save failure toast must be present.');
-assert(files.editor.includes('.enabled(!this.isSaving)'), 'Editor save button must disable while saving.');
+assert(files.editor.includes('private isActionBusy(): boolean'), 'Editor must share one busy gate across save and direct export.');
+assert(files.editor.includes('.enabled(!this.isActionBusy())'), 'Editor actions must disable while saving or exporting.');
 
 assert(files.preview.includes('REVIEW_FLOW_EXPORT_PENDING_TEXT'), 'Preview export button should show loading copy.');
 assert(files.preview.includes('REVIEW_FLOW_EXPORT_SUCCESS_TEXT'), 'Preview export success toast must be present.');

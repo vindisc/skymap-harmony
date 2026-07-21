@@ -26,6 +26,9 @@ assertNotIncludes(editorPageSource, 'EDITOR_PHOTO_TITLE_HEIGHT', 'EditorPage pho
 assertNotIncludes(editorPageSource, 'EDITOR_PHOTO_TITLE_GAP', 'EditorPage photo header must not keep the old title/image gap.');
 assertIncludes(editorPageSource, 'const EDITOR_PHOTO_HEADER_TOP_PADDING: number = AppMetrics.pageTopPadding;', 'EditorPage must keep the photo header below the system status area.');
 assertIncludes(editorPageSource, '.padding({ top: EDITOR_PHOTO_HEADER_TOP_PADDING })', 'EditorPage must apply the shared top inset to the rendered photo header.');
+assertIncludes(editorPageSource, '.justifyContent(FlexAlign.Start)', 'EditorPage previews must stay top-aligned instead of drifting to vertical center.');
+assertNotIncludes(editorPageSource, '预览为屏幕缩略', 'EditorPage must not teach implementation details below the preview.');
+assertNotIncludes(editorPageSource, '导出保留原图分辨率', 'EditorPage must not keep export-resolution teaching copy.');
 assertIncludes(editorPageSource, 'const EDITOR_PHOTO_HEADER_BOTTOM_PADDING: number = 10;', 'EditorPage should keep a compact photo-to-form gap.');
 assertIncludes(editorPageSource, 'const EDITOR_PHOTO_VIEWPORT_RATIO: number = 0.30;', 'EditorPage photo should leave more first-screen writing room.');
 assertIncludes(editorPageSource, 'const EDITOR_KEYBOARD_VISIBLE_RESERVE: number = 54;', 'EditorPage keyboard math must reserve visible caret breathing room.');

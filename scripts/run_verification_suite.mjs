@@ -10,6 +10,7 @@ const allScripts = fs.readdirSync(scriptsDirectory)
   .sort();
 const smokeScripts = [
   'verify_compact_typography.mjs',
+  'verify_editor_direct_frame_export.mjs',
   'verify_editor_template_selector.mjs',
   'verify_export_sync_copy_semantics.mjs',
   'verify_feedback_semantics.mjs',

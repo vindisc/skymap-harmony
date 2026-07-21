@@ -17,6 +17,7 @@ import { ExifPayload, ExifSource, isExifPayloadEmpty, normalizeExifPayload } fro
 import { resolveTemplate, TemplateDescriptor, TemplateId, TemplateLevel } from '../model/TemplateModel';
 import { ReviewInputForm } from '../components/ReviewInputForm';
 import { ReviewCardPreview } from '../components/ReviewCardPreview';
+import { FrameTemplatePreview } from '../components/FrameTemplatePreview';
 import { TemplateLevelTabBar } from '../components/TemplateLevelTabBar';
 import { EditorEmptyPlaceholder } from '../components/EditorEmptyPlaceholder';
 import { FrameParamsSheet } from '../components/FrameParamsSheet';
@@ -32,8 +33,12 @@ import {
   REVIEW_FLOW_SAVE_FAILED_TEXT,
   REVIEW_FLOW_SAVE_PENDING_TEXT,
   REVIEW_FLOW_SAVE_SUCCESS_TEXT,
+  REVIEW_FLOW_EXPORT_FAILED_TEXT,
+  REVIEW_FLOW_EXPORT_PENDING_TEXT,
+  REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT,
   REVIEW_FLOW_TEMPLATE_FRAME_RESET_TEXT
 } from '../services/ReviewFlowFeedback';
+import { ReviewCardExportResult, ReviewCardExportService } from '../services/ReviewCardExportService';
 import { ExifReaderService } from '../services/ExifReaderService';
 import { PickedPhotoResult } from '../services/PhotoPickerService';
 import { applyTemplateToDocument } from '../utils/TemplateApply';
@@ -125,6 +130,7 @@ struct EditorPage {
   @State viewportHeight: number = EDITOR_VIEWPORT_FALLBACK_HEIGHT;
   @State keyboardHeight: number = 0;
   @State isSaving: boolean = false;
+  @State isExporting: boolean = false;
   @State isDirty: boolean = false;
   @State pendingPhotoId: string = '';
   @State introStage: number = 0;
@@ -322,6 +328,28 @@ struct EditorPage {
     return resolveTemplate(this.document.config.templateId);
   }
 
+  private getEditorTitle(): string {
+    if (this.currentTemplateLevel === TemplateLevel.L0_FRAME) {
+      return '编辑相框';
+    }
+    if (this.currentTemplateLevel === TemplateLevel.L1_META) {
+      return '编辑参数卡';
+    }
+    if (this.currentTemplateLevel === TemplateLevel.L2_NOTE) {
+      return '编辑一句话';
+    }
+    return '编辑复盘';
+  }
+
+  private shouldUseDirectPhotoExport(): boolean {
+    return this.currentTemplateLevel === TemplateLevel.L0_FRAME ||
+      this.currentTemplateLevel === TemplateLevel.L1_META;
+  }
+
+  private isActionBusy(): boolean {
+    return this.isSaving || this.isExporting;
+  }
+
   private getCanonicalTemplateId(): string {
     return this.getCurrentDescriptor().id;
   }
@@ -446,7 +474,7 @@ struct EditorPage {
   }
 
   private async saveAndPreview(): Promise<void> {
-    if (this.isSaving) {
+    if (this.isActionBusy()) {
       return;
     }
 
@@ -471,6 +499,36 @@ struct EditorPage {
       ToastService.error(this.getUIContext(), REVIEW_FLOW_SAVE_FAILED_TEXT);
     } finally {
       this.isSaving = false;
+    }
+  }
+
+  private async exportPhotoCard(): Promise<void> {
+    if (this.isActionBusy() || this.imageUri.length === 0) {
+      return;
+    }
+
+    this.isExporting = true;
+    this.syncDocumentFromInput();
+    ReviewCardStore.setCurrentDocument(this.document);
+    try {
+      const result: ReviewCardExportResult = await ReviewCardExportService.exportOriginalResolution(
+        this.getAbilityContext(),
+        this.document,
+        ''
+      );
+      if (result.savedToPhotoLibrary) {
+        this.isDirty = false;
+        ToastService.success(this.getUIContext(), REVIEW_FLOW_IMAGE_EXPORT_SUCCESS_TEXT);
+      } else if (!result.cancelled) {
+        ToastService.error(
+          this.getUIContext(),
+          result.message.length > 0 ? result.message : REVIEW_FLOW_EXPORT_FAILED_TEXT
+        );
+      }
+    } catch (error) {
+      ToastService.error(this.getUIContext(), REVIEW_FLOW_EXPORT_FAILED_TEXT);
+    } finally {
+      this.isExporting = false;
     }
   }
 
@@ -836,7 +894,10 @@ struct EditorPage {
   }
 
   onBackPress(): boolean {
-    if (!this.isDirty || this.isSaving) {
+    if (this.isActionBusy()) {
+      return true;
+    }
+    if (!this.isDirty) {
       return false;
     }
 
@@ -863,7 +924,7 @@ struct EditorPage {
       .border({ width: 1, color: AppColors.border })
 
       Column({ space: 2 }) {
-        Text('编辑复盘')
+        Text(this.getEditorTitle())
           .fontFamily('NotoSansSC-Bold')
           .fontSize(AppTypography.sectionTitle)
           .fontWeight(FontWeight.Bold)
@@ -906,24 +967,24 @@ struct EditorPage {
         })
       } else {
         Column() {
-          ReviewCardPreview({
-            document: this.getPreviewDocument(),
-            renderMode: ReviewCardRenderMode.MOBILE_READING
-          })
+          if (this.shouldUseDirectPhotoExport()) {
+            FrameTemplatePreview({
+              document: this.getPreviewDocument(),
+              maxWidth: this.getContentWidth(),
+              maxHeight: this.getPhotoMaxHeight()
+            })
+          } else {
+            ReviewCardPreview({
+              document: this.getPreviewDocument(),
+              renderMode: ReviewCardRenderMode.MOBILE_READING
+            })
+          }
         }
-        .justifyContent(FlexAlign.Center)
+        .justifyContent(FlexAlign.Start)
+        .alignItems(HorizontalAlign.Center)
         .width('100%')
         .layoutWeight(1)
         .clip(true)
-
-        Text(this.currentTemplateLevel === TemplateLevel.L3_REVIEW
-          ? '预览为屏幕缩略，导出保留原图分辨率。'
-          : '预览暂用复盘卡样式，导出按当前模板生成。')
-          .fontFamily('NotoSansSC-Regular')
-          .fontSize(AppTypography.caption)
-          .fontColor(AppColors.secondaryText)
-          .textAlign(TextAlign.Center)
-          .width('100%')
       }
     }
     .padding({ left: AppMetrics.pagePadding, right: AppMetrics.pagePadding, bottom: AppMetrics.space8 })
@@ -973,7 +1034,7 @@ struct EditorPage {
       .borderRadius(AppMetrics.buttonRadius)
       .backgroundColor(primary ? AppColors.primary : AppColors.surfaceTint)
       .border({ width: 1, color: primary ? AppColors.primaryPressed : AppColors.border })
-      .enabled(!this.isSaving)
+      .enabled(!this.isActionBusy())
       .onClick(() => {
         onTap();
       })
@@ -987,7 +1048,7 @@ struct EditorPage {
         this.ActionChipContent(label, primary, onTap);
       }
     })
-      .enabled(!this.isSaving)
+      .enabled(!this.isActionBusy())
   }
 
   @Builder
@@ -1013,9 +1074,15 @@ struct EditorPage {
 
       Blank()
 
-      this.ActionChip(this.isSaving ? REVIEW_FLOW_SAVE_PENDING_TEXT : '💾 保存', true, () => {
-        this.saveAndPreview();
-      })
+      if (this.shouldUseDirectPhotoExport()) {
+        this.ActionChip(this.isExporting ? REVIEW_FLOW_EXPORT_PENDING_TEXT : '导出到相册', true, () => {
+          this.exportPhotoCard();
+        })
+      } else {
+        this.ActionChip(this.isSaving ? REVIEW_FLOW_SAVE_PENDING_TEXT : '💾 保存', true, () => {
+          this.saveAndPreview();
+        })
+      }
     }
     .alignItems(VerticalAlign.Center)
     .width('100%')
@@ -1028,6 +1095,16 @@ struct EditorPage {
       duration: MotionQualityContext.resolveDuration(MotionTokens.durationSlow),
       curve: MotionQualityContext.resolveCurve(MotionCurveRole.SPRING_SOFT)
     })
+  }
+
+  @Builder
+  CompactContentSection() {
+    Column() {
+      this.CompactActionRow()
+    }
+    .justifyContent(FlexAlign.Start)
+    .layoutWeight(42)
+    .width('100%')
   }
 
   @Builder
@@ -1166,7 +1243,7 @@ struct EditorPage {
         } else if (this.currentTemplateLevel === TemplateLevel.L2_NOTE) {
           this.CaptionContentSection()
         } else {
-          this.CompactActionRow()
+          this.CompactContentSection()
         }
       }
       .width('100%')

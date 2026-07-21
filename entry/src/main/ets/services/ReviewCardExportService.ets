@@ -4,6 +4,9 @@ import fileUri from '@ohos.file.fileuri';
 import photoAccessHelper from '@ohos.file.photoAccessHelper';
 import common from '@ohos.app.ability.common';
 import { ReviewCardDocument } from '../model/ReviewCardModel';
+import { resolveTemplate, TemplateLevel } from '../model/TemplateModel';
+import { L0CanvasComposeResult, L0CanvasComposer } from './L0CanvasComposer';
+import { L1CanvasComposeResult, L1CanvasComposer } from './L1CanvasComposer';
 import { L3CanvasComposeResult, L3CanvasComposer } from './L3CanvasComposer';
 
 export interface ReviewCardExportResult {
@@ -27,6 +30,11 @@ const EXPORT_TITLE_PREFIX: string = 'skymap-review-card';
 const EXPORT_EXTENSION: string = 'jpg';
 const EXPORT_MIME_TYPE: string = 'image/jpeg';
 const BUNDLE_THUMBNAIL_MIME_TYPE: string = 'image/jpeg';
+
+interface OriginalResolutionComposeResult {
+  success: boolean;
+  message: string;
+}
 
 function errorMessage(error: Error): string {
   return error.message;
@@ -139,6 +147,41 @@ async function saveJpgToPhotoLibrary(context: common.UIAbilityContext, outputPat
 export class ReviewCardExportService {
   private static isExporting: boolean = false;
 
+  private static async composeOriginalResolution(
+    context: common.UIAbilityContext,
+    document: ReviewCardDocument,
+    reviewerName: string,
+    outputPath: string
+  ): Promise<OriginalResolutionComposeResult> {
+    const level: TemplateLevel = resolveTemplate(document.config.templateId).level;
+    if (level === TemplateLevel.L0_FRAME) {
+      const result: L0CanvasComposeResult = await L0CanvasComposer.compose({
+        context: context,
+        document: document,
+        outputPath: outputPath
+      });
+      return { success: result.success, message: result.message };
+    }
+    if (level === TemplateLevel.L1_META) {
+      const result: L1CanvasComposeResult = await L1CanvasComposer.compose({
+        context: context,
+        document: document,
+        outputPath: outputPath
+      });
+      return { success: result.success, message: result.message };
+    }
+    if (level === TemplateLevel.L2_NOTE) {
+      return { success: false, message: '一句话模板暂未开放导出' };
+    }
+    const result: L3CanvasComposeResult = await L3CanvasComposer.compose({
+      context: context,
+      document: document,
+      reviewerName: reviewerName,
+      outputPath: outputPath
+    });
+    return { success: result.success, message: result.message };
+  }
+
   static async exportOriginalResolution(
     context: common.UIAbilityContext,
     document: ReviewCardDocument,
@@ -162,12 +205,8 @@ export class ReviewCardExportService {
       const outputDir: string = `${context.filesDir}/${EXPORT_DIR_NAME}`;
       fs.mkdirSync(outputDir, true);
       backupPath = `${outputDir}/${timestamp}-original.${EXPORT_EXTENSION}`;
-      const composeResult: L3CanvasComposeResult = await L3CanvasComposer.compose({
-        context: context,
-        document: document,
-        reviewerName: reviewerName,
-        outputPath: backupPath
-      });
+      const composeResult: OriginalResolutionComposeResult =
+        await ReviewCardExportService.composeOriginalResolution(context, document, reviewerName, backupPath);
       if (!composeResult.success) {
         return {
           success: false,
