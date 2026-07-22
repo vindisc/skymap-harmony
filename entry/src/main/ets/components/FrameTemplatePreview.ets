@@ -90,29 +90,32 @@ export struct FrameTemplatePreview {
 
   @Builder
   PhotoContent(geometry: FramePreviewGeometry) {
-    if (hasDisplayableImageUri(this.document.imageUri) && !this.loadFailed) {
-      Image(this.document.imageUri)
-        .width(geometry.photoWidth)
-        .height(geometry.photoHeight)
-        .objectFit(ImageFit.Fill)
-        .borderRadius(geometry.cornerRadius)
-        .clip(true)
-        .onError(() => {
-          this.loadFailed = true;
-        })
-    } else {
-      Column() {
-        Text(this.loadFailed ? '照片暂不可见' : '照片')
-          .fontFamily('NotoSansSC-Regular')
-          .fontSize(AppTypography.caption)
-          .fontColor(AppColors.secondaryText)
+    Stack() {
+      if (hasDisplayableImageUri(this.document.imageUri) && !this.loadFailed) {
+        Image(this.document.imageUri)
+          .width('100%')
+          .height('100%')
+          .objectFit(ImageFit.Fill)
+          .onError(() => {
+            this.loadFailed = true;
+          })
+      } else {
+        Column() {
+          Text(this.loadFailed ? '照片暂不可见' : '照片')
+            .fontFamily('NotoSansSC-Regular')
+            .fontSize(AppTypography.caption)
+            .fontColor(AppColors.secondaryText)
+        }
+        .justifyContent(FlexAlign.Center)
+        .width('100%')
+        .height('100%')
+        .backgroundColor(AppColors.surfaceMuted)
       }
-      .justifyContent(FlexAlign.Center)
-      .width(geometry.photoWidth)
-      .height(geometry.photoHeight)
-      .backgroundColor(AppColors.surfaceMuted)
-      .borderRadius(geometry.cornerRadius)
     }
+    .width(geometry.photoWidth)
+    .height(geometry.photoHeight)
+    .borderRadius(geometry.cornerRadius)
+    .clip(true)
   }
 
   @Builder
@@ -141,17 +144,17 @@ export struct FrameTemplatePreview {
 
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
-      Column() {
-        this.PhotoContent(this.getGeometry())
-      }
-        .width(this.getGeometry().photoWidth)
-        .height(this.getGeometry().photoHeight)
-        .position({
-          x: this.getGeometry().outerPadding,
-          y: this.getGeometry().outerPadding
-        })
-
       if (this.getDescriptor().level === TemplateLevel.L1_META) {
+        Column() {
+          this.PhotoContent(this.getGeometry())
+        }
+          .width(this.getGeometry().photoWidth)
+          .height(this.getGeometry().photoHeight)
+          .position({
+            x: this.getGeometry().outerPadding,
+            y: this.getGeometry().outerPadding
+          })
+
         Column() {
           this.MetaBar(this.getGeometry())
         }
@@ -161,6 +164,14 @@ export struct FrameTemplatePreview {
             x: this.getGeometry().outerPadding + this.getGeometry().innerPadding,
             y: this.getGeometry().outerPadding + this.getGeometry().photoHeight + this.getGeometry().innerPadding
           })
+      } else {
+        Column() {
+          this.PhotoContent(this.getGeometry())
+        }
+        .width(this.getGeometry().canvasWidth)
+        .height(this.getGeometry().canvasHeight)
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
       }
     }
     .width(this.getGeometry().canvasWidth)
