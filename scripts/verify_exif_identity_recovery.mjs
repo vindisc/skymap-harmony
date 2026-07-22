@@ -86,13 +86,18 @@ assert(fixtureIdentity.lensModel.includes('A071'), `fixture LensModel expected A
 assert(jpegReaderSource.includes('CAMERA_MAKE_TAG: number = 0x010F'), 'JPEG fallback must parse camera Make');
 assert(jpegReaderSource.includes('CAMERA_MODEL_TAG: number = 0x0110'), 'JPEG fallback must parse camera Model');
 assert(readerSource.includes("'A071'"), 'known A071 lens code fallback is missing');
-assert(readerSource.includes('JpegExifIdentityReader.read(imageUri)'), 'binary JPEG identity fallback is not wired');
+assert(readerSource.includes('JpegExifIdentityReader.readFromFd(file.fd)'), 'same-fd JPEG identity fallback is not wired');
+assert(jpegReaderSource.includes('return mergeIdentity(identity, parseXmpIdentity(bytes))'),
+  'JPEG parser must supplement EXIF identity from later XMP metadata');
 assert(readerSource.includes('export function mergeMissingExifIdentity'), 'partial cached EXIF repair is missing');
 assert(sheetSource.includes('this.reloadMissingIdentity()'), 'EXIF panel does not repair partial cached identity');
 assert(testSource.includes("it('repairsPartialCachedExifWithoutLosingExposureData'"), 'partial cache regression case is missing');
 assert(testSource.includes("it('preservesIntentionallyClearedManualIdentity'"), 'manual override regression case is missing');
+assert(testSource.includes("it('mergesCameraIdentityFromLaterXmpSegment'"), 'split XMP identity regression case is missing');
 assert(deviceScenarioSource.includes('fs.unlinkSync(sandboxPath)'), 'device EXIF fixture must be refreshed before every run');
 assert(deviceScenarioSource.includes('cachedIdentityRepairVerification'), 'device partial-cache assertion is missing');
+assert(deviceScenarioSource.includes('mediaUriIdentityVerification'), 'real media URI identity assertion is missing');
+assert(deviceScenarioSource.includes('showAssetsCreationDialog'), 'device test must create a real media-library URI');
 
 if (failures.length > 0) {
   failures.forEach((failure) => console.error(failure));

@@ -196,20 +196,20 @@ async function readExifByUri(imageUri: string): Promise<ExifPayload> {
 async function readExifByFd(imageUri: string): Promise<ExifPayload> {
   const file: fs.File = fs.openSync(imageUri, fs.OpenMode.READ_ONLY);
   try {
+    let jpegIdentity: JpegExifIdentity = {
+      cameraMake: '',
+      cameraModel: '',
+      lensMake: '',
+      lensModel: ''
+    };
+    try {
+      jpegIdentity = JpegExifIdentityReader.readFromFd(file.fd);
+    } catch (error) {
+      console.warn(`[ExifReaderService] JPEG 身份标签 fd 兜底失败：${error}`);
+    }
     const source: image.ImageSource = image.createImageSource(file.fd);
     try {
       const propertyPayload: ExifPayload = await readPayload(source);
-      let jpegIdentity: JpegExifIdentity = {
-        cameraMake: '',
-        cameraModel: '',
-        lensMake: '',
-        lensModel: ''
-      };
-      try {
-        jpegIdentity = JpegExifIdentityReader.read(imageUri);
-      } catch (error) {
-        console.warn(`[ExifReaderService] JPEG 身份标签兜底失败：${error}`);
-      }
       return mergeExifPayload(propertyPayload, createIdentityPayload(jpegIdentity));
     } finally {
       await source.release();

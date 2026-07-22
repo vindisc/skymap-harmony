@@ -1,5 +1,7 @@
 import common from '@ohos.app.ability.common';
 import fs from '@ohos.file.fs';
+import fileUri from '@ohos.file.fileuri';
+import photoAccessHelper from '@ohos.file.photoAccessHelper';
 import image from '@ohos.multimedia.image';
 import { ExifPayload } from '../model/ExifPayloadModel';
 import { createDefaultReviewCardDocument, ReviewCardDocument } from '../model/ReviewCardModel';
@@ -19,9 +21,20 @@ export interface CanvasSpikeV2L1ExportReport {
   decodeVerification: CanvasSpikeV2L1DecodeVerification;
   exifIdentityVerification: CanvasSpikeV2L1ExifIdentityVerification;
   cachedIdentityRepairVerification: CanvasSpikeV2L1CachedIdentityRepairVerification;
+  mediaUriIdentityVerification: CanvasSpikeV2L1MediaUriIdentityVerification;
   timestampMs: number;
   passed: boolean;
   notes: string;
+}
+
+export interface CanvasSpikeV2L1MediaUriIdentityVerification {
+  mediaUri: string;
+  selectedMediaUri: string;
+  cameraMake: string;
+  cameraModel: string;
+  lensMake: string;
+  lensModel: string;
+  passed: boolean;
 }
 
 export interface CanvasSpikeV2L1CachedIdentityRepairVerification {
@@ -103,6 +116,61 @@ async function ensureFixturePhotoInSandbox(context: common.UIAbilityContext): Pr
   return sandboxPath;
 }
 
+function copyFixtureToMediaUri(sourcePath: string, mediaUri: string): void {
+  const sourceFile: fs.File = fs.openSync(sourcePath, fs.OpenMode.READ_ONLY);
+  try {
+    const targetFile: fs.File = fs.openSync(mediaUri, fs.OpenMode.READ_WRITE | fs.OpenMode.TRUNC);
+    try {
+      fs.copyFileSync(sourceFile.fd, targetFile.fd);
+    } finally {
+      fs.closeSync(targetFile);
+    }
+  } finally {
+    fs.closeSync(sourceFile);
+  }
+}
+
+async function createFixtureMediaUri(
+  context: common.UIAbilityContext,
+  sourcePath: string
+): Promise<string> {
+  const helper = photoAccessHelper.getPhotoAccessHelper(context);
+  try {
+    const mediaUris: Array<string> = await helper.showAssetsCreationDialog(
+      [fileUri.getUriFromPath(sourcePath)],
+      [
+        {
+          title: `skymap-exif-media-uri-test-${Date.now()}`,
+          fileNameExtension: 'jpg',
+          photoType: photoAccessHelper.PhotoType.IMAGE
+        }
+      ]
+    );
+    if (mediaUris.length === 0 || mediaUris[0].length === 0) {
+      throw new Error('系统相册未返回测试媒体 URI');
+    }
+    copyFixtureToMediaUri(sourcePath, mediaUris[0]);
+    return mediaUris[0];
+  } finally {
+    try {
+      await helper.release();
+    } catch (error) {
+    }
+  }
+}
+
+async function selectFixtureMediaUri(): Promise<string> {
+  const picker = new photoAccessHelper.PhotoViewPicker();
+  const options = new photoAccessHelper.PhotoSelectOptions();
+  options.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE;
+  options.maxSelectNumber = 1;
+  const result: photoAccessHelper.PhotoSelectResult = await picker.select(options);
+  if (result.photoUris.length === 0 || result.photoUris[0].length === 0) {
+    throw new Error('系统照片选择器未返回测试媒体 URI');
+  }
+  return result.photoUris[0];
+}
+
 async function resolveFixtureImageSize(sourcePath: string): Promise<image.Size> {
   const source: image.ImageSource = image.createImageSource(sourcePath);
   try {
@@ -175,6 +243,15 @@ export class CanvasSpikeV2L1ExportService {
         exposurePreserved: false,
         passed: false
       },
+      mediaUriIdentityVerification: {
+        mediaUri: '',
+        selectedMediaUri: '',
+        cameraMake: '',
+        cameraModel: '',
+        lensMake: '',
+        lensModel: '',
+        passed: false
+      },
       timestampMs: startedAt,
       passed: false,
       notes: ''
@@ -221,6 +298,24 @@ export class CanvasSpikeV2L1ExportService {
           repairedExif.lensMake === 'TAMRON' &&
           exposurePreserved
       };
+      const mediaUri: string = await createFixtureMediaUri(context, sourcePath);
+      report.mediaUriIdentityVerification.mediaUri = mediaUri;
+      console.info(`[ExifDeviceTestMedia] created=${mediaUri}`);
+      const selectedMediaUri: string = await selectFixtureMediaUri();
+      report.mediaUriIdentityVerification.selectedMediaUri = selectedMediaUri;
+      const mediaExif: ExifPayload = await ExifReaderService.read(selectedMediaUri);
+      report.mediaUriIdentityVerification = {
+        mediaUri: mediaUri,
+        selectedMediaUri: selectedMediaUri,
+        cameraMake: mediaExif.cameraMake,
+        cameraModel: mediaExif.cameraModel,
+        lensMake: mediaExif.lensMake,
+        lensModel: mediaExif.lensModel,
+        passed: mediaExif.cameraMake === 'SONY' &&
+          mediaExif.cameraModel === 'ILCE-7CM2' &&
+          mediaExif.lensMake === 'TAMRON' &&
+          mediaExif.lensModel.indexOf('A071') >= 0
+      };
       console.info(
         `[ExifReaderService] SONY A7CM2 sample: make="${exif.cameraMake}" model="${exif.cameraModel}" ` +
         `focalLength="${exif.focalLength}" aperture="${exif.aperture}" ` +
@@ -241,6 +336,7 @@ export class CanvasSpikeV2L1ExportService {
       report.passed = composeResult.success &&
         report.exifIdentityVerification.passed &&
         report.cachedIdentityRepairVerification.passed &&
+        report.mediaUriIdentityVerification.passed &&
         report.outputBytes > 0 &&
         report.decodeVerification.successful &&
         report.decodeVerification.decodedWidth === composeResult.outputWidth &&

@@ -30,7 +30,7 @@ function forbidIncludes(token, scope) {
   'const cameraMake: string = preferExifValue(primary.cameraMake, fallback.cameraMake)',
   'const cameraModel: string = preferExifValue(primary.cameraModel, fallback.cameraModel)',
   'const lensMake: string = preferExifValue(primary.lensMake, fallback.lensMake)',
-  'JpegExifIdentityReader.read(imageUri)',
+  'JpegExifIdentityReader.readFromFd(file.fd)',
   'export function mergeMissingExifIdentity(existing: ExifPayload, automatic: ExifPayload)'
 ].forEach((token) => requireIncludes(token, 'EXIF identity field merge'));
 

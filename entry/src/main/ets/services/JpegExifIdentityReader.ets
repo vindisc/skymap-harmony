@@ -7,7 +7,7 @@ export interface JpegExifIdentity {
   lensModel: string;
 }
 
-const JPEG_HEADER_READ_LIMIT: number = 256 * 1024;
+const JPEG_HEADER_READ_LIMIT: number = 2 * 1024 * 1024;
 const EXIF_IFD_POINTER_TAG: number = 0x8769;
 const CAMERA_MAKE_TAG: number = 0x010F;
 const CAMERA_MODEL_TAG: number = 0x0110;
@@ -22,6 +22,19 @@ function emptyIdentity(): JpegExifIdentity {
     cameraModel: '',
     lensMake: '',
     lensModel: ''
+  };
+}
+
+function preferIdentityValue(primary: string, supplemental: string): string {
+  return primary.trim().length > 0 ? primary : supplemental.trim();
+}
+
+function mergeIdentity(primary: JpegExifIdentity, supplemental: JpegExifIdentity): JpegExifIdentity {
+  return {
+    cameraMake: preferIdentityValue(primary.cameraMake, supplemental.cameraMake),
+    cameraModel: preferIdentityValue(primary.cameraModel, supplemental.cameraModel),
+    lensMake: preferIdentityValue(primary.lensMake, supplemental.lensMake),
+    lensModel: preferIdentityValue(primary.lensModel, supplemental.lensModel)
   };
 }
 
@@ -68,6 +81,99 @@ function readAscii(bytes: Uint8Array, offset: number, length: number): string {
     result += String.fromCharCode(value);
   }
   return result.trim();
+}
+
+function matchesAscii(bytes: Uint8Array, offset: number, token: string): boolean {
+  if (!canRead(bytes, offset, token.length)) {
+    return false;
+  }
+  for (let index: number = 0; index < token.length; index += 1) {
+    if (bytes[offset + index] !== token.charCodeAt(index)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function findAscii(bytes: Uint8Array, token: string, startOffset: number = 0): number {
+  for (let offset: number = Math.max(0, startOffset); offset + token.length <= bytes.length; offset += 1) {
+    if (matchesAscii(bytes, offset, token)) {
+      return offset;
+    }
+  }
+  return -1;
+}
+
+function readXmpAttribute(bytes: Uint8Array, name: string): string {
+  let searchOffset: number = 0;
+  while (searchOffset < bytes.length) {
+    const nameOffset: number = findAscii(bytes, name, searchOffset);
+    if (nameOffset < 0) {
+      return '';
+    }
+    let valueOffset: number = nameOffset + name.length;
+    while (valueOffset < bytes.length &&
+      (bytes[valueOffset] === 0x20 || bytes[valueOffset] === 0x09 ||
+        bytes[valueOffset] === 0x0A || bytes[valueOffset] === 0x0D)) {
+      valueOffset += 1;
+    }
+    if (valueOffset < bytes.length && bytes[valueOffset] === 0x3D) {
+      valueOffset += 1;
+      while (valueOffset < bytes.length && (bytes[valueOffset] === 0x20 || bytes[valueOffset] === 0x09)) {
+        valueOffset += 1;
+      }
+      if (valueOffset < bytes.length && (bytes[valueOffset] === 0x22 || bytes[valueOffset] === 0x27)) {
+        const quote: number = bytes[valueOffset];
+        const contentOffset: number = valueOffset + 1;
+        let endOffset: number = contentOffset;
+        while (endOffset < bytes.length && bytes[endOffset] !== quote) {
+          endOffset += 1;
+        }
+        if (endOffset < bytes.length) {
+          return readAscii(bytes, contentOffset, endOffset - contentOffset);
+        }
+      }
+    }
+    searchOffset = nameOffset + name.length;
+  }
+  return '';
+}
+
+function readXmpElement(bytes: Uint8Array, name: string): string {
+  const openingTag: string = `<${name}>`;
+  const openingOffset: number = findAscii(bytes, openingTag);
+  if (openingOffset < 0) {
+    return '';
+  }
+  const contentOffset: number = openingOffset + openingTag.length;
+  const closingOffset: number = findAscii(bytes, `<`, contentOffset);
+  if (closingOffset < 0) {
+    return '';
+  }
+  return readAscii(bytes, contentOffset, closingOffset - contentOffset);
+}
+
+function readXmpValue(bytes: Uint8Array, names: Array<string>): string {
+  for (let index: number = 0; index < names.length; index += 1) {
+    const attributeValue: string = readXmpAttribute(bytes, names[index]);
+    if (attributeValue.length > 0) {
+      return attributeValue;
+    }
+    const elementValue: string = readXmpElement(bytes, names[index]);
+    if (elementValue.length > 0) {
+      return elementValue;
+    }
+  }
+  return '';
+}
+
+function parseXmpIdentity(bytes: Uint8Array): JpegExifIdentity {
+  return {
+    cameraMake: readXmpValue(bytes, ['tiff:Make', 'exif:Make']),
+    cameraModel: readXmpValue(bytes, ['tiff:Model', 'exif:Model']),
+    lensMake: readXmpValue(bytes, ['exifEX:LensMake', 'aux:LensMake']),
+    lensModel: readXmpValue(bytes, ['exifEX:LensModel', 'exif:LensModel', 'aux:Lens'])
+  };
 }
 
 function readAsciiEntry(
@@ -157,6 +263,7 @@ export function parseJpegExifIdentity(bytes: Uint8Array): JpegExifIdentity {
     return emptyIdentity();
   }
 
+  let identity: JpegExifIdentity = emptyIdentity();
   let markerOffset: number = 2;
   while (markerOffset + 4 <= bytes.length) {
     if (bytes[markerOffset] !== 0xFF) {
@@ -176,34 +283,48 @@ export function parseJpegExifIdentity(bytes: Uint8Array): JpegExifIdentity {
       break;
     }
     if (marker === 0xE1) {
-      const identity: JpegExifIdentity = parseExifSegment(bytes, markerOffset + 4);
-      if (identity.cameraMake.length > 0 || identity.cameraModel.length > 0 ||
-        identity.lensMake.length > 0 || identity.lensModel.length > 0) {
-        return identity;
-      }
+      identity = mergeIdentity(identity, parseExifSegment(bytes, markerOffset + 4));
     }
     markerOffset += 2 + segmentLength;
   }
-  return emptyIdentity();
+  return mergeIdentity(identity, parseXmpIdentity(bytes));
 }
 
 export class JpegExifIdentityReader {
-  static read(imageUri: string): JpegExifIdentity {
-    const file: fs.File = fs.openSync(imageUri, fs.OpenMode.READ_ONLY);
+  static readFromFd(fd: number): JpegExifIdentity {
+    let originalOffset: number = 0;
     try {
-      const fileSize: number = fs.statSync(file.fd).size;
+      try {
+        originalOffset = fs.lseek(fd, 0, fs.WhenceType.SEEK_CUR);
+        fs.lseek(fd, 0, fs.WhenceType.SEEK_SET);
+      } catch (error) {
+        originalOffset = 0;
+      }
+      const fileSize: number = fs.statSync(fd).size;
       const readSize: number = Math.min(fileSize, JPEG_HEADER_READ_LIMIT);
       if (readSize <= 0) {
         return emptyIdentity();
       }
       const buffer: ArrayBuffer = new ArrayBuffer(readSize);
-      const bytesRead: number = fs.readSync(file.fd, buffer);
+      const bytesRead: number = fs.readSync(fd, buffer);
       if (bytesRead <= 0) {
         console.warn(`[JpegExifIdentityReader] 文件头读取为空：size=${fileSize}`);
         return emptyIdentity();
       }
       const bytes: Uint8Array = new Uint8Array(buffer, 0, bytesRead);
       return parseJpegExifIdentity(bytes);
+    } finally {
+      try {
+        fs.lseek(fd, originalOffset, fs.WhenceType.SEEK_SET);
+      } catch (error) {
+      }
+    }
+  }
+
+  static read(imageUri: string): JpegExifIdentity {
+    const file: fs.File = fs.openSync(imageUri, fs.OpenMode.READ_ONLY);
+    try {
+      return JpegExifIdentityReader.readFromFd(file.fd);
     } finally {
       fs.closeSync(file);
     }
