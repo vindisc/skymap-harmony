@@ -1,6 +1,7 @@
 import image from '@ohos.multimedia.image';
 import fs from '@ohos.file.fs';
 import { ExifPayload, ExifSource } from '../model/ExifPayloadModel';
+import { JpegExifIdentity, JpegExifIdentityReader } from './JpegExifIdentityReader';
 
 const CAMERA_MODEL_BRAND_PREFIXES: Array<string> = [
   'SONY ',
@@ -15,6 +16,10 @@ const CAMERA_MODEL_BRAND_PREFIXES: Array<string> = [
   'Ricoh ',
   'PANASONIC ',
   'Panasonic '
+];
+
+const TAMRON_LENS_MODEL_CODES: Array<string> = [
+  'A071'
 ];
 
 function parseExifNumber(raw: string): number | null {
@@ -54,6 +59,33 @@ export function cleanCameraModel(input: string): string {
     }
   }
   return normalized;
+}
+
+export function inferCameraMake(cameraModel: string): string {
+  const normalized: string = cameraModel.trim().toUpperCase();
+  if (normalized.startsWith('ILCE-') || normalized.startsWith('ILCA-') ||
+    normalized.startsWith('NEX-') || normalized.startsWith('DSC-')) {
+    return 'SONY';
+  }
+  return '';
+}
+
+export function inferLensMake(lensModel: string): string {
+  const normalized: string = lensModel.trim().toUpperCase();
+  if (normalized.indexOf('TAMRON') >= 0) {
+    return 'TAMRON';
+  }
+  if (normalized.indexOf('SIGMA') >= 0) {
+    return 'SIGMA';
+  }
+  for (let index: number = 0; index < TAMRON_LENS_MODEL_CODES.length; index += 1) {
+    const code: string = TAMRON_LENS_MODEL_CODES[index];
+    const codePattern: RegExp = new RegExp(`(^|\\s)${code}($|\\s)`);
+    if (codePattern.test(normalized)) {
+      return 'TAMRON';
+    }
+  }
+  return '';
 }
 
 export function normalizeAperture(raw: string): string {
@@ -135,10 +167,11 @@ async function readPayload(source: image.ImageSource): Promise<ExifPayload> {
   const rawShutter: string = await readProperty(source, image.PropertyKey.EXPOSURE_TIME);
   const rawIso: string = await readProperty(source, image.PropertyKey.ISO_SPEED_RATINGS);
   const captureDate: string = await readProperty(source, image.PropertyKey.DATE_TIME_ORIGINAL);
+  const cameraModel: string = cleanCameraModel(rawCameraModel);
   return {
-    cameraMake: cameraMake,
-    cameraModel: cleanCameraModel(rawCameraModel),
-    lensMake: lensMake,
+    cameraMake: cameraMake.length > 0 ? cameraMake : inferCameraMake(cameraModel),
+    cameraModel: cameraModel,
+    lensMake: lensMake.length > 0 ? lensMake : inferLensMake(lensModel),
     lensModel: lensModel,
     focalLength: normalizeFocalLength(rawFocalLength),
     aperture: normalizeAperture(rawAperture),
@@ -165,7 +198,19 @@ async function readExifByFd(imageUri: string): Promise<ExifPayload> {
   try {
     const source: image.ImageSource = image.createImageSource(file.fd);
     try {
-      return await readPayload(source);
+      const propertyPayload: ExifPayload = await readPayload(source);
+      let jpegIdentity: JpegExifIdentity = {
+        cameraMake: '',
+        cameraModel: '',
+        lensMake: '',
+        lensModel: ''
+      };
+      try {
+        jpegIdentity = JpegExifIdentityReader.read(imageUri);
+      } catch (error) {
+        console.warn(`[ExifReaderService] JPEG 身份标签兜底失败：${error}`);
+      }
+      return mergeExifPayload(propertyPayload, createIdentityPayload(jpegIdentity));
     } finally {
       await source.release();
     }
@@ -213,12 +258,39 @@ function preferExifValue(primaryValue: string, fallbackValue: string): string {
   return primaryValue.trim().length > 0 ? primaryValue : fallbackValue;
 }
 
-function mergeExifPayload(primary: ExifPayload, fallback: ExifPayload): ExifPayload {
+function createIdentityPayload(identity: JpegExifIdentity): ExifPayload {
+  const cameraModel: string = cleanCameraModel(identity.cameraModel);
+  const lensModel: string = identity.lensModel.trim();
   return {
-    cameraMake: preferExifValue(primary.cameraMake, fallback.cameraMake),
-    cameraModel: preferExifValue(primary.cameraModel, fallback.cameraModel),
-    lensMake: preferExifValue(primary.lensMake, fallback.lensMake),
-    lensModel: preferExifValue(primary.lensModel, fallback.lensModel),
+    cameraMake: identity.cameraMake.trim().length > 0
+      ? identity.cameraMake.trim()
+      : inferCameraMake(cameraModel),
+    cameraModel: cameraModel,
+    lensMake: identity.lensMake.trim().length > 0
+      ? identity.lensMake.trim()
+      : inferLensMake(lensModel),
+    lensModel: lensModel,
+    focalLength: '',
+    aperture: '',
+    shutter: '',
+    iso: '',
+    captureDate: '',
+    location: '',
+    source: ExifSource.AUTO,
+    manuallyOverridden: []
+  };
+}
+
+export function mergeExifPayload(primary: ExifPayload, fallback: ExifPayload): ExifPayload {
+  const cameraModel: string = preferExifValue(primary.cameraModel, fallback.cameraModel);
+  const lensModel: string = preferExifValue(primary.lensModel, fallback.lensModel);
+  const cameraMake: string = preferExifValue(primary.cameraMake, fallback.cameraMake);
+  const lensMake: string = preferExifValue(primary.lensMake, fallback.lensMake);
+  return {
+    cameraMake: cameraMake.length > 0 ? cameraMake : inferCameraMake(cameraModel),
+    cameraModel: cameraModel,
+    lensMake: lensMake.length > 0 ? lensMake : inferLensMake(lensModel),
+    lensModel: lensModel,
     focalLength: preferExifValue(primary.focalLength, fallback.focalLength),
     aperture: preferExifValue(primary.aperture, fallback.aperture),
     shutter: preferExifValue(primary.shutter, fallback.shutter),
@@ -228,6 +300,58 @@ function mergeExifPayload(primary: ExifPayload, fallback: ExifPayload): ExifPayl
     source: ExifSource.AUTO,
     manuallyOverridden: []
   };
+}
+
+function canAutoFillIdentity(payload: ExifPayload, field: string): boolean {
+  return payload.manuallyOverridden.indexOf(field) < 0;
+}
+
+export function hasMissingExifIdentity(payload: ExifPayload): boolean {
+  const cameraMakeMissing: boolean = payload.cameraMake.trim().length === 0 &&
+    canAutoFillIdentity(payload, 'cameraMake');
+  const cameraModelMissing: boolean = payload.cameraModel.trim().length === 0 &&
+    canAutoFillIdentity(payload, 'cameraModel');
+  const lensMakeMissing: boolean = payload.lensModel.trim().length > 0 &&
+    payload.lensMake.trim().length === 0 &&
+    canAutoFillIdentity(payload, 'lensMake');
+  return cameraMakeMissing || cameraModelMissing || lensMakeMissing;
+}
+
+export function mergeMissingExifIdentity(existing: ExifPayload, automatic: ExifPayload): ExifPayload {
+  const result: ExifPayload = {
+    cameraMake: existing.cameraMake,
+    cameraModel: existing.cameraModel,
+    lensMake: existing.lensMake,
+    lensModel: existing.lensModel,
+    focalLength: existing.focalLength,
+    aperture: existing.aperture,
+    shutter: existing.shutter,
+    iso: existing.iso,
+    captureDate: existing.captureDate,
+    location: existing.location,
+    source: existing.source,
+    manuallyOverridden: existing.manuallyOverridden.slice()
+  };
+  if (result.cameraMake.trim().length === 0 && canAutoFillIdentity(result, 'cameraMake')) {
+    result.cameraMake = automatic.cameraMake;
+  }
+  if (result.cameraModel.trim().length === 0 && canAutoFillIdentity(result, 'cameraModel')) {
+    result.cameraModel = automatic.cameraModel;
+  }
+  if (result.lensMake.trim().length === 0 && canAutoFillIdentity(result, 'lensMake')) {
+    result.lensMake = automatic.lensMake;
+  }
+  if (result.lensModel.trim().length === 0 && canAutoFillIdentity(result, 'lensModel')) {
+    result.lensModel = automatic.lensModel;
+  }
+  if (result.cameraMake.trim().length === 0 && canAutoFillIdentity(result, 'cameraMake')) {
+    result.cameraMake = inferCameraMake(result.cameraModel);
+  }
+  if (result.lensMake.trim().length === 0 && canAutoFillIdentity(result, 'lensMake')) {
+    result.lensMake = inferLensMake(result.lensModel);
+  }
+  result.source = result.manuallyOverridden.length === 0 ? ExifSource.AUTO : ExifSource.MIXED;
+  return result;
 }
 
 export class ExifReaderService {

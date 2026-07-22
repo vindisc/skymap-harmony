@@ -5,7 +5,7 @@ import { ExifPayload } from '../model/ExifPayloadModel';
 import { createDefaultReviewCardDocument, ReviewCardDocument } from '../model/ReviewCardModel';
 import { TemplateId } from '../model/TemplateModel';
 import { applyTemplateToDocument } from '../utils/TemplateApply';
-import { ExifReaderService } from './ExifReaderService';
+import { ExifReaderService, mergeMissingExifIdentity } from './ExifReaderService';
 import { L1CanvasComposeResult, L1CanvasComposer } from './L1CanvasComposer';
 
 export interface CanvasSpikeV2L1ExportReport {
@@ -17,9 +17,27 @@ export interface CanvasSpikeV2L1ExportReport {
   outputBytes: number;
   totalMs: number;
   decodeVerification: CanvasSpikeV2L1DecodeVerification;
+  exifIdentityVerification: CanvasSpikeV2L1ExifIdentityVerification;
+  cachedIdentityRepairVerification: CanvasSpikeV2L1CachedIdentityRepairVerification;
   timestampMs: number;
   passed: boolean;
   notes: string;
+}
+
+export interface CanvasSpikeV2L1CachedIdentityRepairVerification {
+  cameraMake: string;
+  cameraModel: string;
+  lensMake: string;
+  exposurePreserved: boolean;
+  passed: boolean;
+}
+
+export interface CanvasSpikeV2L1ExifIdentityVerification {
+  cameraMake: string;
+  cameraModel: string;
+  lensMake: string;
+  lensModel: string;
+  passed: boolean;
 }
 
 export interface CanvasSpikeV2L1DecodeVerification {
@@ -68,7 +86,7 @@ function writeReport(context: common.UIAbilityContext, report: CanvasSpikeV2L1Ex
 async function ensureFixturePhotoInSandbox(context: common.UIAbilityContext): Promise<string> {
   const sandboxPath: string = `${context.filesDir}/${SOURCE_FILE_NAME}`;
   if (fs.accessSync(sandboxPath)) {
-    return sandboxPath;
+    fs.unlinkSync(sandboxPath);
   }
   const rawContent: Uint8Array = await context.resourceManager.getRawFileContent(SOURCE_FILE_NAME);
   const contentBuffer: ArrayBuffer = new ArrayBuffer(rawContent.byteLength);
@@ -143,6 +161,20 @@ export class CanvasSpikeV2L1ExportService {
         decodedWidth: 0,
         decodedHeight: 0
       },
+      exifIdentityVerification: {
+        cameraMake: '',
+        cameraModel: '',
+        lensMake: '',
+        lensModel: '',
+        passed: false
+      },
+      cachedIdentityRepairVerification: {
+        cameraMake: '',
+        cameraModel: '',
+        lensMake: '',
+        exposurePreserved: false,
+        passed: false
+      },
       timestampMs: startedAt,
       passed: false,
       notes: ''
@@ -150,6 +182,45 @@ export class CanvasSpikeV2L1ExportService {
     try {
       const sourceSize: image.Size = await resolveFixtureImageSize(sourcePath);
       const exif: ExifPayload = await ExifReaderService.read(sourcePath);
+      report.exifIdentityVerification = {
+        cameraMake: exif.cameraMake,
+        cameraModel: exif.cameraModel,
+        lensMake: exif.lensMake,
+        lensModel: exif.lensModel,
+        passed: exif.cameraMake === 'SONY' &&
+          exif.cameraModel === 'ILCE-7CM2' &&
+          exif.lensMake === 'TAMRON' &&
+          exif.lensModel.indexOf('A071') >= 0
+      };
+      const cachedPartialExif: ExifPayload = {
+        cameraMake: '',
+        cameraModel: '',
+        lensMake: '',
+        lensModel: exif.lensModel,
+        focalLength: exif.focalLength,
+        aperture: exif.aperture,
+        shutter: exif.shutter,
+        iso: exif.iso,
+        captureDate: exif.captureDate,
+        location: exif.location,
+        source: exif.source,
+        manuallyOverridden: []
+      };
+      const repairedExif: ExifPayload = mergeMissingExifIdentity(cachedPartialExif, exif);
+      const exposurePreserved: boolean = repairedExif.focalLength === cachedPartialExif.focalLength &&
+        repairedExif.aperture === cachedPartialExif.aperture &&
+        repairedExif.shutter === cachedPartialExif.shutter &&
+        repairedExif.iso === cachedPartialExif.iso;
+      report.cachedIdentityRepairVerification = {
+        cameraMake: repairedExif.cameraMake,
+        cameraModel: repairedExif.cameraModel,
+        lensMake: repairedExif.lensMake,
+        exposurePreserved: exposurePreserved,
+        passed: repairedExif.cameraMake === 'SONY' &&
+          repairedExif.cameraModel === 'ILCE-7CM2' &&
+          repairedExif.lensMake === 'TAMRON' &&
+          exposurePreserved
+      };
       console.info(
         `[ExifReaderService] SONY A7CM2 sample: make="${exif.cameraMake}" model="${exif.cameraModel}" ` +
         `focalLength="${exif.focalLength}" aperture="${exif.aperture}" ` +
@@ -168,6 +239,8 @@ export class CanvasSpikeV2L1ExportService {
         report.decodeVerification = await verifyOutput(outputPath);
       }
       report.passed = composeResult.success &&
+        report.exifIdentityVerification.passed &&
+        report.cachedIdentityRepairVerification.passed &&
         report.outputBytes > 0 &&
         report.decodeVerification.successful &&
         report.decodeVerification.decodedWidth === composeResult.outputWidth &&

@@ -5,7 +5,11 @@ import {
   normalizeExifPayload
 } from '../model/ExifPayloadModel';
 import { createDefaultReviewCardDocument, ReviewCardDocument } from '../model/ReviewCardModel';
-import { ExifReaderService } from '../services/ExifReaderService';
+import {
+  ExifReaderService,
+  hasMissingExifIdentity,
+  mergeMissingExifIdentity
+} from '../services/ExifReaderService';
 import { AppColors, AppMetrics, AppTypography } from './AppDesign';
 
 enum ExifFieldKey {
@@ -33,6 +37,22 @@ export struct ExifSheet {
     this.currentExif = normalizeExifPayload(this.document.exif);
     if (this.document.exif === undefined || isExifPayloadEmpty(this.currentExif)) {
       this.reloadAll();
+    } else if (hasMissingExifIdentity(this.currentExif)) {
+      this.reloadMissingIdentity();
+    }
+  }
+
+  private async reloadMissingIdentity(): Promise<void> {
+    this.isReading = true;
+    try {
+      const autoExif: ExifPayload = await ExifReaderService.read(this.imageUri);
+      const repairedExif: ExifPayload = mergeMissingExifIdentity(this.currentExif, autoExif);
+      this.errorMessage = hasMissingExifIdentity(repairedExif) ? '部分 EXIF 无法读取 · 可手动填写' : '';
+      this.emitUpdate(repairedExif);
+    } catch (error) {
+      this.errorMessage = '部分 EXIF 无法读取 · 可手动填写';
+    } finally {
+      this.isReading = false;
     }
   }
 

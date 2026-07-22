@@ -27,9 +27,11 @@ function forbidIncludes(token, scope) {
   'image.PropertyKey.LENS_MAKE',
   'fallbackPayload = await fallbackReader()',
   'return mergeExifPayload(primaryPayload, fallbackPayload)',
-  'cameraMake: preferExifValue(primary.cameraMake, fallback.cameraMake)',
-  'cameraModel: preferExifValue(primary.cameraModel, fallback.cameraModel)',
-  'lensMake: preferExifValue(primary.lensMake, fallback.lensMake)'
+  'const cameraMake: string = preferExifValue(primary.cameraMake, fallback.cameraMake)',
+  'const cameraModel: string = preferExifValue(primary.cameraModel, fallback.cameraModel)',
+  'const lensMake: string = preferExifValue(primary.lensMake, fallback.lensMake)',
+  'JpegExifIdentityReader.read(imageUri)',
+  'export function mergeMissingExifIdentity(existing: ExifPayload, automatic: ExifPayload)'
 ].forEach((token) => requireIncludes(token, 'EXIF identity field merge'));
 
 forbidIncludes(
