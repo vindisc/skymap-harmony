@@ -13,9 +13,11 @@ import {
   CanvasRotatedImageSize,
   CanvasSourceImageLayout,
   canvasRgbaToRgb,
+  closeCanvasImageSourceFile,
   decodeCanvasPhotoStrip,
   describeCanvasComposeError,
   ensureCanvasOutputParentDirectory,
+  openCanvasImageSource,
   resolveCanvasSourceLayout,
   validateCanvasRegionRotation
 } from './CanvasPhotoStripHelpers';
@@ -73,6 +75,7 @@ export class L0CanvasComposer {
     let outputHeight: number = 0;
     let message: string = '';
     let source: image.ImageSource | null = null;
+    let sourceFile: fs.File | null = null;
     let outputFile: fs.File | null = null;
     let encoderHandle: JpegEncoderHandle | null = null;
     let currentPhotoPixelMap: image.PixelMap | null = null;
@@ -81,7 +84,9 @@ export class L0CanvasComposer {
     let activeStripIndex: number = -1;
     let activeStage: string = 'createImageSource';
     try {
-      source = image.createImageSource(input.document.imageUri);
+      const sourceHandle = openCanvasImageSource(input.document.imageUri);
+      source = sourceHandle.source;
+      sourceFile = sourceHandle.file;
       console.info('[L0CanvasComposer] step 1: createImageSource ok');
       activeStage = 'resolveSourceLayout';
       const sourceLayout: CanvasSourceImageLayout = await resolveCanvasSourceLayout(source);
@@ -253,6 +258,7 @@ export class L0CanvasComposer {
           completed = false;
         }
       }
+      closeCanvasImageSourceFile(sourceFile);
     }
 
     return {

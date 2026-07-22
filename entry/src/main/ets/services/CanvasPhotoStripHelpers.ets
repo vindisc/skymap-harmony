@@ -15,6 +15,60 @@ export interface CanvasSourceImageLayout {
   rotatedSize: CanvasRotatedImageSize;
 }
 
+export interface CanvasImageSourceHandle {
+  source: image.ImageSource;
+  file: fs.File | null;
+}
+
+function requireCanvasImageSource(source: image.ImageSource | undefined, readMode: string): image.ImageSource {
+  if (!source) {
+    throw new Error(`创建图片解码源失败（${readMode}）`);
+  }
+  return source;
+}
+
+function shouldOpenCanvasSourceByFd(imageUri: string): boolean {
+  const normalizedUri: string = imageUri.trim().toLowerCase();
+  return normalizedUri.startsWith('file://media/')
+    || normalizedUri.startsWith('datashare://media/')
+    || normalizedUri.indexOf('://media/') >= 0;
+}
+
+// 相册 URI（file://media/...）无法直接交给 createImageSource(uri)，必须先开 fd。
+// 返回的 file 需在整个合成流程结束后才能关闭。
+export function openCanvasImageSource(imageUri: string): CanvasImageSourceHandle {
+  if (imageUri.trim().length <= 0) {
+    throw new Error('图片地址为空');
+  }
+  if (shouldOpenCanvasSourceByFd(imageUri)) {
+    const file: fs.File = fs.openSync(imageUri, fs.OpenMode.READ_ONLY);
+    try {
+      const source: image.ImageSource = requireCanvasImageSource(
+        image.createImageSource(file.fd),
+        '媒体文件描述符'
+      );
+      return { source: source, file: file };
+    } catch (error) {
+      fs.closeSync(file);
+      throw new Error(`打开媒体图片失败：${error}`);
+    }
+  }
+  const source: image.ImageSource = requireCanvasImageSource(
+    image.createImageSource(imageUri),
+    '图片地址'
+  );
+  return { source: source, file: null };
+}
+
+export function closeCanvasImageSourceFile(file: fs.File | null): void {
+  if (file) {
+    try {
+      fs.closeSync(file);
+    } catch (error) {
+    }
+  }
+}
+
 export const CANVAS_STRIP_HEIGHT_PX: number = 256;
 export const CANVAS_JPEG_QUALITY: number = 95;
 export const CANVAS_RGBA_BYTES_PER_PIXEL: number = 4;
